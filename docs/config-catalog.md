@@ -4322,6 +4322,28 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-workspace-changes -->
 
+<!-- BEGIN GENERATED config-catalog:@local/max-tokens-continue -->
+<a id="localmax-tokens-continue"></a>
+
+## `@local/max-tokens-continue`
+
+- `source`: [`packages/bundle/max-tokens-continue/src/index.ts:51`](../packages/bundle/max-tokens-continue/src/index.ts)
+
+```ts config-catalog
+/** Auto-continuation policy mounted by the bundle's patch row. */
+export interface Config {
+  /** Master switch; false registers no listeners at all. */
+  enabled: boolean
+  /** Hard bound on continuation steers per turn (guard against provider loops). */
+  maxContinuations: number
+  /** Skip steering when the cut-off step streamed no content at all. */
+  requireProgress: boolean
+  /** The continuation message steered into the turn. */
+  prompt: string
+}
+```
+<!-- END GENERATED config-catalog:@local/max-tokens-continue -->
+
 ## Loadable plugins with no config
 
 These load from a `cordis.yml` entry with no `config:` block; they declare no configuration API.

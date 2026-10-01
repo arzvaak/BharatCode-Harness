@@ -1,0 +1,49 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/bundle/max-tokens-continue/README.md
+/:
+  en: 8e632e88b4ba3576
+  zh: e13e4d27a6d4becb
+/local-max-tokens-continue:
+  en: 17b42f8cf6572726
+  zh: 386c2171b9f38aea
+/local-max-tokens-continue/summary:
+  en: 4b9ced04ad171a27
+  zh: c2301d7cc2efdeb6
+/local-max-tokens-continue/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: 09388d293f9be9cb
+/local-max-tokens-continue/use-this-package:
+  en: cf0a0cb7d1f59e13
+  zh: a3857a573be4a3dc
+/local-max-tokens-continue/use-this-package/install-into-a-profile:
+  en: 6c47cb109466584d
+  zh: 9d1907a3c0e0b7df
+/local-max-tokens-continue/use-this-package/what-you-get:
+  en: ca619e516022b72d
+  zh: e8fa5678d13c13fa
+/local-max-tokens-continue/understand-the-implementation:
+  en: 2b48beadce1d0923
+  zh: e37bed2058b38480
+/local-max-tokens-continue/understand-the-implementation/composition-mechanics:
+  en: 6d24cd32ad594026
+  zh: 18097612b5762d9f
+/local-max-tokens-continue/understand-the-implementation/source-map:
+  en: 35fee8d2f2849b0c
+  zh: 7f831ab4a4fa8b8c
+/local-max-tokens-continue/further-exploration:
+  en: 48b0dc1694a70298
+  zh: 8d7766c3c2d0075a
+/local-max-tokens-continue/model-experience:
+  en: 2181c50e2250bcf5
+  zh: 718548d2dfcf748e
+/local-max-tokens-continue/model-experience/kv-cache-effect:
+  en: 3fcdd6e0e9028c29
+  zh: 27bbe213c82148bb
+/local-max-tokens-continue/known-limitations-and-deferred-work:
+  en: 3a8750f4cb908d88
+  zh: c0c4e22ce9cf3b92
+/local-max-tokens-continue/known-limitations-and-deferred-work/dev-note:
+  en: 61b9a56be8f5db58
+  zh: 39237dd7a21a1e3b

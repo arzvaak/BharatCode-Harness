@@ -4324,6 +4324,28 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-workspace-changes -->
 
+<!-- BEGIN GENERATED config-catalog:@local/max-tokens-continue -->
+<a id="localmax-tokens-continue"></a>
+
+## `@local/max-tokens-continue`
+
+- `source`: [`packages/bundle/max-tokens-continue/src/index.ts:51`](../packages/bundle/max-tokens-continue/src/index.ts)
+
+```ts config-catalog
+/** Auto-continuation policy mounted by the bundle's patch row. */
+export interface Config {
+  /** Master switch; false registers no listeners at all. */
+  enabled: boolean
+  /** Hard bound on continuation steers per turn (guard against provider loops). */
+  maxContinuations: number
+  /** Skip steering when the cut-off step streamed no content at all. */
+  requireProgress: boolean
+  /** The continuation message steered into the turn. */
+  prompt: string
+}
+```
+<!-- END GENERATED config-catalog:@local/max-tokens-continue -->
+
 ## 无配置的可加载插件
 
 这些插件通过 `cordis.yml` 中不含 `config:` 块的条目加载；它们未声明任何配置接口。

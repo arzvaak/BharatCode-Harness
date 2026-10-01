@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Max-Tokens Auto-Continue",
+    "description": "When a response is cut off by the provider's output-token cap, automatically steers the agent to continue exactly where it stopped instead of ending the turn truncated."
+  }
+}

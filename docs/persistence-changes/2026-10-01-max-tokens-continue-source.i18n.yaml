@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-01-max-tokens-continue-source.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-01-max-tokens-continue-source.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-01-max-tokens-continue-source:
+  en: 6445d25b6503675c
+  zh: fb5360c2a8a3cb41
+/2026-10-01-max-tokens-continue-source/summary:
+  en: 9cfa07e4b14a4864
+  zh: 702239924bd47911
+/2026-10-01-max-tokens-continue-source/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-01-max-tokens-continue-source/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-01-max-tokens-continue-source/compatibility:
+  en: abe770e6e97d251a
+  zh: 05c9641ef20d0408
+/2026-10-01-max-tokens-continue-source/verification:
+  en: 150cb9cf7e3c23ec
+  zh: 17c21a4f6c00cfb7
+/2026-10-01-max-tokens-continue-source/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

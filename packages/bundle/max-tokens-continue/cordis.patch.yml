@@ -1,0 +1,7 @@
+- insert:
+    - id: max-tokens-continue
+      name: '@local/max-tokens-continue'
+      config:
+        enabled: true
+        maxContinuations: 9
+        requireProgress: true
