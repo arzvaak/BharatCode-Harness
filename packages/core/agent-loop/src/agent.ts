@@ -333,12 +333,16 @@ export class ReactLoopAgent implements Agent {
           if (session === this.session) toolRecovery.observe(event)
         })
         try {
-          // max-tokens is sticky: once any step hits the ceiling, later steps
-          // that complete normally must not downgrade the turn outcome.
           const stepEnd = await this.step(decision)
-          // max-tokens stays sticky: a later completed step must not
-          // downgrade the turn outcome.
-          if (turnEnds === null || turnEnds.kind !== 'max-tokens') turnEnds = stepEnd
+          // The turn outcome follows the last decisive step. A completed step
+          // after a max-tokens cut recovers the turn: the continuation (auto
+          // steering or human input) ran to a clean finish, so the truncation
+          // no longer taints the outcome. A fresh max-tokens step re-marks it,
+          // and a null step end (tool dispatch pending) clears a closable turn
+          // but leaves an unresolved truncation marked, so a turn that never
+          // completes after the cut still reports max-tokens.
+          if (stepEnd !== null) turnEnds = stepEnd
+          else if (turnEnds !== null && turnEnds.kind !== 'max-tokens') turnEnds = null
         } catch (error: unknown) {
           try {
             for (const event of toolRecovery.results()) {
