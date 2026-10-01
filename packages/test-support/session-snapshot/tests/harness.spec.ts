@@ -720,11 +720,11 @@ describe('runScenario', () => {
         steps: [...boot, {
           op: 'promptAndCancel',
           text: 'hang',
-          waitForFile: { path: 'never.txt', timeoutMs: 20 },
+          waitForFile: { path: 'never.txt', timeoutMs: 500 },
         }],
       },
       { agent: AGENT, mode: 'replay', fixtureFile: missing.fixtureFile },
-    )).rejects.toThrow(/workspace file "never\.txt" did not appear within 20ms/)
+    )).rejects.toThrow(/workspace file "never\.txt" did not appear within 500ms/)
   })
 
   it('promptAndWaitForAgentMessage keeps the app live through a matching later update', { timeout: 20_000 }, async () => {
@@ -792,9 +792,9 @@ describe('runScenario', () => {
   it('waitForInboxMessage times out when the session log or matching insertion is absent', { timeout: 20_000 }, async () => {
     const absent = await scenario({ prompt: 'hang-until-cancel', persistLogsOnCancel: true })
     await expect(runScenario(
-      { steps: [...boot, { op: 'promptAndCancel', text: 'hang' }, { op: 'waitForInboxMessage', text: 'missing', timeoutMs: 20 }] },
+      { steps: [...boot, { op: 'promptAndCancel', text: 'hang' }, { op: 'waitForInboxMessage', text: 'missing', timeoutMs: 500 }] },
       { agent: AGENT, mode: 'replay', fixtureFile: absent.fixtureFile },
-    )).rejects.toThrow(/did not persist expected inbox message within 20ms/)
+    )).rejects.toThrow(/did not persist expected inbox message within 500ms/)
 
     const unmatched = await scenario({
       prompt: 'hang-until-cancel',
@@ -805,9 +805,9 @@ describe('runScenario', () => {
       }],
     })
     await expect(runScenario(
-      { steps: [...boot, { op: 'promptAndCancel', text: 'hang' }, { op: 'waitForInboxMessage', text: 'missing', timeoutMs: 20 }] },
+      { steps: [...boot, { op: 'promptAndCancel', text: 'hang' }, { op: 'waitForInboxMessage', text: 'missing', timeoutMs: 500 }] },
       { agent: AGENT, mode: 'replay', fixtureFile: unmatched.fixtureFile },
-    )).rejects.toThrow(/did not persist expected inbox message within 20ms/)
+    )).rejects.toThrow(/did not persist expected inbox message within 500ms/)
   })
 
   it('waitForTitleAfterTurnEnd holds the app through a standalone durable title', { timeout: 20_000 }, async () => {
@@ -995,9 +995,9 @@ describe('runScenario', () => {
 
     const missing = await scenario({})
     await expect(runScenario(
-      { steps: [...boot, { op: 'waitForGoalPhase', phase: 'blocked', timeoutMs: 20 }] },
+      { steps: [...boot, { op: 'waitForGoalPhase', phase: 'blocked', timeoutMs: 500 }] },
       { agent: AGENT, mode: 'replay', fixtureFile: missing.fixtureFile },
-    )).rejects.toThrow(/did not persist goal phase "blocked" within 20ms/)
+    )).rejects.toThrow(/did not persist goal phase "blocked" within 500ms/)
   })
 
   it('identifies the child wait when its first log harvest outlasts the deadline', async () => {
@@ -1016,10 +1016,10 @@ describe('runScenario', () => {
       return await originalReaddir(...args)
     })
     const run = runScenario(
-      { steps: [...boot, { op: 'waitForSubagentTurnEnd', child: 2, timeoutMs: 20 }] },
+      { steps: [...boot, { op: 'waitForSubagentTurnEnd', child: 2, timeoutMs: 500 }] },
       { agent: AGENT, mode: 'replay', fixtureFile },
     )
-    const rejected = expect(run).rejects.toThrow(/subagent child #2 did not persist closed turn 1 within 20ms/)
+    const rejected = expect(run).rejects.toThrow(/subagent child #2 did not persist closed turn 1 within 500ms/)
     try {
       await Promise.race([reading.promise, rejected])
       expect(pendingRead).toBeDefined()
@@ -1072,11 +1072,11 @@ describe('runScenario', () => {
         steps: [
           ...boot,
           { op: 'promptAndCancel', text: 'hang' },
-          { op: 'waitForSubagentTurnEnd', minimumTurn: 2, timeoutMs: 20 },
+          { op: 'waitForSubagentTurnEnd', minimumTurn: 2, timeoutMs: 500 },
         ],
       },
       { agent: AGENT, mode: 'replay', fixtureFile: closed.fixtureFile },
-    )).rejects.toThrow(/subagent child #1 did not persist closed turn 2 within 20ms/)
+    )).rejects.toThrow(/subagent child #1 did not persist closed turn 2 within 500ms/)
 
     const seedOnly = await scenario({
       prompt: 'hang-until-cancel',
@@ -1106,17 +1106,17 @@ describe('runScenario', () => {
         steps: [
           ...boot,
           { op: 'promptAndCancel', text: 'hang' },
-          { op: 'waitForSubagentTurnEnd', timeoutMs: 20 },
+          { op: 'waitForSubagentTurnEnd', timeoutMs: 500 },
         ],
       },
       { agent: AGENT, mode: 'replay', fixtureFile: seedOnly.fixtureFile },
-    )).rejects.toThrow(/subagent child #1 did not persist closed turn 1 within 20ms/)
+    )).rejects.toThrow(/subagent child #1 did not persist closed turn 1 within 500ms/)
 
     const missing = await scenario({})
     await expect(runScenario(
-      { steps: [...boot, { op: 'waitForSubagentTurnEnd', child: 2, timeoutMs: 20 }] },
+      { steps: [...boot, { op: 'waitForSubagentTurnEnd', child: 2, timeoutMs: 500 }] },
       { agent: AGENT, mode: 'replay', fixtureFile: missing.fixtureFile },
-    )).rejects.toThrow(/subagent child #2 did not persist closed turn 1 within 20ms/)
+    )).rejects.toThrow(/subagent child #2 did not persist closed turn 1 within 500ms/)
   })
 
   it('waitForTitleAfterTurnEnd times out when the title precedes the boundary', { timeout: 20_000 }, async () => {
@@ -1187,11 +1187,11 @@ describe('runScenario', () => {
         steps: [
           ...boot,
           { op: 'promptAndCancel', text: 'hang' },
-          { op: 'waitForEventAfterTurnEnd', type: 'user/message', timeoutMs: 20 },
+          { op: 'waitForEventAfterTurnEnd', type: 'user/message', timeoutMs: 500 },
         ],
       },
       { agent: AGENT, mode: 'replay', fixtureFile: early.fixtureFile },
-    )).rejects.toThrow(/did not persist user\/message after turn\/end within 20ms/)
+    )).rejects.toThrow(/did not persist user\/message after turn\/end within 500ms/)
   })
 
   it('promptExpectError swallows a model-error response as the expected outcome', { timeout: 20_000 }, async () => {
