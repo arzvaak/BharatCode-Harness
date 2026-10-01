@@ -1,0 +1,70 @@
+name: Upstream track
+
+# Continuously track deepseek-ai/deepseek-harness so this fork never falls
+# behind silently. Daily job: fetch upstream, count/list new commits since our
+# merge-base, flag upstream changes that touch files WE also changed (the
+# conflict-risk set), and keep one tracker issue updated with the delta.
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    name: upstream drift
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/deepseek-ai/deepseek-harness.git || true
+          git fetch upstream master --no-tags
+
+      - name: Compute drift
+        id: drift
+        run: |
+          BASE=$(git merge-base HEAD upstream/master)
+          NEW=$(git rev-list --count "$BASE"..upstream/master)
+          FILES=$(git diff --name-only "$BASE"..upstream/master | sort -u)
+          OURS=$(git diff --name-only base/upstream-639ed01..HEAD | sort -u)
+          OVERLAP=$(comm -12 <(echo "$FILES") <(echo "$OURS") || true)
+          {
+            echo "new=$NEW"
+            echo "base=$BASE"
+          } >> "$GITHUB_OUTPUT"
+          echo "## Upstream drift vs \`$BASE\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**New upstream commits since merge-base: $NEW**" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$OVERLAP" ]; then
+            echo "### ⚠️ Overlap with fork-changed files" >> "$GITHUB_STEP_SUMMARY"
+            echo "$OVERLAP" | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "$NEW" -gt 0 ]; then
+            git log --oneline -15 "$BASE"..upstream/master | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Update tracker issue
+        if: steps.drift.outputs.new != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW: ${{ steps.drift.outputs.new }}
+          BASE: ${{ steps.drift.outputs.base }}
+        run: |
+          TITLE="Upstream drift tracker (deepseek-ai/deepseek-harness)"
+          BODY="Fork merge-base \`${BASE}\` has **${NEW} new upstream commit(s)**.
+          Sync by merging \`upstream/master\` into a staging branch, then run the full CI gates.
+
+          Latest upstream head: $(git rev-parse --short upstream/master)"
+          NUM=$(gh issue list --repo "$GITHUB_REPOSITORY" --search "title:\"$TITLE\"" --json number --jq '.[0].number // empty')
+          if [ -n "$NUM" ]; then
+            gh issue comment "$NUM" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          fi
