@@ -38,7 +38,7 @@ export interface DevelopmentProjectOptions {
   /** Release identity written into the disposable project metadata. */
   readonly release: DesktopRelease
   /** Build target whose prepared payload the disposable project runs against. */
-  readonly target: DesktopAutoUpdateTarget
+  readonly target: DesktopAutoUpdateTarget | 'linux-x64' | 'linux-arm64'
 }
 
 function readManifest(path: string): PackageManifest {
@@ -162,8 +162,11 @@ export function prepareDevelopmentProject(options: DevelopmentProjectOptions): s
     const manifest = readManifest(join(destinationModules, name, 'package.json'))
     return typeof manifest.version === 'string' ? [{ name, version: manifest.version, path: `node_modules/${name}` }] : []
   })
+  const platform = options.target === 'linux-x64' || options.target === 'linux-arm64'
+    ? { platform: 'linux' as const, arch: options.target === 'linux-arm64' ? 'arm64' : 'x64' }
+    : desktopTargetPlatform(options.target)
   const runtime: DesktopRuntimeDescriptor = { schemaVersion: 1, release: options.release,
-    ...desktopTargetPlatform(options.target), sharedPackages, files: [] }
+    ...platform, sharedPackages, files: [] }
   writeFileSync(join(options.projectDir, DESKTOP_RUNTIME_FILE), `${JSON.stringify(runtime, undefined, 2)}\n`)
   return options.projectDir
 }
