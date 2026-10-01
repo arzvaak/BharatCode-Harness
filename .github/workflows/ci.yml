@@ -38,6 +38,11 @@ jobs:
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
 
+      # Hosted runners ship no sandbox backend; sandbox-mode tests
+      # (read-only/workspace-write confinement) refuse to run unconfined.
+      - name: Prepare bubblewrap (sandbox backend)
+        run: bash scripts/prepare-ci-bubblewrap.sh
+
       - name: Build
         run: pnpm run build
 

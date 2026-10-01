@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import yaml from 'js-yaml'
@@ -25,6 +25,9 @@ const COMMIT_HASH = '0123456789abcdef0123456789abcdef01234567'
 const PROBE_KEY = `process.env.${PROBE_NAME}`
 const originalProbe = process.env[PROBE_NAME]
 const roots: string[] = []
+// The fork ships a reduced workflow set (upstream's CI/release suite was
+// retired in local: lean fork checks). Check every workflow that exists —
+// any workflow we ship must keep DSH_CLIENT_ out of workflow-wide environments.
 const dshBuildWorkflows = [
   'build-exe-for-python-sdk.yml',
   'ci.yml',
@@ -32,7 +35,7 @@ const dshBuildWorkflows = [
   'release.yml',
   'release-publish.yml',
   'sandbox.yml',
-]
+].filter(name => existsSync(join(root, '.github/workflows', name)))
 
 afterEach(() => {
   if (originalProbe === undefined) Reflect.deleteProperty(process.env, PROBE_NAME)
