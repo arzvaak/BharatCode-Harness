@@ -27,7 +27,9 @@ async function main(): Promise<void> {
     profile: 'desktop',
     resolvedProfile: { profile, installAnchor },
     patchFiles: [],
-    args: ['--no-open', '--port', '19387'],
+    // DSH_DESKTOP_WEB_PORT lets a development Desktop boot beside an installed
+    // instance already holding the default; released launches keep 19387.
+    args: ['--no-open', '--port', process.env.DSH_DESKTOP_WEB_PORT ?? '19387'],
     ...(process.argv[5] === undefined ? {} : {
       packageManager: {
         command: process.execPath,
