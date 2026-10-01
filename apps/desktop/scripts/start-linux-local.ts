@@ -38,14 +38,21 @@ prepareDevelopmentProject({
   release: { schemaVersion: 1, version, hostProtocolVersion: DESKTOP_HOST_PROTOCOL_VERSION, nodeVersion, pnpmVersion },
   target,
 })
-const child = spawn(electron, [appRoot], {
-  cwd: appRoot, stdio: 'inherit',
-  env: {
-    ...process.env,
-    DSH_HOME: process.env.DSH_HOME ?? join(buildRoot, 'home'),
-    DSH_DESKTOP_PRIMARY_RUNTIME_DIR: primaryRuntime,
-    DSH_DESKTOP_OPEN_DEVTOOLS: '0',
-  },
+// A harness session exports DSH_HOME for its own profile and
+// ELECTRON_RUN_AS_NODE for Node-mode children; neither belongs to this GUI
+// main process. The launcher is self-contained: its own home, its own
+// Electron user data (so the single-instance lock cannot collide with an
+// installed Desktop already running), and an explicit opt-in override.
+const userData = process.env.DSH_DESKTOP_USER_DATA_DIR ?? join(buildRoot, 'electron-user-data')
+const env: NodeJS.ProcessEnv = {
+  ...process.env,
+  DSH_HOME: process.env.DSH_DESKTOP_LOCAL_HOME ?? join(buildRoot, 'home'),
+  DSH_DESKTOP_PRIMARY_RUNTIME_DIR: primaryRuntime,
+  DSH_DESKTOP_OPEN_DEVTOOLS: '0',
+}
+delete env.ELECTRON_RUN_AS_NODE
+const child = spawn(electron, [appRoot, `--user-data-dir=${userData}`], {
+  cwd: appRoot, stdio: 'inherit', env,
 })
 child.on('error', (error) => { console.error(error); process.exitCode = 1 })
 child.on('exit', (code) => { process.exitCode = code ?? 1 })
