@@ -66,9 +66,10 @@ import type {} from '@deepseek-ai/dsh-fs'
 import { deepEqualJson } from '@deepseek-ai/dsh-util-values'
 import { PiAiAdapter } from './adapter.ts'
 import { authContextFrom, credentialStoreFrom } from './auth.ts'
-import { catalogProviderIds } from './catalog.ts'
+import { catalogModels, catalogProviderIds, MODALITIES } from './catalog.ts'
+import type { PiAiModality } from './catalog.ts'
 import { assertServiceable, Config, resolveProfiles } from './config.ts'
-import type { ResolvedPiAiProviderProfile } from './config.ts'
+import type { PiAiModelProfile, ResolvedPiAiProviderProfile } from './config.ts'
 import { discoverModels } from './discovery.ts'
 import type { StoredModelDiscoveryProfile } from './discovery.ts'
 import { registerPiAiFlows } from './login.ts'
@@ -147,7 +148,15 @@ function directoryEntries(
 
 /** Register one generic pi-ai adapter for all configured provider routes. */
 export function apply(ctx: Context, config: Config): void {
-  ctx.inject(['settings'], (child) => { child.effect(() => child.settings.configure({ auto: false }, ctx.fiber)) })
+  /** Settings service captured when available; auto-import needs it to persist a listing. */
+  let settingsService: { update(ns: string, patch: object): Promise<void> } | undefined
+  ctx.inject(['settings'], (child) => {
+    settingsService = child.settings
+    child.effect(() => child.settings.configure({ auto: false }, ctx.fiber))
+    // A route whose import pump ran before settings existed gets its second
+    // attempt as soon as the service that can persist a listing lands.
+    queueMicrotask(pumpPendingImports)
+  })
   const settingsNs = ctx.fiber.entry?.options.id ?? NS
   let lastRaw: ReturnType<Config['providers']['get']> | undefined
   let memoized: ReadonlyMap<string, ResolvedPiAiProviderProfile> | undefined
@@ -312,6 +321,115 @@ export function apply(ctx: Context, config: Config): void {
     catch (error) {
       ctx.logger.error('llm-pi-ai: configuration conflicts with an existing provider route')
       ctx.logger.error(error)
+    }
+    // A probe that lost the race with composition retries here; the
+    // deep-equality guard below keeps a settled route from re-writing.
+    pumpPendingImports()
+  })
+
+  // ---- endpoint-owned model lists (`autoImport`) ----
+  // A route flagged `autoImport` has its model membership owned by its own
+  // endpoint: when the route's credential appears (or, for a route that still
+  // lists no models, once settings are mounted), `GET {baseURL}/models` is the
+  // answer and its reply is stored into the profile configuration. Declared
+  // capability fields the listing cannot speak — reasoning-effort maps and
+  // compat switches — are carried over per id, so an import refreshes what the
+  // endpoint changed without discarding what only the operator knows. A route
+  // that already lists models and has no credential change is left alone: no
+  // credential means no network, and a failed probe keeps the stored list.
+  const importing = new Set<string>()
+  /** Read the raw configured models of one route (pre-resolution configuration). */
+  const configuredModels = (route: string): readonly PiAiModelProfile[] => {
+    // The raw schema materializes readonly collections; the shape is otherwise
+    // the same profile type, so this is a view over configuration, not a copy.
+    const providers = config.providers.get() as unknown as
+      Record<string, { models?: readonly PiAiModelProfile[] } | undefined>
+    return providers[route]?.models ?? []
+  }
+
+  /**
+   * Probe one `autoImport` route and persist the endpoint's listing. The
+   * endpoint is the source of truth for model membership: a stored seed keeps
+   * the route serviceable with no network and no key, a credential event
+   * forces a re-sync from what the API advertises, and a boot retry only
+   * probes a route that still lists nothing — so an unrelated settings write
+   * never turns into network.
+   * @param route - provider route key.
+   * @param force - probe even though a model list is already stored.
+   * @returns fulfillment after the probe settles; failures are logged, never thrown.
+   */
+  async function autoImportRoute(route: string, force: boolean): Promise<void> {
+    const profile = profiles().get(route)
+    if (profile?.autoImport !== true || profile.baseURL === undefined) return
+    if (settingsService === undefined || importing.has(route)) return
+    if (!force && configuredModels(route).length > 0) return
+    // A route the installed catalog describes keeps its shipped entries: the
+    // catalog carries capabilities no listing endpoint reports, and importing
+    // over it would pin a snapshot of the catalog into user configuration.
+    if (catalogModels(route).size > 0) return
+    importing.add(route)
+    try {
+      const discovered = await discoverModels(
+        {
+          provider: route,
+          baseURL: profile.baseURL,
+          ...profile.api === undefined ? {} : { api: profile.api },
+          // Bound so a hanging endpoint can neither stall a test process's
+          // teardown nor keep a boot probe pending forever.
+          signal: AbortSignal.timeout(15_000),
+        },
+        () => storedDiscoveryProfile(route),
+      )
+      if (discovered.length === 0) return
+      const previous = new Map(configuredModels(route).map(model => [model.id, model]))
+      const models: PiAiModelProfile[] = discovered.map((model) => {
+        const declared = previous.get(model.id)
+        const listed = model.inputModalities === undefined ? undefined
+          : [...model.inputModalities].filter(modality => (MODALITIES as readonly string[]).includes(modality)) as PiAiModality[]
+        // The listing is the answer for membership and disclosed capacities;
+        // anything it cannot say (effort maps, compat switches) is kept from
+        // the configuration that previously declared this id.
+        const merged: PiAiModelProfile = { id: model.id }
+        const name = model.name ?? declared?.name
+        if (name !== undefined) merged.name = name
+        const contextWindow = model.contextWindow ?? declared?.contextWindow
+        if (contextWindow !== undefined) merged.contextWindow = contextWindow
+        const maxTokens = model.maxTokens ?? declared?.maxTokens
+        if (maxTokens !== undefined) merged.maxTokens = maxTokens
+        const input = listed !== undefined && listed.length > 0 ? listed : declared?.input
+        if (input !== undefined) merged.input = [...input]
+        if (declared?.reasoningEfforts !== undefined) merged.reasoningEfforts = declared.reasoningEfforts
+        if (declared?.compat !== undefined) merged.compat = declared.compat
+        return merged
+      })
+      if (deepEqualJson(models, configuredModels(route))) return
+      await settingsService.update(settingsNs, { providers: { [route]: { models } } })
+      ctx.logger.info(`llm-pi-ai: imported ${String(models.length)} model(s) for route "${route}" from its endpoint`)
+    } catch (error) {
+      // No stored credential is the expected state before onboarding: stay
+      // quiet and let the credential event below retry. Anything else is an
+      // endpoint problem worth logging while the stored list keeps serving.
+      if (error instanceof LlmError && error.code === 'MISSING_CREDENTIAL') return
+      ctx.logger.warn(`llm-pi-ai: model import for route "${route}" failed; keeping the stored model list`)
+      ctx.logger.warn(error)
+    } finally {
+      importing.delete(route)
+    }
+  }
+
+  /** Probe flagged routes that still list nothing, once settings exist. */
+  function pumpPendingImports(): void {
+    if (settingsService === undefined) return
+    for (const route of profiles().keys()) void autoImportRoute(route, false)
+  }
+  pumpPendingImports()
+  // A credential write for a flagged route's reference re-runs its probe: this
+  // is the onboarding path (the welcome flow stores the key) and the refresh
+  // path (a rotated key re-confirms what the endpoint now serves). Forced, so
+  // it runs even though a seed is stored — this is the endpoint test.
+  ctx.on('credentials/reference-updated', (ref) => {
+    for (const [route, profile] of profiles()) {
+      if (profile.autoImport === true && profile.apiKeyEnv === ref) void autoImportRoute(route, true)
     }
   })
 }

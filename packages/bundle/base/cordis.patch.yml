@@ -79,11 +79,14 @@
 
     # The transport-independent default for Agents created by entry points.
     # Settings may supply a saved selection; consumers read it at creation time.
+    # The fork's default route is the BharatCode gateway (bharatcode.ai), not
+    # the upstream official DeepSeek route — that route stays mounted for
+    # deployments that configure it, but a fresh profile talks BharatCode.
     - id: agent-default-model
       name: '@deepseek-ai/dsh-agent-default-model'
       config:
-        provider: deepseek-official
-        model: deepseek-flash
+        provider: bharatcode
+        model: qwen-3.8-27b
 
     - id: jobs
       name: '@deepseek-ai/dsh-jobs-local'
@@ -117,15 +120,62 @@
     - id: credentials
       name: '@deepseek-ai/dsh-credentials-local'
 
-    # The pi-ai multi-provider twin, mounted dormant: zero routes (and no extra
-    # models in the picker) until a `llm-pi-ai:` settings section supplies provider
-    # profiles — then those routes register live, keys resolving per request
-    # through their apiKeyEnv references, and drop again when the section empties.
-    # Supplying those profiles is exactly what the web Models page does. Which
-    # adapters exist is composition; which providers run is the user's settings
-    # document.
+    # The pi-ai multi-provider twin. The fork ships ONE route out of the box:
+    # the BharatCode gateway, with `autoImport` so the model list is owned by
+    # `GET {baseURL}/models` — the harness probes the endpoint when the
+    # BHARATCODE_API_KEY credential appears (welcome-flow save or a restored
+    # store) and persists what the endpoint advertises, preserving any
+    # per-model capabilities the listing cannot speak (reasoning-effort maps).
+    # No key yet: the route stays dormant, and the probe retries on the
+    # credential event. Additional routes still arrive through a
+    # `llm-pi-ai:` settings section from the web Models page; routes drop when
+    # the section empties.
     - id: llm-pi-ai
       name: '@deepseek-ai/dsh-llm-pi-ai'
+      config:
+        providers:
+          bharatcode:
+            displayName: BharatCode
+            apiKeyEnv: BHARATCODE_API_KEY
+            api: openai-completions
+            baseURL: https://bharatcode.ai/api/model/v1
+            autoImport: true
+            reasoning: 'off'
+            compat:
+              maxTokensField: max_tokens
+              supportsStore: false
+              supportsDeveloperRole: false
+              supportsReasoningEffort: true
+              thinkingFormat: openai
+              supportsStrictMode: false
+            # Seed so model resolution works before the first probe (and with
+            # no network): `autoImport` re-syncs membership from the endpoint
+            # whenever the credential appears or changes, preserving these
+            # per-model capability declarations the listing cannot disclose.
+            models:
+              - id: qwen-3.8-27b
+                name: Qwen 3.8 27B
+                contextWindow: 262144
+                maxTokens: 32000
+                input:
+                  - text
+                  - image
+                reasoningEfforts:
+                  'off': none
+                  high: high
+              - id: deepseek-v4.1-flash
+                name: DeepSeek V4.1 Flash
+                contextWindow: 1000000
+                maxTokens: 32000
+                input:
+                  - text
+                  - image
+                reasoningEfforts:
+                  'off': none
+                  low: low
+                  medium: medium
+                  high: high
+                  max: max
 
     - id: session-persistence-jsonl
       name: '@deepseek-ai/dsh-session-persistence-jsonl'

@@ -92,6 +92,16 @@ export type {
 export interface PiAiProviderProfile {
   /** Credential reference (environment-variable name) resolved per request through `ctx.credentials`. */
   apiKeyEnv?: string
+  /**
+   * Import this route's model list from its own endpoint instead of configuring
+   * it by hand. While the route declares no `models`, the Host interrogates
+   * `GET {baseURL}/models` once the route's credential exists (at start and on
+   * every credential update) and stores the advertised listing as this route's
+   * configuration; an endpoint failure keeps the stored configuration and is
+   * retried on the next credential update. Routes the installed catalog
+   * already describes ignore the flag — their shipped entries are the answer.
+   */
+  autoImport?: boolean
   /** Name shown by configuration surfaces; defaults to the route key. */
   displayName?: string
   /**
@@ -325,6 +335,7 @@ const modelOverride: z<PiAiModelOverride> = z.object(modelFields)
 
 const profile = z.object({
   apiKeyEnv: z.string().role('credential-ref'),
+  autoImport: z.boolean(),
   displayName: z.string(),
   api: z.union(supportedProtocols()),
   baseURL: z.string(),
