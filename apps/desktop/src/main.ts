@@ -25,6 +25,7 @@ import {
 import { resolveDesktopPaths } from './paths.ts'
 import { DesktopProjectManager } from './project-manager.ts'
 import { DesktopHostFatalError, DesktopHostProcess, DesktopHostUncleanExitError } from './host-process.ts'
+import { resolveHostNode } from './node-environment.ts'
 import { DesktopPlatformView, PLATFORM_IPC, platformBounds } from './platform-view.ts'
 import { installDesktopDirectoryPicker } from './directory-picker.ts'
 import { installMicrophonePermissions } from './microphone-permissions.ts'
@@ -150,7 +151,10 @@ interface RuntimeResources {
 
 function runtimeResources(): RuntimeResources {
   const development = !app.isPackaged
-  const node = process.execPath
+  // On Linux the Host must be a standalone Node.js — sharp segfaults under
+  // Electron's Node mode (https://sharp.pixelplumbing.com/install#electron-and-linux);
+  // explicit DSH_DESKTOP_HOST_NODE wins, then a verified Node from PATH.
+  const node = resolveHostNode(process.env, process.platform, process.env.DSH_DESKTOP_HOST_NODE) ?? process.execPath
   const nodeBin = development ? join(app.getAppPath(), 'scripts', 'node-bin') : join(process.resourcesPath, 'runtime', 'bin')
   const pnpm = (development ? process.env.DSH_DESKTOP_PNPM_ENTRY : undefined)
     ?? (development ? join(app.getAppPath(), 'node_modules', 'pnpm', 'bin', 'pnpm.mjs')
