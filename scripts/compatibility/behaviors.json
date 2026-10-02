@@ -1,0 +1,106 @@
+[
+  {
+    "id": "truncation-recovery",
+    "purpose": "A completed continuation clears truncation without executing incomplete tool calls.",
+    "upstreamPaths": [
+      "packages/core/agent-loop/",
+      "packages/llm/",
+      "packages/core/session/"
+    ],
+    "tests": [
+      "packages/core/agent-loop/tests/loop.spec.ts"
+    ]
+  },
+  {
+    "id": "auto-continuation",
+    "purpose": "Steer on truncation only, require progress, stop at configured budget and respect cancellation.",
+    "upstreamPaths": [
+      "packages/bundle/max-tokens-continue/",
+      "packages/core/agent/",
+      "packages/core/agent-loop/",
+      "packages/llm/"
+    ],
+    "tests": [
+      "scripts/compatibility/continuation.spec.ts"
+    ]
+  },
+  {
+    "id": "linux-desktop",
+    "purpose": "Launch an isolated Electron desktop with the built Host and disposable data.",
+    "upstreamPaths": [
+      "apps/desktop/",
+      "apps/desktop-host/",
+      "scripts/primary-runtime/"
+    ],
+    "tests": [
+      "scripts/compatibility/linux-desktop.ts",
+      "apps/desktop/tests/development-project.spec.ts"
+    ]
+  },
+  {
+    "id": "windows-desktop",
+    "purpose": "Boot the native unsigned packaged runtime with external plugins and dependencies.",
+    "upstreamPaths": [
+      "apps/desktop/",
+      "apps/desktop-host/",
+      "native/",
+      "scripts/primary-runtime/"
+    ],
+    "tests": [
+      "apps/desktop/scripts/smoke-packaged-runtime.ts"
+    ]
+  },
+  {
+    "id": "branding",
+    "purpose": "Assert the committed fork identity in composed UI and CLI output; rebranding expectations land separately.",
+    "upstreamPaths": [
+      "scripts/client-build-environment.ts",
+      "packages/client/",
+      "apps/desktop/",
+      "apps/web/"
+    ],
+    "tests": [
+      "scripts/compatibility/identity.spec.ts",
+      "scripts/client-build-environment.client.spec.ts",
+      "apps/desktop/tests/main-startup.spec.ts"
+    ]
+  },
+  {
+    "id": "model-defaults",
+    "purpose": "Sanitized BharatCode model defaults and preset selection remain effective in a built profile.",
+    "upstreamPaths": [
+      "packages/core/agent-default-model/",
+      "packages/llm/",
+      "packages/preset/",
+      "packages/bundle/"
+    ],
+    "tests": [
+      "apps/cli/tests/profiles/web/tests/fork-compatibility.expected.e2e.ts"
+    ]
+  },
+  {
+    "id": "search-routing",
+    "purpose": "The real web seam routes to the local provider adapter and returns normalized sources.",
+    "upstreamPaths": [
+      "packages/web/",
+      "packages/bundle/"
+    ],
+    "tests": [
+      "apps/cli/tests/profiles/web/tests/fork-compatibility.expected.e2e.ts"
+    ]
+  },
+  {
+    "id": "session-lifecycle",
+    "purpose": "Replayed turns preserve tool execution, cancellation and persisted/reopened sessions.",
+    "upstreamPaths": [
+      "packages/core/",
+      "packages/session/",
+      "packages/sdk/",
+      "python/"
+    ],
+    "tests": [
+      "snapshots/session/headless.snapshot.ts",
+      "snapshots/sdk/sdk.snapshot.ts"
+    ]
+  }
+]
