@@ -1,64 +1,74 @@
-# DeepSeek Harness
+# BharatCode Harness
 
 English | [中文](README.zh.md)
 
-DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
+BharatCode Harness is a personal fork of [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`), the open-source agent harness developed by [DeepSeek AI](https://deepseek.com), retargeted as the BharatCode workspace: workflow-first flavors, dedicated views per field, and BharatCode branding.
 
-It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
-
-Documentation: [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+Like upstream, everything is a plugin on [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512). Upstream documentation remains the reference: [deepseek-harness docs](https://deepseek-harness.github.io/deepseek-harness/).
 
 ## Developer preview
 
-DeepSeek Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
-
-Review the [safety notice](SAFETY.md) before running the project.
+Upstream is in _developer preview_ and iterating rapidly — **compatibility-breaking changes happen**, and this fork inherits that status. Review the [safety notice](SAFETY.md) before running the project.
 
 ## Run
 
-### Run from `npm`
+### Run the Desktop app
 
-Install `Node.js`, then run:
+The Electron Desktop app is the primary surface. From a repository checkout:
 
 ```sh
-npx @deepseek-ai/dsh web
+pnpm install
+pnpm run build
+DSH_DESKTOP_WEB_PORT=19400 pnpm exec tsx apps/desktop/scripts/start-linux-local.ts
 ```
 
-The command starts the Web UI at `http://127.0.0.1:3080` by default and opens it in the default browser for a local launch. An SSH launch only prints the host URL because the SSH client or editor owns the local forwarded address. Pass `--no-open` to run the server without opening a browser. See [Web UI guide](docs/user/guide/index.md).
+`start-linux-local` prepares the pinned primary runtime and a development profile, then boots Electron with an isolated home and user data, so it runs beside an installed instance. `DSH_DESKTOP_WEB_PORT` selects the port; the default Desktop port is 19387.
 
-### Run from source
-
-To run from a repository checkout:
+### Run the Web UI
 
 ```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
+git clone https://github.com/arzvaak/Bharatcode-Harness.git
+cd Bharatcode-Harness
 pnpm install
 pnpm run build
 pnpm dsh web
 ```
 
-`pnpm run build` prepares the repository artifacts. `pnpm dsh web` uses those built artifacts without rebuilding.
+`pnpm run build` prepares the repository artifacts; `pnpm dsh web` serves the built artifacts without rebuilding. Flags reach `dsh web`, for example `pnpm run dev:web --no-open --port 3081`.
 
-## Community and support
+## Release flow
 
-- Submit feedback or bug reports through [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions).
-- Add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your plugin repository for discoverability.
-- Join <a href="https://discord.gg/4MrtZUhpxg">DeepSeek Harness Discord community</a>.
+Nothing reaches `main` without passing the gate set. Candidates are pulled into `alpha`, promoted to `beta`, then released to `main`:
 
-## Contributing
+```text
+upstream (read-only) ── manual sync PR ──► alpha ◄── candidate/* & feature PRs
+                                              │
+                                   promotion PR (required checks)
+                                              ▼
+                                             beta ── 3-day soak + smoke ──► main (default, tagged)
+```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+| Branch | Purpose | Gates |
+|---|---|---|
+| `alpha` | Integration: upstream syncs, candidates, features | Slim: frozen install, build, unit tests, brand tripwire |
+| `beta` | Stabilization | Full: test matrix, config-snapshot diff, plugin-row diff, brand tripwire, smoke |
+| `main` | Released state — default branch | Beta promotion PR only: full gates, 3-day soak, agent-run smoke, human merge |
+
+The **config-snapshot diff** catches the failure upstream tests cannot: the Cordis Loader warns and skips a patch row whose `id` no longer exists, so an upstream row rename would silently revert an override without failing any test.
 
 ## Development
 
 Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
 
-`pnpm run dev:web` builds, serves, and rebuilds client bundles on source edits in one terminal, and `make help` lists the matching Make targets for Web and Desktop; the guide's application commands section owns the full table.
+`pnpm run dev:web` builds, serves, and rebuilds client bundles on source edits; `pnpm run dev:desktop` builds and launches Desktop; `make help` lists the matching Make targets. The guide's application commands section owns the full table.
 
-For agents, follow [AGENTS.md](AGENTS.md).
+For agents, follow [AGENTS.md](AGENTS.md). Contributions upstream go to [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Citation
+## Upstream and attribution
+
+- Forked from [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) under the MIT License; this project is described as _built on DeepSeek Harness_ per the upstream [brand guidelines](https://github.com/deepseek-ai/deepseek-harness/blob/master/BRAND_GUIDELINES.md).
+- Local changes are recorded as `local/*` commits on top of the pinned upstream base; see the journal for decisions and pending work.
+- The `dsh` CLI, profiles, bundles, and Cordis plugin system are unchanged upstream technology.
 
 ```bibtex
 @misc{deepseek-harness2026,

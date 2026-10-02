@@ -15,11 +15,14 @@ import { isArchivedAgentNotePath, uniqueRepoFiles } from './repo-files.ts'
 
 const root = resolve(import.meta.dirname, '..')
 
-/** Repo-authored Markdown checked for relative links. */
+/**
+ * Repo-authored Markdown checked for relative links. Agent notes are excluded:
+ * they are historical records of past repository states, and this fork removed
+ * upstream workflows and specs those notes document.
+ */
 const PATTERNS = [
   'README.md',
   'README.zh.md',
-  '.agents/notes/**/*.md',
   'docs/**/*.md',
   'packages/*.md',
   'packages/*/*.md',
