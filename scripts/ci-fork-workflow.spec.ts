@@ -40,7 +40,7 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
     expect(workflow.on).toHaveProperty('pull_request')
   })
 
-  it('runs install, sandbox backend, build, profile composition, tests — in that order', () => {
+  it('runs install, sandbox backend, build, profile composition, brand tripwire, tests — in that order', () => {
     const workflow = loadWorkflow('ci.yml')
     expect(checksJob(workflow)['runs-on']).toBe('ubuntu-latest')
     expect(runCommands(checksJob(workflow))).toEqual([
@@ -48,6 +48,7 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
       'bash scripts/prepare-ci-bubblewrap.sh',
       'pnpm run build',
       'bash scripts/gates/verify-config.sh',
+      'bash scripts/gates/brand-tripwire.sh',
       'pnpm run test',
     ])
   })
@@ -59,5 +60,9 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
 
   it('keeps the profile composition gate executable', () => {
     expect(existsSync(resolve(root, 'scripts/gates/verify-config.sh'))).toBe(true)
+  })
+
+  it('keeps the brand tripwire gate executable', () => {
+    expect(existsSync(resolve(root, 'scripts/gates/brand-tripwire.sh'))).toBe(true)
   })
 })

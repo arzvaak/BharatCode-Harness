@@ -49,5 +49,10 @@ jobs:
       - name: Profile composition gate (plugins must activate)
         run: bash scripts/gates/verify-config.sh
 
+      # The BharatCode rebrand must not regress: the upstream product name
+      # may appear only in the allowlisted attribution files.
+      - name: Brand tripwire (no upstream product name in source)
+        run: bash scripts/gates/brand-tripwire.sh
+
       - name: Unit tests
         run: pnpm run test
