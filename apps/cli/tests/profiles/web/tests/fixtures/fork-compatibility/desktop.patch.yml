@@ -1,0 +1,41 @@
+# Sanitized desktop overrides; URLs are documentation-only and no credentials are stored.
+- id: agent-default-model
+  config:
+    provider: bharatcode
+    model: deepseek-v4.1-flash
+    reasoningEffort: max
+- id: llm-pi-ai
+  config:
+    providers:
+      bharatcode:
+        displayName: BharatCode CI fixture
+        api: openai-completions
+        baseURL: https://gateway.example.invalid/v1
+        apiKeyEnv: BHARATCODE_COMPATIBILITY_KEY
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-v4.1-flash
+            name: DeepSeek V4.1 Flash
+            contextWindow: 1000000
+            maxTokens: 32000
+            reasoningEfforts:
+              off: none
+              low: low
+              medium: medium
+              high: high
+              max: max
+- id: agent-preset-registry
+  config:
+    default: standard
+    selectedDefault: cordis
+- id: ui-theme
+  config:
+    preference: dark
+- id: ui-conversation
+  config:
+    busyEnter: steer
+- id: web
+  config:
+    searchProvider: searxng
+    fetchProvider: http

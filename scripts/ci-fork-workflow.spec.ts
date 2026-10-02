@@ -49,7 +49,10 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
       'pnpm run build',
       'bash scripts/gates/verify-config.sh',
       'bash scripts/gates/brand-tripwire.sh',
+      'node --test scripts/compatibility/*.test.mjs\nnode scripts/compatibility/upstream.mjs validate\nnode scripts/compatibility/composition.mjs\npnpm exec vitest run scripts/compatibility/continuation.spec.ts scripts/compatibility/identity.spec.ts\n',
+      'pnpm run verify-persistence-changes\npnpm run verify-persistence-releases\npnpm run verify-persistence-formats\n',
       'pnpm run test',
+      'node scripts/compatibility/evidence.mjs unit',
     ])
   })
 

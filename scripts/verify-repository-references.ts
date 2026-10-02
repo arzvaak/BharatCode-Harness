@@ -35,6 +35,7 @@ function isMaintained(file: string): boolean {
  * @param source - File text or a symlink's stored target.
  * @param commits - Lowercase, unambiguous full or abbreviated commit identifiers.
  * @returns One finding per line and reference kind; digests and other Git object types are accepted.
+ * Full ancestry IDs are allowed only in the dedicated accepted-upstream record.
  */
 export function findRepositoryReferences(
   file: string,
@@ -47,7 +48,10 @@ export function findRepositoryReferences(
     if (organizationUrl.test(canonicalReferenceText(line).replace(kitRepositoryUrl, ''))) {
       references.push({ file, line: index + 1, kind: 'organization-url' })
     }
-    if ([...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
+    // CI separately validates that these recorded ancestry IDs belong to the candidate history.
+    const acceptedAncestryId = file === 'scripts/compatibility/baseline.json'
+      && /^\s*"(?:upstreamSha|forkSha)":\s*"[a-f0-9]{40}",?\s*$/u.test(line)
+    if (!acceptedAncestryId && [...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
       references.push({ file, line: index + 1, kind: 'commit-hash' })
     }
   }

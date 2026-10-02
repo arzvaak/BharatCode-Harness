@@ -44,6 +44,16 @@ function repository(test: TestContext) {
 }
 
 describe('maintained repository reference policy', () => {
+  it('allows only full ancestry IDs in the dedicated accepted-upstream record', () => {
+    const commit = 'a'.repeat(40)
+    const commits = new Set([commit, commit.slice(0, 7)])
+    const baseline = 'scripts/compatibility/baseline.json'
+    expect(findRepositoryReferences(baseline, `  "upstreamSha": "${commit}",\n  "forkSha": "${commit}",`, commits)).toEqual([])
+    expect(findRepositoryReferences(baseline, `  "evidence": "${commit}"`, commits)).toHaveLength(1)
+    expect(findRepositoryReferences(baseline, `  "upstreamSha": "${commit.slice(0, 7)}"`, commits)).toHaveLength(1)
+    expect(findRepositoryReferences('other.json', `  "upstreamSha": "${commit}"`, commits)).toHaveLength(1)
+  })
+
   it('permits only the independent kit repository and its source URLs', () => {
     for (const suffix of ['', '.git', '/tree/main/packages/entry']) {
       expect(findRepositoryReferences('package.json', `${organizationUrl}/libreoffice-kit${suffix}`, new Set())).toEqual([])
