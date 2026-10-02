@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "upstreamSha": "639ed015397290b3745d163aafe02ffee4aa3f84",
+  "forkSha": "f2ad7e29c061030bf31ccfd23cf2193ccc2b7d99",
+  "nodeMajor": 24,
+  "packageManager": "pnpm@11.7.0",
+  "lockfileSha256": "2e1fe452d75e9e5f01d0c07de49798a3e5c5984811c59d2a4af06669d7361872",
+  "artifacts": [],
+  "evidence": "Initial accepted commit has prior unit/build evidence; no retained artifact identifiers. New runs emit per-SHA evidence."
+}

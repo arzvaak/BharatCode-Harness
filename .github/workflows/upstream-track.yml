@@ -1,10 +1,5 @@
 name: Upstream track
 
-# Continuously track deepseek-ai/deepseek-harness so this fork never falls
-# behind silently. Daily job: fetch upstream, count/list new commits since our
-# merge-base, flag upstream changes that touch files WE also changed (the
-# conflict-risk set), and keep one tracker issue updated with the delta.
-
 on:
   schedule:
     - cron: '23 6 * * *'
@@ -12,59 +7,53 @@ on:
 
 permissions:
   contents: read
-  issues: write
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: upstream-integration
+  cancel-in-progress: false
 
 jobs:
   drift:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    name: upstream drift
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Fetch upstream
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Fetch and report upstream drift
         run: |
-          git remote add upstream https://github.com/deepseek-ai/deepseek-harness.git || true
+          git remote add upstream https://github.com/deepseek-ai/deepseek-harness.git
           git fetch upstream master --no-tags
-
-      - name: Compute drift
-        id: drift
-        run: |
-          BASE=$(git merge-base HEAD upstream/master)
-          NEW=$(git rev-list --count "$BASE"..upstream/master)
-          FILES=$(git diff --name-only "$BASE"..upstream/master | sort -u)
-          OURS=$(git diff --name-only base/upstream-639ed01..HEAD | sort -u)
-          OVERLAP=$(comm -12 <(echo "$FILES") <(echo "$OURS") || true)
-          {
-            echo "new=$NEW"
-            echo "base=$BASE"
-          } >> "$GITHUB_OUTPUT"
-          echo "## Upstream drift vs \`$BASE\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "**New upstream commits since merge-base: $NEW**" >> "$GITHUB_STEP_SUMMARY"
-          if [ -n "$OVERLAP" ]; then
-            echo "### ⚠️ Overlap with fork-changed files" >> "$GITHUB_STEP_SUMMARY"
-            echo "$OVERLAP" | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "$NEW" -gt 0 ]; then
-            git log --oneline -15 "$BASE"..upstream/master | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Update tracker issue
-        if: steps.drift.outputs.new != '0'
+          node scripts/compatibility/upstream.mjs report upstream/master HEAD "$RUNNER_TEMP/upstream-report.json"
+          cat "$RUNNER_TEMP/upstream-report.json.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Require repository-scoped GitHub App setup
         env:
-          GH_TOKEN: ${{ github.token }}
-          NEW: ${{ steps.drift.outputs.new }}
-          BASE: ${{ steps.drift.outputs.base }}
+          APP_ID: ${{ vars.UPSTREAM_APP_ID }}
+          PRIVATE_KEY: ${{ secrets.UPSTREAM_APP_PRIVATE_KEY }}
         run: |
-          TITLE="Upstream drift tracker (deepseek-ai/deepseek-harness)"
-          BODY="Fork merge-base \`${BASE}\` has **${NEW} new upstream commit(s)**.
-          Sync by merging \`upstream/master\` into a staging branch, then run the full CI gates.
-
-          Latest upstream head: $(git rev-parse --short upstream/master)"
-          NUM=$(gh issue list --repo "$GITHUB_REPOSITORY" --search "title:\"$TITLE\"" --json number --jq '.[0].number // empty')
-          if [ -n "$NUM" ]; then
-            gh issue comment "$NUM" --repo "$GITHUB_REPOSITORY" --body "$BODY"
-          else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          if [ -z "$APP_ID" ] || [ -z "$PRIVATE_KEY" ]; then
+            echo '::error::Upstream candidate automation is blocked: configure UPSTREAM_APP_ID and UPSTREAM_APP_PRIVATE_KEY for the repository-scoped GitHub App. Drift reporting completed; no branch or PR was changed.'
+            exit 1
           fi
+      - uses: actions/create-github-app-token@v2
+        id: app
+        with:
+          app-id: ${{ vars.UPSTREAM_APP_ID }}
+          private-key: ${{ secrets.UPSTREAM_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+      - name: Prepare or update the reviewed candidate PR
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: |
+          gh auth setup-git
+          git config user.name 'BharatCode upstream integration'
+          git config user.email 'upstream-integration@users.noreply.github.com'
+          node scripts/compatibility/automation.mjs

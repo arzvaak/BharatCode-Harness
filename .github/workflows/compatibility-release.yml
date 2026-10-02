@@ -1,0 +1,39 @@
+name: Retain compatibility candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  checks: read
+
+concurrency:
+  group: compatibility-release-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  candidate:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: compatibility-release
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Verify live inference (missing credentials fail)
+        env:
+          BHARATCODE_API_KEY: ${{ secrets.BHARATCODE_API_KEY }}
+          BHARATCODE_BASE_URL: ${{ vars.BHARATCODE_BASE_URL }}
+          BHARATCODE_MODEL: ${{ vars.BHARATCODE_MODEL }}
+        run: |
+          node scripts/compatibility/live-provider.mjs
+          node scripts/compatibility/evidence.mjs live-provider
+      - name: Retain exact-commit platform artifacts as an internal prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/compatibility/release.mjs
