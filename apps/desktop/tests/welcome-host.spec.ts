@@ -2,9 +2,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { connectDesktopWelcome } from '../src/welcome-backend.ts'
 
-function transport(preference?: string) {
+function transport(preference?: string, directory?: unknown[]) {
   const keys = new Map<string, string>()
-  const namespaces = [
+  const namespaces: { ns: string; value: unknown }[] = [
     { ns: 'llm-deepseek', value: { apiKeyEnv: 'CUSTOM_DEEPSEEK_KEY' } },
     { ns: 'llm-pi-ai', value: { profiles: { example: { apiKeyEnv: 'EXAMPLE_API_KEY' } } } },
     { ns: 'locale', value: preference === undefined ? {} : { preference } },
@@ -19,7 +19,7 @@ function transport(preference?: string) {
     let value: unknown
     if (method === 'account/getState') value = { links: { usageUrl: 'http://localhost/usage', topUpUrl: 'http://localhost/top_up' }, status: 'signed-out', attempt: null }
     else if (method === 'settings/describe') value = { namespaces }
-    else if (method === 'llm/listConfigurableProviders') value = [{ settingsNs: 'llm-pi-ai', settingsPath: ['profiles', 'example'] }]
+    else if (method === 'llm/listConfigurableProviders') value = directory ?? [{ settingsNs: 'llm-pi-ai', settingsPath: ['profiles', 'example'] }]
     else if (method === 'productAnalytics/enabled') value = true
     else if (method === 'productAnalytics/report') value = undefined
     else if (method === 'credentials/set') keys.set(payload.args.ref, payload.args.value)
@@ -44,6 +44,23 @@ describe('desktop welcome Web operations', () => {
       expect(input).toMatch(/^http:\/\/127\.0\.0\.1:19387\/api\//u)
       expect(init).toMatchObject({ credentials: 'include', redirect: 'error' })
     }
+  })
+
+  it('saves the welcome key to the default model route, not the official row', async () => {
+    // A fresh fork profile: the default model rides the BharatCode gateway, so
+    // the welcome ask must land the key in BHARATCODE_API_KEY — the reference
+    // that actually unlocks agent-default-model — with the official row left
+    // untouched as a fallback answer for upstream-shaped profiles.
+    const host = transport(undefined, [
+      { provider: 'bharatcode', displayName: 'BharatCode', settingsNs: 'llm-pi-ai', settingsPath: ['providers', 'bharatcode'] },
+    ])
+    host.namespaces[1] = { ns: 'llm-pi-ai', value: { providers: { bharatcode: { apiKeyEnv: 'BHARATCODE_API_KEY' } } } }
+    host.namespaces.unshift({ ns: 'agent-default-model', value: { provider: 'bharatcode', model: 'qwen-3.8-27b' } })
+    const backend = await connectDesktopWelcome(url, host.send)
+    expect(await backend.save('bc_live_example')).toEqual({ ok: true })
+    expect(host.keys.get('BHARATCODE_API_KEY')).toBe('bc_live_example')
+    expect(host.keys.has('CUSTOM_DEEPSEEK_KEY')).toBe(false)
+    expect(await backend.read()).toMatchObject({ hasApiKey: true, writable: true })
   })
 
   it('reads the explicit language preference and recognizes another provider key', async () => {

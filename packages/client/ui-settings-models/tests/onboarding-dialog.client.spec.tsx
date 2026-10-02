@@ -49,6 +49,47 @@ type AttentionSnapshot = Parameters<Parameters<DeepSeekOnboardingDialogProps['us
 const noAttention: AttentionSnapshot = new Map()
 const useSessionStatus: DeepSeekOnboardingDialogProps['useSessionStatus'] = selector => selector(noAttention)
 
+/** The fork's first-run world: default model on the BharatCode gateway. */
+function defaultRouteNamespaces(apiKeyEnv: string | null): SettingsNamespaceView[] {
+  const piValue = { providers: { bharatcode: { apiKeyEnv: 'BHARATCODE_API_KEY' } } }
+  const selectionValue = { provider: 'bharatcode', model: 'qwen-3.8-27b' }
+  const piSchema = JSON.parse(JSON.stringify(Schema.object({
+    providers: Schema.object({
+      bharatcode: Schema.object({
+        apiKeyEnv: Schema.string().role('credential-ref'),
+        baseURL: Schema.string().pattern(/^https:\/\//),
+      }),
+    }),
+  }).toJSON())) as JsonValue
+  const selectionSchema = JSON.parse(JSON.stringify(Schema.object({
+    provider: Schema.string().required(),
+    model: Schema.string().required(),
+  }).toJSON())) as JsonValue
+  return [
+    deepSeekNamespace(apiKeyEnv),
+    {
+      ns: 'llm-pi-ai',
+      schema: piSchema,
+      value: piValue,
+      base: piValue,
+      user: {},
+      autoGenerate: true, applies: 'live',
+      secrets: [],
+      revision: 0,
+    },
+    {
+      ns: 'agent-default-model',
+      schema: selectionSchema,
+      value: selectionValue,
+      base: selectionValue,
+      user: {},
+      autoGenerate: true, applies: 'live',
+      secrets: [],
+      revision: 0,
+    },
+  ]
+}
+
 function deepSeekNamespace(apiKeyEnv: string | null): SettingsNamespaceView {
   const value = apiKeyEnv === null ? {} : { apiKeyEnv }
   return {
@@ -68,6 +109,8 @@ function harness(options: {
   providerSettingsNs?: string
   providerActive?: boolean
   settingsNamespace?: boolean
+  /** Compose the fork's default-route world (agent-default-model → bharatcode). */
+  defaultRoute?: boolean
   apiKeyEnv?: string | null
   configured?: () => boolean
   credential?: { source?: string; writable: boolean }
@@ -97,18 +140,36 @@ function harness(options: {
         return Promise.resolve(remoteOk(
           options.provider === false || options.providerActive === false
             ? []
-            : [{ id: 'deepseek-official', name: 'DeepSeek' }],
+            : [
+              { id: 'deepseek-official', name: 'DeepSeek' },
+              ...options.defaultRoute === true ? [{ id: 'bharatcode', name: 'BharatCode' }] : [],
+            ],
         ))
       },
       listConfigurableProviders: () => Promise.resolve(remoteOk(
         options.provider === false
           ? []
-          : [{
-            provider: 'deepseek-official',
-            displayName: 'DeepSeek',
-            settingsNs: options.providerSettingsNs ?? 'llm-deepseek',
-            settingsPath: [],
-          }],
+          : options.defaultRoute === true
+            ? [
+              {
+                provider: 'deepseek-official',
+                displayName: 'DeepSeek',
+                settingsNs: 'llm-deepseek',
+                settingsPath: [],
+              },
+              {
+                provider: 'bharatcode',
+                displayName: 'BharatCode',
+                settingsNs: 'llm-pi-ai',
+                settingsPath: ['providers', 'bharatcode'],
+              },
+            ]
+            : [{
+              provider: 'deepseek-official',
+              displayName: 'DeepSeek',
+              settingsNs: options.providerSettingsNs ?? 'llm-deepseek',
+              settingsPath: [],
+            }],
       )),
       discoverModels: () => Promise.resolve(remoteOk([])),
     },
@@ -116,7 +177,9 @@ function harness(options: {
       describe: () => Promise.resolve(remoteOk({
         writable: options.settingsWritable ?? true,
         hasDocument: false,
-        namespaces: options.settingsNamespace === false ? [] : [deepSeekNamespace(apiKeyEnv)],
+        namespaces: options.settingsNamespace === false
+          ? []
+          : options.defaultRoute === true ? defaultRouteNamespaces(apiKeyEnv) : [deepSeekNamespace(apiKeyEnv)],
       })),
       mutate,
     },
@@ -130,6 +193,17 @@ function harness(options: {
               : {},
             writable: options.credential?.writable ?? true,
           },
+          ...options.defaultRoute === true
+            ? {
+              BHARATCODE_API_KEY: {
+                configured: configured(),
+                ...configured() && options.credential?.source !== undefined
+                  ? { source: options.credential.source }
+                  : {},
+                writable: options.credential?.writable ?? true,
+              },
+            }
+            : {},
         }))
         : Promise.resolve(remoteFail(options.describeFailure)),
       set,
@@ -209,6 +283,17 @@ describe('DeepSeekOnboardingDialog', () => {
     expect(save.disabled).toBe(true)
     expect(screen.getByText(en.keyRequired)).toBeTruthy()
     expect(h.set).not.toHaveBeenCalled()
+  })
+
+  it('stores the first-run key under the default model route\'s reference', async () => {
+    const h = harness({ defaultRoute: true })
+    render(<DeepSeekOnboardingDialog {...h.props} />)
+    await screen.findByRole('dialog')
+    fireEvent.change(screen.getByLabelText(en.keyInput), { target: { value: 'bc_live_test' } })
+    fireEvent.click(screen.getByRole('button', { name: en.onboardingSave }))
+    await waitFor(() => { expect(h.set).toHaveBeenCalledWith('BHARATCODE_API_KEY', 'bc_live_test') })
+    expect(h.set).not.toHaveBeenCalledWith('DEEPSEEK_API_KEY', expect.anything())
+    await waitFor(() => { expect(h.complete).toHaveBeenCalledOnce() })
   })
 
   it('keeps the modal open and reports a refused credential write', async () => {

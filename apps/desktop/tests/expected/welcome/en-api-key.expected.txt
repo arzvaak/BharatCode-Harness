@@ -1,7 +1,7 @@
 BharatCode Harness
 BharatCode Harness
 Add an API key to get started
-Configure official DeepSeek models to start using BharatCode Harness
+Get your API key at bharatcode.ai/account and add it to start using BharatCode Harness
 Enter API key [password]
 Save and continue [disabled]
 Set up later
