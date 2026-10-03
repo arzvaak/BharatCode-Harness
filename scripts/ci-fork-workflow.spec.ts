@@ -43,7 +43,9 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
   it('creates safe local settings before packaging the unsigned Windows runtime', () => {
     const workflow = loadWorkflow('ci.yml')
     const jobs = workflow.jobs as Record<string, Record<string, unknown>>
-    const steps = jobs.windows.steps as Record<string, unknown>[]
+    const windowsJob = jobs.windows
+    if (!windowsJob) throw new Error('workflow must define the windows job')
+    const steps = windowsJob.steps as Record<string, unknown>[]
     const setup = steps.findIndex(step => step.name === 'Configure unsigned Windows packaging environment')
     const packaging = steps.findIndex(step => step.name === 'Package unsigned Windows runtime and run the built payload smoke')
     expect(setup).toBeGreaterThanOrEqual(0)
