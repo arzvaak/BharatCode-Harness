@@ -523,10 +523,14 @@ afterEach(async () => {
 })
 
 it('assembles the shipped Web transport, catalog, guidance, and defaults', async () => {
-  scaffold = await launchWebScaffold({ deepSeekMissingCredential: true })
+  scaffold = await launchWebScaffold({ deepSeekMissingCredential: true, shippedModelCatalog: true })
   const ctx = scaffold.ctx
   expect(ctx.llm.listProviders().some(provider => provider.id === 'deepseek-messages')).toBe(false)
-  expect(ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'deepseek-official', model: 'deepseek-flash' })
+  expect(ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'bharatcode', model: 'qwen-3.8-27b' })
+  expect(ctx.llm.listProviders()).toContainEqual({ id: 'bharatcode', name: 'BharatCode' })
+  await expect(ctx.llm.resolveModelInfo('bharatcode', 'deepseek-v4.1-flash')).resolves.toMatchObject({
+    name: 'DeepSeek V4.1 Flash', context: { contextWindow: 1_000_000 },
+  })
   const index = await fetch(`http://127.0.0.1:${String(ctx.webServer.port)}`, {
     headers: { 'accept-encoding': 'gzip' },
   })

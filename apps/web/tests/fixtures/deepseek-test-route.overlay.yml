@@ -1,0 +1,8 @@
+# Explicit route for DeepSeek mock servers and recorded browser scenarios.
+- id: llm-pi-ai
+  config:
+    providers: {}
+- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-flash

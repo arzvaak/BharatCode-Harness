@@ -36,6 +36,8 @@ Acceptance lives in `apps/web/tests/preview-boot.e2e.ts`, which serves the real 
 
 The [built-bundle import sweep](tests/compile/transform-corpus-check.ts) checks bare Node imports after the library build. Its Dockkit exception accepts Node’s unknown-`.css`-extension refusal for any stylesheet rather than one pinned path; another extension, error code, or message, and an unexpectedly successful exempt import, remain errors. See the [stylesheet exemption decision](../../../.agents/notes/implemented/bug-fix/2026-09-10-built-bundle-css-exemption.md).
 
+The pi-ai replacement registers configured provider models and constructs protocol bindings during activation. Its streaming methods still refuse model requests explicitly; the worker preview can boot a configured BharatCode route without claiming provider inference support.
+
 -----
 
 <a id="model-experience"></a>

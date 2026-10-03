@@ -36,6 +36,8 @@ kind: "package-library"
 
 [已构建 bundle 导入检查](tests/compile/transform-corpus-check.ts)在库构建后检查裸 Node 导入。Dockkit 例外接受 Node 针对任意样式表报告的未知 `.css` 扩展名错误，而不限定某一固定路径；其他扩展名、错误码或消息，以及意外成功的豁免导入，仍然报错。参见 [样式表豁免决策](../../../.agents/notes/implemented/bug-fix/2026-09-10-built-bundle-css-exemption.zh.md)。
 
+pi-ai 替换实现会在激活时注册已配置的提供商模型并构造协议绑定。流式方法仍会明确拒绝模型请求；Worker 预览可以启动已配置的 BharatCode 路由，但不具备提供商推理支持。
+
 -----
 
 <a id="model-experience"></a>

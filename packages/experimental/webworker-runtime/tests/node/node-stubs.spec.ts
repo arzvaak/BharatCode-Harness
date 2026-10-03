@@ -48,10 +48,7 @@ const CALLED: [string, Record<string, unknown>, readonly string[]][] = [
   ['node-pty', nodePty, ['spawn', 'open']],
   ['execa', execa, ['execa']],
   ['got', got.default, ['post']],
-  ['@deepseek-ai/pi-ai', piAi, [
-    'createProvider', 'createModels', 'openAICompletionsApi', 'openAIResponsesApi', 'anthropicMessagesApi',
-    'isContextOverflow', 'getSupportedThinkingLevels',
-  ]],
+  ['@deepseek-ai/pi-ai', piAi, ['isContextOverflow', 'getSupportedThinkingLevels']],
 ]
 
 /** Classes that refuse when constructed. */
@@ -101,6 +98,47 @@ describe('not-implemented stubs', () => {
       const holder = namespace as { __esModule?: unknown; default?: unknown }
       expect(holder.__esModule).toBe(true)
       expect(holder.default).toBeDefined()
+    }
+  })
+})
+
+describe('worker pi-ai model facade', () => {
+  it('provides the builtinModels entry point as an empty worker-safe registry', () => {
+    const models = piAi.builtinModels()
+    expect(models.getProviders()).toEqual([])
+    expect(models.getModels()).toEqual([])
+  })
+
+  it('registers providers and exposes their configured models without importing the catalog', () => {
+    const api = { stream: vi.fn(() => 'stream'), streamSimple: vi.fn(() => 'simple') }
+    const model = { id: 'fixture-model' }
+    const provider = piAi.createProvider({ id: 'fixture', models: [model], api })
+    const models = piAi.createModels()
+
+    models.setProvider(provider)
+    expect(models.getProvider('fixture')).toBe(provider)
+    expect(models.getModels('fixture')).toEqual([model])
+    const selectedModel = models.getModel('fixture', 'fixture-model')!
+    expect(selectedModel).toEqual({ ...model, provider: 'fixture' })
+    expect(models.getModel('fixture', 'missing')).toBeUndefined()
+    expect(models.streamSimple(selectedModel)).toBe('simple')
+    expect(api.streamSimple).toHaveBeenCalledWith(selectedModel)
+  })
+})
+
+describe('worker protocol API bindings', () => {
+  it('constructs during activation and refuses only when a request is streamed', () => {
+    quiet()
+    const apis: [string, () => { stream(): never; streamSimple(): never }][] = [
+      ['anthropicMessagesApi', piAi.anthropicMessagesApi],
+      ['openAICompletionsApi', piAi.openAICompletionsApi],
+      ['openAIResponsesApi', piAi.openAIResponsesApi],
+    ]
+
+    for (const [name, factory] of apis) {
+      const binding = factory()
+      expect(() => binding.stream()).toThrow(new RegExp(`${name}.*not available in the worker host`))
+      expect(() => binding.streamSimple()).toThrow(new RegExp(`${name}.*not available in the worker host`))
     }
   })
 })

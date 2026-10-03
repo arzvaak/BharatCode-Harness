@@ -141,6 +141,16 @@ it.each([undefined, '2'])('passes macOS pack concurrency %s only to workspace pa
   const packs = calls.filter(call => call[0].startsWith('run release:pack'))
   expect(packs).toHaveLength(2)
   for (const call of packs) expect(call[2].slice(-2)).toEqual(['--concurrency', concurrency ?? '4'])
+  const desktopHostPack = calls.find(call => call[0].startsWith('--dir apps/desktop-host pack --pack-destination'))
+  const bundlePackIndex = calls.findIndex(call => call[0].startsWith('--dir packages/bundle/max-tokens-continue pack --pack-destination'))
+  const bundlePack = calls[bundlePackIndex]
+  const preparePackagesIndex = calls.findIndex(call => call[0] === 'run prepare:packages')
+  expect(desktopHostPack).toBeDefined()
+  expect(bundlePack).toBeDefined()
+  expect(bundlePack![2].slice(1)).toEqual([
+    '--dir', 'packages/bundle/max-tokens-continue', 'pack', '--pack-destination', desktopHostPack![2][5],
+  ])
+  expect(bundlePackIndex).toBeLessThan(preparePackagesIndex)
   for (const call of calls) {
     expect(call[3].env.HTTP_PROXY).toBe(/^run prepare:(?:runtime|dsh)$/u.test(call[0]) ? 'http://downloads.example:8080' : undefined)
   }

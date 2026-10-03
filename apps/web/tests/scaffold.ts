@@ -395,6 +395,8 @@ export interface LaunchOptions {
    * keyless first-run configuration lane; the default disables the adapter.
    */
   deepSeekMissingCredential?: boolean
+  /** Preserve the shipped provider catalog and default route for fork composition checks. */
+  shippedModelCatalog?: boolean
   /** Leave the current welcome notice pending; ordinary scenarios pre-acknowledge it before browser boot. */
   welcomeNoticePending?: boolean
   /** Leave first-use Workspace initialization eligible; ordinary scenarios start after the default was removed. */
@@ -568,9 +570,15 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     ...options.profile?.hmr === false ? [{ id: 'hmr', disabled: true }] : [],
     { id: 'session-log-deepseek', config: { enabled: false } },
     { id: 'ui-plugin-manager', config: { registryProbeEnabled: false } },
-    ...mode === 'record' || options.deepSeekMissingCredential === true
-      ? []
-      : [{ id: 'agent-default-model', config: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } }],
+    // Replay scenarios own their catalog; shipped defaults have dedicated coverage.
+    ...options.shippedModelCatalog === true ? [] : [
+      { id: 'llm-pi-ai', config: { providers: {} } },
+      { id: 'agent-default-model', config: {
+        provider: 'deepseek-official',
+        model: mode === 'record' || options.deepSeekMissingCredential === true
+          ? 'deepseek-flash' : 'deepseek-v4-flash',
+      } },
+    ],
     ...extraOverlayPatches,
     { id: 'agent-preset-registry', config: { default: 'standard' } },
     { id: 'session-persistence-jsonl', config: { root: persistenceRoot } },

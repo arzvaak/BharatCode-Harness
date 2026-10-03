@@ -315,7 +315,9 @@ describe('dsh web keyless CLI smoke', () => {
     const tsxLoader = pathToFileURL(createRequire(join(REPO_ROOT, 'package.json')).resolve('tsx')).href
     const child = spawn(
       process.execPath,
-      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web', '--no-open', '--port', '0'],
+      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web',
+        '--patch', fileURLToPath(new URL('./fixtures/deepseek-test-route.overlay.yml', import.meta.url)),
+        '--no-open', '--port', '0'],
       {
         cwd: sessionsDir,
         env: {
@@ -437,7 +439,9 @@ describe('dsh web keyless CLI smoke', () => {
     const tsxLoader = pathToFileURL(createRequire(join(REPO_ROOT, 'package.json')).resolve('tsx')).href
     const child = spawn(
       process.execPath,
-      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web', '--no-open', '--port', '0'],
+      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web',
+        '--patch', fileURLToPath(new URL('./fixtures/deepseek-test-route.overlay.yml', import.meta.url)),
+        '--no-open', '--port', '0'],
       {
         cwd: workspace,
         env: {
@@ -542,7 +546,9 @@ describe('dsh web keyless CLI smoke', () => {
     const tsxLoader = pathToFileURL(createRequire(join(REPO_ROOT, 'package.json')).resolve('tsx')).href
     const child = spawn(
       process.execPath,
-      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web', '--no-open', '--port', '0'],
+      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web',
+        '--patch', fileURLToPath(new URL('./fixtures/deepseek-test-route.overlay.yml', import.meta.url)),
+        '--no-open', '--port', '0'],
       {
         cwd: workspace,
         env: {
@@ -622,7 +628,9 @@ describe('dsh web keyless CLI smoke', () => {
     const tsxLoader = pathToFileURL(createRequire(join(REPO_ROOT, 'package.json')).resolve('tsx')).href
     const child = spawn(
       process.execPath,
-      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web', '--no-open', '--port', '0'],
+      ['--import', tsxLoader, join(REPO_ROOT, 'apps/cli/src/bin.ts'), 'web',
+        '--patch', fileURLToPath(new URL('./fixtures/deepseek-test-route.overlay.yml', import.meta.url)),
+        '--no-open', '--port', '0'],
       {
         cwd: workspace,
         env: {
