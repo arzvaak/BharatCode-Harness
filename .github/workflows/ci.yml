@@ -166,7 +166,7 @@ jobs:
           '@
           [System.IO.File]::WriteAllText('apps/desktop/.env.windows', $settings, [System.Text.UTF8Encoding]::new($false))
       - name: Package unsigned Windows runtime and run the built payload smoke
-        run: pnpm --dir apps/desktop exec tsx scripts/package-target.ts win-x64 --unsigned --dir
+        run: pnpm --dir apps/desktop run package -- win-x64 --unsigned --dir
       - name: Record successful check evidence
         run: node scripts/compatibility/evidence.mjs windows
       - uses: actions/upload-artifact@v4

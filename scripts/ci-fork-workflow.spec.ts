@@ -50,6 +50,7 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
     const packaging = steps.findIndex(step => step.name === 'Package unsigned Windows runtime and run the built payload smoke')
     expect(setup).toBeGreaterThanOrEqual(0)
     expect(packaging).toBeGreaterThan(setup)
+    expect(steps[packaging]?.run).toBe('pnpm --dir apps/desktop run package -- win-x64 --unsigned --dir')
     for (const setting of [
       'DSH_DESKTOP_APP_ID=dev.bharatcode.harness',
       'DSH_DESKTOP_AUTO_UPDATE_ENV=test',
