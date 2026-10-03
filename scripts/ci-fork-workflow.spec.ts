@@ -40,6 +40,26 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
     expect(workflow.on).toHaveProperty('pull_request')
   })
 
+  it('creates safe local settings before packaging the unsigned Windows runtime', () => {
+    const workflow = loadWorkflow('ci.yml')
+    const jobs = workflow.jobs as Record<string, Record<string, unknown>>
+    const steps = jobs.windows.steps as Record<string, unknown>[]
+    const setup = steps.findIndex(step => step.name === 'Configure unsigned Windows packaging environment')
+    const packaging = steps.findIndex(step => step.name === 'Package unsigned Windows runtime and run the built payload smoke')
+    expect(setup).toBeGreaterThanOrEqual(0)
+    expect(packaging).toBeGreaterThan(setup)
+    for (const setting of [
+      'DSH_DESKTOP_APP_ID=dev.bharatcode.harness',
+      'DSH_DESKTOP_AUTO_UPDATE_ENV=test',
+      'DOWNLOAD_TEST_ORIGIN=https://updates.example.invalid',
+      'DOWNLOAD_TEST_RELEASE_ID=0123456789abcdef0123456789abcdef',
+      'DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN=https://policy.example.invalid',
+      'DSH_DESKTOP_MANDATORY_UPDATE_CONFIG=',
+    ]) {
+      expect(steps[setup]?.run).toContain(setting)
+    }
+  })
+
   it('runs install, sandbox backend, build, profile composition, brand tripwire, tests — in that order', () => {
     const workflow = loadWorkflow('ci.yml')
     expect(checksJob(workflow)['runs-on']).toBe('ubuntu-latest')
