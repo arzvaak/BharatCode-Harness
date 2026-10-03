@@ -40,7 +40,30 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
     expect(workflow.on).toHaveProperty('pull_request')
   })
 
-  it('runs install, sandbox backend, build, profile composition, tests — in that order', () => {
+  it('creates safe local settings before packaging the unsigned Windows runtime', () => {
+    const workflow = loadWorkflow('ci.yml')
+    const jobs = workflow.jobs as Record<string, Record<string, unknown>>
+    const windowsJob = jobs.windows
+    if (!windowsJob) throw new Error('workflow must define the windows job')
+    const steps = windowsJob.steps as Record<string, unknown>[]
+    const setup = steps.findIndex(step => step.name === 'Configure unsigned Windows packaging environment')
+    const packaging = steps.findIndex(step => step.name === 'Package unsigned Windows runtime and run the built payload smoke')
+    expect(setup).toBeGreaterThanOrEqual(0)
+    expect(packaging).toBeGreaterThan(setup)
+    expect(steps[packaging]?.run).toBe('pnpm --dir apps/desktop run package -- win-x64 --unsigned --dir')
+    for (const setting of [
+      'DSH_DESKTOP_APP_ID=dev.bharatcode.harness',
+      'DSH_DESKTOP_AUTO_UPDATE_ENV=test',
+      'DOWNLOAD_TEST_ORIGIN=https://updates.example.invalid',
+      'DOWNLOAD_TEST_RELEASE_ID=0123456789abcdef0123456789abcdef',
+      'DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN=https://policy.example.invalid',
+      'DSH_DESKTOP_MANDATORY_UPDATE_CONFIG=',
+    ]) {
+      expect(steps[setup]?.run).toContain(setting)
+    }
+  })
+
+  it('runs install, sandbox backend, build, profile composition, brand tripwire, tests — in that order', () => {
     const workflow = loadWorkflow('ci.yml')
     expect(checksJob(workflow)['runs-on']).toBe('ubuntu-latest')
     expect(runCommands(checksJob(workflow))).toEqual([
@@ -48,7 +71,11 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
       'bash scripts/prepare-ci-bubblewrap.sh',
       'pnpm run build',
       'bash scripts/gates/verify-config.sh',
+      'bash scripts/gates/brand-tripwire.sh',
+      'node --test scripts/compatibility/*.test.mjs\nnode scripts/compatibility/upstream.mjs validate\nnode scripts/compatibility/composition.mjs\npnpm exec vitest run scripts/compatibility/continuation.spec.ts scripts/compatibility/identity.spec.ts\n',
+      'pnpm run verify-persistence-changes\npnpm run verify-persistence-releases\npnpm run verify-persistence-formats\n',
       'pnpm run test',
+      'node scripts/compatibility/evidence.mjs unit',
     ])
   })
 
@@ -59,5 +86,9 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
 
   it('keeps the profile composition gate executable', () => {
     expect(existsSync(resolve(root, 'scripts/gates/verify-config.sh'))).toBe(true)
+  })
+
+  it('keeps the brand tripwire gate executable', () => {
+    expect(existsSync(resolve(root, 'scripts/gates/brand-tripwire.sh'))).toBe(true)
   })
 })

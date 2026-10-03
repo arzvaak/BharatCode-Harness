@@ -48,6 +48,9 @@ const env: NodeJS.ProcessEnv = {
   ...process.env,
   DSH_HOME: process.env.DSH_DESKTOP_LOCAL_HOME ?? join(buildRoot, 'home'),
   DSH_DESKTOP_PRIMARY_RUNTIME_DIR: primaryRuntime,
+  // Start the Host on this launcher's own Node.js: sharp segfaults in
+  // Electron's Node mode on Linux (https://sharp.pixelplumbing.com/install#electron-and-linux).
+  DSH_DESKTOP_HOST_NODE: process.execPath,
   DSH_DESKTOP_OPEN_DEVTOOLS: '0',
 }
 delete env.ELECTRON_RUN_AS_NODE

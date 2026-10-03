@@ -12,6 +12,8 @@ pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install --with-deps 
 
 On Linux, `--with-deps` installs dependencies through the system package manager. The persistent CI VM must provide these dependencies through image maintenance; CI installs only the browser binaries, as required by the [failover runbook](../../../.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.md).
 
+Browser fixtures pin a DeepSeek default route and an empty pi-ai catalog before scenario overlays, so inherited gateway models cannot change keyboard ordering, model counts, or credential setup. `shippedModelCatalog: true` preserves the BharatCode catalog for the shipped-composition check; CLI mock-provider scenarios pass `fixtures/deepseek-test-route.overlay.yml` explicitly.
+
 Ordinary scenarios begin with no registered Workspace or Session and a durable marker recording a removed default Workspace, so explicit folder-selection scenarios retain control of their cwd. `launchWebScaffold({ firstUse: true })` leaves initialization eligible for startup scenarios.
 
 ## Completion observations

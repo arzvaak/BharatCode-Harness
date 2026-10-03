@@ -12,7 +12,7 @@ const organizationUrl = new RegExp(`\\bgithub\\.com/${organization}(?![a-z0-9-])
 // The independent kit repository owns the engine source and documentation.
 const kitRepositoryUrl = new RegExp(`\\bgithub\\.com/${organization}/libreoffice-kit(?:\\.git)?(?=/|[^a-zA-Z0-9_.-]|$)`, 'g')
 const commitCandidate = /(?<![a-z0-9])[\da-f]{7,40}(?![a-z0-9])/gi
-const excludedPrefixes = ['vendor/', '.agents/notes/archived/']
+const excludedPrefixes = ['vendor/', '.agents/notes/archived/', '.github/workflows/upstream-track.yml']
 const gitOutputLimit = 64 * 1024 * 1024
 
 /** One prohibited reference in a maintained source file. */
@@ -35,6 +35,7 @@ function isMaintained(file: string): boolean {
  * @param source - File text or a symlink's stored target.
  * @param commits - Lowercase, unambiguous full or abbreviated commit identifiers.
  * @returns One finding per line and reference kind; digests and other Git object types are accepted.
+ * Full ancestry IDs are allowed only in the dedicated accepted-upstream record.
  */
 export function findRepositoryReferences(
   file: string,
@@ -47,7 +48,10 @@ export function findRepositoryReferences(
     if (organizationUrl.test(canonicalReferenceText(line).replace(kitRepositoryUrl, ''))) {
       references.push({ file, line: index + 1, kind: 'organization-url' })
     }
-    if ([...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
+    // CI separately validates that these recorded ancestry IDs belong to the candidate history.
+    const acceptedAncestryId = file === 'scripts/compatibility/baseline.json'
+      && /^\s*"(?:upstreamSha|forkSha)":\s*"[a-f0-9]{40}",?\s*$/u.test(line)
+    if (!acceptedAncestryId && [...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
       references.push({ file, line: index + 1, kind: 'commit-hash' })
     }
   }

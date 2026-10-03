@@ -25,6 +25,7 @@ class RestartableServer {
     const child = spawn(process.execPath, [
       join(REPO_ROOT, 'apps/cli/lib/bin.js'), '--profile', 'web',
       '--patch', fileURLToPath(new URL('./pin-browse-picker.overlay.yml', import.meta.url)),
+      '--patch', fileURLToPath(new URL('./fixtures/deepseek-test-route.overlay.yml', import.meta.url)),
       '--patch', fileURLToPath(new URL('./fixtures/restart-startup.overlay.yml', import.meta.url)),
       '--no-open', '--port', String(port),
     ], {

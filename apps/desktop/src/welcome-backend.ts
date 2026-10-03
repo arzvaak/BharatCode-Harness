@@ -72,12 +72,41 @@ export async function connectDesktopWelcome(
   const settingsAndReference = async () => {
     const settings = await invoke({ namespace: 'settings', method: 'describe', args: {} })
     if (!record(settings) || !Array.isArray(settings.namespaces)) throw new Error('desktop welcome: missing settings namespaces')
-    const official: unknown = settings.namespaces.find((item: unknown) => record(item) && item.ns === 'llm-deepseek')
-    if (official === undefined) return { settings: { namespaces: settings.namespaces }, ref: undefined }
-    if (!record(official) || !record(official.value) || typeof official.value.apiKeyEnv !== 'string') {
-      throw new Error('desktop welcome: missing official DeepSeek credential reference')
+    const namespaces = settings.namespaces
+    // The key the welcome page asks for belongs to the route the default
+    // model rides on: resolve agent-default-model's provider through the
+    // configurable-provider directory to that route's apiKeyEnv. This is how
+    // a fresh profile lands the key in BHARATCODE_API_KEY rather than the
+    // upstream official row's reference.
+    const selection: unknown = namespaces.find((item: unknown) => record(item) && item.ns === 'agent-default-model')
+    if (record(selection) && record(selection.value) && typeof selection.value.provider === 'string') {
+      const defaultProvider: string = selection.value.provider
+      const directory: unknown = await invoke({ namespace: 'llm', method: 'listConfigurableProviders', args: {} })
+      if (Array.isArray(directory)) {
+        const entry = directory.find((candidate: unknown): candidate is Record<string, unknown> =>
+          record(candidate) && candidate.provider === defaultProvider
+          && typeof candidate.settingsNs === 'string' && Array.isArray(candidate.settingsPath))
+        if (entry !== undefined) {
+          const section: unknown = namespaces.find((item: unknown) => record(item) && item.ns === entry.settingsNs)
+          let value: unknown = record(section) ? section.value : undefined
+          for (const key of entry.settingsPath as unknown[]) {
+            if (typeof key !== 'string') { value = undefined; break }
+            value = record(value) ? value[key] : undefined
+          }
+          if (record(value) && typeof value.apiKeyEnv === 'string') {
+            return { settings: { namespaces }, ref: value.apiKeyEnv }
+          }
+        }
+      }
     }
-    return { settings: { namespaces: settings.namespaces }, ref: official.value.apiKeyEnv }
+    // Upstream-shaped profiles with no resolvable default route keep the
+    // original answer: the official row's reference.
+    const official: unknown = namespaces.find((item: unknown) => record(item) && item.ns === 'llm-deepseek')
+    if (official === undefined) return { settings: { namespaces }, ref: undefined }
+    if (!record(official) || !record(official.value) || typeof official.value.apiKeyEnv !== 'string') {
+      throw new Error('desktop welcome: missing credential reference')
+    }
+    return { settings: { namespaces }, ref: official.value.apiKeyEnv }
   }
   const localePreference = (namespaces: unknown[]): string | null => {
     const locale: unknown = namespaces.find((item: unknown) => record(item) && item.ns === 'locale')

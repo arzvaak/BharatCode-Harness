@@ -298,12 +298,36 @@ export type OnboardingReadiness =
   }
 
 /**
+ * The row first-run onboarding offers its key field for: the route the
+ * default model rides on, so the saved key is exactly what makes the next
+ * chat work. A profile whose `agent-default-model` resolves to no joined row
+ * keeps the upstream answer — the official DeepSeek row, the one route the
+ * prompt could always offer a key field for.
+ * @param state - current shared Models join snapshot.
+ * @returns the join row the prompt targets, or undefined when none applies.
+ */
+export function onboardingTargetRow(state: ModelsSettingsState): ProviderRow | undefined {
+  const selection = state.namespaces.get('agent-default-model')?.value
+  if (selection !== null && typeof selection === 'object' && !Array.isArray(selection)) {
+    const provider: unknown = (selection as Record<string, unknown>).provider
+    if (typeof provider === 'string') {
+      const row = state.rows.find(candidate => candidate.entry.provider === provider)
+      if (row !== undefined) return row
+    }
+  }
+  return state.rows.find(candidate =>
+    candidate.entry.provider === 'deepseek-official'
+    && candidate.entry.settingsNs === 'llm-deepseek'
+    && candidate.entry.settingsPath.length === 0)
+}
+
+/**
  * Project first-run readiness from the provider/settings/credential join used
  * by the Models page. The step exists to leave the user with a model to talk
- * to, so ANY usable provider ends it; only when none exists does the official
- * DeepSeek route — the one route the prompt can offer a key field for — decide
- * whether prompting can help. A missing official configurable-provider
- * declaration means the adapter is not repairable by navigating to Models.
+ * to, so ANY usable provider ends it; only when none exists does the default
+ * model's own route — see {@link onboardingTargetRow} — decide whether
+ * prompting can help. A missing target declaration means the adapter is not
+ * repairable by navigating to Models.
  * @param state - current shared Models join snapshot.
  * @returns the onboarding state without reading a parallel fact source.
  */
@@ -318,10 +342,7 @@ export function onboardingReadiness(state: ModelsSettingsState): OnboardingReadi
     }
   }
   if (state.rows.some(providerUsable)) return { kind: 'provider-ready' }
-  const row = state.rows.find(candidate =>
-    candidate.entry.provider === 'deepseek-official'
-    && candidate.entry.settingsNs === 'llm-deepseek'
-    && candidate.entry.settingsPath.length === 0)
+  const row = onboardingTargetRow(state)
   if (row === undefined) return { kind: 'adapter-absent' }
   if (!row.entry.active) {
     return {

@@ -1,21 +1,17 @@
 name: CI
 
-# BharatCode fork gate: prove the product still works before it reaches users.
-# Deliberately lean — build, unit suite, and a real profile composition that
-# fails when a plugin/bundle row stops activating (the silent-skip class that
-# upstream tests cannot catch). Heavier lanes (snapshot/e2e) join when we need
-# them, not by copying upstream's enterprise-runner suite.
-
 on:
   push:
     branches: [main, master]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 env:
   DSH_TELEMETRY_DISABLED: '1'
+  DSH_SNAPSHOT: replay
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,29 +21,179 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     name: build + unit + config
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
-
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
-
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
-
-      # Hosted runners ship no sandbox backend; sandbox-mode tests
-      # (read-only/workspace-write confinement) refuse to run unconfined.
       - name: Prepare bubblewrap (sandbox backend)
         run: bash scripts/prepare-ci-bubblewrap.sh
-
       - name: Build
         run: pnpm run build
-
       - name: Profile composition gate (plugins must activate)
         run: bash scripts/gates/verify-config.sh
 
+      # The BharatCode rebrand must not regress: the upstream product name
+      # may appear only in the allowlisted attribution files.
+      - name: Brand tripwire (no upstream product name in source)
+        run: bash scripts/gates/brand-tripwire.sh
+
+      - name: Fork development checks and negative controls
+        run: |
+          node --test scripts/compatibility/*.test.mjs
+          node scripts/compatibility/upstream.mjs validate
+          node scripts/compatibility/composition.mjs
+          pnpm exec vitest run scripts/compatibility/continuation.spec.ts scripts/compatibility/identity.spec.ts
+      - name: Persistence compatibility
+        run: |
+          pnpm run verify-persistence-changes
+          pnpm run verify-persistence-releases
+          pnpm run verify-persistence-formats
       - name: Unit tests
         run: pnpm run test
+      - name: Record successful check evidence
+        run: node scripts/compatibility/evidence.mjs unit
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-unit-${{ github.sha }}
+          path: .artifacts/compatibility/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+  linux:
+    runs-on: ubuntu-latest
+    name: Linux replay + web + desktop
+    timeout-minutes: 150
+    env:
+      DSH_WEB_SNAPSHOT_WORKERS: '2'
+      DSH_EXAMPLE_MODE: lib
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: bash scripts/prepare-ci-bubblewrap.sh
+      - run: pnpm run build
+      - name: Browser and desktop prerequisites
+        run: |
+          pnpm --dir apps/web exec playwright install --with-deps chromium webkit
+          pnpm --dir apps/desktop exec node node_modules/electron/install.js
+          sudo apt-get update
+          sudo apt-get install -y xvfb libasound2t64 libgtk-3-0 libnss3
+      - name: Keyless session replay (including SDKs and reopened sessions)
+        run: pnpm run test:snapshot
+      - name: Built CLI and customized-profile expectations
+        run: pnpm run test:expected
+      - name: Built browser interactions
+        run: pnpm run test:web:ci
+      - name: Real Linux desktop main, preload and Host
+        run: xvfb-run -a pnpm exec tsx scripts/compatibility/linux-desktop.ts
+      - name: Retain tested Linux source, dependencies, Electron and pinned runtime
+        run: |
+          mkdir -p .artifacts/compatibility
+          tar -czf .artifacts/compatibility/linux-runtime.tar.gz \
+            --exclude=./.git --exclude=./.artifacts --exclude=./.superpowers \
+            --exclude='*/.env' --exclude='*/.credentials.yaml' \
+            --exclude=./apps/desktop/.desktop-build/downloads \
+            --exclude=./apps/desktop/.desktop-build/linux-local/downloads \
+            --exclude=./apps/desktop/.desktop-build/linux-local/home \
+            --exclude=./apps/desktop/.desktop-build/linux-local/electron-user-data \
+            --exclude=./apps/desktop/.desktop-build/development/project .
+      - name: Record successful check evidence
+        run: node scripts/compatibility/evidence.mjs linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-linux-${{ github.sha }}
+          path: |
+            .artifacts/compatibility/
+            .dsh-build/client-build-environment.json
+            apps/web/dist/
+            apps/desktop/lib/
+            apps/desktop-host/lib/
+            apps/cli/lib/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+  windows:
+    runs-on: windows-latest
+    name: Windows unsigned runtime
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Fork checks on native Windows
+        run: |
+          node --test scripts/compatibility/*.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/compatibility/composition.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm exec vitest run scripts/compatibility/continuation.spec.ts scripts/compatibility/identity.spec.ts apps/desktop/tests/development-project.spec.ts apps/desktop/tests/runtime-tree.spec.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Configure unsigned Windows packaging environment
+        run: |
+          $settings = @'
+          DSH_DESKTOP_APP_ID=dev.bharatcode.harness
+          DSH_DESKTOP_AUTO_UPDATE_ENV=test
+          DOWNLOAD_TEST_ORIGIN=https://updates.example.invalid
+          DOWNLOAD_TEST_RELEASE_ID=0123456789abcdef0123456789abcdef
+          DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN=https://policy.example.invalid
+          DSH_DESKTOP_MANDATORY_UPDATE_CONFIG='{"allowedAuthOrigins":["https://login.example.invalid"]}'
+          '@
+          [System.IO.File]::WriteAllText('apps/desktop/.env.windows', $settings, [System.Text.UTF8Encoding]::new($false))
+      - name: Package unsigned Windows runtime and run the built payload smoke
+        run: pnpm --dir apps/desktop run package -- win-x64 --unsigned --dir
+      - name: Record successful check evidence
+        run: node scripts/compatibility/evidence.mjs windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-windows-${{ github.sha }}
+          path: |
+            .artifacts/compatibility/
+            apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+  compatibility:
+    name: fork compatibility
+    if: always()
+    needs: [checks, linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every client lane to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          results = json.loads(os.environ['RESULTS'])
+          failed = [name for name, job in results.items() if job['result'] != 'success']
+          if failed:
+              raise SystemExit('Required lanes did not succeed: ' + ', '.join(failed))
+          print('Linux, Windows, web and fork checks succeeded for this candidate.')
+          PY

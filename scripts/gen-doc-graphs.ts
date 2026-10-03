@@ -958,8 +958,12 @@ function renderCapabilitySeams(pkgs: Pkg[], services: readonly ServiceEntry[]): 
   return lines.join('\n')
 }
 
-function parseExampleCordis(rel: string): ExamplePlugin[] {
-  const text = readFileSync(resolve(root, rel), 'utf8')
+/**
+ * Read plugin identities from top-level and bundle-insert YAML rows.
+ * @param text - Bundle YAML text.
+ * @returns plugin row identities in declaration order.
+ */
+export function parseExampleCordis(text: string): ExamplePlugin[] {
   const plugins: ExamplePlugin[] = []
   let current: { id: string; name?: string } | null = null
   const flush = (): void => {
@@ -967,13 +971,13 @@ function parseExampleCordis(rel: string): ExamplePlugin[] {
   }
   for (const line of text.split('\n')) {
     // Top-level rows (`- id:`) and bundle-patch insert rows (`    - id:`).
-    const id = /^\s*-\s+id:\s+(.+?)\s*$/.exec(line)
+    const id = /^(?: {4})?-\s+id:\s+(.+?)\s*$/.exec(line)
     if (id?.[1] !== undefined) {
       flush()
       current = { id: stripYamlScalar(id[1]) }
       continue
     }
-    const name = /^\s+name:\s+(.+?)\s*$/.exec(line)
+    const name = /^(?: {2}| {6})name:\s+(.+?)\s*$/.exec(line)
     if (name?.[1] !== undefined && current) current.name = stripYamlScalar(name[1])
   }
   flush()
@@ -998,7 +1002,7 @@ const APP_EXAMPLES = [
 type AppExample = typeof APP_EXAMPLES[number]
 
 function renderAppComposition(example: AppExample): string {
-  const plugins = parseExampleCordis(example.config)
+  const plugins = parseExampleCordis(readFileSync(resolve(root, example.config), 'utf8'))
   const maintenance = 'hybrid: the patch row list is parsed from its `cordis.yml`; app package expansion is curated from package source'
   const lines = generatedHeader(example.title)
   lines.push(

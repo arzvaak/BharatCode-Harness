@@ -9,7 +9,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { collectPackageSources, EventRelationCollector } from './gen-doc-graphs.ts'
+import { collectPackageSources, EventRelationCollector, parseExampleCordis } from './gen-doc-graphs.ts'
 import { TypeScriptProject } from './ts-project.ts'
 
 const FIXTURE: Record<string, string> = {
@@ -95,4 +95,26 @@ describe('event relation call-site indexing', () => {
     // proof would index helper.ts only and lose the caller.ts call site.
     expect(dispatchersOf(['pkgc'], 'pkgc/script-event')).toEqual(['pkgc'])
   })
+})
+
+it('keeps provider model declarations out of the plugin composition', () => {
+  expect(parseExampleCordis([
+    '- insert:',
+    '    - id: llm-pi-ai',
+    '      name: "@deepseek-ai/dsh-llm-pi-ai"',
+    '      config:',
+    '        providers:',
+    '          gateway:',
+    '            models:',
+    '              - id: model-a',
+    '                name: Model A',
+    '    - id: persistence',
+    '      name: "@deepseek-ai/dsh-session-persistence-jsonl"',
+    '- id: root-plugin',
+    '  name: root-package',
+  ].join('\n'))).toEqual([
+    { id: 'llm-pi-ai', name: '@deepseek-ai/dsh-llm-pi-ai' },
+    { id: 'persistence', name: '@deepseek-ai/dsh-session-persistence-jsonl' },
+    { id: 'root-plugin', name: 'root-package' },
+  ])
 })

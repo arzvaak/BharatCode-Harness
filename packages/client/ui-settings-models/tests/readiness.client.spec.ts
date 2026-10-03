@@ -1,8 +1,8 @@
 /** Pure first-run readiness projection over the shared Models join. */
 import { describe, expect, it } from 'vitest'
-import type { CredentialInfo } from '@deepseek-ai/dsh-api-remotes/client'
+import type { CredentialInfo, SettingsNamespaceView } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ModelsSettingsState, ProviderRow } from '../src/client/store.ts'
-import { onboardingReadiness, providerUsable } from '../src/client/store.ts'
+import { onboardingReadiness, onboardingTargetRow, providerUsable } from '../src/client/store.ts'
 
 const missingCredential: CredentialInfo = { configured: false, writable: true }
 
@@ -52,6 +52,68 @@ function state(overrides: Partial<ModelsSettingsState> = {}): ModelsSettingsStat
     ...overrides,
   }
 }
+
+/** The fork's default-model selection as the shared settings mirror reports it. */
+function defaultModelView(provider: string): SettingsNamespaceView {
+  const value = { provider, model: 'seed' }
+  return {
+    ns: 'agent-default-model',
+    schema: {},
+    value,
+    base: value,
+    user: {},
+    autoGenerate: false, applies: 'live',
+    secrets: [],
+    revision: 0,
+  }
+}
+
+/** A keyless row on the shipped BharatCode gateway route. */
+function bharatcodeRow(overrides: Partial<ProviderRow> = {}): ProviderRow {
+  return {
+    entry: {
+      provider: 'bharatcode',
+      displayName: 'BharatCode',
+      settingsNs: 'llm-pi-ai',
+      settingsPath: ['providers', 'bharatcode'],
+      active: true,
+    },
+    configured: true,
+    removable: true,
+    apiKeyEnv: 'BHARATCODE_API_KEY',
+    credential: missingCredential,
+    ...overrides,
+  }
+}
+
+describe('onboardingTargetRow', () => {
+  it('offers the default model route, not the official row, when one resolves', () => {
+    const stateful = state({
+      rows: [row(), bharatcodeRow()],
+      namespaces: new Map([['agent-default-model', defaultModelView('bharatcode')]]),
+    })
+    expect(onboardingTargetRow(stateful)?.entry.provider).toBe('bharatcode')
+    expect(onboardingReadiness(stateful)).toEqual({ kind: 'credential-missing' })
+  })
+
+  it('falls back to the official row when no default selection exists', () => {
+    expect(onboardingTargetRow(state({ rows: [row(), bharatcodeRow()] }))?.entry.provider)
+      .toBe('deepseek-official')
+  })
+
+  it('falls back to the official row when the default resolves to no joined row', () => {
+    const stateful = state({
+      rows: [row()],
+      namespaces: new Map([['agent-default-model', defaultModelView('bharatcode')]]),
+    })
+    expect(onboardingTargetRow(stateful)?.entry.provider).toBe('deepseek-official')
+  })
+
+  it('returns undefined when neither a default route nor the official row is declared', () => {
+    expect(onboardingTargetRow(state({ rows: [otherRow()] }))).toBeUndefined()
+    expect(onboardingReadiness(state({ rows: [otherRow()] }))).toEqual({ kind: 'provider-ready' })
+  })
+})
 
 describe('providerUsable', () => {
   it('requires a registered route and a stored key for every named reference', () => {

@@ -63,6 +63,26 @@ describe('desktop package-set selection', () => {
     ]))).toThrow(/omit @deepseek-ai\/dsh-desktop-host/u)
   })
 
+  it('requires the packed private runtime bundle used by the CLI', () => {
+    const dsh = packed('@deepseek-ai/dsh', {
+      dependencies: { '@local/max-tokens-continue': '1.1.0' },
+    })
+    const host = packed('@deepseek-ai/dsh-desktop-host', {
+      dependencies: { '@deepseek-ai/dsh': '^1.0.0' },
+    })
+    expect(() => selectDesktopPackageClosure(new Map([
+      ['@deepseek-ai/dsh', dsh],
+      ['@deepseek-ai/dsh-desktop-host', host],
+    ]))).toThrow(/requires unpacked package @local\/max-tokens-continue/u)
+
+    const bundle = packed('@local/max-tokens-continue')
+    expect(selectDesktopPackageClosure(new Map([
+      ['@deepseek-ai/dsh', dsh],
+      ['@deepseek-ai/dsh-desktop-host', host],
+      ['@local/max-tokens-continue', bundle],
+    ])).map(entry => entry.manifest.name)).toContain('@local/max-tokens-continue')
+  })
+
   it('leaves independently published Office packages to npm resolution', () => {
     const available = new Map<string, PackedDesktopPackage>([
       ['@deepseek-ai/dsh', packed('@deepseek-ai/dsh', {
