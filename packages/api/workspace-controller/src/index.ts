@@ -3,6 +3,9 @@
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import { ProjectKnowledge } from '@deepseek-ai/dsh-workspace'
+import { ProjectKnowledgeController } from './knowledge.ts'
+export { ProjectKnowledgeController } from './knowledge.ts'
 import { WorkspaceCommands } from './commands.ts'
 import { DirectoryPickerController } from './directory-picker.ts'
 import { WorkspaceFeed, workspaceView } from './feed.ts'
@@ -75,6 +78,8 @@ export class WorkspaceController extends TypertRemoteService {
     // stays pending until a picking backend is composed, so a host without one
     // registers no picking namespace instead of answering an unservable verb.
     ctx.plugin(DirectoryPickerController)
+    ctx.plugin(ProjectKnowledge)
+    ctx.plugin(ProjectKnowledgeController)
   }
 
   /**

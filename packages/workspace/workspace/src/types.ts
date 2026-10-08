@@ -142,3 +142,168 @@ export interface Workspace {
    */
   status(): Promise<'ok' | 'missing-dir'>
 }
+
+/** Identifies an immutable captured document revision, not a mutable file. */
+export type ArtifactRevisionId = Branded<'ArtifactRevisionId'>
+
+/** Complete immutable text and source identity for one registered revision. */
+export interface ArtifactRevision {
+  readonly id: ArtifactRevisionId
+  readonly projectId: WorkspaceId
+  readonly path: string
+  readonly title: string
+  readonly kind: 'source' | 'note' | 'hypothesis' | 'finding' | 'decision' | 'requirement' | 'manuscript'
+  readonly revision: string
+  readonly text: string
+  readonly capturedAt: string
+  readonly origin?: SessionArtifactOrigin | undefined
+}
+/** Semantic evidence classification; a note never implicitly becomes an instruction. */
+export type ArtifactKind = ArtifactRevision['kind']
+/** Explicit file registration; files outside this set never enter project search. */
+export interface RegisterArtifactRequest {
+  readonly projectId: WorkspaceId
+  readonly path: string
+  readonly kind: ArtifactKind
+  readonly title?: string
+}
+/** Project-scoped lexical retrieval over registered revisions. */
+export interface SearchArtifactsRequest {
+  readonly projectId: WorkspaceId
+  readonly query: string
+}
+/** Explicit revision selection for a bounded context capture. */
+export interface CaptureArtifactsRequest {
+  readonly projectId: WorkspaceId
+  readonly revisionIds: readonly ArtifactRevisionId[]
+}
+/** Context preserves complete quotations or records an omission; it never silently truncates. */
+export interface CapturedArtifacts {
+  readonly projectId: WorkspaceId
+  readonly evidence: readonly ArtifactRevision[]
+  readonly omitted: readonly ArtifactRevisionId[]
+}
+/** Current source availability compared with the selected immutable revision. */
+export interface ArtifactInspection {
+  readonly artifact: ArtifactRevision
+  readonly status: 'current' | 'stale' | 'missing' | 'captured'
+}
+/** One session's working profile, independent of its presentation layout. */
+export type WorkflowProfile = 'writing' | 'research' | 'coding'
+/** Stable identity of one prepared handoff and its submitted task. */
+export type HandoffId = Branded<'HandoffId'>
+/** User-authored handoff content and explicit destination selection. */
+export interface PrepareHandoffRequest {
+  readonly requestId: string
+  readonly sourceProjectId: WorkspaceId
+  readonly destinationProjectId: WorkspaceId
+  readonly sourceSessionId?: SessionId | undefined
+  readonly destinationSessionId?: SessionId
+  readonly workflow: WorkflowProfile
+  readonly objective: string
+  readonly revisionIds: readonly ArtifactRevisionId[]
+  readonly constraints: readonly string[]
+  readonly questions: readonly string[]
+}
+/** Durable handoff editor state with captured evidence and a retry-stable destination. */
+export interface PreparedHandoff {
+  readonly id: HandoffId
+  readonly fingerprint: string
+  readonly requestId: string
+  readonly sourceProjectId: WorkspaceId
+  readonly destinationProjectId: WorkspaceId
+  readonly sourceSessionId?: SessionId | undefined
+  readonly destinationSessionId: SessionId
+  readonly createsSession: boolean
+  readonly workflow: WorkflowProfile
+  readonly objective: string
+  readonly constraints: readonly string[]
+  readonly questions: readonly string[]
+  readonly context: CapturedArtifacts
+  readonly status: 'prepared' | 'submitted'
+  readonly createdAt: string
+}
+/** User-selected queue admission; steering must be explicitly selected. */
+export interface SubmitHandoffRequest {
+  readonly id: HandoffId
+  readonly mode: 'queue' | 'steer'
+}
+/** Explicit workflow assignment, separate from layout selection. */
+export interface AssignWorkflowRequest {
+  readonly sessionId: SessionId
+  readonly workflow: WorkflowProfile
+}
+/** Durable receiving-session facts; the corresponding user message carries model-visible text. */
+export interface HandoffAdmission {
+  readonly id: HandoffId
+  readonly sourceProjectId: WorkspaceId
+  readonly sourceSessionId?: SessionId | undefined
+  readonly workflow: WorkflowProfile
+  readonly revisionIds: readonly ArtifactRevisionId[]
+  readonly omitted: readonly ArtifactRevisionId[]
+  readonly mode: 'queue' | 'steer'
+}
+declare module '@deepseek-ai/dsh-session/types' {
+  interface SessionEventMap {
+    /** Presentation-independent user workflow intent; never enters model history. */
+    'workflow/assignment': { readonly workflow: WorkflowProfile }
+    /** Immutable evidence admission and research backlink; never implicitly becomes instructions. */
+    'project/handoff': HandoffAdmission
+  }
+}
+
+/** Stable identity of one explicitly registered relationship. */
+export type ArtifactRelationId = Branded<'ArtifactRelationId'>
+/** Explicit revision relationship; annotations never change source classification. */
+export interface LinkArtifactsRequest {
+  readonly projectId: WorkspaceId
+  readonly from: ArtifactRevisionId
+  readonly to: ArtifactRevisionId
+  readonly relation: 'cites' | 'supports' | 'conflicts' | 'implements' | 'supersedes'
+  /** Required when the linked source belongs to another project. */
+  readonly destinationProjectId?: WorkspaceId | undefined
+}
+/** Immutable revision relationship in private host storage. */
+export interface ArtifactRelation extends LinkArtifactsRequest {
+  readonly id: ArtifactRelationId
+  readonly createdAt: string
+}
+
+/** Search display excerpt; model admission must read and capture the immutable revision separately. */
+export interface ArtifactSearchHit {
+  readonly id: ArtifactRevisionId
+  readonly projectId: WorkspaceId
+  readonly path: string
+  readonly title: string
+  readonly kind: ArtifactKind
+  readonly revision: string
+  readonly capturedAt: string
+  readonly excerpt: string
+}
+/** Complete bounded retrieval page, including an explicit omission signal. */
+export interface SearchArtifactsResult {
+  readonly hits: readonly ArtifactSearchHit[]
+  readonly hasMore: boolean
+}
+
+/** Provenance of an immutable conversation snapshot retained by the existing reference projection. */
+export interface SessionArtifactOrigin {
+  readonly sessionId: SessionId
+  readonly capturedThroughSeq: number | null
+  readonly capturedFormatVersion: number
+  readonly omittedMessages: number
+  readonly omittedBytes: number
+}
+/** Host-owned registration of projected conversation evidence; not an unrestricted Remote write. */
+export interface RegisterSessionSnapshotRequest {
+  readonly projectId: WorkspaceId
+  readonly title: string
+  readonly text: string
+  readonly origin: SessionArtifactOrigin
+}
+/** Explicit source-session selection, without automatic transcript replication. */
+export interface CaptureSessionArtifactRequest {
+  readonly projectId: WorkspaceId
+  readonly sessionId: SessionId
+  readonly title: string
+}

@@ -76,6 +76,12 @@
     },
     {
       "path": "../product-analytics/tsconfig.client.json"
+    },
+    {
+      "path": "../../util/crypto"
+    },
+    {
+      "path": "../../workspace/workspace"
     }
   ]
 }

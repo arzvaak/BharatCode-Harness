@@ -52,6 +52,7 @@ import { PinSessionMenuItem, PinSessionRowButton } from './session-actions/PinSe
 import { RenameSessionMenuItem, SessionRenameDialog } from './session-actions/RenameSession.tsx'
 import { RowActionToast } from './session-actions/RowActionToast.tsx'
 import { WorkspacePicker } from './WorkspacePicker.tsx'
+import { HandoffDialog, HandoffMenuItem, UsingContext, type HandoffTarget, type HandoffDialogInjected, type UsingContextInjected } from './handoffs.tsx'
 import { en, zh, type WorkspaceKey } from './locales.ts'
 
 export type { UiWorkspace } from './navigation.ts'
@@ -94,7 +95,7 @@ const NS = 'workspace'
  * declaration through `slots.inject()` instead of assuming order.
  */
 export const inject = [
-  'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'layout', 'shortcuts',
+  'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'layout', 'shortcuts',
 ]
 
 /**
@@ -166,6 +167,65 @@ export function apply(ctx: Context): void {
     )
     if (!result.ok) throw new Error(result.error.message)
   }
+  const handoffTarget = createSnapshotStore<HandoffTarget | null>(null)
+  const requestHandoff: UsingContextInjected['requestHandoff'] = (sessionId, workflow) => { handoffTarget.set({ sessionId, workflow }) }
+  const handoffInjected = (): HandoffDialogInjected => ({
+    hooks: { handoffTarget },
+    closeHandoff: () => { handoffTarget.set(null) }, openDestination: openSession,
+    captureSession: async (request) => {
+      const result = await ctx.remote.knowledge.captureSession(request)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+    readArtifact: async (id) => {
+      const result = await ctx.remote.knowledge.read(id)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+    registerArtifact: async (request) => {
+      const result = await ctx.remote.knowledge.register(request)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+    searchArtifacts: async (request) => {
+      const result = await ctx.remote.knowledge.search(request)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+    prepareHandoff: async (request) => {
+      const result = await ctx.remote.knowledge.prepareHandoff(request)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+    submitHandoff: async (request) => {
+      const result = await ctx.remote.knowledge.submitHandoff(request)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+  })
+  const contextInjected = (): UsingContextInjected => ({ requestHandoff,
+    inspectArtifact: async (id) => {
+      const result = await ctx.remote.knowledge.inspect(id)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+    refreshContext: async (sessionId, handoff, id) => {
+      const result = await ctx.remote.knowledge.refresh(id)
+      if (!result.ok) throw new Error(result.error.message)
+      const destinationProject = workspaces.list.getSnapshot().items.find(project => project.sessionIds.includes(sessionId))
+      if (destinationProject === undefined) throw new Error('The receiving project is unavailable.')
+      handoffTarget.set({ sessionId: handoff.sourceSessionId ?? sessionId, workflow: handoff.workflow,
+        sourceProjectId: result.value.projectId, destinationProjectId: destinationProject.workspaceId,
+        destinationSessionId: sessionId, evidence: [result.value],
+      })
+    },
+    readContext: async (sessionId) => {
+      const result = await ctx.remote.knowledge.usingContext(sessionId)
+      if (!result.ok) throw new Error(result.error.message)
+      return result.value
+    },
+  })
+  ctx.slots.inject('conversation.input.left', () => ctx.slots.register({ name: 'conversation.input.left', id: 'project.context', locale: NS, inject: contextInjected }, UsingContext))
   const pinInjected = (): PinSessionInjected => ({
     hooks: { pinned: pinnedSet, archived: archivedSet },
     // Pin failures surface as a notice: nothing else on the surface moves, so
@@ -285,6 +345,7 @@ export function apply(ctx: Context): void {
   ctx.slots.inject('sidebar.workspaces.session.menu.item', function* () {
     yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'pin', order: 100, locale: NS, inject: pinInjected }, PinSessionMenuItem)
     yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'rename', order: 200, locale: NS, inject: renameInjected }, RenameSessionMenuItem)
+    yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'handoff', order: 250, locale: NS, inject: () => ({ requestHandoff }) }, HandoffMenuItem)
     yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'fork', order: 300, locale: NS, inject: forkInjected }, ForkSessionMenuItem)
     yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'archive', order: 400, locale: NS, inject: archiveInjected }, ArchiveSessionMenuItem)
   })
@@ -295,6 +356,7 @@ export function apply(ctx: Context): void {
   // The surfaces the actions raise live in the frame-wide layer: they must
   // outlive the row menu the action sat in.
   ctx.slots.inject('shell.overlay', function* () {
+    yield ctx.slots.register({ name: 'shell.overlay', id: 'project.handoff', locale: NS, inject: handoffInjected }, HandoffDialog)
     yield ctx.slots.register({
       name: 'shell.overlay', id: 'workspace.session-rename', locale: NS, inject: renameDialogInjected,
     }, SessionRenameDialog)

@@ -222,6 +222,13 @@ declare module './types.ts' {
     followup(message: UserMessage): void
 
     /**
+     * Wake already-persisted pending input after explicit session restoration.
+     * Does not insert, replace, or duplicate any message and does not steer a running task.
+     * @returns Whether an idle driver with pending input was started.
+     */
+    resumePendingInput?(): boolean
+
+    /**
    * Submit steering for the nearest step. An idle driver starts a turn;
    * a running driver consumes it at its next step boundary.
    * A rejected step leaves steering parked in the inbox until the next

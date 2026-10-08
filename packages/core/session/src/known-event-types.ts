@@ -47,6 +47,7 @@ export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set([
   'model/selection',
   'permission/preset',
   'plan/mode',
+  'project/handoff',
   'request/context',
   'request/header',
   'sandbox/mode',
@@ -78,6 +79,7 @@ export const KNOWN_SESSION_EVENT_TYPES: ReadonlySet<string> = new Set([
   'turn/start',
   'user/message',
   'web/deepseek-search-llm-request',
+  'workflow/assignment',
   'workspace/changes',
 ])
 

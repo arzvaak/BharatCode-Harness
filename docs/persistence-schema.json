@@ -10872,6 +10872,145 @@
       }
     },
     {
+      "key": "event:project/handoff",
+      "kind": "event",
+      "event": "project/handoff",
+      "surface": false,
+      "digest": "79c08cc644d861871207b8438ea73f077e7bc1a648bcc010afe17ba93666c171",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 11,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 13,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "mode",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "omitted",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "revisionIds",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "sourceProjectId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "sourceSessionId",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "workflow",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "queue"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "array",
+            "element": 2
+          },
+          {
+            "kind": "union",
+            "types": [
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "coding"
+          },
+          {
+            "kind": "literal",
+            "value": "writing"
+          },
+          {
+            "kind": "literal",
+            "value": "research"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "project/handoff"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:request/context",
       "kind": "event",
       "event": "request/context",
@@ -21816,6 +21955,92 @@
       }
     },
     {
+      "key": "event:workflow/assignment",
+      "kind": "event",
+      "event": "workflow/assignment",
+      "surface": false,
+      "digest": "a106efd80dac6f3d3a3e1466dcd83c7554260a85baf8334a36f751768d3520f5",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "workflow",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "coding"
+          },
+          {
+            "kind": "literal",
+            "value": "research"
+          },
+          {
+            "kind": "literal",
+            "value": "writing"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "workflow/assignment"
+          }
+        ]
+      }
+    },
+    {
       "key": "event:workspace/changes",
       "kind": "event",
       "event": "workspace/changes",
@@ -22257,6 +22482,11 @@
       "sources": [
         "packages/core/session/src/types.ts:94"
       ]
+    },
+    {
+      "digest": "1a6332d367291e5f7baef7462faafd95e14037f457ba058e7c83635a7589d40a",
+      "names": [],
+      "sources": []
     },
     {
       "digest": "1ab2ef1296f157ba96998f179bb5daa9d21a82480da2901127aeab2730797c92",
@@ -22854,6 +23084,13 @@
       ]
     },
     {
+      "digest": "443000524ce3bb379745cb41b4872b06764d6795abf986e68c09d1d416b4ef4c",
+      "names": [],
+      "sources": [
+        "packages/workspace/workspace/src/types.ts:249"
+      ]
+    },
+    {
       "digest": "44818000e56acb97afdb5045ce235eb55e3fb1ccabc9fc7d0750bb38f36a7f8e",
       "names": [],
       "sources": []
@@ -22910,6 +23147,11 @@
     },
     {
       "digest": "48f9c19417a1abbedfa59f4667bba36b93ac2db407adf5e84cb3ba0de30942cb",
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "4988b03f86756a2d24567b5c1a6b2ad17a1cc5558d5b6d2e23e809a00bf445c5",
       "names": [],
       "sources": []
     },
@@ -22973,6 +23215,15 @@
       ]
     },
     {
+      "digest": "4c2cdc2bfc1613ddcd6dbac3923655ed8b9c9afd66c51c84c0e03a94de2b1a78",
+      "names": [
+        "packages/workspace/workspace/src/types.ts#HandoffAdmission"
+      ],
+      "sources": [
+        "packages/workspace/workspace/src/types.ts:237"
+      ]
+    },
+    {
       "digest": "4cd48f3e5108bd6ebedf7301c3638839b8b2b9db8dbd493974177fbdeb91a01b",
       "names": [
         "packages/api/session-controller/src/types.ts#SessionRequestId",
@@ -22997,7 +23248,10 @@
         "packages/webhook/webhook/src/brand.ts#WebhookDeliveryId",
         "packages/webhook/webhook/src/brand.ts#WebhookRuleId",
         "packages/webhook/webhook/src/brand.ts#WebhookSourceId",
-        "packages/workflow/workflow/src/types.ts#WorkflowRunId"
+        "packages/workflow/workflow/src/types.ts#WorkflowRunId",
+        "packages/workspace/workspace/src/types.ts#ArtifactRevisionId",
+        "packages/workspace/workspace/src/types.ts#HandoffId",
+        "packages/workspace/workspace/src/types.ts#WorkspaceId"
       ],
       "sources": [
         "packages/api/session-controller/src/types.ts:398",
@@ -23022,7 +23276,10 @@
         "packages/webhook/webhook/src/brand.ts:12",
         "packages/webhook/webhook/src/brand.ts:6",
         "packages/webhook/webhook/src/brand.ts:9",
-        "packages/workflow/workflow/src/types.ts:13"
+        "packages/workflow/workflow/src/types.ts:13",
+        "packages/workspace/workspace/src/types.ts:147",
+        "packages/workspace/workspace/src/types.ts:16",
+        "packages/workspace/workspace/src/types.ts:194"
       ]
     },
     {
@@ -23137,6 +23394,11 @@
       "sources": [
         "packages/core/session/src/types.ts:273"
       ]
+    },
+    {
+      "digest": "531d44dfd904d36f095bbfaa82606834507edd8219f0b9f4caf275b5a224b2e2",
+      "names": [],
+      "sources": []
     },
     {
       "digest": "53cf1704ae0709c7678bcf070c83c619fc48ca1b5c173b74cfa8702f22a8e492",
@@ -23413,6 +23675,11 @@
       "sources": []
     },
     {
+      "digest": "68c5d125a83c98a33507f405a45733c6dbf8482462af390d5bc82e6e5308fcb7",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "68f44f59e91c41395076cb77265981a601680ec8a381bbbeb6ab754ffdc94573",
       "names": [],
       "sources": []
@@ -23625,6 +23892,11 @@
       ]
     },
     {
+      "digest": "79c08cc644d861871207b8438ea73f077e7bc1a648bcc010afe17ba93666c171",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "79ddc907312f97cf9553d4841e8b3fc937097bd8d97900a790efad3c05255e99",
       "names": [],
       "sources": [
@@ -23759,6 +24031,20 @@
       ]
     },
     {
+      "digest": "8152dee5fd02cb0807e0b80155eafd3baf412ad771af05aa748cb1b24a90c5a2",
+      "names": [
+        "packages/workspace/workspace/src/types.ts#WorkflowProfile"
+      ],
+      "sources": [
+        "packages/workspace/workspace/src/types.ts:192"
+      ]
+    },
+    {
+      "digest": "81cec112cc37f2d180c25e093eb78fb7457a01ab59974402f5ceb8d8b7340f2a",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "82470020b5bfcb1a843e2aa05602af7d37df99e82d01f015c7c589ba054fd89d",
       "names": [],
       "sources": []
@@ -23807,6 +24093,11 @@
       "sources": [
         "packages/workflow/workflow/src/types.ts:63"
       ]
+    },
+    {
+      "digest": "847de97d9ff31dff732d3bc310f69dc98ce63e765bf0b13f6092d85e02c17400",
+      "names": [],
+      "sources": []
     },
     {
       "digest": "84ac8c1a66ffc697262e181f42e851259eae14038c113ca329fb4700ccdb1f7c",
@@ -24221,6 +24512,11 @@
     },
     {
       "digest": "a0f906856fc06f1c6f2083eb970e5a657a82b1a84c06c095445e5d6d161cda80",
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "a106efd80dac6f3d3a3e1466dcd83c7554260a85baf8334a36f751768d3520f5",
       "names": [],
       "sources": []
     },
@@ -24912,6 +25208,11 @@
       ]
     },
     {
+      "digest": "cf0cd3b1b263b0b67850e970c20867eed50a922767a9eeb6d96cf2a4705a4b28",
+      "names": [],
+      "sources": []
+    },
+    {
       "digest": "cf6e3aaf1e2de6480aa0157730a41b9a492108a55304100b0f7e112711dd4331",
       "names": [],
       "sources": []
@@ -25234,6 +25535,11 @@
     },
     {
       "digest": "edbbfff1128099fda7b792c56330d2cb04debc9790988e66d1c3f4026e813e0e",
+      "names": [],
+      "sources": []
+    },
+    {
+      "digest": "ee0e0e288e8b20359827a9bd7f9678e062c6c0792844a1519a73249e9ddd1f70",
       "names": [],
       "sources": []
     },
