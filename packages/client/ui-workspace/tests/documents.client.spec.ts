@@ -98,3 +98,25 @@ it('keeps the last explicitly requested tab active when older file reads finish 
   expect(b.controller.state.getSnapshot().sessions[session]?.active).toBe('new.md')
   expect(Object.keys(b.controller.state.getSnapshot().sessions[session]?.documents ?? {})).toHaveLength(2)
 })
+
+it('closes a dirty tab only after retaining its latest draft and recovers it on reopen', async () => {
+  const b = bench()
+  await b.controller.open(session, '章.md')
+  const editing = b.controller.edit(session, '章.md', 'Keep on close')
+  expect(await b.controller.close(session, '章.md')).toBe(true)
+  await editing
+  expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']).toBeUndefined()
+  expect(b.draft()?.text).toBe('Keep on close')
+  expect(b.access.save).not.toHaveBeenCalled()
+  await b.controller.open(session, '章.md')
+  expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.text).toBe('Keep on close')
+})
+it('keeps a dirty tab open when recovery persistence fails', async () => {
+  const b = bench()
+  await b.controller.open(session, '章.md')
+  b.access.saveDraft = async () => { throw new Error('Recovery unavailable') }
+  await b.controller.edit(session, '章.md', 'Do not lose')
+  expect(await b.controller.close(session, '章.md')).toBe(false)
+  expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.text).toBe('Do not lose')
+  expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.error).toBe('Recovery unavailable')
+})

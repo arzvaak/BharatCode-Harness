@@ -34,8 +34,8 @@
   cursor: pointer;
 }
 .panel button:disabled { opacity: 0.5; cursor: default; }
-.tabs { display: flex; gap: 4px; min-width: 0; overflow: auto; padding: 6px 14px; }
-.tabs button { flex: 0 0 auto; max-width: min(220px, 100%); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tabs { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 6px 14px; }
+.tabs button { flex: 0 0 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tabs button[aria-selected='true'] { color: var(--dsw-alias-brand-primary); }
 .status { justify-content: space-between; color: var(--dsw-alias-label-secondary); }
 .source {
@@ -61,3 +61,11 @@
 .conflict pre { max-height: 160px; overflow: auto; white-space: pre-wrap; }
 
 .conflict { flex: 0 1 auto; min-height: 0; max-height: 40%; overflow: auto; }
+
+.heading { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 12px; }
+.files { flex: none; max-height: 35%; overflow: auto; border-bottom: 0.5px solid var(--dsw-alias-border-general); }
+.files summary { padding: 10px 14px; cursor: pointer; font-size: 12px; color: var(--dsw-alias-label-secondary); }
+.filename { display: block; padding-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file { display: flex; gap: 4px; min-width: 0; }
+.file button[role='tab'] { flex: 1; text-align: left; }
+.file button:last-child { flex: none; }

@@ -58,7 +58,7 @@ it('preserves the live composer DOM and unsent text while switching profiles and
     const props = {
       sessionId: 'session-a',
       useDocuments: (select: (value: { sessions: Record<string, never> }) => unknown) => select({ sessions: {} }),
-      arrange: vi.fn(), restoreDocuments: vi.fn(),
+      showEditor: vi.fn(), closeDocument: vi.fn(), arrange: vi.fn(), restoreDocuments: vi.fn(),
       openDocument: vi.fn(), selectDocument: vi.fn(), editDocument: vi.fn(), saveDocument: vi.fn(), rebaseDocument: vi.fn(),
       phase: 'active',
       hero: false,
@@ -83,4 +83,35 @@ it('preserves the live composer DOM and unsent text while switching profiles and
     else Object.defineProperty(HTMLElement.prototype, 'animate', original)
     vi.unstubAllGlobals()
   }
+})
+
+it('hides and reopens the editor without replacing the composer or source DOM', () => {
+  let visible = true
+  const p = {
+    sessionId: 'session-a', phase: 'active', hero: false,
+    usePresentation: (select: (value: unknown) => unknown) => select({
+      profiles: { 'session-a': 'writing' }, editorVisibility: { '["session-a","writing"]': visible },
+    }),
+    useDocuments: (select: (value: unknown) => unknown) => select({ sessions: { 'session-a': {
+      active: 'chapter.md', documents: { 'chapter.md': {
+        path: 'chapter.md', base: { absolutePath: '/chapter.md', version: 'v1', text: 'Before' }, text: 'Draft', busy: false,
+      } },
+    } } }),
+    showEditor: vi.fn((_key, value) => { visible = value }), arrange: vi.fn(), restoreDocuments: vi.fn(),
+    openDocument: vi.fn(), closeDocument: vi.fn(), selectDocument: vi.fn(), editDocument: vi.fn(),
+    saveDocument: vi.fn(), rebaseDocument: vi.fn(), renderFactorySlot: () => <textarea aria-label="Unsent draft" />,
+    t: (key: string) => copy[key] ?? key,
+  } as WorkflowWorkspaceProps
+  const view = render(<WorkflowWorkspace {...p} />)
+  const composer = screen.getByRole('textbox', { name: 'Unsent draft' }) as HTMLTextAreaElement
+  const source = screen.getByRole('textbox', { name: 'editor.source' })
+  fireEvent.change(composer, { target: { value: 'Unsent' } })
+  fireEvent.click(screen.getByRole('button', { name: 'editor.collapse' }))
+  view.rerender(<WorkflowWorkspace {...p} />)
+  expect(screen.queryByRole('textbox', { name: 'editor.source' })).toBeNull()
+  expect(screen.getByRole('textbox', { name: 'Unsent draft' })).toBe(composer)
+  fireEvent.click(screen.getByRole('button', { name: 'editor.documents' }))
+  view.rerender(<WorkflowWorkspace {...p} />)
+  expect(screen.getByRole('textbox', { name: 'editor.source' })).toBe(source)
+  expect(composer.value).toBe('Unsent')
 })

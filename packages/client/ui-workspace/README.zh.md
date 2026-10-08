@@ -33,7 +33,7 @@ kind: "package-reference"
 
 ### 工作流视图与项目上下文
 
-侧栏提供 Chat、Coding、Research 和 Writing 视图；折叠导航保留图标操作。切换视图保留原生会话和未发送输入文本。选择只改变展示，不提交任务、不改变权限或执行目录。Coding、Research 和 Writing 在原生聊天旁增加完整源文档编辑面板。Balanced、Chat focus、Document focus、仅文档 Focus mode、Swap sides 和 Reset layout 保留输入区 DOM。布局按 Session 和工作流保存在浏览器本地；窄窗口上下排列面板，不改写保存的布局。
+侧栏提供 Chat、Coding、Research 和 Writing 视图；折叠导航保留图标操作。切换视图保留原生会话和未发送输入文本。选择只改变展示，不提交任务、不改变权限或执行目录。Coding、Research 和 Writing 提供可选的完整源文档编辑器，**Documents** 可展开或隐藏面板；空工作流默认只显示聊天。隐藏和重新打开不会替换聊天输入框或文档正文，编辑器显隐按会话及工作流保存。可折叠的 **Files** 列表替代常驻路径输入框和标签栏，每个文件均可单独关闭。关闭仅移除已打开文件的界面记录，保留未保存的私有恢复草稿；再次打开相同路径可恢复草稿。Balanced、Chat focus、Document focus、仅文档 Focus mode、Swap sides 和 Reset layout 保留输入区 DOM。布局按 Session 和工作流保存在浏览器本地；窄窗口上下排列面板，不改写保存的布局。
 
 通过路径打开现有 UTF-8 项目文件。标签页与活动文档从浏览器本地展示状态恢复；未保存文本从 Host 私有且带版本检查的恢复存储读取。打开不会重写源文件。Save 或 Ctrl/Cmd+S 仅在文件仍为打开时版本的情况下替换项目文件。冲突保留草稿并显示最新文件；明确接受该版本只更新保存基准，不发布草稿。恢复失败保持可见。源编辑器在编辑前保留不支持的 Markdown 与换行符；Monaco 语言服务、富文本手稿编辑、PDF 阅读、拖动停靠和完整界面 Focus mode 尚未完成。
 

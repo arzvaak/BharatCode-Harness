@@ -7,6 +7,7 @@ import type {
   PropsRenderFactories,
 } from '@deepseek-ai/dsh-client-ui-slots'
 import { useEffect, useRef } from 'react'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { DocumentPanelActions } from './DocumentPanel.tsx'
 import { DocumentPanel } from './DocumentPanel.tsx'
 import type { EditorSnapshot } from './documents.ts'
@@ -18,7 +19,11 @@ import css from './workflows.module.css'
 export type WorkflowWorkspaceProps = PropsRuntime<'conversation.workspace'> &
   PropsLocale<'workspace'> &
   PropsHooks<{ presentation: HostObservable<WorkflowPresentationState>; documents: HostObservable<EditorSnapshot> }> &
-  { arrange: (key: string, preset: WorkspacePreset, swapped: boolean) => void; restoreDocuments: (session: import('@deepseek-ai/dsh-session/types').SessionId) => void } &
+  {
+    showEditor: (key: string, visible: boolean) => void
+    arrange: (key: string, preset: WorkspacePreset, swapped: boolean) => void
+    restoreDocuments: (session: SessionId) => void
+  } &
   DocumentPanelActions &
   PropsRenderFactories
 
@@ -31,6 +36,7 @@ export function WorkflowWorkspace({
   t,
   useDocuments,
   arrange,
+  showEditor,
   restoreDocuments,
   ...documents
 }: WorkflowWorkspaceProps) {
@@ -40,7 +46,11 @@ export function WorkflowWorkspace({
   const preset = layout?.preset ?? 'balanced'
   const swapped = layout?.swapped ?? false
   const view = useDocuments(value => sessionId === undefined ? undefined : value.sessions[sessionId])
+  const editorPreference = usePresentation(value => value.editorVisibility?.[layoutKey])
+  const hasDocuments = Object.keys(view?.documents ?? {}).length > 0
+  const editorVisible = profile !== 'chat' && (editorPreference ?? hasDocuments)
   useEffect(() => { if (sessionId !== undefined) restoreDocuments(sessionId) }, [sessionId, restoreDocuments])
+  const documentsToggle = useRef<HTMLButtonElement>(null)
   const body = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -65,18 +75,24 @@ export function WorkflowWorkspace({
           {t(`workflow.${profile}`)}
         </span>
         <span className={css.workspaceCaption}>{t(`workflow.${profile}.detail`)}</span>
-        <select aria-label={t('layout.label')} value={preset} onChange={(event) => { arrange(layoutKey, event.target.value as WorkspacePreset, swapped) }}>
+        <button ref={documentsToggle} type="button" aria-expanded={editorVisible} onClick={() => { showEditor(layoutKey, !editorVisible) }}>
+          {t('editor.documents')}
+        </button>
+        <select hidden={!editorVisible} disabled={!editorVisible} aria-label={t('layout.label')} value={preset}
+          onChange={(event) => { arrange(layoutKey, event.target.value as WorkspacePreset, swapped) }}>
           {(['balanced', 'chat-focus', 'document-focus', 'focus'] as const).map(value => <option key={value} value={value}>{t(`layout.${value}`)}</option>)}
         </select>
-        <button type="button" onClick={() => { arrange(layoutKey, preset, !swapped) }}>{t('layout.swap')}</button>
-        <button type="button" onClick={() => { arrange(layoutKey, 'balanced', false) }}>{t('layout.reset')}</button>
+        <button type="button" hidden={!editorVisible} disabled={!editorVisible} onClick={() => { arrange(layoutKey, preset, !swapped) }}>{t('layout.swap')}</button>
+        <button type="button" hidden={!editorVisible} onClick={() => { arrange(layoutKey, 'balanced', false); showEditor(layoutKey, hasDocuments) }}>{t('layout.reset')}</button>
       </div>
-      <div ref={body} className={css.workspaceBody} data-workflow={profile} data-preset={preset} data-swapped={swapped}>
+      <div ref={body} className={css.workspaceBody} data-editor-collapsed={!editorVisible}
+        data-workflow={profile} data-preset={preset} data-swapped={swapped}>
         <div className={css.chatPane}>
           {renderFactorySlot('conversation.content', { variant: 'main', phase, hero })}
         </div>
-        <div className={css.documentPane} hidden={profile === 'chat'}>
-          <DocumentPanel sessionId={sessionId ?? null} view={view} profile={profile} t={t} {...documents} />
+        <div className={css.documentPane} hidden={!editorVisible}>
+          <DocumentPanel collapseEditor={() => { showEditor(layoutKey, false); documentsToggle.current?.focus() }}
+            sessionId={sessionId ?? null} view={view} profile={profile} t={t} {...documents} />
         </div>
       </div>
     </section>

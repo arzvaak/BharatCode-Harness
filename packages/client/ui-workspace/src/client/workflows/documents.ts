@@ -114,7 +114,9 @@ export class WorkspaceDocuments {
   /** Publish an edit immediately and persist a serialized host-private recovery copy. */
   edit(session: SessionId, path: string, text: string): Promise<void> {
     this.update(session, path, value => ({ ...value, text, error: undefined }))
-    return this.enqueue(session, path, () => this.recover(session, path))
+    return this.enqueue(session, path, async () => {
+      if (this.state.getSnapshot().sessions[session]?.documents[path] !== undefined) await this.recover(session, path)
+    })
   }
   private async recover(session: SessionId, path: string): Promise<void> {
     const value = this.document(session, path)
@@ -153,6 +155,29 @@ export class WorkspaceDocuments {
       })
       await this.recover(session, path)
     })
+  }
+  /** Close a tab after its latest unsaved text is safely retained in private recovery storage. */
+  async close(session: SessionId, path: string): Promise<boolean> {
+    let closed = false
+    await this.enqueue(session, path, async () => {
+      if (this.state.getSnapshot().sessions[session]?.documents[path] === undefined) return
+      let value = this.document(session, path)
+      while (value.text !== value.base.text) {
+        await this.recover(session, path)
+        value = this.document(session, path)
+        if (value.recovery?.text === value.text) break
+      }
+      const snapshot = this.state.getSnapshot()
+      const view = snapshot.sessions[session]
+      if (view === undefined) return
+      const remaining = Object.fromEntries(Object.entries(view.documents).filter(([key]) => key !== path))
+      const active = view.active === path ? Object.keys(remaining).at(-1) : view.active
+      if (active === undefined) this.selected.delete(session)
+      else this.selected.set(session, active)
+      this.state.set({ sessions: { ...snapshot.sessions, [session]: { ...view, documents: remaining, active } } })
+      closed = true
+    })
+    return closed
   }
   /** Release this plugin's pending publication when its Cordis lifetime ends. */
   dispose(): void { this.disposed = true }

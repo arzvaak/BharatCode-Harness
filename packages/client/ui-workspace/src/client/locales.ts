@@ -6,6 +6,10 @@
 
 /** Simplified Chinese dictionary (the key-set source of truth). */
 export const zh = {
+  'editor.documents': 'Documents',
+  'editor.files': 'Files',
+  'editor.collapse': 'Hide document editor',
+  'editor.close': 'Close file',
   'editor.title': 'Document editor',
   'editor.path': 'File path in this project',
   'editor.open': 'Open',
@@ -206,6 +210,10 @@ export type WorkspaceKey = keyof typeof zh
 
 /** English dictionary, checked complete against the zh key set. */
 export const en = {
+  'editor.documents': 'Documents',
+  'editor.files': 'Files',
+  'editor.collapse': 'Hide document editor',
+  'editor.close': 'Close file',
   'editor.title': 'Document editor',
   'editor.path': 'File path in this project',
   'editor.open': 'Open',

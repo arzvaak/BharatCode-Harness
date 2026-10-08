@@ -8,6 +8,7 @@ import css from './documents.module.css'
 /** Plain workspace editor callbacks supplied by the owning plugin. */
 export interface DocumentPanelActions {
   openDocument(session: SessionId, path: string): Promise<void>
+  closeDocument(session: SessionId, path: string): Promise<void>
   selectDocument(session: SessionId, path: string): void
   editDocument(session: SessionId, path: string, text: string): Promise<void>
   saveDocument(session: SessionId, path: string): Promise<void>
@@ -15,6 +16,7 @@ export interface DocumentPanelActions {
 }
 /** Source editor state and callbacks, with workspace-owned localized copy. */
 export type DocumentPanelProps = PropsLocale<'workspace'> & DocumentPanelActions & {
+  collapseEditor: () => void
   sessionId: SessionId | null
   view: EditorSession | undefined
   profile: 'chat' | 'coding' | 'writing' | 'research'
@@ -24,8 +26,9 @@ export type DocumentPanelProps = PropsLocale<'workspace'> & DocumentPanelActions
  * @param props - Session editor state, localized copy, and callbacks.
  * @returns The complete-source editor pane.
  */
-export function DocumentPanel({ sessionId, view, profile, t, ...actions }: DocumentPanelProps) {
+export function DocumentPanel({ sessionId, view, profile, t, collapseEditor, ...actions }: DocumentPanelProps) {
   const [path, setPath] = useState('')
+  const [filesOpen, setFilesOpen] = useState<boolean | undefined>(undefined)
   const [opening, setOpening] = useState(false)
   const document = view?.active === undefined ? undefined : view.documents[view.active]
   const open = async (): Promise<void> => {
@@ -35,17 +38,30 @@ export function DocumentPanel({ sessionId, view, profile, t, ...actions }: Docum
     finally { setOpening(false) }
   }
   return <section className={css.panel} aria-label={t('editor.title')} data-profile={profile}>
-    <form className={css.toolbar} onSubmit={(event) => { event.preventDefault(); void open() }}>
-      <input aria-label={t('editor.path')} value={path} onChange={(event) => { setPath(event.target.value) }} placeholder={t('editor.path')} disabled={sessionId === null} />
-      <button type="submit" disabled={opening || sessionId === null || path.trim() === ''}>{t(opening ? 'editor.opening' : 'editor.open')}</button>
-    </form>
-    {view?.error !== undefined && <p role="alert" className={css.error}>{view.error}</p>}
-    <div className={css.tabs} role="tablist" aria-label={t('editor.tabs')}>
-      {Object.keys(view?.documents ?? {}).map(file => <button key={file} type="button" role="tab" title={file} aria-selected={file === view?.active}
-        onClick={() => { if (sessionId !== null) actions.selectDocument(sessionId, file) }}>
-        {file.split(/[\\/]/).at(-1) ?? file}{view?.documents[file]?.text !== view?.documents[file]?.base.text ? ' •' : ''}
-      </button>)}
+    <div className={css.heading}>
+      <strong>{t('editor.title')}</strong>
+      <button type="button" onClick={collapseEditor} aria-label={t('editor.collapse')} title={t('editor.collapse')}>›</button>
     </div>
+    <details className={css.files} open={filesOpen ?? document === undefined}>
+      <summary onClick={(event) => { event.preventDefault(); setFilesOpen(!(filesOpen ?? document === undefined)) }}><span>{t('editor.files')} ({Object.keys(view?.documents ?? {}).length})</span>
+        <span className={css.filename} title={document?.path}>{document?.path.split(/[\\/]/).at(-1)}</span>
+      </summary>
+      <form className={css.toolbar} onSubmit={(event) => { event.preventDefault(); void open() }}>
+        <input aria-label={t('editor.path')} value={path} onChange={(event) => { setPath(event.target.value) }} placeholder={t('editor.path')} disabled={sessionId === null} />
+        <button type="submit" disabled={opening || sessionId === null || path.trim() === ''}>{t(opening ? 'editor.opening' : 'editor.open')}</button>
+      </form>
+      <div className={css.tabs} role="tablist" aria-label={t('editor.tabs')}>
+        {Object.keys(view?.documents ?? {}).map(file => <div className={css.file} key={file}>
+          <button type="button" role="tab" title={file} aria-selected={file === view?.active}
+            onClick={() => { if (sessionId !== null) actions.selectDocument(sessionId, file) }}>
+            {file.split(/[\\/]/).at(-1) ?? file}{view?.documents[file]?.text !== view?.documents[file]?.base.text ? ' •' : ''}
+          </button>
+          <button type="button" aria-label={`${t('editor.close')}: ${file.split(/[\\/]/).at(-1) ?? file}`} title={t('editor.close')}
+            onClick={() => { if (sessionId !== null) void actions.closeDocument(sessionId, file) }}>×</button>
+        </div>)}
+      </div>
+    </details>
+    {view?.error !== undefined && <p role="alert" className={css.error}>{view.error}</p>}
     {document === undefined ? <div className={css.empty}>{t(sessionId === null ? 'editor.noSession' : 'editor.empty')}</div> : <>
       <div className={css.status}>
         <span>{t(document.busy ? 'editor.saving' : document.text !== document.base.text ? 'editor.unsaved' : 'editor.saved')}</span>

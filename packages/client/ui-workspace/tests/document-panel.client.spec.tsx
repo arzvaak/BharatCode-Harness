@@ -7,7 +7,7 @@ import { en } from '../src/client/locales.ts'
 afterEach(cleanup)
 const sessionId = 'session' as SessionId
 function props(): DocumentPanelProps {
-  return { sessionId, view: undefined, profile: 'coding', t: ((key: keyof typeof en) => en[key]) as DocumentPanelProps['t'],
+  return { collapseEditor: vi.fn(), closeDocument: vi.fn(async () => {}), sessionId, view: undefined, profile: 'coding', t: ((key: keyof typeof en) => en[key]) as DocumentPanelProps['t'],
     openDocument: vi.fn(async () => {}), selectDocument: vi.fn(), editDocument: vi.fn(async () => {}),
     saveDocument: vi.fn(async () => {}), rebaseDocument: vi.fn(async () => {}) }
 }
@@ -38,5 +38,22 @@ it('shows both conflicting texts and requires an explicit rebase before saving',
   expect(screen.getByText('Agent text')).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: 'Use this revision as the save base' }))
   expect(p.rebaseDocument).toHaveBeenCalledWith(sessionId, 'chapter.md')
+  expect(p.saveDocument).not.toHaveBeenCalled()
+})
+
+it('collapses file controls independently of the source and offers separate close and hide actions', () => {
+  const p = props()
+  p.view = { active: 'chapter.md', documents: { 'chapter.md': {
+    path: 'chapter.md', base: { absolutePath: '/chapter.md', version: 'v1', text: 'Before' }, text: 'My text', busy: false,
+  } } }
+  const rendered = render(<DocumentPanel {...p} />)
+  const source = screen.getByRole('textbox', { name: 'Document source' })
+  expect(rendered.container.querySelector('details')?.open).toBe(false)
+  fireEvent.click(screen.getByText('Files (1)'))
+  expect(screen.getByRole('textbox', { name: 'Document source' })).toBe(source)
+  fireEvent.click(screen.getByRole('button', { name: 'Close file: chapter.md', hidden: true }))
+  expect(p.closeDocument).toHaveBeenCalledWith(sessionId, 'chapter.md')
+  fireEvent.click(screen.getByRole('button', { name: 'Hide document editor' }))
+  expect(p.collapseEditor).toHaveBeenCalledOnce()
   expect(p.saveDocument).not.toHaveBeenCalled()
 })

@@ -263,15 +263,22 @@ export function apply(ctx: Context): void {
     inject: () => ({
       hooks: { presentation: workflowInstance, documents: documents.state },
       arrange: (key: string, preset: import('./workflows/layout.ts').WorkspacePreset, swapped: boolean) => workflowInstance.actions.arrange(key, preset, swapped),
+      showEditor: (key: string, visible: boolean) => workflowInstance.actions.showEditor(key, visible),
       restoreDocuments: (session: SessionId): void => {
         if (restoredDocuments.has(session)) return
         restoredDocuments.add(session)
         const saved = workflowInstance.getSnapshot().documents?.[session]
         if (saved === undefined) return
-        void Promise.all([...saved.paths.filter(path => path !== saved.active), saved.active].map(path => documents.open(session, path)))
+        const paths = [...saved.paths.filter(path => path !== saved.active), ...saved.active === undefined ? [] : [saved.active]]
+        void Promise.all(paths.map(path => documents.open(session, path)))
       },
       openDocument: async (session: SessionId, path: string) => { await documents.open(session, path); rememberDocument(session, path) },
       selectDocument: (session: SessionId, path: string) => { documents.select(session, path); rememberDocument(session, path) },
+      closeDocument: async (session: SessionId, path: string) => {
+        if (await documents.close(session, path)) {
+          workflowInstance.actions.forgetDocument(session, path, documents.state.getSnapshot().sessions[session]?.active)
+        }
+      },
       editDocument: (session: SessionId, path: string, text: string) => documents.edit(session, path, text),
       saveDocument: (session: SessionId, path: string) => documents.save(session, path),
       rebaseDocument: (session: SessionId, path: string) => documents.rebase(session, path),
