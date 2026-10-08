@@ -19,6 +19,7 @@
   --bc-motion-figure: 300ms;
 }
 body {
+  --dsw-specific-sidebar-fill: #f1efea;
   --dsw-alias-bg-base: #faf9f6;
   --dsw-alias-bg-layer-1: #faf9f6;
   --dsw-alias-bg-layer-2: #f3f1ec;
@@ -36,6 +37,7 @@ body {
   --dsw-focus-ring-color: #be431a;
 }
 body[data-ds-dark-theme] {
+  --dsw-specific-sidebar-fill: #191816;
   --dsw-alias-bg-base: #201e1b;
   --dsw-alias-bg-layer-1: #201e1b;
   --dsw-alias-bg-layer-2: #292621;

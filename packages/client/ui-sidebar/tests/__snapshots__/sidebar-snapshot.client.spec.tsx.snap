@@ -60,6 +60,10 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
       </span>
     </button>
     <div
+      data-slot="sidebar.workflows"
+      style="display: contents;"
+    />
+    <div
       class="regionArea"
     >
       <div
@@ -143,7 +147,7 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
                 <span
                   class="localBuildTitle"
                 >
-                  DSH Local Build
+                  BharatCode
                 </span>
                 <span
                   class="buildVersion"
@@ -202,6 +206,10 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
         </span>
       </span>
     </button>
+    <div
+      data-slot="sidebar.workflows"
+      style="display: contents;"
+    />
     <div
       class="regionArea"
     >
@@ -312,6 +320,10 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
       </span>
     </button>
     <div
+      data-slot="sidebar.workflows"
+      style="display: contents;"
+    />
+    <div
       class="regionArea"
     >
       <div
@@ -395,7 +407,7 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
                 <span
                   class="localBuildTitle"
                 >
-                  DSH Local Build
+                  BharatCode
                 </span>
                 <span
                   class="buildVersion"
@@ -454,6 +466,10 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
         </span>
       </span>
     </button>
+    <div
+      data-slot="sidebar.workflows"
+      style="display: contents;"
+    />
     <div
       class="regionArea"
     >
@@ -538,7 +554,7 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
                 <span
                   class="localBuildTitle"
                 >
-                  DSH 本地构建
+                  BharatCode
                 </span>
                 <span
                   class="buildVersion"
@@ -597,6 +613,10 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
         </span>
       </span>
     </button>
+    <div
+      data-slot="sidebar.workflows"
+      style="display: contents;"
+    />
     <div
       class="regionArea"
     >

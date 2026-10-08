@@ -14,8 +14,8 @@
 .form select {
   background: var(--dsw-alias-bg-base);
   color: inherit;
-  border: 1px solid var(--dsw-alias-border-general);
-  border-radius: 8px;
+  border: 0.5px solid var(--dsw-alias-border-general);
+  border-radius: var(--dsw-radius-md);
   padding: 9px 11px;
   font: inherit;
   width: 100%;
@@ -50,7 +50,7 @@
   padding: 8px 0;
 }
 .sources small,
-.context small {
+.contextBody small {
   display: block;
   color: var(--dsw-alias-label-secondary);
   font-size: 11px;
@@ -61,24 +61,80 @@
   position: relative;
   font-size: 12px;
 }
-.context summary {
+.contextTrigger {
   cursor: pointer;
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: var(--dsw-radius-sm);
+  border: 0;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  font: inherit;
+}
+.contextTrigger:hover {
+  background: var(--dsw-alias-bg-layer-3);
 }
 .contextBody {
-  position: absolute;
-  bottom: 36px;
-  left: 0;
-  width: min(360px, 75vw);
+  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+  position: fixed;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 32px));
   max-height: 50vh;
   overflow: auto;
   background: var(--dsw-alias-bg-base);
-  border: 1px solid var(--dsw-alias-border-general);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px #0002;
-  padding: 16px;
-  z-index: 10;
+  border: 0;
+  border-radius: var(--dsw-radius-lg);
+  box-shadow: var(--dsw-elevation-panel);
+  padding: 18px;
+  z-index: 1000;
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary);
+  animation: contextEnter var(--bc-motion-content) cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+.contextHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.contextHeader button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 22px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--dsw-radius-sm);
+}
+.contextHeader button:hover {
+  background: var(--dsw-alias-bg-layer-3);
+}
+.emptyContext {
+  color: var(--dsw-alias-label-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+@keyframes contextEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contextBody {
+  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+    animation: none;
+  }
 }
 .contextBody button {
   margin: 4px 4px 0 0;

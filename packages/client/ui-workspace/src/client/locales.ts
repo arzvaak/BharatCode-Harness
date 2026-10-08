@@ -6,6 +6,20 @@
 
 /** Simplified Chinese dictionary (the key-set source of truth). */
 export const zh = {
+  'workflow.label': 'Workflows',
+  'workflow.chat': 'Chat',
+  'workflow.coding': 'Coding',
+  'workflow.research': 'Research',
+  'workflow.writing': 'Writing',
+  'workflow.chat.detail': 'Quick questions',
+  'workflow.coding.detail': 'Build and edit files',
+  'workflow.research.detail': 'Read, explore, connect',
+  'workflow.writing.detail': 'Shape your next chapter',
+  'handoff.contextTitle': 'Using context',
+  'handoff.closeContext': 'Close context',
+  'handoff.contextUnavailable': 'Project context is temporarily unavailable. Try again.',
+  'handoff.retryContext': 'Retry',
+
   'handoff.searchMore': 'More sources match. Narrow your search to see them.',
   'handoff.refreshContext': 'Refresh context…',
   'handoff.status.captured': 'Captured session',
@@ -170,6 +184,20 @@ export type WorkspaceKey = keyof typeof zh
 
 /** English dictionary, checked complete against the zh key set. */
 export const en = {
+  'workflow.label': 'Workflows',
+  'workflow.chat': 'Chat',
+  'workflow.coding': 'Coding',
+  'workflow.research': 'Research',
+  'workflow.writing': 'Writing',
+  'workflow.chat.detail': 'Quick questions',
+  'workflow.coding.detail': 'Build and edit files',
+  'workflow.research.detail': 'Read, explore, connect',
+  'workflow.writing.detail': 'Shape your next chapter',
+  'handoff.contextTitle': 'Using context',
+  'handoff.closeContext': 'Close context',
+  'handoff.contextUnavailable': 'Project context is temporarily unavailable. Try again.',
+  'handoff.retryContext': 'Retry',
+
   'handoff.searchMore': 'More sources match. Narrow your search to see them.',
   'handoff.refreshContext': 'Refresh context…',
   'handoff.status.captured': 'Captured session',

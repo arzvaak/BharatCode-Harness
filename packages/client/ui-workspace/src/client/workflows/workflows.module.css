@@ -1,0 +1,110 @@
+.workspaceHeader[hidden] {
+  display: none;
+}
+.navigation {
+  display: grid;
+  gap: 4px;
+  margin: 18px 0 22px;
+}
+.sectionLabel {
+  padding: 0 12px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dsw-alias-label-tertiary);
+}
+.workflowChoice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 54px;
+  padding: 9px 12px;
+  text-align: left;
+  color: var(--dsw-alias-label-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--dsw-radius-lg);
+  cursor: pointer;
+  transition:
+    background var(--bc-motion-control),
+    color var(--bc-motion-control),
+    border-color var(--bc-motion-control);
+}
+.workflowChoice:hover {
+  background: var(--dsw-alias-bg-layer-3);
+  color: var(--dsw-alias-label-primary);
+}
+.workflowChoice[aria-current] {
+  background: color-mix(in srgb, var(--bc-orange) 10%, var(--dsw-alias-bg-layer-2));
+  border-color: color-mix(in srgb, var(--bc-orange) 18%, transparent);
+  color: var(--dsw-alias-brand-primary);
+}
+.workflowIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 24px;
+}
+.workflowCopy {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+}
+.workflowCopy strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.workflowCopy small {
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.activeDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--bc-orange);
+}
+.navigation[data-wide='false'] {
+  margin: 18px 0;
+  gap: 10px;
+}
+.navigation[data-wide='false'] .workflowChoice {
+  width: 36px;
+  min-height: 38px;
+  padding: 5px;
+  justify-content: center;
+  border-radius: var(--dsw-radius-md);
+}
+.workspace {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+.workspaceHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 28px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-general);
+}
+.profileBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsw-alias-brand-primary);
+}
+.workspaceCaption {
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+.workspaceBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}

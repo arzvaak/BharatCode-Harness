@@ -114,6 +114,17 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
     expect(webSearchRow.querySelector('[data-web]')).not.toBeNull()
   }, { timeout: 10_000 })
 
+  // Workspace navigation is presentation-only and the context disclosure has
+  // its own close action in the actual built composition.
+  fireEvent.click(screen.getByRole('button', { name: 'Research' }))
+  expect(screen.getByRole('region', { name: 'Research' })).toBeTruthy()
+  const usingContext = screen.getByRole('button', { name: /^Using context \(\d+\)$/ })
+  fireEvent.click(usingContext)
+  const evidencePanel = await screen.findByRole('dialog', { name: 'Using context' })
+  fireEvent.click(within(evidencePanel).getByRole('button', { name: 'Close context' }))
+  expect(screen.queryByRole('dialog', { name: 'Using context' })).toBeNull()
+  expect(document.activeElement).toBe(usingContext)
+
   // Every bundle injected its plugin-owned style tag (the loader's CSS path).
   const styleOwners = [...document.head.querySelectorAll('style[data-plugin]')]
     .map(style => style.getAttribute('data-plugin'))

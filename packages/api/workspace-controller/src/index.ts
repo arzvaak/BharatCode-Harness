@@ -3,9 +3,11 @@
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { ProjectKnowledge } from '@deepseek-ai/dsh-workspace'
+import { ProjectKnowledge, DocumentDrafts } from '@deepseek-ai/dsh-workspace'
+import { DocumentDraftController } from './documents.ts'
 import { ProjectKnowledgeController } from './knowledge.ts'
 export { ProjectKnowledgeController } from './knowledge.ts'
+export { DocumentDraftController } from './documents.ts'
 import { WorkspaceCommands } from './commands.ts'
 import { DirectoryPickerController } from './directory-picker.ts'
 import { WorkspaceFeed, workspaceView } from './feed.ts'
@@ -73,6 +75,8 @@ export class WorkspaceController extends TypertRemoteService {
     if (this.config.documentsDirectory !== undefined) validateDocumentsDirectory(this.config.documentsDirectory)
     this.commands = new WorkspaceCommands(ctx)
     this.feed = new WorkspaceFeed(ctx)
+    ctx.plugin(DocumentDrafts)
+    ctx.plugin(DocumentDraftController)
     // This package is the Loader entry for both Remote owners it hosts: the
     // directory-picking seam is abstract and never an entry itself. The child
     // stays pending until a picking backend is composed, so a host without one

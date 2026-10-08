@@ -66,6 +66,8 @@ async function declareFrame(runtime: SlotTestRuntime): Promise<void> {
   await runtime.root.declare(
     {
       'sidebar.workspaces': { kind: 'single', scope: 'root' },
+      'sidebar.workflows': { kind: 'single', scope: 'root' },
+      'conversation.workspace': { kind: 'single', scope: 'session-maybe' },
       'shell.overlay': { kind: 'list', scope: 'root' },
     } as never,
     SidebarFrame as never,
@@ -95,6 +97,7 @@ describe('session rename through the assembled browser', () => {
     await seedWorkspace(runtime)
     await declareFrame(runtime)
     await runtime.mount({ inject: [...inject], apply })
+    expect(runtime.slots.entriesOfSlot('conversation.workspace')).toHaveLength(1)
     const registerAction = (id: string, order: number, priority: number, label: string) => {
       runtime.slots.register(
         { name: 'sidebar.workspaces.session.menu.item', id, order, priority },

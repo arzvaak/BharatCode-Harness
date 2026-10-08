@@ -137,6 +137,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
     }
     /** Resident navigation container, including when no Session is selected. */
     'conversation.header': { kind: 'single'; scope: 'session-maybe' }
+    /** Optional workflow composition; receives presentation facts, never React content or task commands. */
+    'conversation.workspace': { kind: 'single'; scope: 'session-maybe'; owner: { phase: 'settling' | 'hero' | 'active'; hero: boolean } }
     /** Strict per-Session title, actions, and View navigation. */
     'conversation.session.header': {
       kind: 'single'
@@ -452,7 +454,7 @@ export interface HeroBrandMarkOwnerProps {
 /** Full props of the resident optional-Session Conversation shell. */
 export type ConversationSlotProps =
   PropsRuntime<'main.conversation'>
-  & PropsRenderSlots<'conversation.header'>
+  & PropsRenderSlots<'conversation.header' | 'conversation.workspace'>
   & PropsRenderFactories
 
 /** Inputs shared by main and embedded Conversation content occurrences. */

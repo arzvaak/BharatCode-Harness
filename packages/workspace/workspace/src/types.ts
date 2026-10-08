@@ -190,6 +190,23 @@ export interface ArtifactInspection {
 }
 /** One session's working profile, independent of its presentation layout. */
 export type WorkflowProfile = 'writing' | 'research' | 'coding'
+/** Host-private unsaved editor text, independent of agent execution and disk content. */
+export interface DocumentRecoveryDraft {
+  readonly sessionId: SessionId
+  readonly path: string
+  readonly baseVersion: string
+  readonly text: string
+  readonly revision: string
+  readonly updatedAt: string
+}
+/** Compare-and-save of recovery text; null only when creating the first draft. */
+export interface SaveDocumentDraftRequest {
+  readonly sessionId: SessionId
+  readonly path: string
+  readonly baseVersion: string
+  readonly text: string
+  readonly expectedDraftRevision: string | null
+}
 /** Stable identity of one prepared handoff and its submitted task. */
 export type HandoffId = Branded<'HandoffId'>
 /** User-authored handoff content and explicit destination selection. */

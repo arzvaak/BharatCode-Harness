@@ -15,6 +15,8 @@ import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface SlotMap {
+    /** Workflow navigation shared by expanded sidebar and collapsed rail. */
+    'sidebar.workflows': { kind: 'single'; scope: 'root'; owner: { wide: boolean } }
     /** Non-interactive notification inside the collapsed sidebar expand button. */
     'sidebar.toggle.badge': { kind: 'single'; scope: 'root'; owner: Record<never, never> }
     /**
@@ -142,6 +144,7 @@ export type SidebarRootComponentProps =
     | 'sidebar.toggle.badge'
     | 'sidebar.panellist'
     | 'sidebar.workspaces'
+    | 'sidebar.workflows'
     | 'sidebar.settings'
     | 'sidebar.footer.action'
   >

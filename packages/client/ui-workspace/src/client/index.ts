@@ -54,6 +54,9 @@ import { RowActionToast } from './session-actions/RowActionToast.tsx'
 import { WorkspacePicker } from './WorkspacePicker.tsx'
 import { HandoffDialog, HandoffMenuItem, UsingContext, type HandoffTarget, type HandoffDialogInjected, type UsingContextInjected } from './handoffs.tsx'
 import { en, zh, type WorkspaceKey } from './locales.ts'
+import { createWorkflowPresentationStore } from './workflows/presentation.ts'
+import { WorkflowNavigation } from './workflows/WorkflowNavigation.tsx'
+import { WorkflowWorkspace } from './workflows/WorkflowWorkspace.tsx'
 
 export type { UiWorkspace } from './navigation.ts'
 export type {
@@ -107,6 +110,9 @@ export const inject = [
 export function apply(ctx: Context): void {
   const sessions = ctx.get('sessions') as ISessions
   const workspaces = ctx.get('workspaces') as IWorkspaces
+  const workflowHandle = createWorkflowPresentationStore()
+  const workflowInstance = workflowHandle.create()
+  const workflowPresentation: typeof workflowHandle = { ...workflowHandle, create: () => workflowInstance }
   // One viewing-store instance, created here as ui-layout does for its layout
   // store: the browser declares the handle, and the UiWorkspace service writes
   // view order through the same instance the renderer hands the browser.
@@ -226,6 +232,14 @@ export function apply(ctx: Context): void {
     },
   })
   ctx.slots.inject('conversation.input.left', () => ctx.slots.register({ name: 'conversation.input.left', id: 'project.context', locale: NS, inject: contextInjected }, UsingContext))
+  ctx.slots.inject('sidebar.workflows', () => ctx.slots.register({
+    name: 'sidebar.workflows', locale: NS, store: workflowPresentation,
+    inject: () => ({ hooks: { selection: uiWorkspace.selection }, reveal: () => { ctx.layout.selectPanel(null) } }),
+  }, WorkflowNavigation))
+  ctx.slots.inject('conversation.workspace', () => ctx.slots.register({
+    name: 'conversation.workspace', locale: NS,
+    inject: () => ({ hooks: { presentation: workflowInstance } }),
+  }, WorkflowWorkspace))
   const pinInjected = (): PinSessionInjected => ({
     hooks: { pinned: pinnedSet, archived: archivedSet },
     // Pin failures surface as a notice: nothing else on the surface moves, so

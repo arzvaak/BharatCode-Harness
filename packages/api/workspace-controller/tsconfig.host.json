@@ -13,7 +13,8 @@
     "src/directory-picker.ts",
     "src/feed.ts",
     "src/default-directory.ts",
-    "src/knowledge.ts"
+    "src/knowledge.ts",
+    "src/documents.ts"
   ],
   "references": [
     {

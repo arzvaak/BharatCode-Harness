@@ -1,7 +1,8 @@
 /** Shared handoff editor and composer context inspection, using shared modal controls. */
 import { randomUUID } from '@deepseek-ai/dsh-util-crypto'
-import { useEffect, useState } from 'react'
-import { Button, MenuItemButton, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { useEffect, useState, useRef, useId } from 'react'
+import { createPortal } from 'react-dom'
+import { Button, MenuItemButton, Modal, useAnchoredPosition, IconCloseOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsHooks, PropsLocale, PropsRuntime, HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type {
@@ -478,7 +479,6 @@ export function UsingContext({
   readContext,
   inspectArtifact,
   refreshContext,
-  requestHandoff,
   useSession,
   t,
 }: UsingContextProps) {
@@ -487,6 +487,47 @@ export function UsingContext({
   const [error, setError] = useState<string>()
   const [statuses, setStatuses] = useState<Readonly<Record<string, ArtifactInspection['status']>>>({})
   const [refreshing, setRefreshing] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [retry, setRetry] = useState(0)
+  const container = useRef<HTMLDivElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
+  const closeButton = useRef<HTMLButtonElement>(null)
+  const dialogId = useId()
+  const position = useAnchoredPosition({ open, anchorRef: trigger, panelRef: panel, side: 'top', gap: 10, margin: 16 })
+  const close = () => {
+    setOpen(false)
+    trigger.current?.focus()
+  }
+  const positioned = position !== null
+  useEffect(() => {
+    if (open && positioned) closeButton.current?.focus()
+  }, [open, positioned])
+  useEffect(() => {
+    if (!open) return
+    const outside = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !container.current?.contains(event.target) &&
+        !panel.current?.contains(event.target)
+      )
+        setOpen(false)
+    }
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
+        setOpen(false)
+        trigger.current?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', outside)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', escape)
+    }
+  }, [open])
   useEffect(() => {
     let current = true
     void readContext(sessionId)
@@ -506,66 +547,96 @@ export function UsingContext({
     return () => {
       current = false
     }
-  }, [sessionId, readContext, inspectArtifact, watermark])
+  }, [sessionId, readContext, inspectArtifact, watermark, retry])
   return (
-    <details className={css.context}>
-      <summary>
+    <div className={css.context} ref={container}>
+      <button
+        ref={trigger}
+        type="button"
+        className={css.contextTrigger}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-controls={open ? dialogId : undefined}
+        onClick={() => {
+          setOpen(!open)
+        }}
+      >
         {t('handoff.usingContext', { n: context.reduce((count, item) => count + item.context.evidence.length, 0) })}
-      </summary>
-      <div className={css.contextBody}>
-        {context.length === 0 ? (
-          <p>{t('handoff.emptyContext')}</p>
-        ) : (
-          context.map(item => (
-            <div key={item.id}>
-              <strong>{item.objective}</strong>
-              <small>{item.sourceSessionId ?? item.sourceProjectId}</small>
-              {item.context.evidence.map(source => (
-                <p key={source.id}>
-                  {source.title}
-                  <small>
-                    {source.revision.slice(0, 12)}
-                    {statuses[source.id] === undefined
-                      ? null
-                      : ` · ${t(`handoff.status.${statuses[source.id] ?? 'current'}`)}`}
-                  </small>
-                  {statuses[source.id] === 'stale' ? (
-                    <Button
-                      variant="outline"
-                      disabled={refreshing}
-                      onClick={() => {
-                        setRefreshing(true)
-                        void refreshContext(sessionId, item, source.id)
-                          .catch((reason: unknown) => {
-                            setError(reason instanceof Error ? reason.message : String(reason))
-                          })
-                          .finally(() => {
-                            setRefreshing(false)
-                          })
-                      }}
-                    >
-                      {t('handoff.refreshContext')}
-                    </Button>
-                  ) : null}
-                </p>
-              ))}
-              {item.context.omitted.length ? <p>{t('handoff.omitted', { n: item.context.omitted.length })}</p> : null}
-            </div>
-          ))
-        )}
-        {error === undefined ? null : <p role="alert">{error}</p>}
-        {(['coding', 'research', 'writing'] as const).map(workflow => (
-          <Button
-            key={workflow}
-            variant="outline"
-            onClick={() => {
-              requestHandoff(sessionId, workflow)
-            }}
+      </button>
+      {open &&
+        createPortal(
+          <div
+            ref={panel}
+            id={dialogId}
+            style={position ?? { visibility: 'hidden' }}
+            className={css.contextBody}
+            role="dialog"
+            aria-label={t('handoff.contextTitle')}
           >
-            {t(`handoff.use.${workflow}`)}
-          </Button>
-        ))}
-      </div>
-    </details>
+            <div className={css.contextHeader}>
+              <strong>{t('handoff.contextTitle')}</strong>
+              <button ref={closeButton} type="button" aria-label={t('handoff.closeContext')} onClick={close}>
+                <IconCloseOutlineRegular size={16} />
+              </button>
+            </div>
+            {context.length === 0 ? (
+              <p className={css.emptyContext}>{t('handoff.emptyContext')}</p>
+            ) : (
+              context.map(item => (
+                <div key={item.id}>
+                  <strong>{item.objective}</strong>
+                  <small>{item.sourceSessionId ?? item.sourceProjectId}</small>
+                  {item.context.evidence.map(source => (
+                    <p key={source.id}>
+                      {source.title}
+                      <small>
+                        {source.revision.slice(0, 12)}
+                        {statuses[source.id] === undefined
+                          ? null
+                          : ` · ${t(`handoff.status.${statuses[source.id] ?? 'current'}`)}`}
+                      </small>
+                      {statuses[source.id] === 'stale' ? (
+                        <Button
+                          variant="outline"
+                          disabled={refreshing}
+                          onClick={() => {
+                            setRefreshing(true)
+                            void refreshContext(sessionId, item, source.id)
+                              .catch((reason: unknown) => {
+                                setError(reason instanceof Error ? reason.message : String(reason))
+                              })
+                              .finally(() => {
+                                setRefreshing(false)
+                              })
+                          }}
+                        >
+                          {t('handoff.refreshContext')}
+                        </Button>
+                      ) : null}
+                    </p>
+                  ))}
+                  {item.context.omitted.length ? (
+                    <p>{t('handoff.omitted', { n: item.context.omitted.length })}</p>
+                  ) : null}
+                </div>
+              ))
+            )}
+            {error === undefined ? null : (
+              <div role="alert">
+                <p>{t('handoff.contextUnavailable')}</p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRetry(value => value + 1)
+                  }}
+                >
+                  {t('handoff.retryContext')}
+                </Button>
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
+    </div>
   )
 }

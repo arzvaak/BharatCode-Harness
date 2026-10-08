@@ -13,7 +13,7 @@
    an eased track chases the live window edge and the centre column visibly
    rubber-bands while the user resizes the window. */
 .frame[data-animating] {
-  transition: grid-template-columns var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+  transition: grid-template-columns var(--bc-motion-sidebar, 240ms) var(--ds-ease-in-out);
 }
 
 /* Dragging writes widths at pointer cadence; easing them would detach the
@@ -240,7 +240,7 @@
    during collapse/expand; instant at steady state (viewport-driven moves)
    and while dragging. */
 .frame[data-animating] .handle {
-  transition: left var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+  transition: left var(--bc-motion-sidebar, 240ms) var(--ds-ease-in-out);
 }
 
 .frame[data-dragging] .handle {
