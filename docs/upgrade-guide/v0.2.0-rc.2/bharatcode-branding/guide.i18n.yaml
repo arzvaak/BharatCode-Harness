@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for guide.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.0-rc.2/bharatcode-branding/guide.md
+/:
+  en: fe01de941b1f75b2
+  zh: 954265525638c2b1
+/bharatcode-application-identity:
+  en: b33928eb94929734
+  zh: eb2143695df643c6
+/bharatcode-application-identity/change:
+  en: c11bfc0ef57421e8
+  zh: 94a5f73a7ed512bc
+/bharatcode-application-identity/migration:
+  en: 897c36687f4fd33c
+  zh: 382753c881606b04

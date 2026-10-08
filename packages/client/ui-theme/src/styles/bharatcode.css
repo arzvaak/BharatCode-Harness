@@ -1,0 +1,60 @@
+/* Product aliases override the upstream palette without changing public tokens. */
+:root {
+  --bc-orange: #ff6b35;
+  --dsw-static-deepseek-50: #fff3ed;
+  --dsw-static-deepseek-100: #ffe6d7;
+  --dsw-static-deepseek-200: #ffcbaf;
+  --dsw-static-deepseek-300: #ffad8a;
+  --dsw-static-deepseek-400: #ff8e60;
+  --dsw-static-deepseek-450: #ff956d;
+  --dsw-static-deepseek-500: #c44a1c;
+  --dsw-static-deepseek-600: #aa3b14;
+  --dsw-static-deepseek-700: #872f16;
+  --dsw-static-deepseek-800: #632718;
+  --dsw-static-deepseek-900: #42231a;
+  --bc-reading-font: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --bc-motion-control: 120ms;
+  --bc-motion-content: 200ms;
+  --bc-motion-sidebar: 240ms;
+  --bc-motion-figure: 300ms;
+}
+body {
+  --dsw-alias-bg-base: #faf9f6;
+  --dsw-alias-bg-layer-1: #faf9f6;
+  --dsw-alias-bg-layer-2: #f3f1ec;
+  --dsw-alias-bg-layer-3: #ebe8e1;
+  --dsw-alias-bg-document-preview: #f3f1ec;
+  --dsw-alias-brand-primary: #be431a;
+  --dsw-alias-brand-primary-invert: #fff;
+  --dsw-alias-button-info-fill: #be431a;
+  --dsw-alias-button-info-hover: #943010;
+  --dsw-alias-button-primary-hover: #943010;
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #be431a;
+  --dsw-alias-state-business-primary: #be431a;
+  --dsw-alias-interactive-bg-hover-accent: #ff6b351a;
+  --dsw-specific-sidebar-nav-item-active-accent: #ff6b3524;
+  --dsw-focus-ring-color: #be431a;
+}
+body[data-ds-dark-theme] {
+  --dsw-alias-bg-base: #201e1b;
+  --dsw-alias-bg-layer-1: #201e1b;
+  --dsw-alias-bg-layer-2: #292621;
+  --dsw-alias-bg-layer-3: #35312b;
+  --dsw-alias-bg-document-preview: #292621;
+  --dsw-alias-brand-primary: #ff956d;
+  --dsw-alias-brand-primary-invert: #201e1b;
+  --dsw-alias-button-info-fill: #ff956d;
+  --dsw-alias-button-info-hover: #ffad8a;
+  --dsw-alias-button-primary-hover: #ffad8a;
+  --dsw-alias-brand-primary-new-colorprimary-new-color: #ff956d;
+  --dsw-alias-state-business-primary: #ff956d;
+  --dsw-focus-ring-color: #ff956d;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --bc-motion-control: 0ms;
+    --bc-motion-content: 0ms;
+    --bc-motion-sidebar: 0ms;
+    --bc-motion-figure: 0ms;
+  }
+}

@@ -341,3 +341,6 @@ body {
 .actions .welcome-loading { color: inherit; }
 
 .auth-waiting .copy-link:disabled { cursor: default; }
+
+/* Share the canonical orange mark and product typography with the workspace. */
+.brand { display: flex; align-items: center; gap: 12px; font: 600 28px/40px var(--dsw-font-family); }
