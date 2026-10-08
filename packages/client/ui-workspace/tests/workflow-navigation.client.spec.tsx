@@ -57,6 +57,9 @@ it('preserves the live composer DOM and unsent text while switching profiles and
     let profile = 'coding'
     const props = {
       sessionId: 'session-a',
+      useDocuments: (select: (value: { sessions: Record<string, never> }) => unknown) => select({ sessions: {} }),
+      arrange: vi.fn(), restoreDocuments: vi.fn(),
+      openDocument: vi.fn(), selectDocument: vi.fn(), editDocument: vi.fn(), saveDocument: vi.fn(), rebaseDocument: vi.fn(),
       phase: 'active',
       hero: false,
       usePresentation: (select: (value: unknown) => unknown) => select({ profiles: { 'session-a': profile } }),
@@ -64,16 +67,16 @@ it('preserves the live composer DOM and unsent text while switching profiles and
       t: (key: string) => copy[key] ?? key,
     } as WorkflowWorkspaceProps
     const view = render(<WorkflowWorkspace {...props} />)
-    const editor = screen.getByRole('textbox') as HTMLTextAreaElement
+    const editor = screen.getByRole('textbox', { name: 'Unsent draft' }) as HTMLTextAreaElement
     fireEvent.change(editor, { target: { value: 'Keep this draft' } })
     profile = 'research'
     view.rerender(<WorkflowWorkspace {...props} />)
-    expect(screen.getByRole('textbox')).toBe(editor)
+    expect(screen.getByRole('textbox', { name: 'Unsent draft' })).toBe(editor)
     expect(editor.value).toBe('Keep this draft')
     expect(cancel).toHaveBeenCalledOnce()
     profile = 'writing'
     view.rerender(<WorkflowWorkspace {...props} />)
-    expect(screen.getByRole('textbox')).toBe(editor)
+    expect(screen.getByRole('textbox', { name: 'Unsent draft' })).toBe(editor)
     expect(cancel).toHaveBeenCalledTimes(2)
   } finally {
     if (original === undefined) Reflect.deleteProperty(HTMLElement.prototype, 'animate')

@@ -333,6 +333,7 @@ button.crumb:hover {
 /* Composer context stack (Figma 9:937): standalone dock cards share one
    rhythm above the input card. */
 .composerStack {
+  min-width: 0;
   /* Horizontal geometry (card width, clearance, dock inset) rides the shared
      .root variables above so takeover siblings match the stack. */
   --dsh-composer-stack-gap: 6px;
@@ -344,6 +345,7 @@ button.crumb:hover {
 
 /* Common seat for the composer chain (fallback + elected overlay siblings). */
 .composerSeat {
+  min-width: 0;
   display: flex;
   flex: none;
   flex-direction: column;
@@ -381,9 +383,9 @@ button.crumb:hover {
   /* Shared width axis for the transcript, dock cards, composer, and takeover
      cards. Main width controls publish the live body width and optional user
      preference; embedded occurrences override this adaptive axis below. */
-  --dsh-chat-content-width: var(
-    --dsh-chat-user-width,
-    clamp(680px, calc(var(--dsh-conversation-column-width, 0px) * 0.64), 920px)
+  --dsh-chat-content-width: min(
+    var(--dsh-chat-available-width, 920px),
+    var(--dsh-chat-user-width, clamp(680px, calc(var(--dsh-conversation-column-width, 0px) * 0.64), 920px))
   );
   --dsh-composer-card-max-width: calc(var(--dsh-chat-content-width) + 32px);
   --dsh-composer-side-clearance: 16px;
@@ -429,6 +431,7 @@ button.crumb:hover {
 
 .root[data-phase='active'] .composerSeat,
 .embeddedBody[data-content-phase='active'] .composerSeat {
+  min-width: 0;
   position: sticky;
   bottom: 0;
   /* Above markdown CodeBlock sticky banners (z-index 6) so the footer never
@@ -486,6 +489,7 @@ button.crumb:hover {
 }
 
 .scrollBody:has([data-conversation-composer-overlay]) > .composerSeat {
+  min-width: 0;
   position: absolute;
   /* Chat's seat rides this box's content box, which its own scrolling shortens
      by the bar's width; the overlay seat is against the padding box, so it
@@ -541,5 +545,6 @@ button.crumb:hover {
    mounted but invisible so no wrong layout flashes before the phase lands. */
 .root[data-phase='settling'] .composerSeat,
 .embeddedBody[data-content-phase='settling'] .composerSeat {
+  min-width: 0;
   visibility: hidden;
 }

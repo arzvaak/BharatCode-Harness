@@ -33,7 +33,9 @@ kind: "package-reference"
 
 ### 工作流视图与项目上下文
 
-侧栏提供 Chat、Coding、Research 和 Writing 视图；折叠导航保留图标操作。切换视图保留原生会话和未发送输入文本。选择只改变展示，不提交任务、不改变权限或执行目录。文档工作区实现期间，共享框架仍显示原生聊天内容。
+侧栏提供 Chat、Coding、Research 和 Writing 视图；折叠导航保留图标操作。切换视图保留原生会话和未发送输入文本。选择只改变展示，不提交任务、不改变权限或执行目录。Coding、Research 和 Writing 在原生聊天旁增加完整源文档编辑面板。Balanced、Chat focus、Document focus、仅文档 Focus mode、Swap sides 和 Reset layout 保留输入区 DOM。布局按 Session 和工作流保存在浏览器本地；窄窗口上下排列面板，不改写保存的布局。
+
+通过路径打开现有 UTF-8 项目文件。标签页与活动文档从浏览器本地展示状态恢复；未保存文本从 Host 私有且带版本检查的恢复存储读取。打开不会重写源文件。Save 或 Ctrl/Cmd+S 仅在文件仍为打开时版本的情况下替换项目文件。冲突保留草稿并显示最新文件；明确接受该版本只更新保存基准，不发布草稿。恢复失败保持可见。源编辑器在编辑前保留不支持的 Markdown 与换行符；Monaco 语言服务、富文本手稿编辑、PDF 阅读、拖动停靠和完整界面 Focus mode 尚未完成。
 
 会话行的 **Send to session…** 操作可准备交接。输入区旁的 **Using context** 列出捕获的证据与来源状态。关闭按钮、Escape 或外部点击可关闭面板；按钮与 Escape 关闭将焦点还给输入区触发按钮。面板在视口内跟随锚点。查看失败时保留已加载的证据并提供 Retry。
 

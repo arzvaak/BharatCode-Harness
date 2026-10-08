@@ -118,6 +118,13 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
   // its own close action in the actual built composition.
   fireEvent.click(screen.getByRole('button', { name: 'Research' }))
   expect(screen.getByRole('region', { name: 'Research' })).toBeTruthy()
+  expect(screen.getByRole('region', { name: 'Document editor' })).toBeTruthy()
+  expect(screen.getByRole('textbox', { name: 'File path in this project' })).toBeTruthy()
+  fireEvent.change(screen.getByRole('combobox', { name: 'Workspace layout' }), { target: { value: 'chat-focus' } })
+  expect((screen.getByRole('combobox', { name: 'Workspace layout' }) as HTMLSelectElement).value).toBe('chat-focus')
+  fireEvent.click(screen.getByRole('button', { name: 'Swap sides' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Reset layout' }))
+  expect((screen.getByRole('combobox', { name: 'Workspace layout' }) as HTMLSelectElement).value).toBe('balanced')
   const usingContext = screen.getByRole('button', { name: /^Using context \(\d+\)$/ })
   fireEvent.click(usingContext)
   const evidencePanel = await screen.findByRole('dialog', { name: 'Using context' })

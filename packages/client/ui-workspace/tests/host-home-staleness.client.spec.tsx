@@ -35,7 +35,7 @@ async function bench() {
   runtime.releaseWorkspaceSource()
   const directoryPicker = {}
   const { remote } = runtime
-  remote.provideNamespaces({ directoryPicker, knowledge: {} })
+  remote.provideNamespaces({ directoryPicker, knowledge: {}, workspaceFiles: {}, documents: {} })
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.ctx.provide('locale', locale)
   runtime.slots.installLocale(locale)

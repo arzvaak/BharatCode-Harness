@@ -708,6 +708,20 @@ describe('ConversationRoot resident composer', () => {
     expect(root.style.getPropertyValue('--dsh-chat-user-width')).toBe('')
   })
 
+  it('fits a split pane without replacing the saved desktop width preference', () => {
+    localStorage.setItem('dsh.conversation.contentWidth', '1200')
+    try {
+      const b = mount(sessionSnapshotOf())
+      const content = b.view.container.querySelector('[data-conversation-content]') as HTMLElement
+      const root = content.parentElement as HTMLElement
+      Object.defineProperty(content, 'offsetWidth', { value: 400, configurable: true })
+      act(() => { fireResize(content) })
+      expect(root.style.getPropertyValue('--dsh-chat-user-width')).toBe('336px')
+      expect(root.style.getPropertyValue('--dsh-chat-available-width')).toBe('336px')
+      expect(localStorage.getItem('dsh.conversation.contentWidth')).toBe('1200')
+    } finally { localStorage.removeItem('dsh.conversation.contentWidth') }
+  })
+
   it('drag → persist → window clamp round-trip on a width handle', () => {
     const b = mount(sessionSnapshotOf())
     const content = b.view.container.querySelector('[data-conversation-content]') as HTMLElement

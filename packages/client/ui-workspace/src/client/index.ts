@@ -56,6 +56,7 @@ import { HandoffDialog, HandoffMenuItem, UsingContext, type HandoffTarget, type 
 import { en, zh, type WorkspaceKey } from './locales.ts'
 import { createWorkflowPresentationStore } from './workflows/presentation.ts'
 import { WorkflowNavigation } from './workflows/WorkflowNavigation.tsx'
+import { WorkspaceDocuments } from './workflows/documents.ts'
 import { WorkflowWorkspace } from './workflows/WorkflowWorkspace.tsx'
 
 export type { UiWorkspace } from './navigation.ts'
@@ -98,7 +99,7 @@ const NS = 'workspace'
  * declaration through `slots.inject()` instead of assuming order.
  */
 export const inject = [
-  'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'layout', 'shortcuts',
+  'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'remote.workspaceFiles', 'remote.documents', 'layout', 'shortcuts',
 ]
 
 /**
@@ -110,8 +111,29 @@ export const inject = [
 export function apply(ctx: Context): void {
   const sessions = ctx.get('sessions') as ISessions
   const workspaces = ctx.get('workspaces') as IWorkspaces
+  const unwrap = <T>(result: { ok: true; value: T } | { ok: false; error: { message: string } }): T => {
+    if (!result.ok) throw new Error(result.error.message)
+    return result.value
+  }
+  const documents = new WorkspaceDocuments({
+    read: async (session, path) => unwrap(await ctx.remote.workspaceFiles.readEditable(session, path)),
+    save: async (session, path, text, expectedVersion) =>
+      unwrap(await ctx.remote.workspaceFiles.saveEditable(session, path, { text, expectedVersion })),
+    readDraft: async (session, path) => unwrap(await ctx.remote.documents.readDraft(session, path)),
+    saveDraft: async request => unwrap(await ctx.remote.documents.saveDraft(request)),
+    clearDraft: async (session, path, revision) => unwrap(await ctx.remote.documents.clearDraft(session, path, revision)),
+  })
+  ctx.effect(() => () => documents.dispose(), 'workspace.documents')
   const workflowHandle = createWorkflowPresentationStore()
   const workflowInstance = workflowHandle.create()
+  const restoredDocuments = new Set<SessionId>()
+  const rememberDocument = (session: SessionId, path: string): void => {
+    const view = documents.state.getSnapshot().sessions[session]
+    if (view?.documents[path] !== undefined && view.active !== undefined) {
+      workflowInstance.actions.rememberDocument(session, path)
+      workflowInstance.actions.rememberDocument(session, view.active)
+    }
+  }
   const workflowPresentation: typeof workflowHandle = { ...workflowHandle, create: () => workflowInstance }
   // One viewing-store instance, created here as ui-layout does for its layout
   // store: the browser declares the handle, and the UiWorkspace service writes
@@ -238,7 +260,22 @@ export function apply(ctx: Context): void {
   }, WorkflowNavigation))
   ctx.slots.inject('conversation.workspace', () => ctx.slots.register({
     name: 'conversation.workspace', locale: NS,
-    inject: () => ({ hooks: { presentation: workflowInstance } }),
+    inject: () => ({
+      hooks: { presentation: workflowInstance, documents: documents.state },
+      arrange: (key: string, preset: import('./workflows/layout.ts').WorkspacePreset, swapped: boolean) => workflowInstance.actions.arrange(key, preset, swapped),
+      restoreDocuments: (session: SessionId): void => {
+        if (restoredDocuments.has(session)) return
+        restoredDocuments.add(session)
+        const saved = workflowInstance.getSnapshot().documents?.[session]
+        if (saved === undefined) return
+        void Promise.all([...saved.paths.filter(path => path !== saved.active), saved.active].map(path => documents.open(session, path)))
+      },
+      openDocument: async (session: SessionId, path: string) => { await documents.open(session, path); rememberDocument(session, path) },
+      selectDocument: (session: SessionId, path: string) => { documents.select(session, path); rememberDocument(session, path) },
+      editDocument: (session: SessionId, path: string, text: string) => documents.edit(session, path, text),
+      saveDocument: (session: SessionId, path: string) => documents.save(session, path),
+      rebaseDocument: (session: SessionId, path: string) => documents.rebase(session, path),
+    }),
   }, WorkflowWorkspace))
   const pinInjected = (): PinSessionInjected => ({
     hooks: { pinned: pinnedSet, archived: archivedSet },
