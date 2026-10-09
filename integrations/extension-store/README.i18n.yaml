@@ -4,13 +4,13 @@
 #   pnpm run verify-translation-pairing --write integrations/extension-store/README.md
 /bc-extension-store:
   en: ee158604138015ef
-  zh: 548fde34b0a484b8
+  zh: 3583f30469d5ee70
 /bc-extension-store/private-preview-installation:
   en: c3589ae95c67f58c
-  zh: dc297dad332056d4
+  zh: 0714f98afe0ad8f6
 /bc-extension-store/version-and-release-contract:
   en: 466faf232db6fdb4
-  zh: cca5a799625e45b1
+  zh: 17e424e410551095
 /bc-extension-store/local-requirement-inspection:
   en: 678b9be4bcf31da9
   zh: 397016267a96aa59
