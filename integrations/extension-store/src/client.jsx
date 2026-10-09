@@ -20,12 +20,17 @@ export function Store() {
     [busy, setBusy] = useState(false),
     [token, setToken] = useState(""),
     [connectionTokens, setConnectionTokens] = useState({}),
+    [dependencyResults, setDependencyResults] = useState({}),
     [workspace, setWorkspace] = useState("");
   const run = async (action) => {
     setBusy(true);
     setError("");
     try {
-      setView(await request(action));
+      const next = await request(action);
+      setView(next);
+      if (next.inspectedDependencies) setDependencyResults(current => ({
+        ...current, [next.inspectedDependencies.id]: next.inspectedDependencies.results,
+      }));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -100,6 +105,12 @@ export function Store() {
               <li key={i}>{r}</li>
             ))}
           </ul>
+          {e.dependencyIds?.length > 0 && <div>
+            <button disabled={busy} onClick={() => run({ action: 'inspect-dependencies', id: e.id })}>Inspect local requirements</button>
+            {dependencyResults[e.id]?.map(result => <p key={result.id}>
+              {result.title}: {result.available ? `found ${result.version}` : result.reason}. {result.note}
+            </p>)}
+          </div>}
           <p>
             <a href={e.source} target="_blank" rel="noreferrer">
               Upstream source

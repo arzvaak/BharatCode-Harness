@@ -21,6 +21,7 @@ export interface ExtensionDescriptor {
     | "client-restricted"
     | "web-only";
   requirements: string[];
+  dependencyIds?: ("node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg")[];
   tools?: string[];
   packageName?: string;
   credentialReference?: string;

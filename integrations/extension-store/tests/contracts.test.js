@@ -53,6 +53,8 @@ test("rejects duplicates, unsafe identifiers and unknown schema", () => {
     (x) => (x.schemaVersion = 2),
     (x) => (x.entries[0].artifact.sha256 = "bad"),
     (x) => (x.entries[0].runtime.args = [1]),
+    (x) => (x.entries[0].dependencyIds = ["../outside"]),
+    (x) => (x.entries[0].dependencyIds = ["python", "python"]),
   ]) {
     const x = catalog();
     mutate(x);

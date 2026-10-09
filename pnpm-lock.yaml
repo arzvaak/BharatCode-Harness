@@ -1198,6 +1198,12 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:*
+        version: link:../../vendor/cordis
+      '@deepseek-ai/dsh-subprocess-local':
+        specifier: workspace:*
+        version: link:../../packages/subprocess/subprocess-local
       esbuild:
         specifier: 0.25.12
         version: 0.25.12

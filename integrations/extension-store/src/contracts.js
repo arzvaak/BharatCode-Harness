@@ -1,5 +1,6 @@
 import semver from "semver";
 import { verify } from "node:crypto";
+import { DEPENDENCY_IDS } from './dependencies.js';
 export const SCHEMA_VERSION = 1;
 export const REQUIRED_EVIDENCE = ["packed-install", "lifecycle", "workflow"];
 export const STATUSES = [
@@ -54,6 +55,10 @@ export function validateCatalog(value) {
       !strings(e.tools ?? [])
     )
       throw Error(`Invalid descriptor: ${e.id}`);
+    if (e.dependencyIds !== undefined && (!Array.isArray(e.dependencyIds)
+      || new Set(e.dependencyIds).size !== e.dependencyIds.length
+      || e.dependencyIds.some(id => !DEPENDENCY_IDS.includes(id))))
+      throw Error('Invalid dependency requirements');
     if (
       (e.kind === "native" && e.scope !== "profile") ||
       (e.kind === "mcp" && e.scope !== "session")

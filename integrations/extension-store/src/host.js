@@ -13,6 +13,7 @@ import { configureConnection } from "./connections.js";
 import { RuntimeManager } from "./runtime.js";
 import { trustedRequest, json, body } from "./http.js";
 import { canInstall } from "./contracts.js";
+import { inspectDependencies } from './dependencies.js';
 export const name = "bc-extension-store";
 export const inject = [
   "webServer",
@@ -23,6 +24,7 @@ export const inject = [
   "agents",
   "workspaceRegistry",
   "storageDomain",
+  "subprocess",
 ];
 export const Config = z.object({
   credentialReference: z
@@ -213,7 +215,16 @@ export async function apply(ctx, config = {}) {
       const request = await body(req);
       const disconnect = new AbortController();
       req.once("aborted", () => disconnect.abort());
+      res.once("close", () => { if (!res.writableEnded) disconnect.abort(); });
       switch (request.action) {
+        case "inspect-dependencies": {
+          const entry = store.catalog.entries.find(e => e.id === request.id);
+          if (!entry) throw Error('Unknown extension');
+          json(res, 200, { ...(await snapshot()), inspectedDependencies: {
+            id: entry.id, results: await inspectDependencies(entry.dependencyIds ?? [], { signal: disconnect.signal, subprocess: ctx.subprocess }),
+          } });
+          return;
+        }
         case "refresh":
           await store.refresh(disconnect.signal);
           break;

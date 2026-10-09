@@ -82,6 +82,17 @@ try {
   }
   assert.equal(view.running.length, 0, "Optional runtimes started at boot");
   assert.equal(view.installed.length, 0);
+  const inspection = await fetch(`${address}/api/bc-extension-store`, {
+    method: 'POST', headers: { Origin: address, Cookie: cookie, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'inspect-dependencies', id: 'motherduck-duckdb-mcp', dependencyIds: ['../outside'] }),
+    signal: AbortSignal.timeout(15000),
+  });
+  assert.equal(inspection.status, 200, 'Authenticated dependency inspection unavailable');
+  const inspected = await inspection.json();
+  assert.deepEqual(inspected.inspectedDependencies.results.map(result => result.id), ['python', 'duckdb'], 'Only signed descriptor requirements may run');
+  assert.ok(inspected.inspectedDependencies.results.every(result => result.managedSetup === 'unavailable'));
+  assert.equal(inspected.running.length, 0, 'Version inspection activated optional runtimes');
+  assert.equal(inspected.installed.length, 0, 'Version inspection installed packages');
   for (const name of core.defaultOn) {
     const bundle = view.bundles.find((b) => b.name === name);
     assert.ok(bundle, `Missing core bundle ${name}`);

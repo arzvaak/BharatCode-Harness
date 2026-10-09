@@ -1985,12 +1985,17 @@ async function request(action) {
   return value;
 }
 function Store() {
-  const [view, setView] = (0, import_react.useState)(), [tab, setTab] = (0, import_react.useState)("Extensions"), [query, setQuery] = (0, import_react.useState)(""), [error, setError] = (0, import_react.useState)(""), [busy, setBusy] = (0, import_react.useState)(false), [token, setToken] = (0, import_react.useState)(""), [connectionTokens, setConnectionTokens] = (0, import_react.useState)({}), [workspace, setWorkspace] = (0, import_react.useState)("");
+  const [view, setView] = (0, import_react.useState)(), [tab, setTab] = (0, import_react.useState)("Extensions"), [query, setQuery] = (0, import_react.useState)(""), [error, setError] = (0, import_react.useState)(""), [busy, setBusy] = (0, import_react.useState)(false), [token, setToken] = (0, import_react.useState)(""), [connectionTokens, setConnectionTokens] = (0, import_react.useState)({}), [dependencyResults, setDependencyResults] = (0, import_react.useState)({}), [workspace, setWorkspace] = (0, import_react.useState)("");
   const run = async (action) => {
     setBusy(true);
     setError("");
     try {
-      setView(await request(action));
+      const next = await request(action);
+      setView(next);
+      if (next.inspectedDependencies) setDependencyResults((current) => ({
+        ...current,
+        [next.inspectedDependencies.id]: next.inspectedDependencies.results
+      }));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -2045,6 +2050,16 @@ function Store() {
         " MiB"
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { children: e.requirements.map((r, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: r }, i)) }),
+      e.dependencyIds?.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run({ action: "inspect-dependencies", id: e.id }), children: "Inspect local requirements" }),
+        dependencyResults[e.id]?.map((result) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+          result.title,
+          ": ",
+          result.available ? `found ${result.version}` : result.reason,
+          ". ",
+          result.note
+        ] }, result.id))
+      ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: e.source, target: "_blank", rel: "noreferrer", children: "Upstream source" }),
         " ",

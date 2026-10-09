@@ -23,7 +23,11 @@
       ],
       "description": "Open/edit/execute notebook cells, inspect outputs, turn data analysis into a reproducible notebook.",
       "tools": [],
-      "qualification": {}
+      "qualification": {},
+      "dependencyIds": [
+        "python",
+        "jupyter"
+      ]
     },
     {
       "id": "native-dsh-jupyter",
@@ -45,7 +49,11 @@
       ],
       "description": "Notebook workbench embedded in the harness.",
       "tools": [],
-      "qualification": {}
+      "qualification": {},
+      "dependencyIds": [
+        "python",
+        "jupyter"
+      ]
     },
     {
       "id": "motherduck-duckdb-mcp",
@@ -67,7 +75,11 @@
       ],
       "description": "Query local analytical data and DuckDB databases; optional MotherDuck connection.",
       "tools": [],
-      "qualification": {}
+      "qualification": {},
+      "dependencyIds": [
+        "python",
+        "duckdb"
+      ]
     },
     {
       "id": "microsoft-markitdown",
@@ -244,7 +256,10 @@
       ],
       "description": "Edit technical reports with rendered previews.",
       "tools": [],
-      "qualification": {}
+      "qualification": {},
+      "dependencyIds": [
+        "tinymist"
+      ]
     },
     {
       "id": "oh-story",
@@ -310,7 +325,10 @@
       ],
       "description": "Parse, translate, merge and export SRT/VTT while retaining alignment and glossaries.",
       "tools": [],
-      "qualification": {}
+      "qualification": {},
+      "dependencyIds": [
+        "ffmpeg"
+      ]
     },
     {
       "id": "dsh-ffmpeg",
@@ -332,7 +350,10 @@
       ],
       "description": "Probe/cut/concatenate/transcode media, extract audio/subtitles/frames and make GIFs.",
       "tools": [],
-      "qualification": {}
+      "qualification": {},
+      "dependencyIds": [
+        "ffmpeg"
+      ]
     },
     {
       "id": "draw-io-official-mcp",

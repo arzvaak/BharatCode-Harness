@@ -1,0 +1,87 @@
+import test, { after } from 'node:test';
+import { Context } from '@deepseek-ai/cordis';
+import { LocalSubprocessRuntime } from '@deepseek-ai/dsh-subprocess-local';
+const context = new Context();
+await context.plugin(LocalSubprocessRuntime);
+const subprocess = context.subprocess;
+after(() => context.fiber.dispose());
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { inspectDependencies, probeCommand } from '../src/dependencies.js';
+
+test('local inspection uses an existing runtime and never downloads or injects tools', async () => {
+  const result = await inspectDependencies(['node'], { subprocess });
+  assert.equal(result[0].available, true);
+  assert.equal(result[0].command, process.execPath);
+  assert.match(result[0].version, /^\d+\.\d+\.\d+$/);
+  assert.equal(result[0].managedSetup, 'unavailable');
+});
+
+test('missing, incompatible and excessive-output probes produce bounded diagnostics', async () => {
+  const missing = await probeCommand('bc-missing-fixture-runtime', ['--version'], { subprocess });
+  assert.equal(missing.available, false);
+  assert.equal(missing.reason, 'Executable not found');
+  const incompatible = await inspectDependencies(['python'], { runner: async () => ({ available: true, version: '2.7.18' }) });
+  assert.equal(incompatible[0].available, false);
+  assert.match(incompatible[0].reason, /requires >=3.10.0/);
+  const overflow = await probeCommand(process.execPath, ['-e', "process.stdout.write('x'.repeat(32768))"], { subprocess });
+  assert.equal(overflow.available, false);
+  assert.match(overflow.reason, /output limit/);
+});
+
+test('cancellation settles the owned version process without exposing process output', async () => {
+  const abort = new AbortController();
+  const pending = probeCommand(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { signal: abort.signal, subprocess });
+  abort.abort();
+  const result = await pending;
+  assert.equal(result.available, false);
+  assert.equal(result.reason, 'Inspection cancelled');
+});
+
+test('only declared runtime IDs can trigger a probe; inspection stays explicit', async () => {
+  let calls = 0;
+  await assert.rejects(inspectDependencies(['../outside'], { runner: async () => { calls++; } }), /Unknown dependency/);
+  assert.equal(calls, 0);
+  assert.deepEqual(await inspectDependencies([], { runner: async () => { calls++; } }), []);
+  assert.equal(calls, 0);
+});
+
+test('deadline closes a version process that ignores graceful termination', { timeout: 10_000 }, async () => {
+  const result = await probeCommand(process.execPath, ['-e', "process.on('SIGTERM',()=>{});setInterval(()=>{},1000)"], { subprocess });
+  assert.equal(result.available, false);
+  assert.equal(result.reason, 'Inspection deadline exceeded');
+});
+
+
+test('native version probes scrub provider, GitHub and host identity variables', async () => {
+  const keys = ['BC_FIXTURE_TOKEN', 'Bc_fixture_pAsSwOrD', 'DSH_FIXTURE_VALUE'];
+  const prior = keys.map(key => process.env[key]);
+  try {
+    for (const key of keys) process.env[key] = 'owned-dummy-value';
+    const source = `console.log(${JSON.stringify(keys)}.some(key=>process.env[key])?'v0.0.0':process.version)`;
+    const result = await probeCommand(process.execPath, ['-e', source], { subprocess });
+    assert.equal(result.version, process.versions.node);
+  } finally { keys.forEach((key, i) => { if (prior[i] === undefined) delete process.env[key]; else process.env[key] = prior[i]; }); }
+});
+
+test('deadline reaches quiescence with a descendant retaining stdio', { timeout: 10_000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'bc-probe-descendant-'));
+  const file = join(directory, 'pid');
+  let pid;
+  try {
+    const descendant = `require('node:fs').writeFileSync(${JSON.stringify(file)},String(process.pid));setInterval(()=>{},1000)`;
+    const source = `require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(descendant)}],{stdio:'inherit'});setInterval(()=>{},1000)`;
+    const start = performance.now();
+    const result = await probeCommand(process.execPath, ['-e', source], { subprocess });
+    pid = Number(await readFile(file, 'utf8'));
+    assert.equal(result.reason, 'Inspection deadline exceeded');
+    assert.ok(performance.now() - start < 7000, 'native process range must stop, including inherited pipes');
+    assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' }, 'owned descendant must be gone after settlement');
+    pid = undefined;
+  } finally {
+    if (pid) { try { process.kill(pid, 'SIGKILL'); } catch {} }
+    await rm(directory, { recursive: true, force: true });
+  }
+});
