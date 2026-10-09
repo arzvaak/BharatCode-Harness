@@ -44,7 +44,7 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
     const workflow = loadWorkflow('ci.yml')
     expect(checksJob(workflow)['runs-on']).toBe('ubuntu-latest')
     expect(runCommands(checksJob(workflow))).toEqual([
-      'pnpm install --frozen-lockfile',
+      'pnpm install --frozen-lockfile --ignore-scripts',
       'bash scripts/prepare-ci-bubblewrap.sh',
       'pnpm run build',
       'bash scripts/gates/verify-config.sh',

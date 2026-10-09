@@ -249,7 +249,7 @@ try {
   assert.equal(typeof afterDisable.summary.disabled, "number");
   assert.equal(typeof afterDisable.summary.issues, "number");
   const openclawRoot = afterDisable.roots.find((r) => r.kind === "project-openclaw");
-  assert.equal(openclawRoot.path, join(project, "skills"), "generic project Skills retain the workspace/skills directory");
+  assert.equal(openclawRoot.path, await realpath(join(project, "skills")), "generic project Skills retain the workspace/skills directory");
   assert.equal(openclawRoot.localeKey, "projectSkills", "root skills use a neutral display name while preserving policy key compatibility");
   console.log("Project sources, Copilot migration, and loading regression checks passed");
 } finally {
