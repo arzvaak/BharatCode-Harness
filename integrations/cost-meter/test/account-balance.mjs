@@ -253,18 +253,27 @@ try {
   assert.equal(JSON.parse(readFileSync(join(restartHome, 'storages', 'cost-meter', 'ledger.json'), 'utf8')).balanceRef, null, '重挂载无法确认旧账号身份时丢弃磁盘基准')
 
   const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done }); return { promise, resolve } }
+  const awaitStart = async (promise, label) => {
+    let timeout
+    try {
+      await Promise.race([promise, new Promise((_, reject) => {
+        timeout = setTimeout(() => reject(Error('Timed out awaiting ' + label)), 5000)
+      })])
+    } finally { clearTimeout(timeout) }
+  }
+
   for (const late of ['ready', 'null', 'throw']) {
     useHome('pending-' + late)
-    const gate = deferred()
+    const gate = deferred(), began = deferred()
     let started = false, current = false
     const pending = mount({ account: async () => {
       if (current) return { status: 'ready', value: [{ currency: 'CNY', balance: '10' }], bonusWallets: [] }
-      started = true; await gate.promise
+      started = true; began.resolve(); await gate.promise
       if (late === 'throw') throw Error(sensitiveDetail)
       return late === 'null' ? null : { status: 'ready', value: [{ currency: 'CNY', balance: '100' }], bonusWallets: [] }
     }, secrets: { DSH_DEEPSEEK_API_KEY: modelKey }, section: { apiKeyEnv: 'DSH_DEEPSEEK_API_KEY' } })
     const old = pending.service.refreshBalance()
-    for (let n = 0; n < 100 && !started; n++) await tick()
+    await awaitStart(began.promise, 'account read')
     assert.ok(started)
     current = true
     pending.emit('credentials/record-updated', 'deepseek-account-platform/default')
@@ -276,14 +285,21 @@ try {
   }
   for (const method of ['getState', 'refreshBalance']) {
     useHome('snapshot-race-' + method)
-    const gate = deferred()
+    const gate = deferred(), began = deferred()
     let descriptionStarted = false, blockDescription = true
     const snapshot = mount({
       account: () => ({ status: 'ready', value: [{ currency: 'CNY', balance: '100' }], bonusWallets: [] }),
-      describe: async ref => { if (ref === 'DEEPSEEK_BALANCE_API_KEY' && blockDescription) { descriptionStarted = true; await gate.promise } },
+      // Native credential lookup can include I/O. Wait on its observed start,
+      // rather than counting event-loop turns that can finish before the I/O.
+      describe: async ref => {
+        await new Promise(resolve => setTimeout(resolve, 20))
+        if (ref === 'DEEPSEEK_BALANCE_API_KEY' && blockDescription) {
+          descriptionStarted = true; began.resolve(); await gate.promise
+        }
+      },
     })
     const response = snapshot.service[method]()
-    for (let n = 0; n < 100 && !descriptionStarted; n++) await tick()
+    await awaitStart(began.promise, 'credential description')
     assert.ok(descriptionStarted, '状态组装已进入异步凭据描述')
     snapshot.emit('deepseek-account/signed-out')
     blockDescription = false
@@ -314,14 +330,14 @@ try {
 
   for (const late of ['ready', 'null']) {
     useHome('proxy-pending-replacement-' + late)
-    const gate = deferred()
+    const gate = deferred(), began = deferred()
     let started = false
     const replaced = mount({ proxyAccount: true, account: async () => {
-      started = true; await gate.promise
+      started = true; began.resolve(); await gate.promise
       return late === 'null' ? null : { status: 'ready', value: [{ currency: 'CNY', balance: '100' }], bonusWallets: [] }
     }, secrets: { DSH_DEEPSEEK_API_KEY: modelKey }, section: { apiKeyEnv: 'DSH_DEEPSEEK_API_KEY' } })
     const previous = replaced.service.refreshBalance()
-    for (let n = 0; n < 100 && !started; n++) await tick()
+    await awaitStart(began.promise, 'account read')
     assert.ok(started)
     replaced.replaceAccount({ getBalance: async () => ({ status: 'ready', value: [{ currency: 'CNY', balance: '1' }], bonusWallets: [] }) })
     assert.equal((await replaced.service.getState()).balance.totalBalance, 1)
