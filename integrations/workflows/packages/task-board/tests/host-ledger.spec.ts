@@ -103,7 +103,8 @@ describe('HostTaskLedger', () => {
     expect(merged.title).toBe('newer')
     expect(merged.executions.map(entry => entry.id)).toEqual(['exec-a', 'exec-b'])
     expect(ledger.state().revision).toBe(revision + 1)
-  })
+    // Native Windows lock-owner checks invoke bounded PowerShell probes per write.
+  }, process.platform === 'win32' ? 30_000 : 5_000)
 
   it('operator applies a live subtask-depth edit, clamps it, and notifies only on change', () => {
     // Given a ledger with the default single-level limit and a subscriber
@@ -995,4 +996,3 @@ describe('HostTaskLedger label management', () => {
     expect(ledger.state().tasks.map(entry => entry.tags)).toEqual([undefined, undefined])
   })
 })
-

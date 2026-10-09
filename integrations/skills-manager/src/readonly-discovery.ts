@@ -2,13 +2,26 @@ import type { CodedError } from "./types.js";
 import type { DiscoveredEntry } from "./types.js";
 // Discover skills in read-only directories: allow directory links, filter hidden directories by discovered path, and detect cycles using real ancestor paths.
 import { promises as fs } from "node:fs";
-import { resolve, join, relative, sep } from "node:path";
+import { resolve, join, relative, sep, dirname } from "node:path";
 
 const MAX_DEPTH = 6;
 const MAX_DIRECTORIES = 2000;
 const MAX_ENTRIES = 20000;
 const identity = (path: string) =>
   process.platform === "win32" ? path.toLowerCase() : path;
+
+// Windows realpath expands short 8.3 names. That spelling change is not a
+// distribution link; ownership must follow actual links within this source.
+async function linkedWithinRoot(path: string, root: string) {
+  let current = resolve(path);
+  for (;;) {
+    if ((await fs.lstat(current)).isSymbolicLink()) return true;
+    if (identity(current) === identity(root)) return false;
+    const parent = dirname(current);
+    if (parent === current) return false;
+    current = parent;
+  }
+}
 
 /** Read-only entries use paths relative to the root; a dot represents the root SKILL.md, and traversal paths are rejected. */
 export function validDiscoveryName(name: unknown): name is string {
@@ -72,7 +85,7 @@ export async function discoverReadonlyEntries(root: string) {
             entryPath: current.path,
             realDocPath,
             realEntryPath: realDirectory,
-            linked: identity(resolve(current.path)) !== identity(realDirectory),
+            linked: await linkedWithinRoot(current.path, rootPath),
           });
           continue;
         }
@@ -138,7 +151,7 @@ export async function discoverReadonlyEntries(root: string) {
           entryPath,
           realDocPath,
           realEntryPath,
-          linked: identity(resolve(entryPath)) !== identity(realEntryPath),
+          linked: await linkedWithinRoot(entryPath, rootPath),
         });
       } catch {
         /* Skip sources that become unavailable during scanning; revalidate real paths before loading. */

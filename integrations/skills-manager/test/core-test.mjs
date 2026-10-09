@@ -11,6 +11,7 @@ import {
   stat,
   symlink,
   rename,
+  realpath,
 } from "node:fs/promises";
 import { createServer, request } from "node:http";
 import { basename, dirname, join, sep } from "node:path";
@@ -105,7 +106,7 @@ async function makeSkill(root, name, content) {
   return dir;
 }
 
-const tmp = await mkdtemp(join(tmpdir(), "dssm-test-"));
+const tmp = await realpath(await mkdtemp(join(tmpdir(), "dssm-test-")));
 const testUserHome = join(tmp, "home");
 process.env.HOME = testUserHome;
 process.env.USERPROFILE = testUserHome;

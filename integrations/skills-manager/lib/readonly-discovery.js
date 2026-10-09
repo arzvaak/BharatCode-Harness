@@ -1,9 +1,19 @@
 import { promises as fs } from "node:fs";
-import { resolve, join, relative, sep } from "node:path";
+import { resolve, join, relative, sep, dirname } from "node:path";
 const MAX_DEPTH = 6;
 const MAX_DIRECTORIES = 2e3;
 const MAX_ENTRIES = 2e4;
 const identity = (path) => process.platform === "win32" ? path.toLowerCase() : path;
+async function linkedWithinRoot(path, root) {
+  let current = resolve(path);
+  for (; ; ) {
+    if ((await fs.lstat(current)).isSymbolicLink()) return true;
+    if (identity(current) === identity(root)) return false;
+    const parent = dirname(current);
+    if (parent === current) return false;
+    current = parent;
+  }
+}
 function validDiscoveryName(name) {
   return typeof name === "string" && (name === "." || name.length <= 1024 && name.split("/").every(
     (part) => part.length > 0 && part.length <= 255 && !part.startsWith(".") && !/[\\:*?"<>|\0]/.test(part) && !/[. ]$/.test(part) && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i.test(part)
@@ -49,7 +59,7 @@ async function discoverReadonlyEntries(root) {
             entryPath: current.path,
             realDocPath,
             realEntryPath: realDirectory,
-            linked: identity(resolve(current.path)) !== identity(realDirectory)
+            linked: await linkedWithinRoot(current.path, rootPath)
           });
           continue;
         }
@@ -108,7 +118,7 @@ async function discoverReadonlyEntries(root) {
           entryPath,
           realDocPath,
           realEntryPath,
-          linked: identity(resolve(entryPath)) !== identity(realEntryPath)
+          linked: await linkedWithinRoot(entryPath, rootPath)
         });
       } catch {
       }
