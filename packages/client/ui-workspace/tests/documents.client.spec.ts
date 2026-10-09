@@ -20,9 +20,9 @@ function bench() {
       draft = undefined
     }),
     save: vi.fn(async (_session, _path, text, version) => {
-      if (disk.version !== version) return { status: 'conflict', current: { ...disk } }
+      if (disk.version !== version) return { status: 'conflict' as const, current: { ...disk } }
       disk = { ...disk, version: `v${++count + 1}`, text }
-      return { status: 'saved', document: { ...disk } }
+      return { status: 'saved' as const, document: { ...disk } }
     }),
   }
   const controller = new WorkspaceDocuments(access)

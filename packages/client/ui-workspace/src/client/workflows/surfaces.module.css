@@ -3,7 +3,7 @@
 .surface button, .surface input, .surface select, .explorer input, .explorer button { font: inherit; }
 .surface button, .explorer button { cursor: pointer; color: inherit; }
 .surface button:disabled, .explorer button:disabled { opacity: .45; cursor: default; }
-.surface button:focus-visible, .surface select:focus-visible, .surface input:focus-visible, .explorer input:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 2px; }
+.surface button:focus-visible, .surface select:focus-visible, .surface input:focus-visible, .explorer input:focus-visible { outline: 2px solid var(--dsw-focus-ring-color); outline-offset: 2px; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 0.5px solid var(--dsw-alias-border-general); font-size: 12px; }
 .toolbar button, .pageHeading button, .empty button, .notice button, .captureForm button { padding: 6px 10px; border: 0.5px solid var(--dsw-alias-border-general); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-2); font-size: 12px; }
 .toolbar button[aria-expanded='true'] { color: var(--dsw-alias-brand-primary); }

@@ -365,7 +365,7 @@ export class ProjectKnowledge extends Service {
     })
   }
   /** Prepare one immutable task and persist its destination before submission.
-   * @param request - Objective, selected evidence, explicit project destination, and unresolved questions.
+   * @param input - Objective, selected evidence, explicit project destination, and unresolved questions.
    * @returns The same handoff on retry; reusing its identity for different content rejects.
    */
   prepareHandoff(input: PrepareHandoffRequest): Promise<PreparedHandoff> {

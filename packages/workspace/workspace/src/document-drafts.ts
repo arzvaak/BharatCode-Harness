@@ -24,6 +24,7 @@ const key = (session: SessionId, path: string) =>
     .update(JSON.stringify([session, path]))
     .digest('hex')
 
+/** Durable host-private drafts with optimistic revision checks and serialized writes. */
 export class DocumentDrafts extends Service {
   static inject = ['storageDomain']
   private drafts?: KvTable<string, DocumentRecoveryDraft>
@@ -40,10 +41,19 @@ export class DocumentDrafts extends Service {
     if (this.drafts === undefined) throw new Error('Document recovery storage is unavailable.')
     return this.drafts
   }
+  /** Read the recovery revision without modifying project files.
+   * @param session - Draft owner.
+   * @param path - Draft workspace path.
+   * @returns An immutable draft copy, or undefined.
+   */
   read(session: SessionId, path: string): DocumentRecoveryDraft | undefined {
     const draft = this.table().get(key(session, path))
     return draft === undefined ? undefined : Object.freeze({ ...draft })
   }
+  /** Persist a draft only when its expected revision matches the current copy.
+   * @param input - Recovery content and expected revision.
+   * @returns A durable immutable revision after storage acknowledgement.
+   */
   save(input: SaveDocumentDraftRequest): Promise<DocumentRecoveryDraft> {
     const request = { ...input }
     const operation = this.tail.then(async () => {
@@ -69,6 +79,11 @@ export class DocumentDrafts extends Service {
     )
     return operation
   }
+  /** Remove the expected recovery copy while preserving concurrent changes.
+   * @param session - Draft owner.
+   * @param path - Draft workspace path.
+   * @param expectedRevision - Exact revision authorized for deletion.
+   */
   clear(session: SessionId, path: string, expectedRevision: string): Promise<void> {
     const operation = this.tail.then(async () => {
       const current = this.read(session, path)

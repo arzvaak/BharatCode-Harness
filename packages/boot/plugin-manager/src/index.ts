@@ -25,7 +25,7 @@ import { InvalidInstallSpecError, parseInstallSpec, type ParsedInstallSpec } fro
 import { attributeFailure, normalizeRegistry, NPMMIRROR_REGISTRY, registryPlan } from './registry.ts'
 import { writePluginEnabled } from './patch.ts'
 import { incompatiblePlugin, ManagementFailure } from './failure.ts'
-import { approveBuilds, readPendingBuilds } from './build-approval.ts'
+import { approveBuilds, readPendingBuilds, recordPendingBuilds } from './build-approval.ts'
 import { checkGithubConnection } from './github-connection.ts'
 import type {
   BundleInfo, BundleRowInfo, ChangeResult, InspectOptions, InstallBundleOptions, ManagementError, PackageResult, PluginChange,
@@ -527,7 +527,8 @@ export class PluginManager extends TypertRemoteService {
         if (succeeded) delete result.failedAt
         if (!succeeded) {
           // pnpm-workspace.yaml is not restored, so the names pnpm left undecided there can be offered for approval.
-          try { result.pendingBuilds = await readPendingBuilds(this.profile.dir) }
+          try { result.pendingBuilds = run.kind === 'build-blocked'
+            ? await recordPendingBuilds(this.profile.dir) : await readPendingBuilds(this.profile.dir) }
           catch (error) {
             this.ownerContext.logger.warn('Could not read pending build approvals after pnpm failed', error)
           }

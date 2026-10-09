@@ -1,3 +1,4 @@
+import type { ArtifactRevision } from '@deepseek-ai/dsh-workspace/types'
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -29,7 +30,7 @@ it('provides the full Scholar-style groups and a selectable simple presentation'
   expect(p.changePreference).toHaveBeenCalledWith({ complexity: 'simple' })
   v.rerender(<ResearchWorkspace {...p} preference={{ complexity: 'simple', section: 'overview' }} />)
   expect(screen.queryByRole('button', { name: 'Execution' })).toBeNull()
-  expect(screen.getByRole('button', { name: 'Sources', exact: true })).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Sources' })).toBeTruthy()
 })
 it('reads a real registered revision and carries it into an explicit coding handoff', async () => {
   const p = props()
@@ -47,7 +48,7 @@ it('reads a real registered revision and carries it into an explicit coding hand
 it('drops late source results when the selected project changes', async () => {
   const p = props()
   let resolve!: (value: { hits: never[]; hasMore: boolean }) => void
-  p.searchArtifacts = vi.fn(() => new Promise(r => { resolve = r }))
+  p.searchArtifacts = vi.fn(() => new Promise<{ hits: never[]; hasMore: boolean }>((r) => { resolve = r }))
   const v = render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'sources' }} />)
   await waitFor(() => expect(p.searchArtifacts).toHaveBeenCalledOnce())
   v.rerender(<ResearchWorkspace {...p} project={undefined} />)
@@ -78,7 +79,7 @@ it('opens a recent source reader after navigating out of Overview', async () => 
   const artifact = { id: 'recent' as never, projectId: 'p' as never, path: 'recent.md', title: 'Recent source', kind: 'source' as const, revision: 'v1', capturedAt: '2026-10-08', text: 'Captured recent source' }
   p.searchArtifacts = vi.fn(async () => ({ hits: [{ ...artifact, excerpt: 'Captured recent source' }], hasMore: false }))
   let resolveRead!: (value: typeof artifact) => void
-  p.readArtifact = vi.fn(() => new Promise(r => { resolveRead = r }))
+  p.readArtifact = vi.fn(() => new Promise<ArtifactRevision>((r) => { resolveRead = r }))
   p.inspectArtifact = vi.fn(async () => ({ artifact, status: 'current' as const }))
   const v = render(<ResearchWorkspace {...p} />)
   fireEvent.click(await screen.findByRole('button', { name: 'Recent source' }))

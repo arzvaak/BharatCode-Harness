@@ -93,6 +93,12 @@ declare module '@deepseek-ai/dsh-api-session-controller/client' {
 /** Dictionary namespace owned by this plugin. */
 declare module '@deepseek-ai/cordis' {
   interface Events {
+    /**
+     * Offer a workspace source file to the editor owner.
+     * @mode bail
+     * @param sessionId - Session owning the workspace.
+     * @param path - Workspace file to open.
+     */
     'workspace/file/open': (sessionId: SessionId, path: string) => boolean | undefined
   }
 }

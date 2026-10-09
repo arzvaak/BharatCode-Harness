@@ -194,6 +194,21 @@ describe('syncTools', () => {
     expect(ctx.tools.get('add')).toBeUndefined()
   })
 
+  it('keeps unqualified tools out of every synchronization generation', async () => {
+    const opts = { ...defaultOpts, allowedTools: ['admin.reset'] }
+    const first = await syncTools(createMockClient([{ name: 'admin.reset', inputSchema: { type: 'object' } }]) as never, ctx, opts, new Map())
+    expect(ctx.tools.get(publicToolName('srv', 'admin.reset'))).toBeDefined()
+    const second = await syncTools(createMockClient([
+      { name: 'admin.reset', inputSchema: { type: 'object' } },
+      { name: 'delete_everything', inputSchema: { type: 'object' } },
+    ]) as never, ctx, opts, first)
+    expect(second.size).toBe(1)
+    expect(ctx.tools.get('mcp__srv__delete_everything')).toBeUndefined()
+    await syncTools(createMockClient([{ name: 'delete_everything', inputSchema: { type: 'object' } }]) as never, ctx, { ...opts, allowedTools: [] }, second)
+    expect(ctx.tools.get(publicToolName('srv', 'admin.reset'))).toBeUndefined()
+    expect(ctx.tools.get('mcp__srv__delete_everything')).toBeUndefined()
+  })
+
   it('lets two servers publish the same raw name side by side', async () => {
     const clientA = createMockClient([{ name: 'search', inputSchema: { type: 'object' } }])
     const clientB = createMockClient([{ name: 'search', inputSchema: { type: 'object' } }])

@@ -46,6 +46,12 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 declare module '@deepseek-ai/cordis' {
   interface Events {
     /** Claim a file-tree activation for a separate workspace source editor. */
+    /**
+     * Offer a workspace source file to the editor owner.
+     * @mode bail
+     * @param sessionId - Session owning the workspace.
+     * @param path - Workspace file to open.
+     */
     'workspace/file/open': (sessionId: SessionId, path: string) => boolean | undefined
   }
 }

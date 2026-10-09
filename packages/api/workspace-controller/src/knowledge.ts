@@ -35,17 +35,29 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     super(ctx, 'projectKnowledgeController', { namespace: 'knowledge' })
   }
 
-  /** @param request - Explicit source registration. @returns Captured immutable source revision. */
+  /**
+   * Register immutable project evidence.
+   * @param request - Explicit source registration.
+   * @returns Captured immutable source revision.
+   */
   @Remote('register')
   register(request: RegisterArtifactRequest): Promise<ArtifactRevision> {
     return this.ctx.projectKnowledge.register(request)
   }
-  /** @param request - Selected project and literal query. @returns Registered source matches. */
+  /**
+   * Search registered project sources without initiating model work.
+   * @param request - Selected project and literal query.
+   * @returns Registered source matches.
+   */
   @Remote('search')
   search(request: SearchArtifactsRequest): SearchArtifactsResult {
     return this.ctx.projectKnowledge.search(request)
   }
-  /** @param request - Explicit project/session source. @returns Immutable bounded conversation evidence with omission facts. */
+  /**
+   * Capture bounded conversation evidence from the selected project session.
+   * @param request - Explicit project/session source.
+   * @returns Immutable bounded conversation evidence with omission facts.
+   */
   @Remote('captureSession')
   async captureSession(request: CaptureSessionArtifactRequest): Promise<ArtifactRevision> {
     const project = this.ctx.workspaceRegistry.get(request.projectId)
@@ -71,22 +83,38 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       },
     })
   }
-  /** @param request - Explicit revision relationship. @returns Durable implementation or evidence backlink. */
+  /**
+   * Record an explicit relationship between immutable source revisions.
+   * @param request - Explicit revision relationship.
+   * @returns Durable implementation or evidence backlink.
+   */
   @Remote('link')
   link(request: LinkArtifactsRequest): Promise<ArtifactRelation> {
     return this.ctx.projectKnowledge.link(request)
   }
-  /** @param id - Captured revision. @returns Explicit backlinks and conflicts. */
+  /**
+   * Read source relationships and conflicts.
+   * @param id - Captured revision.
+   * @returns Explicit backlinks and conflicts.
+   */
   @Remote('related')
   related(id: ArtifactRevisionId): readonly ArtifactRelation[] {
     return this.ctx.projectKnowledge.related(id)
   }
-  /** @param id - Captured revision. @returns Complete immutable source content. */
+  /**
+   * Read the complete immutable source revision.
+   * @param id - Captured revision.
+   * @returns Complete immutable source content.
+   */
   @Remote('read')
   read(id: ArtifactRevisionId): ArtifactRevision {
     return this.ctx.projectKnowledge.read(id)
   }
-  /** @param id - Captured revision. @returns Current, stale, or missing source status. */
+  /**
+   * Compare the source revision with its current origin.
+   * @param id - Captured revision.
+   * @returns Current, stale, or missing source status.
+   */
   @Remote('inspect')
   async inspect(id: ArtifactRevisionId): Promise<ArtifactInspection> {
     const artifact = this.ctx.projectKnowledge.read(id)
@@ -103,7 +131,11 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       throw error
     }
   }
-  /** @param id - Earlier revision to refresh explicitly. @returns Latest source capture. */
+  /**
+   * Capture a fresh revision from the existing source origin.
+   * @param id - Earlier revision to refresh explicitly.
+   * @returns Latest source capture.
+   */
   @Remote('refresh')
   refresh(id: ArtifactRevisionId): Promise<ArtifactRevision> {
     const artifact = this.ctx.projectKnowledge.read(id)
@@ -115,12 +147,20 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       })
     return this.ctx.projectKnowledge.refresh(id)
   }
-  /** @param request - Explicit revision selection. @returns Bounded complete evidence and omissions. */
+  /**
+   * Capture the selected workspace outputs.
+   * @param request - Explicit revision selection.
+   * @returns Bounded complete evidence and omissions.
+   */
   @Remote('capture')
   capture(request: CaptureArtifactsRequest): CapturedArtifacts {
     return this.ctx.projectKnowledge.capture(request)
   }
-  /** @param request - Objective and explicit evidence/destination selection. @returns Retry-stable prepared task. */
+  /**
+   * Prepare evidence and task identity for an explicit destination.
+   * @param request - Objective and explicit evidence/destination selection.
+   * @returns Retry-stable prepared task.
+   */
   @Remote('prepareHandoff')
   async prepareHandoff(request: PrepareHandoffRequest): Promise<PreparedHandoff> {
     const source = this.ctx.workspaceRegistry.get(request.sourceProjectId)
@@ -142,13 +182,21 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     }
     return await this.ctx.projectKnowledge.prepareHandoff(request)
   }
-  /** @param id - Prepared handoff. @returns Immutable task and admission receipt. */
+  /**
+   * Read a prepared handoff and its admission receipt.
+   * @param id - Prepared handoff.
+   * @returns Immutable task and admission receipt.
+   */
   @Remote('handoff')
   handoff(id: HandoffId): PreparedHandoff {
     return this.ctx.projectKnowledge.handoff(id)
   }
 
-  /** @param sessionId - Receiving session. @returns Captured handoffs admitted to that session, in log order. */
+  /**
+   * Read handoffs admitted to the receiving session.
+   * @param sessionId - Receiving session.
+   * @returns Captured handoffs admitted to that session, in log order.
+   */
   @Remote('usingContext')
   async usingContext(sessionId: SessionId): Promise<readonly PreparedHandoff[]> {
     using observation = await this.ctx.sessionQuery.observeSession(sessionId, { projectionMode: 'none' })
@@ -165,14 +213,22 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     )
   }
 
-  /** @param sessionId - Session to inspect without activating an agent. @returns Latest explicit workflow assignment. */
+  /**
+   * Read the latest explicitly selected session workflow.
+   * @param sessionId - Session to inspect without activating an agent.
+   * @returns Latest explicit workflow assignment.
+   */
   @Remote('workflow')
   async workflow(sessionId: SessionId): Promise<WorkflowProfile | undefined> {
     using observation = await this.ctx.sessionQuery.observeSession(sessionId, { projectionMode: 'none' })
     const event = observation.events.findLast(event => event.type === 'workflow/assignment')
     return event?.type === 'workflow/assignment' ? event.data.workflow : undefined
   }
-  /** @param request - Explicit session profile choice. @returns Persisted selected workflow. */
+  /**
+   * Persist the user-selected workflow before acknowledging it.
+   * @param request - Explicit session profile choice.
+   * @returns Persisted selected workflow.
+   */
   @Remote('assignWorkflow')
   async assignWorkflow(request: AssignWorkflowRequest): Promise<WorkflowProfile> {
     // Cold activation goes through the existing idempotent Session command owner.
@@ -188,6 +244,7 @@ export class ProjectKnowledgeController extends TypertRemoteService {
   }
 
   /**
+   * Admit the prepared task through the durable receiving inbox.
    * @param request - Prepared task identity and user-selected queue or steering mode.
    * @param signal - Remote request lifetime; retry uses the same durable task identity.
    * @returns Submitted handoff only after the receiving inbox crosses a durability checkpoint.
