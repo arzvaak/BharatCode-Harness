@@ -13,6 +13,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { validateArchive } from "./archive.js";
 import { ManagedDependencyStore } from './managed-dependencies.js';
 import { inspectDependencies } from './dependencies.js';
+import { isPythonDependency } from './dependency-groups.js';
 import {
   verifyCatalog,
   canInstall,
@@ -379,7 +380,7 @@ export class ExtensionStore {
         const inspected = await this.inspectEntryDependencies(entry, cancel);
         cancel.throwIfAborted();
         const missing = (entry.dependencyIds ?? []).filter(id => !inspected.find(result => result.id === id)?.available);
-        const pythonIds = (entry.dependencyIds ?? []).filter(id => ['python', 'jupyter', 'duckdb'].includes(id));
+        const pythonIds = (entry.dependencyIds ?? []).filter(isPythonDependency);
         const missingPython = missing.filter(id => pythonIds.includes(id));
         const installedNonPythonInvalid = missing.filter(dependencyId => !pythonIds.includes(dependencyId)
           && this.dependencies.installedBundle(dependencyId, entry.dependencyRanges?.[dependencyId] ?? '*'));
@@ -412,7 +413,7 @@ export class ExtensionStore {
     const installed = new Map(ids.map(dependencyId => [dependencyId,
       managed ? this.dependencies.installedBundle(dependencyId, ranges[dependencyId] ?? '*') : undefined]));
     const commands = managed ? await this.dependencies.commandsFor(ids, ranges) : {};
-    const pythonIds = ids.filter(id => ['python', 'jupyter', 'duckdb'].includes(id));
+    const pythonIds = ids.filter(isPythonDependency);
     const pythonBundle = managed ? this.dependencies.pythonBundleFor(pythonIds, ranges, true) : undefined;
     const availablePythonBundle = managed ? this.dependencies.pythonBundleFor(pythonIds, ranges) : undefined;
     const managedStatus = Object.fromEntries(ids.map(dependencyId => {
@@ -440,9 +441,6 @@ export class ExtensionStore {
       signal,
     });
     return results;
-  }
-  async verifyDependencies(entry, signal, options) {
-    return this.inspectEntryDependencies(entry, signal, options);
   }
   async resolveRuntimeCommand(entry, command) {
     const dependencyIds = entry.dependencyIds ?? [];

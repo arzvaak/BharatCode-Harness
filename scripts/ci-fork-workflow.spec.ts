@@ -33,7 +33,7 @@ function runCommands(job: Record<string, unknown>): unknown[] {
     .filter(command => command !== undefined)
 }
 
-describe('fork CI gate (.github/workflows/ci.yml)', () => {
+describe('fork CI workflows (.github/workflows)', () => {
   it('triggers on trunk pushes and on pull requests', () => {
     const workflow = loadWorkflow('ci.yml')
     expect(workflow.on).toHaveProperty('push')
@@ -50,6 +50,17 @@ describe('fork CI gate (.github/workflows/ci.yml)', () => {
       'bash scripts/gates/verify-config.sh',
       'pnpm run test',
     ])
+  })
+
+  it('prepares bubblewrap in a completed step before the Linux unit suite', () => {
+    const workflow = loadWorkflow('core-qualification.yml')
+    const jobs = workflow.jobs as Record<string, unknown>
+    const commands = runCommands(jobs.native as Record<string, unknown>)
+    const prepareIndex = commands.indexOf('bash scripts/prepare-ci-bubblewrap.sh')
+    const testIndex = commands.indexOf('pnpm run test')
+
+    expect(prepareIndex).toBeGreaterThanOrEqual(0)
+    expect(testIndex).toBeGreaterThan(prepareIndex)
   })
 
   it('cancels superseded runs on the same ref', () => {

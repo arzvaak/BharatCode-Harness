@@ -64,12 +64,14 @@ jobs:
           name: packed-core-${{ runner.os }}
           path: dist/packed-core
           retention-days: 14
+      - name: Prepare bubblewrap (sandbox backend)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: bash scripts/prepare-ci-bubblewrap.sh
       - name: Linux complete unit suite
         if: runner.os == 'Linux'
         shell: bash
-        run: |
-          bash scripts/prepare-ci-bubblewrap.sh
-          pnpm run test
+        run: pnpm run test
       - name: Native Windows process and installer checks
         if: runner.os == 'Windows'
         run: pnpm exec vitest run apps/desktop/tests/installer-packaging.spec.ts packages/boot/plugin-manager/tests packages/mcp/mcp-client/tests

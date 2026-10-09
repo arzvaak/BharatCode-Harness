@@ -14,6 +14,7 @@ import { RuntimeManager } from "./runtime.js";
 import { trustedRequest, json, body } from "./http.js";
 import { validateOperation } from "./operations.js";
 import { canInstall } from "./contracts.js";
+import { isPythonDependency } from './dependency-groups.js';
 export const name = "bc-extension-store";
 export const inject = [
   "webServer",
@@ -99,7 +100,7 @@ export async function apply(ctx, config = {}) {
       throw Error("Live session/workspace ownership mismatch");
     if (!entry.runtime || entry.kind !== "mcp")
       throw Error("No qualified MCP runtime");
-    const dependencyChecks = await store.verifyDependencies(entry, signal);
+    const dependencyChecks = await store.inspectEntryDependencies(entry, signal);
     const missingDependency = dependencyChecks.find(result => !result.available);
     if (missingDependency)
       throw Error(`${missingDependency.title}: ${missingDependency.reason ?? 'a compatible runtime is required'}`);
@@ -124,7 +125,7 @@ export async function apply(ctx, config = {}) {
     const managedCommand = await store.resolveRuntimeCommand(entry, settings.command);
     if (managedCommand) settings.command = managedCommand;
     else if (settings.command === 'python' && process.platform !== 'win32'
-      && (entry.dependencyIds ?? []).some(id => ['python', 'jupyter', 'duckdb'].includes(id))) settings.command = 'python3';
+      && (entry.dependencyIds ?? []).some(isPythonDependency)) settings.command = 'python3';
     if (entry.credentialReference) {
       const ref = credentialRef(entry.credentialReference);
       const secret = await ctx.credentials.resolve(ref);
@@ -299,7 +300,7 @@ export async function apply(ctx, config = {}) {
           if (request.enabled) {
             const record = store.installed.find(item => item.id === request.id);
             if (record) {
-              const missing = (await store.verifyDependencies(record.descriptor, disconnect.signal, { managed: false }))
+              const missing = (await store.inspectEntryDependencies(record.descriptor, disconnect.signal, { managed: false }))
                 .find(result => !result.available);
               if (missing) throw Error(`${missing.title}: ${missing.reason ?? 'a compatible local runtime is required'}`);
             }
@@ -319,7 +320,7 @@ export async function apply(ctx, config = {}) {
           if (!ctx.workspaceRegistry.get(request.workspace))
             throw Error("Unknown workspace");
           if (request.enabled === true) {
-            const missing = (await store.verifyDependencies(entry, disconnect.signal))
+            const missing = (await store.inspectEntryDependencies(entry, disconnect.signal))
               .find(result => !result.available);
             if (missing) throw Error(`${missing.title}: ${missing.reason ?? 'a compatible runtime is required'}`);
             runtime.enable(request.workspace, entry);

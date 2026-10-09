@@ -1,5 +1,7 @@
 # BC Extension Store
 
+English | [中文](README.zh.md)
+
 Private-preview catalog and verified package installation through BC's native plugin manager. Graphics and standard workflows ship in the core; this catalog adds optional capabilities.
 
 The store uses the user's `BC_EXTENSION_GITHUB_TOKEN` credential reference and private repository collaborator access. Secrets stay in native credentials. Catalogs require an Ed25519 signature and monotonically increasing revisions. Packages require exact size/hash and per-platform evidence before installation; they install disabled.
@@ -25,10 +27,14 @@ Application version, package semver and catalog revision are independent. Qualif
 
 CI runs Linux and native Windows qualification before the private preview publication job. That job receives repository-scoped GitHub permissions and `BC_EXTENSION_CATALOG_KEY` through the supported repository-secret mechanism. Its public key is bundled here; key rotation requires a BC update. OS application signing uses separate supported secrets and is not replaced by catalog signing. Preview publication refuses an existing release tag.
 
-The Promote private extension preview workflow takes a published revision and its original publication run ID. It verifies the signed catalog and signed package inventory, every archive's bytes, the source commit, and successful Linux/Windows/verdict/publication jobs from the signed run attempt. Promotion changes only the existing release's prerelease flag; signed catalog bytes retain their preview provenance. It neither rebuilds packages nor issues a replacement catalog. Concurrent changes or an unconfirmed write trigger restoration of preview status; unsuccessful restoration reports manual recovery explicitly. No preview has been published or promoted yet. Published-artifact upgrade and recovery acceptance remains pending.
+The Promote private extension preview workflow takes a published revision and its original publication run ID. It verifies the signed catalog and signed package inventory, every archive's bytes, the source commit, and successful Linux/Windows/verdict/publication jobs from the signed run attempt. Promotion changes only the existing release's prerelease flag; signed catalog bytes stay unchanged and continue to describe the same preview release. It neither rebuilds packages nor issues a replacement catalog. Concurrent changes or an unconfirmed write trigger restoration of preview status; unsuccessful restoration reports manual recovery explicitly. No preview has been published or promoted yet. Published-artifact upgrade and recovery acceptance remains pending.
 
 See the [acceptance ledger](../../.workspace/core-extension-store/ledger.md) for every A1–E9 task, evidence and remaining work.
 
 ## Local requirement inspection
 
-Selected candidate cards offer **Inspect local requirements**. This explicitly runs fixed version probes through BC's native subprocess service, reusing the BC Node runtime or existing local Python/Jupyter/DuckDB/Typst/Tinymist/FFmpeg installations. Probes have a five-second deadline, bounded output, scrubbed credentials, and awaited process-range cleanup. They do not run at boot, install packages, download models, activate tools, or return raw process output. A found version is an inspection result; package, account and workflow qualification still apply. Store-managed runtime download/setup is unavailable until its signed release and lifecycle are qualified. The existing bundled workspace-dependency service remains available separately.
+Selected candidate cards offer **Inspect local requirements**. This explicitly runs fixed version probes through BC's native subprocess service, reusing the BC Node runtime or existing local Python/Jupyter/DuckDB/Typst/Tinymist/FFmpeg installations. Probes have a five-second deadline, bounded output, scrubbed credentials, and awaited process-range cleanup. They do not run at boot, install packages, download models, activate tools, or return raw process output. A found version is an inspection result; package, account and workflow qualification still apply. The existing bundled workspace-dependency service remains available separately.
+
+## Managed runtime setup
+
+An extension card offers **Set up managed requirements** only when the signed catalog contains a compatible, platform-qualified runtime for its missing dependencies. Setup verifies the signed release inventory and exact artifact size and SHA-256, bounds archive extraction, checks the provided versions, and activates the runtime atomically. The current catalog contains no managed runtime bundle, so setup is unavailable in this preview. **Managed runtimes** lists installed versions for individual removal; removal is refused while agent work is running or a dependent extension runtime remains active.

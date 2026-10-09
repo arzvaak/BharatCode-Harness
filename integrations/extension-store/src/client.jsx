@@ -2,6 +2,7 @@ import semver from "semver";
 import React, { useEffect, useState } from "react";
 import { validateOperation } from "./operations.js";
 import { en, NS, zh } from './locales.js';
+import { isPythonDependency } from './dependency-groups.js';
 export const inject = ["slots", "layout", "locale"];
 async function request(action) {
   const response = await fetch("/api/bc-extension-store", {
@@ -79,7 +80,7 @@ export function Store({ t = key => key } = {}) {
   const canSetUpRequirements = (e) => {
     if (e.kind !== 'mcp' || !(e.dependencyIds?.length > 0)
       || !dependencyResults[e.id]?.some(result => !result.available)) return false;
-    const pythonIds = e.dependencyIds.filter(id => ['python', 'jupyter', 'duckdb'].includes(id));
+    const pythonIds = e.dependencyIds.filter(isPythonDependency);
     const otherIds = e.dependencyIds.filter(id => !pythonIds.includes(id));
     const bundles = view?.catalog.managedDependencies ?? [];
     return (!pythonIds.length || bundles.some(bundle => bundle.status === 'qualified' && bundle.platforms.includes(view.platform)

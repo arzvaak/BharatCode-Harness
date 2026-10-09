@@ -21,6 +21,7 @@
     "catalog-public-key.pem",
     "cordis.patch.yml",
     "README.md",
+    "README.zh.md",
     "LICENSE"
   ],
   "dsh": {

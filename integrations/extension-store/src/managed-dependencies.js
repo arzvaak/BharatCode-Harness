@@ -6,9 +6,9 @@ import { x as extractTar } from 'tar';
 import semver from 'semver';
 import { canInstallManagedDependency } from './contracts.js';
 import { inspectDependencies } from './dependencies.js';
+import { isPythonDependency } from './dependency-groups.js';
 
 const MAX_FILES = 50000;
-const PYTHON_DEPENDENCIES = new Set(['python', 'jupyter', 'duckdb']);
 const abortError = () => Object.assign(new Error('Managed dependency setup cancelled'), { name: 'AbortError' });
 
 function checkAbort(signal) {
@@ -148,7 +148,7 @@ export class ManagedDependencyStore {
   }
 
   pythonBundleFor(ids, ranges = {}, installedOnly = false) {
-    const pythonIds = ids.filter(id => PYTHON_DEPENDENCIES.has(id));
+    const pythonIds = ids.filter(isPythonDependency);
     if (!pythonIds.length) return undefined;
     const supports = bundle => pythonIds.every(id =>
       canInstallManagedDependency(bundle, this.platform, id, rangeFor(ranges, id)));
@@ -215,7 +215,7 @@ export class ManagedDependencyStore {
     const pythonCommand = await this.resolvePythonFor(ids, ranges);
     if (pythonCommand) commands.python = pythonCommand;
     for (const id of ids) {
-      if (PYTHON_DEPENDENCIES.has(id)) continue;
+      if (isPythonDependency(id)) continue;
       const direct = await this.resolveCommand(id, rangeFor(ranges, id));
       if (direct) commands[id] = direct;
     }

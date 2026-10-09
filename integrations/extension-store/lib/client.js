@@ -2038,6 +2038,12 @@ var zh = {
   dependencyLocalOnly: "\u4EC5\u68C0\u67E5\u672C\u5730\u7248\u672C\uFF1B\u5F53\u524D\u6CA1\u6709\u7B26\u5408\u8D44\u683C\u7684\u6258\u7BA1\u8FD0\u884C\u65F6\u7248\u672C\u3002"
 };
 
+// src/dependency-groups.js
+var PYTHON_DEPENDENCY_IDS = Object.freeze(["python", "jupyter", "duckdb"]);
+function isPythonDependency(id) {
+  return PYTHON_DEPENDENCY_IDS.includes(id);
+}
+
 // src/client.jsx
 var import_jsx_runtime = require("react/jsx-runtime");
 var inject = ["slots", "layout", "locale"];
@@ -2099,7 +2105,7 @@ function Store({ t = (key) => key } = {}) {
   const installedRequirements = (e) => e.kind === "mcp" && (e.dependencyIds ?? []).length > 0 && e.dependencyIds.every((id) => dependencyResults[e.id]?.some((result) => result.id === id && result.available && result.managedSetup === "installed"));
   const canSetUpRequirements = (e) => {
     if (e.kind !== "mcp" || !(e.dependencyIds?.length > 0) || !dependencyResults[e.id]?.some((result) => !result.available)) return false;
-    const pythonIds = e.dependencyIds.filter((id) => ["python", "jupyter", "duckdb"].includes(id));
+    const pythonIds = e.dependencyIds.filter(isPythonDependency);
     const otherIds = e.dependencyIds.filter((id) => !pythonIds.includes(id));
     const bundles = view?.catalog.managedDependencies ?? [];
     return (!pythonIds.length || bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && pythonIds.every((id) => bundle.provides[id] && import_semver.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")))) && otherIds.every((id) => bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && bundle.provides[id] && import_semver.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")));
