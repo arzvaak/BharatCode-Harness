@@ -13,7 +13,7 @@ Run `npm test` and `npm run build` in this package. Release workflows sign immut
 
 ## Private preview installation
 
-A user-facing installer has not been published yet. The current engineering branch can be built with Node 24 and the pinned pnpm version: run `pnpm install --frozen-lockfile`, `pnpm run build`, and `node scripts/extensions/core.mjs build` at the repository root. Run `node scripts/extensions/verify-core.mjs` for an owned temporary profile. This smoke removes its fixture home afterward and does not configure the user's live profile.
+A user-facing installer has not been published yet. The current engineering branch can be built with Node 24 and the pinned pnpm version: run `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm run build`, and `node scripts/extensions/core.mjs build` at the repository root. Run `node scripts/extensions/verify-core.mjs` for an owned temporary profile. This smoke removes its fixture home afterward and does not configure the user's live profile.
 
 When a preview is qualified and published, testers use their own GitHub account with collaborator access to `arzvaak/Bharatcode-Harness`. In Extensions, expand Private preview access, enter a repository-restricted credential with Contents read permission, and refresh the signed catalog. GitHub authentication does not qualify an optional extension: unavailable entries explain their remaining requirements. Only releases with exact package hashes and evidence for the current platform offer Install. Optional packages install disabled; workspace capabilities require explicit enablement in each workspace. Native host packages are profile-wide and run with host privileges.
 
