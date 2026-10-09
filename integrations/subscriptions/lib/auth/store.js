@@ -13,12 +13,60 @@
  * survive the upgrade untouched.
  */
 import { createHash } from 'node:crypto';
+import { credentialKey } from '@deepseek-ai/dsh-credentials';
 import { decodeJwtPayload } from './jwt.js';
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths';
 /** Every provider route, in display order. */
 export const PROVIDER_IDS = ['codex', 'claude', 'grok', 'copilot', 'antigravity'];
+/** Native records are the runtime authority. Legacy files remain recoverable backups. */
+export function createNativeSessionStore(credentials, legacyPaths = [authFilePath(), legacyAuthFilePath()]) {
+    const key = credentialKey('dsh-plugin-subscriptions', 'accounts');
+    const decode = (record) => {
+        if (record.kind !== 'grant' || typeof record.payload !== 'object' || record.payload === null
+            || Array.isArray(record.payload))
+            throw new Error('subscriptions: unsupported native credential record');
+        const payload = record.payload;
+        if (payload.schemaVersion !== 1 || typeof payload.sessions !== 'object' || payload.sessions === null
+            || Array.isArray(payload.sessions))
+            throw new Error('subscriptions: unsupported native credential schema');
+        return parseStore(JSON.stringify(payload.sessions), 'native credential service');
+    };
+    const migrate = async () => {
+        for (const path of legacyPaths) {
+            try {
+                return parseStore(await readFile(path, 'utf8'), path);
+            }
+            catch (error) {
+                if (error.code !== 'ENOENT')
+                    throw error;
+            }
+        }
+        return {};
+    };
+    const recordOf = (sessions) => ({ kind: 'grant', payload: { schemaVersion: 1, sessions } });
+    return {
+        async read() {
+            let record = await credentials.readRecord(key);
+            if (record === undefined)
+                record = await credentials.modifyRecord(key, async (current) => current ?? recordOf(await migrate()));
+            if (record === undefined)
+                throw new Error('subscriptions: native credential persistence was not acknowledged');
+            return decode(record);
+        },
+        async mutate(action) {
+            const committed = await credentials.modifyRecord(key, async (current) => {
+                const sessions = current === undefined ? await migrate() : decode(current);
+                action(sessions);
+                return recordOf(sessions);
+            });
+            if (committed === undefined)
+                throw new Error('subscriptions: native credential persistence was not acknowledged');
+            decode(committed);
+        },
+    };
+}
 /**
  * The stable identity of one session's account: Codex keys on workspace AND
  * user (email fallback, workspace-only for unidentified legacy sessions),
@@ -198,6 +246,8 @@ function assertSessionShape(provider, account, value) {
  * @returns the parsed session map.
  */
 export async function loadStore(path = authFilePath()) {
+    if (typeof path !== 'string')
+        return path.read();
     let text;
     try {
         text = await readFile(path, 'utf8');
@@ -351,6 +401,16 @@ async function serialize(path, action) {
             writeChains.delete(path);
     }
 }
+/** Apply account changes under the backend's exclusive record transaction. */
+async function mutateStore(path, action) {
+    if (typeof path !== 'string')
+        return path.mutate(action);
+    return serialize(path, async () => {
+        const store = await loadStore(path);
+        action(store);
+        await writeStore(store, path);
+    });
+}
 /**
  * List one provider's accounts, default first.
  * @param provider - the provider route.
@@ -396,8 +456,7 @@ export async function getAccountSession(provider, account, path = authFilePath()
  */
 export async function saveAccountSession(provider, account, session, path = authFilePath()) {
     assertSessionShape(provider, account, session);
-    return serialize(path, async () => {
-        const store = await loadStore(path);
+    return mutateStore(path, store => {
         const entry = store[provider];
         if (entry !== undefined) {
             account = resolveAccount(entry, account);
@@ -411,7 +470,6 @@ export async function saveAccountSession(provider, account, session, path = auth
             default: entry?.default ?? account,
             accounts: { ...entry?.accounts, [account]: session },
         };
-        await writeStore(store, path);
     });
 }
 /**
@@ -422,8 +480,7 @@ export async function saveAccountSession(provider, account, session, path = auth
  * @param path - store file path; defaults to {@link authFilePath}.
  */
 export async function deleteAccountSession(provider, account, path = authFilePath()) {
-    return serialize(path, async () => {
-        const store = await loadStore(path);
+    return mutateStore(path, store => {
         const entry = store[provider];
         if (entry === undefined)
             return;
@@ -443,7 +500,6 @@ export async function deleteAccountSession(provider, account, path = authFilePat
                 accounts,
             };
         }
-        await writeStore(store, path);
     });
 }
 /**
@@ -453,8 +509,7 @@ export async function deleteAccountSession(provider, account, path = authFilePat
  * @param path - store file path; defaults to {@link authFilePath}.
  */
 export async function setDefaultAccount(provider, account, path = authFilePath()) {
-    return serialize(path, async () => {
-        const store = await loadStore(path);
+    return mutateStore(path, store => {
         const entry = store[provider];
         if (entry !== undefined)
             account = resolveAccount(entry, account);
@@ -463,6 +518,5 @@ export async function setDefaultAccount(provider, account, path = authFilePath()
         }
         ;
         store[provider] = { ...entry, default: account };
-        await writeStore(store, path);
     });
 }

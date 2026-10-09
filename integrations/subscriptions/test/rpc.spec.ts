@@ -1,3 +1,4 @@
+import { createFakeCredentials } from './fake-credentials.js'
 /**
  * Unit tests for the `/subscriptions-auth` `image` endpoint: payload
  * validation, the base64 round trip through a fake attachment store, and the
@@ -28,6 +29,7 @@ interface FakeStore {
 /** Mount the plugin with fake llm/connection (and optional attachments); return the RPC handler. */
 async function mount(attachments?: FakeStore): Promise<ConnectionRpcHandler> {
   const ctx = new Context()
+  ctx.provide('credentials', createFakeCredentials())
   ctx.provide('llm', { registerAdapter: () => Object.assign(() => {}, { replace: () => {} }) })
   const fake = createFakeConnection()
   ctx.provide('connection', fake.connection)

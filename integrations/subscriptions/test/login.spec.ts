@@ -1,3 +1,4 @@
+import { createFakeCredentials } from './fake-credentials.js'
 /**
  * Claude login paths: credential import vs interactive OAuth fallback.
  *
@@ -550,6 +551,7 @@ test('claude: an import and a logout fired together settle in call order', async
 /** Mount the plugin with a fake llm/connection host; return the RPC handler. */
 async function mountPlugin(): Promise<ConnectionRpcHandler> {
   const ctx = new Context()
+  ctx.provide('credentials', createFakeCredentials())
   ctx.provide('llm', { registerAdapter: () => Object.assign(() => {}, { replace: () => {} }) })
   const fake = createFakeConnection()
   ctx.provide('connection', fake.connection)

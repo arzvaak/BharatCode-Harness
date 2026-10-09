@@ -14,6 +14,8 @@
  */
 
 import { createHash } from 'node:crypto'
+import { credentialKey } from '@deepseek-ai/dsh-credentials'
+import type { CredentialProvider, CredentialRecord } from '@deepseek-ai/dsh-credentials'
 import { decodeJwtPayload } from './jwt.js'
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
@@ -122,6 +124,54 @@ export interface SessionMap {
   antigravity?: ProviderAccounts<AntigravitySession>
 }
 
+/** Native host storage or an explicit legacy file used by standalone tools. */
+export interface SessionStoreBackend {
+  read(): Promise<SessionMap>
+  mutate(action: (store: SessionMap) => void): Promise<void>
+}
+export type SessionStoreLocation = string | SessionStoreBackend
+
+/** Native records are the runtime authority. Legacy files remain recoverable backups. */
+export function createNativeSessionStore(
+  credentials: Pick<CredentialProvider, 'readRecord' | 'modifyRecord'>,
+  legacyPaths: readonly string[] = [authFilePath(), legacyAuthFilePath()],
+): SessionStoreBackend {
+  const key = credentialKey('dsh-plugin-subscriptions', 'accounts')
+  const decode = (record: CredentialRecord): SessionMap => {
+    if (record.kind !== 'grant' || typeof record.payload !== 'object' || record.payload === null
+      || Array.isArray(record.payload)) throw new Error('subscriptions: unsupported native credential record')
+    const payload = record.payload as Record<string, unknown>
+    if (payload.schemaVersion !== 1 || typeof payload.sessions !== 'object' || payload.sessions === null
+      || Array.isArray(payload.sessions)) throw new Error('subscriptions: unsupported native credential schema')
+    return parseStore(JSON.stringify(payload.sessions), 'native credential service')
+  }
+  const migrate = async (): Promise<SessionMap> => {
+    for (const path of legacyPaths) {
+      try { return parseStore(await readFile(path, 'utf8'), path) }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
+    }
+    return {}
+  }
+  const recordOf = (sessions: SessionMap): CredentialRecord => ({ kind: 'grant', payload: { schemaVersion: 1, sessions } })
+  return {
+    async read() {
+      let record = await credentials.readRecord(key)
+      if (record === undefined) record = await credentials.modifyRecord(key, async current => current ?? recordOf(await migrate()))
+      if (record === undefined) throw new Error('subscriptions: native credential persistence was not acknowledged')
+      return decode(record)
+    },
+    async mutate(action) {
+      const committed = await credentials.modifyRecord(key, async current => {
+        const sessions = current === undefined ? await migrate() : decode(current)
+        action(sessions)
+        return recordOf(sessions)
+      })
+      if (committed === undefined) throw new Error('subscriptions: native credential persistence was not acknowledged')
+      decode(committed)
+    },
+  }
+}
+
 /** Any stored session, for provider-agnostic plumbing. */
 export type StoredSession = CodexSession | ClaudeSession | GrokSession | CopilotSession | AntigravitySession
 
@@ -217,7 +267,7 @@ function resolveCodexReference(entry: ProviderAccounts<CodexSession>, reference:
 export async function resolveAccountKey(
   provider: ProviderId,
   account: string,
-  path = authFilePath(),
+  path: SessionStoreLocation = authFilePath(),
 ): Promise<string> {
   const entry = (await loadStore(path))[provider]
   if (entry === undefined) return account
@@ -323,7 +373,8 @@ function assertSessionShape(provider: ProviderId, account: string, value: unknow
  * @param path - store file path; defaults to {@link authFilePath}.
  * @returns the parsed session map.
  */
-export async function loadStore(path = authFilePath()): Promise<SessionMap> {
+export async function loadStore(path: SessionStoreLocation = authFilePath()): Promise<SessionMap> {
+  if (typeof path !== 'string') return path.read()
   let text: string
   try {
     text = await readFile(path, 'utf8')
@@ -471,6 +522,16 @@ async function serialize<T>(path: string, action: () => Promise<T>): Promise<T> 
   }
 }
 
+/** Apply account changes under the backend's exclusive record transaction. */
+async function mutateStore(path: SessionStoreLocation, action: (store: SessionMap) => void): Promise<void> {
+  if (typeof path !== 'string') return path.mutate(action)
+  return serialize(path, async () => {
+    const store = await loadStore(path)
+    action(store)
+    await writeStore(store, path)
+  })
+}
+
 /**
  * List one provider's accounts, default first.
  * @param provider - the provider route.
@@ -479,7 +540,7 @@ async function serialize<T>(path: string, action: () => Promise<T>): Promise<T> 
  */
 export async function listAccounts<K extends ProviderId>(
   provider: K,
-  path = authFilePath(),
+  path: SessionStoreLocation = authFilePath(),
 ): Promise<AccountEntry<SessionOf<K>>[]> {
   const entry = (await loadStore(path))[provider]
   if (entry === undefined) return []
@@ -498,7 +559,7 @@ export async function listAccounts<K extends ProviderId>(
 export async function getAccountSession<K extends ProviderId>(
   provider: K,
   account?: string,
-  path = authFilePath(),
+  path: SessionStoreLocation = authFilePath(),
 ): Promise<SessionOf<K> | undefined> {
   const entry = (await loadStore(path))[provider]
   if (entry === undefined) return undefined
@@ -524,11 +585,10 @@ export async function saveAccountSession<K extends ProviderId>(
   provider: K,
   account: string,
   session: SessionOf<K>,
-  path = authFilePath(),
+  path: SessionStoreLocation = authFilePath(),
 ): Promise<void> {
   assertSessionShape(provider, account, session)
-  return serialize(path, async () => {
-    const store = await loadStore(path)
+  return mutateStore(path, store => {
     const entry = store[provider] as ProviderAccounts<SessionOf<K>> | undefined
     if (entry !== undefined) {
       account = resolveAccount(entry, account)
@@ -544,7 +604,6 @@ export async function saveAccountSession<K extends ProviderId>(
       default: entry?.default ?? account,
       accounts: { ...entry?.accounts, [account]: session },
     } satisfies ProviderAccounts<SessionOf<K>>
-    await writeStore(store, path)
   })
 }
 
@@ -558,10 +617,9 @@ export async function saveAccountSession<K extends ProviderId>(
 export async function deleteAccountSession(
   provider: ProviderId,
   account: string,
-  path = authFilePath(),
+  path: SessionStoreLocation = authFilePath(),
 ): Promise<void> {
-  return serialize(path, async () => {
-    const store = await loadStore(path)
+  return mutateStore(path, store => {
     const entry = store[provider]
     if (entry === undefined) return
     account = resolveAccount(entry, account)
@@ -577,7 +635,6 @@ export async function deleteAccountSession(
         accounts,
       }
     }
-    await writeStore(store, path)
   })
 }
 
@@ -590,16 +647,14 @@ export async function deleteAccountSession(
 export async function setDefaultAccount(
   provider: ProviderId,
   account: string,
-  path = authFilePath(),
+  path: SessionStoreLocation = authFilePath(),
 ): Promise<void> {
-  return serialize(path, async () => {
-    const store = await loadStore(path)
+  return mutateStore(path, store => {
     const entry = store[provider]
     if (entry !== undefined) account = resolveAccount(entry, account)
     if (entry === undefined || !Object.hasOwn(entry.accounts, account)) {
       throw new Error(`no ${provider} account "${account}" is logged in`)
     }
     ;(store as Record<string, unknown>)[provider] = { ...entry, default: account }
-    await writeStore(store, path)
   })
 }

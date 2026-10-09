@@ -1,3 +1,4 @@
+import { createFakeCredentials } from './fake-credentials.js'
 /**
  * Subscription usage lookups: fetchCodexUsage / fetchClaudeUsage payload
  * mapping (via an injected fetch, no network) and the `/subscriptions-auth`
@@ -294,6 +295,7 @@ test('fetchGrokUsage extracts reset window when creditUsagePercent is absent but
 /** Mount the plugin with fake llm/connection; return the RPC handler. */
 async function mount(): Promise<ConnectionRpcHandler> {
   const ctx = new Context()
+  ctx.provide('credentials', createFakeCredentials())
   ctx.provide('llm', { registerAdapter: () => Object.assign(() => {}, { replace: () => {} }) })
   const fake = createFakeConnection()
   ctx.provide('connection', fake.connection)

@@ -20,7 +20,7 @@ import {
   saveAccountSession,
   resolveAccountKey,
 } from '../auth/store.js'
-import type { AccountEntry, ProviderId } from '../auth/store.js'
+import type { AccountEntry, ProviderId, SessionStoreLocation } from '../auth/store.js'
 
 export { DISCOVERY_TIMEOUT_MS } from './common.js'
 
@@ -136,6 +136,8 @@ export interface AccountTokenManagerOptions<S extends TimedSession> {
   onAccountRemoved?: (account: string) => void
   /** Store backend; defaults to the durable auth store. */
   io?: AccountStoreIo<S>
+  /** Host-owned native credential backend; standalone callers may use the legacy file. */
+  store?: SessionStoreLocation
 }
 
 export class AccountTokenManager<S extends TimedSession> {
@@ -145,11 +147,11 @@ export class AccountTokenManager<S extends TimedSession> {
   constructor(private readonly options: AccountTokenManagerOptions<S>) {
     const provider = options.provider
     this.io = options.io ?? {
-      list: () => listAccounts(provider) as Promise<AccountEntry<S>[]>,
-      get: account => getAccountSession(provider, account) as Promise<S | undefined>,
-      save: (account, session) => saveAccountSession(provider, account, session as never),
-      remove: account => deleteAccountSession(provider, account),
-      resolve: account => resolveAccountKey(provider, account),
+      list: () => listAccounts(provider, options.store) as Promise<AccountEntry<S>[]>,
+      get: account => getAccountSession(provider, account, options.store) as Promise<S | undefined>,
+      save: (account, session) => saveAccountSession(provider, account, session as never, options.store),
+      remove: account => deleteAccountSession(provider, account, options.store),
+      resolve: account => resolveAccountKey(provider, account, options.store),
     }
   }
 

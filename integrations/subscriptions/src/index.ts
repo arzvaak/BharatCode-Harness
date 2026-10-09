@@ -1,8 +1,8 @@
 /**
  * dsh-plugin-subscriptions: register OAuth-subscription LLM providers
  * (ChatGPT/Codex, Claude, Grok, GitHub Copilot, Google Antigravity) on `ctx.llm`, and expose the `/subscriptions-auth`
- * RPC channel the web Settings page uses to run the logins. The token store
- * lives at `~/.dsh/plugins/subscriptions/auth.json`; the channel registers only when
+ * RPC channel the web Settings page uses to run the logins. Grants use the
+ * native credential service; legacy files are preserved during one-time migration. The channel registers only when
  * a host `connection` service exists, so headless compositions load fine.
  * @module dsh-plugin-subscriptions
  */
@@ -18,6 +18,7 @@ import type {
 } from '@deepseek-ai/dsh-llm'
 // Type-only: activates the `ctx.tools` Context merge for the inject block.
 import type {} from '@deepseek-ai/dsh-tools'
+import type {} from '@deepseek-ai/dsh-credentials'
 // Type-only: activates the `ctx.web` Context merge for optional registration.
 import type {} from '@deepseek-ai/dsh-web'
 import type { AttachmentStore, ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
@@ -46,6 +47,7 @@ import {
 } from './model-defaults.js'
 import {
   accountKeyOf,
+  createNativeSessionStore,
   deleteAccountSession,
   listAccounts,
   saveAccountSession,
@@ -60,6 +62,7 @@ import type {
   GrokSession,
   ProviderId,
   StoredSession,
+  SessionStoreLocation,
 } from './auth/store.js'
 import { DISCOVERY_TIMEOUT_MS, validateModels, withTimeout } from './providers/common.js'
 import type { ModelEntry, ProviderUsage } from './providers/common.js'
@@ -140,7 +143,7 @@ export type { ProviderStatus } from './auth/rpc.js'
 export type { AntigravitySession, ClaudeSession, CodexSession, CopilotSession, GrokSession, ProviderId } from './auth/store.js'
 
 export const name = 'dsh-plugin-subscriptions'
-export const inject = ['llm']
+export const inject = ['llm', 'credentials']
 
 /** Default maximum provider idle time while one stream read is outstanding. */
 export const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 300_000
@@ -402,6 +405,7 @@ export class SubscriptionsAuthController implements AuthController {
     private readonly antigravityConfig: Config['antigravity'] = {},
     /** The CLI version each route presents, shown beside the provider in Settings. */
     private readonly clientVersions: Partial<Record<ProviderId, () => Promise<CliVersion | undefined>>> = {},
+    private readonly store: SessionStoreLocation | undefined = undefined,
   ) {}
 
   usage(provider: ProviderId, account: string, signal: AbortSignal, force = false): Promise<ProviderUsage> {
@@ -428,7 +432,7 @@ export class SubscriptionsAuthController implements AuthController {
   }
 
   async status(provider: ProviderId): Promise<ProviderStatus> {
-    const entries = await listAccounts(provider)
+    const entries = await listAccounts(provider, this.store)
     // The plan name is shown by the usage section, so `detail` only carries errors.
     const detail = this.lastError.get(provider)
     const clientVersion = await this.clientVersions[provider]?.()
@@ -596,7 +600,7 @@ export class SubscriptionsAuthController implements AuthController {
   private persist(provider: ProviderId, session: StoredSession): Promise<void> {
     // Keyed by the account's stable identity: re-logging the same account
     // updates in place, a different account appends.
-    return saveAccountSession(provider, accountKeyOf(provider, session), session as never)
+    return saveAccountSession(provider, accountKeyOf(provider, session), session as never, this.store)
   }
 
   /**
@@ -632,13 +636,13 @@ export class SubscriptionsAuthController implements AuthController {
     this.claim(provider)
     this.flows.pending(provider)?.cancel()
     this.deviceFlows.pending(provider)?.cancel()
-    await deleteAccountSession(provider, account)
+    await deleteAccountSession(provider, account, this.store)
     this.lastError.delete(provider)
     this.onAuthChanged(provider, account)
   }
 
   async setDefault(provider: ProviderId, account: string): Promise<void> {
-    await setDefaultAccount(provider, account)
+    await setDefaultAccount(provider, account, this.store)
     this.onAuthChanged(provider, account)
   }
 }
@@ -671,6 +675,7 @@ export function presentedVersion(
 }
 
 export function apply(ctx: Context, config: Config): void {
+  const sessionStore = createNativeSessionStore(ctx.credentials)
   // Outbound requests (catalog discovery, the npm version lookup, token
   // refresh) must survive links where one TCP handshake exceeds Node's 250ms
   // Happy Eyeballs attempt budget; see MIN_CONNECT_ATTEMPT_TIMEOUT_MS.
@@ -769,6 +774,7 @@ export function apply(ctx: Context, config: Config): void {
       case 'codex': {
         const tokens = new AccountTokenManager<CodexSession>({
           provider: 'codex',
+          store: sessionStore,
           displayName: 'ChatGPT (Codex)',
           makeOptions: () => ({
             preemptMs: CODEX_PREEMPT_MS,
@@ -812,6 +818,7 @@ export function apply(ctx: Context, config: Config): void {
       case 'claude': {
         const tokens = new AccountTokenManager<ClaudeSession>({
           provider: 'claude',
+          store: sessionStore,
           displayName: 'Claude (Subscription)',
           makeOptions: () => ({
             preemptMs: CLAUDE_PREEMPT_MS,
@@ -848,6 +855,7 @@ export function apply(ctx: Context, config: Config): void {
       case 'grok': {
         const tokens = new AccountTokenManager<GrokSession>({
           provider: 'grok',
+          store: sessionStore,
           displayName: 'Grok (Subscription)',
           makeOptions: () => ({
             preemptMs: GROK_PREEMPT_MS,
@@ -881,6 +889,7 @@ export function apply(ctx: Context, config: Config): void {
       case 'copilot': {
         const tokens = new AccountTokenManager<CopilotSession>({
           provider: 'copilot',
+          store: sessionStore,
           displayName: 'GitHub Copilot',
           makeOptions: () => ({
             preemptMs: COPILOT_PREEMPT_MS,
@@ -911,6 +920,7 @@ export function apply(ctx: Context, config: Config): void {
       case 'antigravity': {
         const tokens = new AccountTokenManager<AntigravitySession>({
           provider: 'antigravity',
+          store: sessionStore,
           displayName: 'Google Antigravity',
           makeOptions: () => ({
             preemptMs: ANTIGRAVITY_PREEMPT_MS,
@@ -1167,6 +1177,7 @@ export function apply(ctx: Context, config: Config): void {
       } : {},
       ...providers.includes('claude') ? { claude: presentedVersion(claudeVersion) } : {},
     },
+    sessionStore,
   ), speed, {
     get: () => proxyGetConfig(),
     set: input => proxySetConfig(input),

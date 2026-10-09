@@ -1,8 +1,8 @@
 /**
  * dsh-plugin-subscriptions: register OAuth-subscription LLM providers
  * (ChatGPT/Codex, Claude, Grok, GitHub Copilot, Google Antigravity) on `ctx.llm`, and expose the `/subscriptions-auth`
- * RPC channel the web Settings page uses to run the logins. The token store
- * lives at `~/.dsh/plugins/subscriptions/auth.json`; the channel registers only when
+ * RPC channel the web Settings page uses to run the logins. Grants use the
+ * native credential service; legacy files are preserved during one-time migration. The channel registers only when
  * a host `connection` service exists, so headless compositions load fine.
  * @module dsh-plugin-subscriptions
  */

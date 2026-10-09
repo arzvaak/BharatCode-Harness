@@ -12,7 +12,7 @@ import { LlmAdapter } from '@deepseek-ai/dsh-llm';
 import type { GenerateOptions, LlmModelInfo, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm';
 import { TokenManager } from './common.js';
 import type { TokenManagerOptions } from './common.js';
-import type { AccountEntry, ProviderId } from '../auth/store.js';
+import type { AccountEntry, ProviderId, SessionStoreLocation } from '../auth/store.js';
 export { DISCOVERY_TIMEOUT_MS } from './common.js';
 /** Minimal session shape the token managers need (mirrors common.ts). */
 interface TimedSession {
@@ -80,6 +80,8 @@ export interface AccountTokenManagerOptions<S extends TimedSession> {
     onAccountRemoved?: (account: string) => void;
     /** Store backend; defaults to the durable auth store. */
     io?: AccountStoreIo<S>;
+    /** Host-owned native credential backend; standalone callers may use the legacy file. */
+    store?: SessionStoreLocation;
 }
 export declare class AccountTokenManager<S extends TimedSession> {
     private readonly options;

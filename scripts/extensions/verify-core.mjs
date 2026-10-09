@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdtemp, rm, readFile } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import assert from "node:assert/strict";
@@ -9,6 +9,13 @@ const bin = process.argv[2]
   : join(root, "apps/cli/lib/bin.js");
 const core = JSON.parse(await readFile(join(root, "integrations/core.json")));
 const home = await mkdtemp(join(tmpdir(), "bc-core-qualification-"));
+const legacyAuth = join(home, '.dsh/plugins/subscriptions/auth.json');
+const legacyBytes = JSON.stringify({ copilot: { default: 'fixture-user', accounts: { 'fixture-user': {
+  accessToken: 'isolated-fixture-access', refreshToken: 'isolated-fixture-refresh',
+  expiresAt: Date.now() + 86400000, account: 'fixture-user',
+} } } });
+await mkdir(join(home, '.dsh/plugins/subscriptions'), { recursive: true });
+await writeFile(legacyAuth, legacyBytes, { mode: 0o600 });
 let output = "";
 let exited = false;
 const startedAt = performance.now();
@@ -64,6 +71,24 @@ try {
   assert.ok(cookie, "Native authentication exchange failed");
   const skills = await fetch(`${address}/api/dsh-skills-manager/state`, { headers: { Origin: address, Cookie: cookie }, signal: AbortSignal.timeout(10000) });
   assert.equal(skills.status, 200, "Authenticated skills endpoint unavailable");
+  async function subscriptionRpc(endpoint, payload) {
+    const method = `subscriptions-auth.${endpoint}`;
+    const response = await fetch(`${address}/api/${method}`, {
+      method: 'POST', headers: { Origin: address, Cookie: cookie, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'client-request', rpcId: 'native-auth-fixture', method, payload }),
+      signal: AbortSignal.timeout(15000),
+    });
+    assert.equal(response.status, 200, 'Native subscription endpoint unavailable');
+    const envelope = await response.json();
+    assert.equal(envelope.result.ok, true, 'Native subscription operation failed');
+    return envelope.result.value;
+  }
+  const subscriptionStatus = await subscriptionRpc('status', {});
+  assert.equal(subscriptionStatus.providers.copilot.accounts[0]?.key, 'fixture-user', 'Native migration did not surface legacy account');
+  await subscriptionRpc('logout', { provider: 'copilot', account: 'fixture-user' });
+  assert.equal((await subscriptionRpc('status', {})).providers.copilot.accounts.length, 0, 'Native logout did not persist');
+  assert.equal(await readFile(legacyAuth, 'utf8'), legacyBytes, 'Migration changed legacy credentials');
+  assert.ok((await readFile(join(home, '.dsh/.credentials.yaml'), 'utf8')).includes('dsh-plugin-subscriptions/accounts'), 'Grant missing from native storage');
   const response = await fetch(`${address}/api/bc-extension-store`, {
     headers: { Origin: address, Cookie: cookie },
     signal: AbortSignal.timeout(10000),

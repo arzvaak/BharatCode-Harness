@@ -1,3 +1,4 @@
+import { createFakeCredentials } from './fake-credentials.js'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtemp, rm } from 'node:fs/promises'
@@ -16,6 +17,7 @@ test('provider settings RPC edits picker visibility without losing the editor ca
   const previous = process.env.DSH_HOME
   process.env.DSH_HOME = home
   const ctx = new Context()
+  ctx.provide('credentials', createFakeCredentials())
   const adapters = new Map<string, AccountAwareAdapter>()
   const tools = new Set<string>()
   ctx.provide('llm', {
@@ -90,6 +92,7 @@ test('Antigravity registers the real multi-account adapter with provider setting
   const previous = process.env.DSH_HOME
   process.env.DSH_HOME = home
   const ctx = new Context()
+  ctx.provide('credentials', createFakeCredentials())
   const adapters = new Map<string, AccountAwareAdapter>()
   ctx.provide('llm', {
     registerAdapter: (routes: string[], adapter: AccountAwareAdapter) => {

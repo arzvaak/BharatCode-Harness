@@ -1,3 +1,4 @@
+import { createFakeCredentials } from './fake-credentials.js'
 /**
  * Unit tests for the `modelDefaults` / `setModelDefault` endpoints: payload
  * validation, the catalog shape served to the Settings page, and the
@@ -47,6 +48,7 @@ async function mount(options: { tier?: string } = {}): Promise<{ handler: Connec
   const fake: FakeLlm = { registered: [], replaced: [], catalogClears: 0 }
   CodexAdapter.prototype.clearAccountCatalog = function (account?: string) { fake.catalogClears++; clearCodexCatalog.call(this, account) }
   const ctx = new Context()
+  ctx.provide('credentials', createFakeCredentials())
   const listed = [{ id: 'gpt-5.6-sol', name: 'GPT-5.6-Sol' }]
   // A configured tier appears in the picker catalog the same way the pool
   // contributes it, so the settings catalog has to recognise and skip it.

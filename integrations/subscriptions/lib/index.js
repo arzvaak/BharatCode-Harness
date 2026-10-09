@@ -1,8 +1,8 @@
 /**
  * dsh-plugin-subscriptions: register OAuth-subscription LLM providers
  * (ChatGPT/Codex, Claude, Grok, GitHub Copilot, Google Antigravity) on `ctx.llm`, and expose the `/subscriptions-auth`
- * RPC channel the web Settings page uses to run the logins. The token store
- * lives at `~/.dsh/plugins/subscriptions/auth.json`; the channel registers only when
+ * RPC channel the web Settings page uses to run the logins. Grants use the
+ * native credential service; legacy files are preserved during one-time migration. The channel registers only when
  * a host `connection` service exists, so headless compositions load fine.
  * @module dsh-plugin-subscriptions
  */
@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { readClaudeCodeCredentials, refreshClaudeSynced } from './auth/claude-code-creds.js';
 import { BadRequest, registerAuthRpc } from './auth/rpc.js';
 import { defaultEffortOf, loadModelDefaults, setDefaultEffort, } from './model-defaults.js';
-import { accountKeyOf, deleteAccountSession, listAccounts, saveAccountSession, setDefaultAccount, PROVIDER_IDS, } from './auth/store.js';
+import { accountKeyOf, createNativeSessionStore, deleteAccountSession, listAccounts, saveAccountSession, setDefaultAccount, PROVIDER_IDS, } from './auth/store.js';
 import { DISCOVERY_TIMEOUT_MS, validateModels, withTimeout } from './providers/common.js';
 import { AccountTokenManager } from './providers/accounts.js';
 import { DEFAULT_RATE_LIMIT_MAX_WAIT_MS, resolveRateLimitWait } from './providers/rate-limit.js';
@@ -41,7 +41,7 @@ import { createVideoGenerateTool, videosDirectory } from './tools/video-generate
 import { ensureConnectAttemptTimeout, proxiedFetch, proxyGetConfig, proxySetConfig, proxyTestConnection, restoreConnectAttemptTimeout } from './http.js';
 import { ProviderSettingsStore, PROVIDER_TOOLS, validatePreferences } from './provider-settings.js';
 export const name = 'dsh-plugin-subscriptions';
-export const inject = ['llm'];
+export const inject = ['llm', 'credentials'];
 /** Default maximum provider idle time while one stream read is outstanding. */
 export const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 300_000;
 /** Bound on one pool quota poll — member selection must not hang on a usage endpoint. */
@@ -188,6 +188,7 @@ export class SubscriptionsAuthController {
     poolUsage;
     antigravityConfig;
     clientVersions;
+    store;
     /** Last login failure per provider, surfaced as `detail` until the next success. */
     lastError = new Map();
     /**
@@ -252,7 +253,7 @@ export class SubscriptionsAuthController {
     /** Antigravity OAuth/runtime configuration. */
     antigravityConfig = {}, 
     /** The CLI version each route presents, shown beside the provider in Settings. */
-    clientVersions = {}) {
+    clientVersions = {}, store = undefined) {
         this.flows = flows;
         this.deviceFlows = deviceFlows;
         this.onAuthChanged = onAuthChanged;
@@ -262,6 +263,7 @@ export class SubscriptionsAuthController {
         this.poolUsage = poolUsage;
         this.antigravityConfig = antigravityConfig;
         this.clientVersions = clientVersions;
+        this.store = store;
     }
     usage(provider, account, signal, force = false) {
         const fetcher = this.usageFetchers[provider];
@@ -286,7 +288,7 @@ export class SubscriptionsAuthController {
         return { mediaType: 'video/mp4', dataBase64: data.toString('base64') };
     }
     async status(provider) {
-        const entries = await listAccounts(provider);
+        const entries = await listAccounts(provider, this.store);
         // The plan name is shown by the usage section, so `detail` only carries errors.
         const detail = this.lastError.get(provider);
         const clientVersion = await this.clientVersions[provider]?.();
@@ -448,7 +450,7 @@ export class SubscriptionsAuthController {
     persist(provider, session) {
         // Keyed by the account's stable identity: re-logging the same account
         // updates in place, a different account appends.
-        return saveAccountSession(provider, accountKeyOf(provider, session), session);
+        return saveAccountSession(provider, accountKeyOf(provider, session), session, this.store);
     }
     /**
      * Settle once no OAuth completion is running for a provider.
@@ -480,12 +482,12 @@ export class SubscriptionsAuthController {
         this.claim(provider);
         this.flows.pending(provider)?.cancel();
         this.deviceFlows.pending(provider)?.cancel();
-        await deleteAccountSession(provider, account);
+        await deleteAccountSession(provider, account, this.store);
         this.lastError.delete(provider);
         this.onAuthChanged(provider, account);
     }
     async setDefault(provider, account) {
-        await setDefaultAccount(provider, account);
+        await setDefaultAccount(provider, account, this.store);
         this.onAuthChanged(provider, account);
     }
 }
@@ -512,6 +514,7 @@ export function presentedVersion(cache, waitMs = STATUS_VERSION_WAIT_MS) {
     };
 }
 export function apply(ctx, config) {
+    const sessionStore = createNativeSessionStore(ctx.credentials);
     // Outbound requests (catalog discovery, the npm version lookup, token
     // refresh) must survive links where one TCP handshake exceeds Node's 250ms
     // Happy Eyeballs attempt budget; see MIN_CONNECT_ATTEMPT_TIMEOUT_MS.
@@ -609,6 +612,7 @@ export function apply(ctx, config) {
             case 'codex': {
                 const tokens = new AccountTokenManager({
                     provider: 'codex',
+                    store: sessionStore,
                     displayName: 'ChatGPT (Codex)',
                     makeOptions: () => ({
                         preemptMs: CODEX_PREEMPT_MS,
@@ -650,6 +654,7 @@ export function apply(ctx, config) {
             case 'claude': {
                 const tokens = new AccountTokenManager({
                     provider: 'claude',
+                    store: sessionStore,
                     displayName: 'Claude (Subscription)',
                     makeOptions: () => ({
                         preemptMs: CLAUDE_PREEMPT_MS,
@@ -684,6 +689,7 @@ export function apply(ctx, config) {
             case 'grok': {
                 const tokens = new AccountTokenManager({
                     provider: 'grok',
+                    store: sessionStore,
                     displayName: 'Grok (Subscription)',
                     makeOptions: () => ({
                         preemptMs: GROK_PREEMPT_MS,
@@ -716,6 +722,7 @@ export function apply(ctx, config) {
             case 'copilot': {
                 const tokens = new AccountTokenManager({
                     provider: 'copilot',
+                    store: sessionStore,
                     displayName: 'GitHub Copilot',
                     makeOptions: () => ({
                         preemptMs: COPILOT_PREEMPT_MS,
@@ -746,6 +753,7 @@ export function apply(ctx, config) {
             case 'antigravity': {
                 const tokens = new AccountTokenManager({
                     provider: 'antigravity',
+                    store: sessionStore,
                     displayName: 'Google Antigravity',
                     makeOptions: () => ({
                         preemptMs: ANTIGRAVITY_PREEMPT_MS,
@@ -1000,7 +1008,7 @@ export function apply(ctx, config) {
                 : async () => ({ version: config.codexClientVersion, source: 'config' }),
         } : {},
         ...providers.includes('claude') ? { claude: presentedVersion(claudeVersion) } : {},
-    }), speed, {
+    }, sessionStore), speed, {
         get: () => proxyGetConfig(),
         set: input => proxySetConfig(input),
         test: payload => proxyTestConnection(payload.url, payload.proxy),

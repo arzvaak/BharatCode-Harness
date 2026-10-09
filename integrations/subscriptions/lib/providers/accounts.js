@@ -62,11 +62,11 @@ export class AccountTokenManager {
         this.options = options;
         const provider = options.provider;
         this.io = options.io ?? {
-            list: () => listAccounts(provider),
-            get: account => getAccountSession(provider, account),
-            save: (account, session) => saveAccountSession(provider, account, session),
-            remove: account => deleteAccountSession(provider, account),
-            resolve: account => resolveAccountKey(provider, account),
+            list: () => listAccounts(provider, options.store),
+            get: account => getAccountSession(provider, account, options.store),
+            save: (account, session) => saveAccountSession(provider, account, session, options.store),
+            remove: account => deleteAccountSession(provider, account, options.store),
+            resolve: account => resolveAccountKey(provider, account, options.store),
         };
     }
     /** The provider's accounts, default first (straight from the store). */
