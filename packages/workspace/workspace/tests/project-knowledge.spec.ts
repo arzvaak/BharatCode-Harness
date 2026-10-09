@@ -17,7 +17,7 @@ afterEach(async () => {
     await rm(root, { recursive: true, force: true })
   }
 })
-async function harness(pool = new MemoryMediaPool(), existingRoot?: string) {
+async function harness(pool = new MemoryMediaPool(), existingRoot?: string, maxSearchResults = 50) {
   const root = existingRoot ?? (await mkdtemp(join(tmpdir(), 'bharatcode-knowledge-')))
   const ctx = new Context()
   const storage = ctx.plugin(Storage)
@@ -27,7 +27,7 @@ async function harness(pool = new MemoryMediaPool(), existingRoot?: string) {
   ctx.provide('sessionPersistence', { list: async () => [] } as never)
   const registry = ctx.plugin(WorkspaceRegistry)
   await registry.await()
-  const service = ctx.plugin(ProjectKnowledge, { maxArtifactBytes: 4096, maxContextBytes: 1024 })
+  const service = ctx.plugin(ProjectKnowledge, { maxArtifactBytes: 4096, maxContextBytes: 1024, maxSearchResults })
   await service.await()
   const dispose = async () => {
     await service.dispose()
@@ -217,4 +217,27 @@ it('freezes preparation input before queued work and accepts equivalent reordere
     requestId: 'stable-input',
   })
   expect(retry.id).toBe(prepared.id)
+})
+
+it('browses the latest registered revisions with an empty query without exposing unregistered files', async () => {
+  const h = await harness()
+  await writeFile(join(h.root, 'note.md'), 'First revision')
+  await writeFile(join(h.root, 'private.md'), 'Never registered')
+  const first = await h.knowledge.register({ projectId: h.workspace.id, path: 'note.md', kind: 'note' })
+  await writeFile(join(h.root, 'note.md'), 'Second revision')
+  const latest = await h.knowledge.refresh(first.id)
+  const result = h.knowledge.search({ projectId: h.workspace.id, query: '' })
+  expect(result.hits.map(hit => hit.id)).toEqual([latest.id])
+  expect(result.hits[0]?.excerpt).toBe('Second revision')
+  expect(result.hasMore).toBe(false)
+})
+it('filters classification before the bounded search result budget', async () => {
+  const h = await harness(new MemoryMediaPool(), undefined, 1)
+  await writeFile(join(h.root, 'finding.md'), 'Measured finding')
+  const finding = await h.knowledge.register({ projectId: h.workspace.id, path: 'finding.md', kind: 'finding' })
+  await writeFile(join(h.root, 'source.md'), 'Background source')
+  await h.knowledge.register({ projectId: h.workspace.id, path: 'source.md', kind: 'source' })
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '' }).hits[0]?.kind).toBe('source')
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '', kinds: ['finding'] }).hits.map(hit => hit.id)).toEqual([finding.id])
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '', kinds: [] }).hits).toEqual([])
 })

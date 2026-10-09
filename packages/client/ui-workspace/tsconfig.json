@@ -88,6 +88,12 @@
     },
     {
       "path": "../ui-dockkit"
+    },
+    {
+      "path": "../../api/job-controller/tsconfig.client.json"
+    },
+    {
+      "path": "../ui-sidebar-right"
     }
   ]
 }

@@ -167,3 +167,5 @@
   min-width: 0;
   overflow: hidden;
 }
+
+.terminalPanel { height: 100%; min-height: 0; width: 100%; --dsh-dockkit-dock-layer: 10; }

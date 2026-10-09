@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
+import React from '../visuals/node_modules/react/index.js';
+import { JSDOM } from '../visuals/node_modules/jsdom/lib/api.js';
+const dom=new JSDOM('<html><head></head><body></body></html>');let plugin;
+runInNewContext(readFileSync(new URL('../visuals/lib/client.js',import.meta.url),'utf8'),{window:{__ModuleLoader__:{load(record){plugin=record.factory(id=>{assert.equal(id,'react');return React;});}}},document:dom.window.document,TextDecoder,TextEncoder,URL,console,setTimeout,clearTimeout});
+let gallery;const cleanup=[];
+plugin.apply({effect(fn){cleanup.push(fn());},slots:{entries:()=>[],subscribe:()=>()=>{},register(options,component){if(options.id==='visuals'){assert.equal(options.name,'settings.section');gallery=component;}return()=>{};},inject(name,fn){assert.equal(name,'settings.section');cleanup.push(fn());}},locale:{register(ns,dictionaries){assert.deepEqual(JSON.parse(JSON.stringify(dictionaries.en)),JSON.parse(JSON.stringify(dictionaries.zh)));assert.ok(!/\p{Script=Han}/u.test(JSON.stringify(dictionaries)));return()=>{};},bind:()=>key=>key,subscribe:()=>()=>{},getSnapshot:()=>({revision:0})}});
+assert.ok(gallery,'gallery available in shared Settings');
+for(const fn of cleanup.reverse())fn?.();dom.window.close();
+const registry=JSON.parse(readFileSync(new URL('../registry.json',import.meta.url),'utf8'));
+assert.equal(registry.language,'en');assert.ok(registry.deferred.includes('searxng'));assert.ok(!registry.plugins.some(row=>row.enabled&&row.id==='searxng'));
+console.log('PASS English Visuals for all locale aliases, shared settings gallery, SearXNG deferred');

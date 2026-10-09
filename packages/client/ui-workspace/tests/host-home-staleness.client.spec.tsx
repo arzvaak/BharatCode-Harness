@@ -29,6 +29,8 @@ function SidebarFrame({ renderSlot }: FrameProps) {
 /** The assembled sidebar over one Workspace inside the POSIX home the Host reports. */
 async function bench() {
   const runtime = await SlotTestRuntime.create()
+  runtime.ctx.provide('sidebarRight', { openResource: vi.fn(), openTab: vi.fn() })
+  runtime.ctx.provide('jobs', { state: createSnapshotStore({ rows: {}, observed: {} }), watchRows: () => () => {}, observe: () => () => {} })
   runtime.ctx.provide('shortcuts', { register: () => () => {}, catalog: createSnapshotStore([]) })
   runtime.ctx.provide('uiConversation', {})
   runtime.ctx.provide('layout', { selectPanel: vi.fn(), beginNavigation: () => new AbortController().signal })

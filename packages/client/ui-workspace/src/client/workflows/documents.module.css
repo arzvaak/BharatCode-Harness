@@ -58,9 +58,9 @@
   box-sizing: border-box; font-family: Georgia, serif; font-size: 17px; line-height: 1.8; }
 .empty { margin: auto; padding: 28px; color: var(--dsw-alias-label-secondary); font-size: 13px; text-align: center; }
 .error, .conflict { margin: 0; padding: 12px 16px; font-size: 12px; color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-layer-2); }
-.conflict pre { max-height: 160px; overflow: auto; white-space: pre-wrap; }
+.conflict pre { --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2); --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2); max-height: 160px; overflow: auto; white-space: pre-wrap; }
 
-.conflict { flex: 0 1 auto; min-height: 0; max-height: 40%; overflow: auto; }
+.conflict { --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2); --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2); flex: 0 1 auto; min-height: 0; max-height: 40%; overflow: auto; }
 
 .heading { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 12px; }
 .files { flex: none; max-height: 35%; overflow: auto; border-bottom: 0.5px solid var(--dsw-alias-border-general); }
@@ -69,3 +69,8 @@
 .file { display: flex; gap: 4px; min-width: 0; }
 .file button[role='tab'] { flex: 1; text-align: left; }
 .file button:last-child { flex: none; }
+
+.editorTabs { display: flex; flex: none; max-width: 100%; overflow-x: auto; border-bottom: 0.5px solid var(--dsw-alias-border-general); padding: 4px 8px; gap: 4px; }
+.editorTabs .file { flex: none; max-width: 220px; }
+
+.editorTabs button[role="tab"] { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }

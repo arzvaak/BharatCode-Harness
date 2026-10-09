@@ -1,0 +1,6 @@
+# English Engram host plugin; light automatic ingestion.
+- insert:
+    - id: dsh-engram
+      name: '@kenz1117/dsh-engram'
+      config:
+        ingest: 'light'

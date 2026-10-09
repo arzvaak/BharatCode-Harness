@@ -7,6 +7,7 @@ import type {
   HostObservable,
 } from '@deepseek-ai/dsh-client-ui-slots'
 import { IconNewChatOutlineRegular, IconCodeOutlineRegular, IconSearchOutlineRegular, IconEditOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { createWorkflowPresentationStore, WorkflowView } from './presentation.ts'
 import css from './workflows.module.css'
@@ -31,8 +32,9 @@ export function WorkflowIcon({ profile }: { profile: WorkflowView }) {
   const Icon = icons[profile]
   return <Icon size={19} />
 }
-export function WorkflowNavigation({ wide, useSelection, useStore, actions, reveal, t }: WorkflowNavigationProps) {
+export function WorkflowNavigation({ wide, useSelection, useStore, usePanelInfo, actions, reveal, t }: WorkflowNavigationProps) {
   const session = useSelection(value => value.sessionId) ?? 'new'
+  const workflowVisible = usePanelInfo(info => info.activePanelId === null)
   const selected = useStore(value => value.profiles[session] ?? 'chat')
   return (
     <nav className={css.navigation} data-wide={wide} aria-label={t('workflow.label')}>
@@ -43,7 +45,7 @@ export function WorkflowNavigation({ wide, useSelection, useStore, actions, reve
           type="button"
           aria-label={t(`workflow.${profile}`)}
           title={wide ? undefined : t(`workflow.${profile}`)}
-          aria-current={selected === profile ? 'page' : undefined}
+          aria-current={workflowVisible && selected === profile ? 'page' : undefined}
           className={css.workflowChoice}
           onClick={() => {
             actions.choose(session, profile)
@@ -59,7 +61,7 @@ export function WorkflowNavigation({ wide, useSelection, useStore, actions, reve
               <small>{t(`workflow.${profile}.detail`)}</small>
             </span>
           )}
-          {wide && selected === profile && <span className={css.activeDot} aria-hidden="true" />}
+          {wide && workflowVisible && selected === profile && <span className={css.activeDot} aria-hidden="true" />}
         </button>
       ))}
     </nav>

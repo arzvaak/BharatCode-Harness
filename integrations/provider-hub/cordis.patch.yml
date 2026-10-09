@@ -1,0 +1,3 @@
+- insert:
+    - id: provider-hub
+      name: '@arzvaak/dsh-provider-hub'

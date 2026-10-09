@@ -39,7 +39,9 @@
         "@deepseek-ai/dsh-client-ui-renderer",
         "@deepseek-ai/dsh-client-ui-session",
         "@deepseek-ai/dsh-client-ui-sidebar",
-        "@deepseek-ai/dsh-api-workspace-files"
+        "@deepseek-ai/dsh-api-workspace-files",
+        "@deepseek-ai/dsh-api-job-controller",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
       ],
       "platform": "web"
     }
@@ -94,7 +96,9 @@
     "@deepseek-ai/dsh-api-workspace-files": "workspace:*",
     "@deepseek-ai/dsh-client-ui-dockkit": "workspace:*",
     "react-dom": "^18.2.0",
-    "@types/react-dom": "~18.3.0"
+    "@types/react-dom": "~18.3.0",
+    "@deepseek-ai/dsh-api-job-controller": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-sidebar-right": "workspace:*"
   },
   "files": [
     "lib/index.js",

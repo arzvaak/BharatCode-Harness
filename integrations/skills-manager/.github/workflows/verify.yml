@@ -1,0 +1,83 @@
+name: Verify
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Run the full verification suite
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      full:
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  changes:
+    name: Change scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_tests: ${{ steps.scope.outputs.run_tests }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: scope
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // Manual checks and release calls always run the full suite; regular pushes skip presentation-only changes.
+            if (${{ inputs.full == true }}) {
+              core.setOutput('run_tests', 'true');
+              return;
+            }
+            const base = context.eventName === 'pull_request'
+              ? context.payload.pull_request.base.sha : context.payload.before;
+            if (!base || /^0+$/.test(base) || context.ref.startsWith('refs/tags/')) {
+              core.setOutput('run_tests', 'true');
+              return;
+            }
+            const { execFileSync } = require('node:child_process');
+            const files = execFileSync('git', ['diff', '--no-renames', '--name-only', '-z', base, 'HEAD'], { encoding: 'utf8' }).split('\0').filter(Boolean);
+            const presentation = /^(?:README(?:\.[^/]+)?\.md|CHANGELOG(?:\.[^/]+)?\.md|docs\/.*|assets\/(?:branding|screenshots)\/.*)$/;
+            const run = files.some(file => !presentation.test(file));
+            core.setOutput('run_tests', String(run));
+            core.info(run ? 'Running full verification' : 'Documentation or presentation-image changes only; skipping full tests');
+
+  verify:
+    name: Full verification (Node.js ${{ matrix.node }})
+    needs: changes
+    if: needs.changes.outputs.run_tests == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.19.0", "24"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile --config.minimumReleaseAge=0 --config.auto-install-peers=true --config.strictDepBuilds=false
+      - run: npm run verify
+
+  compatibility:
+    needs: changes
+    if: needs.changes.outputs.run_tests == 'true'
+    uses: ./.github/workflows/compatibility.yml

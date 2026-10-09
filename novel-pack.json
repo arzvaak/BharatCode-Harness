@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "ENOENT",
+    "summary": "Could not read package.json: Error: ENOENT: no such file or directory, open '/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/package.json'",
+    "detail": "This is related to npm not being able to find a file."
+  }
+}

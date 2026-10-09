@@ -1,0 +1,7 @@
+# dsh-skills-manager bundle patch
+#
+# Automatically mounts when added with `dsh plugin --profile web add <path>` (Loader bundle layer).
+# Users mounting manually can add an insert entry to profiles/web/cordis.patch.yml.
+- insert:
+    - id: skills-manager
+      name: '@michengai/dsh-skills-manager'

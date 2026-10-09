@@ -55,6 +55,8 @@ async function bench() {
   const ctx = new Context()
   ctx.provide('shortcuts', { register: () => () => {}, catalog: createSnapshotStore([]) })
   ctx.provide('uiConversation', {})
+  ctx.provide('sidebarRight', { openResource: vi.fn(), openTab: vi.fn() })
+  ctx.provide('jobs', { state: createSnapshotStore({ rows: {}, observed: {} }), watchRows: () => () => {}, observe: () => () => {} })
   await ctx.plugin(SlotRegistry).await()
   const create = vi.fn(async (input: { name: string } | { path: string }) => ({
     workspaceId: 'ws-new' as never,
@@ -188,7 +190,7 @@ describe('ui-workspace apply', () => {
 
   it('declares the services it drives', () => {
     expect(inject).toEqual([
-      'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'remote.workspaceFiles', 'remote.documents', 'layout', 'shortcuts',
+      'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'remote.workspaceFiles', 'remote.documents', 'layout', 'shortcuts', 'sidebarRight', 'jobs',
     ])
   })
 

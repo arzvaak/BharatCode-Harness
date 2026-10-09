@@ -231,6 +231,9 @@ export interface ISidebarRight {
   isExpanded(): boolean
   /** Collapse the column, or expand it and focus its active dock pane. Recorded in the sequence. */
   toggleExpanded(): void
+  /** Independently show or hide terminal instances without closing them. */
+  toggleTerminal(): void
+
   /**
    * Focus a tab and the pane holding it, raising a floating one. Recorded.
    * @param tabId - the tab; one that does not exist is left alone.
@@ -482,6 +485,17 @@ export class SidebarRightController implements ISidebarRight {
       return layout?.expanded ? activeDockPaneId(layout) : undefined
     })
   }
+
+  /** Reveal retained terminals or create the first one on an explicit toggle. */
+  toggleTerminal(): void {
+    const { sessionId, actions } = this.require()
+    if (!Object.values(this.mountedSurface()?.layout.tabs ?? {}).some(tab => tab.kind === 'terminal')) {
+      this.openTab('terminal')
+      return
+    }
+    actions.toggleTerminal(sessionId)
+  }
+
 
   /**
    * Focus a tab and the pane holding it; a missing tab is left alone.

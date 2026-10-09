@@ -159,7 +159,8 @@
   z-index: var(--dsh-dockkit-float-layer, 60);
 }
 
-.tabHost {
+.tabHost,
+.emptyTabHost {
   min-width: 0;
   min-height: 0;
   pointer-events: auto;

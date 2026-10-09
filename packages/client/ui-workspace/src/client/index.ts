@@ -16,6 +16,9 @@
  * packages/client/AGENTS.md.
  */
 import type {} from '@deepseek-ai/dsh-client-product-analytics/client'
+import type {} from '@deepseek-ai/dsh-api-job-controller/client'
+import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
+import { fileAddressFor, resolveWorkspacePath } from '@deepseek-ai/dsh-util-workspace-path'
 import type { Context } from '@deepseek-ai/cordis'
 import type { RemoteHostFacts } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client'
@@ -88,6 +91,12 @@ declare module '@deepseek-ai/dsh-api-session-controller/client' {
 }
 
 /** Dictionary namespace owned by this plugin. */
+declare module '@deepseek-ai/cordis' {
+  interface Events {
+    'workspace/file/open': (sessionId: SessionId, path: string) => boolean | undefined
+  }
+}
+
 const NS = 'workspace'
 
 /**
@@ -99,7 +108,7 @@ const NS = 'workspace'
  * declaration through `slots.inject()` instead of assuming order.
  */
 export const inject = [
-  'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'remote.workspaceFiles', 'remote.documents', 'layout', 'shortcuts',
+  'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'remote.workspaceFiles', 'remote.documents', 'layout', 'shortcuts', 'sidebarRight', 'jobs',
 ]
 
 /**
@@ -121,11 +130,23 @@ export function apply(ctx: Context): void {
       unwrap(await ctx.remote.workspaceFiles.saveEditable(session, path, { text, expectedVersion })),
     readDraft: async (session, path) => unwrap(await ctx.remote.documents.readDraft(session, path)),
     saveDraft: async request => unwrap(await ctx.remote.documents.saveDraft(request)),
-    clearDraft: async (session, path, revision) => unwrap(await ctx.remote.documents.clearDraft(session, path, revision)),
+    clearDraft: async (session, path, revision) => { unwrap(await ctx.remote.documents.clearDraft(session, path, revision)) },
   })
-  ctx.effect(() => () => documents.dispose(), 'workspace.documents')
+  ctx.effect(() => () => { documents.dispose() }, 'workspace.documents')
   const workflowHandle = createWorkflowPresentationStore()
   const workflowInstance = workflowHandle.create()
+  ctx.on('workspace/file/open', (sessionId: SessionId, path: string) => {
+    const profile = workflowInstance.getSnapshot().profiles[sessionId] ?? 'chat'
+    if (profile === 'chat' || /\.(pdf|png|jpe?g|gif|webp|svg|mp3|mp4|docx|xlsx|pptx)$/i.test(path)) return undefined
+    workflowInstance.actions.showEditor(JSON.stringify([sessionId, profile]), true)
+    if (profile === 'research') workflowInstance.actions.researchView(sessionId, { section: 'notes' })
+    const cwd = sessions.list.getSnapshot().byId[sessionId]?.cwd
+    const view = documents.state.getSnapshot().sessions[sessionId]
+    const existingPath = Object.keys(view?.documents ?? {}).find(key => resolveWorkspacePath(cwd, key) === resolveWorkspacePath(cwd, path))
+    const documentPath = existingPath ?? (cwd !== undefined && path.startsWith(`${cwd}/`) ? path.slice(cwd.length + 1) : path)
+    void documents.open(sessionId, documentPath).then(() => { rememberDocument(sessionId, documentPath) })
+    return true
+  })
   const restoredDocuments = new Set<SessionId>()
   const rememberDocument = (session: SessionId, path: string): void => {
     const view = documents.state.getSnapshot().sessions[session]
@@ -261,9 +282,33 @@ export function apply(ctx: Context): void {
   ctx.slots.inject('conversation.workspace', () => ctx.slots.register({
     name: 'conversation.workspace', locale: NS,
     inject: () => ({
-      hooks: { presentation: workflowInstance, documents: documents.state },
-      arrange: (key: string, preset: import('./workflows/layout.ts').WorkspacePreset, swapped: boolean) => workflowInstance.actions.arrange(key, preset, swapped),
-      showEditor: (key: string, visible: boolean) => workflowInstance.actions.showEditor(key, visible),
+      hooks: { presentation: workflowInstance, documents: documents.state, jobs: ctx.jobs.state },
+      changeResearch: (key: string, change: Partial<import('./workflows/surfaces.ts').ResearchPreference>) => { workflowInstance.actions.researchView(key, change) },
+      showResearchChat: (key: string, visible: boolean) => { workflowInstance.actions.showResearchChat(key, visible) },
+      searchArtifacts: async (request: import('@deepseek-ai/dsh-workspace/types').SearchArtifactsRequest) => unwrap(await ctx.remote.knowledge.search(request)),
+      readArtifact: async (id: import('@deepseek-ai/dsh-workspace/types').ArtifactRevisionId) => unwrap(await ctx.remote.knowledge.read(id)),
+      registerArtifact: async (request: import('@deepseek-ai/dsh-workspace/types').RegisterArtifactRequest) => unwrap(await ctx.remote.knowledge.register(request)),
+      inspectArtifact: contextInjected().inspectArtifact,
+      readContext: contextInjected().readContext,
+      requestEvidenceHandoff: (sessionId: SessionId, artifact: import('@deepseek-ai/dsh-workspace/types').ArtifactRevision, workflow: import('@deepseek-ai/dsh-workspace/types').WorkflowProfile) => {
+        handoffTarget.set({ sessionId, workflow, sourceProjectId: artifact.projectId, evidence: [artifact] })
+      },
+      listFiles: async (sessionId: SessionId, path: string) => unwrap(await ctx.remote.workspaceFiles.list(sessionId, path)),
+      openPreview: (sessionId: SessionId, path: string) => {
+        ctx.sidebarRight.openResource(fileAddressFor(sessionId, sessions.list.getSnapshot().byId[sessionId]?.cwd, path))
+      },
+      openFiles: () => { if (ctx.sidebarRight.mounted.getSnapshot() !== undefined) ctx.sidebarRight.openTab('files') },
+      openTerminal: () => { ctx.sidebarRight.openTab('terminal') },
+      toggleFiles: () => {
+        if (ctx.sidebarRight.isExpanded()) ctx.sidebarRight.toggleExpanded()
+        else ctx.sidebarRight.openTab('files')
+      },
+      toggleTerminal: () => { ctx.sidebarRight.toggleTerminal() },
+      openSession,
+      watchRuns: (sessionId: SessionId) => ctx.jobs.watchRows(sessionId),
+      observeRun: (sessionId: SessionId, id: import('@deepseek-ai/dsh-api-job-controller/client').JobView['id']) => ctx.jobs.observe(sessionId, id),
+      arrange: (key: string, preset: import('./workflows/layout.ts').WorkspacePreset, swapped: boolean) => { workflowInstance.actions.arrange(key, preset, swapped) },
+      showEditor: (key: string, visible: boolean) => { workflowInstance.actions.showEditor(key, visible) },
       restoreDocuments: (session: SessionId): void => {
         if (restoredDocuments.has(session)) return
         restoredDocuments.add(session)

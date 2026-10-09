@@ -246,12 +246,11 @@ export class ProjectKnowledge extends Service {
     })
   }
   /** Retrieve only explicitly registered evidence in the selected project.
-   * @param request - Project and literal text to match.
+   * @param request - Project and literal text to match; an empty query browses registered sources.
    * @returns Newest matching revision per source, bounded by deployment policy.
    */
   search(request: SearchArtifactsRequest): SearchArtifactsResult {
     const query = request.query.trim().toLocaleLowerCase()
-    if (query === '') return { hits: [], hasMore: false }
     const latest = new Map<string, ArtifactRevision>()
     for (const [, artifact] of this.table().entries()) {
       if (artifact.projectId !== request.projectId) continue
@@ -259,8 +258,9 @@ export class ProjectKnowledge extends Service {
       if (previous === undefined || artifact.capturedAt >= previous.capturedAt) latest.set(artifact.path, artifact)
     }
     const matches = [...latest.values()].filter(artifact =>
-      `${artifact.title}\n${artifact.text}`.toLocaleLowerCase().includes(query),
-    )
+      (request.kinds === undefined || request.kinds.includes(artifact.kind))
+      && `${artifact.title}\n${artifact.text}`.toLocaleLowerCase().includes(query),
+    ).sort((a, b) => b.capturedAt.localeCompare(a.capturedAt) || b.path.localeCompare(a.path))
     const hits: ArtifactSearchHit[] = []
     for (const artifact of matches) {
       if (hits.length >= this.limits.maxSearchResults) break

@@ -1,0 +1,23 @@
+{
+  "home": "/home/sushi/.local/share/bharatcode-plugin-preview-20261008",
+  "profile": "/home/sushi/.local/share/bharatcode-plugin-preview-20261008/profiles/integrations",
+  "plugins": [
+    "zero",
+    "visuals",
+    "tool-call-guard",
+    "skills-manager",
+    "provider-hub",
+    "subscriptions",
+    "cost-meter",
+    "engram",
+    "context",
+    "zotero",
+    "github",
+    "task-board",
+    "library",
+    "lsp-actions",
+    "browser-playwright",
+    "novel-continuity",
+    "deepread"
+  ]
+}

@@ -171,6 +171,8 @@ export interface RegisterArtifactRequest {
 export interface SearchArtifactsRequest {
   readonly projectId: WorkspaceId
   readonly query: string
+  /** Restrict classifications before applying result and byte limits. */
+  readonly kinds?: readonly ArtifactKind[]
 }
 /** Explicit revision selection for a bounded context capture. */
 export interface CaptureArtifactsRequest {

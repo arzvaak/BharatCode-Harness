@@ -176,3 +176,5 @@
 .titleIcon {
   flex: none;
 }
+
+.row[aria-current="true"] { background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-brand-primary); }

@@ -1,0 +1,7 @@
+{
+  "name": "bharatcode-english-integrations",
+  "private": true,
+  "type": "module",
+  "description": "Native profile installation and qualification helpers for the reviewed English plugin set",
+  "dependencies": { "yaml": "2.8.1" }
+}

@@ -5,7 +5,7 @@ kind: "package-reference"
 
 # @deepseek-ai/dsh-client-ui-plugin-manager
 
-English | [中文](README.zh.md)
+The BharatCode Web profile activates this page by default. Product copy remains English for every locale selection.
 
 Desktop product events use the optional [product analytics service](../product-analytics/README.md); ordinary Web interactions are excluded.
 

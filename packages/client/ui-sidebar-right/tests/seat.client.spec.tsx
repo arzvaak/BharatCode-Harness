@@ -175,6 +175,30 @@ function element(container: HTMLElement, selector: string): HTMLElement {
 }
 
 describe('RightbarSeat presentation', () => {
+  it('opens a guide from the add button when terminal projection leaves the resource pane empty', async () => {
+    const h = await mountSeat()
+    act(() => { h.registerPage('terminal', true); h.controller.toggleExpanded() })
+    const guide = h.controller.active()!
+    act(() => { h.controller.openTab('terminal', { replaceTab: guide.id }) })
+    expect(h.view.container.querySelector('[data-dockkit-empty]')).not.toBeNull()
+    expect(h.view.container.querySelector('button[aria-label="Split"]')).toBeNull()
+    fireEvent.click(element(h.view.container, '[data-dockkit-add-tab]'))
+    expect(h.view.container.querySelector('[data-dockkit-empty]')).toBeNull()
+    expect(h.controller.active()?.kind).toBe('guide')
+  })
+
+  it('does not offer an unusable split control in the independent terminal dock', async () => {
+    const outlet = document.createElement('div')
+    outlet.setAttribute('data-shell-terminal', '')
+    document.body.append(outlet)
+    try {
+      const h = await mountSeat()
+      act(() => { h.registerPage('terminal', true); h.controller.openTab('terminal') })
+      expect(outlet.querySelector('[data-terminal-dock]')).not.toBeNull()
+      expect(outlet.querySelector('button[aria-label="Split"]')).toBeNull()
+    } finally { outlet.remove() }
+  })
+
   it('keeps a background retained body through standard-source registration and removal', async () => {
     const h = await mountSeat(1440, true, 0, false, true)
     const tab = h.open('retained.txt')

@@ -286,6 +286,7 @@ export function AppFrame({
           {renderSlot('rightbar', { width: normal.rightbar, viewportWidth: viewport, canShow: normal.rightbar > 0 })}
         </RightbarColumn>
       </>
+      <div data-shell-terminal className={css.terminalSeat} />
       <div className={css.overlayLayer} data-shell-overlay>
         {overlays}
       </div>

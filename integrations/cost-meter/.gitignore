@@ -1,0 +1,25 @@
+node_modules/
+bin/
+.audit-tmp/
+.qoder/
+.workbuddy/
+HANDOFF.md
+/.idea/
+.tmp-issue59/
+.tmp-*
+.tmp-npm-cache/
+.zcode/
+/opencode.json
+
+.pnpm-store/
+.hoplite/attachments/
+
+.local-backup-*/
+
+# Fork runtime sources and local review artifacts.
+!lib/
+!lib/**
+!artifacts/
+!artifacts/*.tgz
+node_modules/
+lib-test/

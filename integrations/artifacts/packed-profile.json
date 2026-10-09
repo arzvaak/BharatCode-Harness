@@ -1,0 +1,8 @@
+{
+  "home": "/home/sushi/.local/share/bharatcode-packed-qualification-20261008",
+  "profile": "integrations",
+  "port": 3196,
+  "command": "DSH_HOME=/home/sushi/.local/share/bharatcode-packed-qualification-20261008 node apps/cli/lib/bin.js --profile integrations --no-open --port 3196",
+  "language": "en",
+  "searxng": "deferred"
+}

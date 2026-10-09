@@ -1,7 +1,8 @@
 /** Shared complete-source editor; unsupported manuscript syntax remains untouched. */
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
+import type { WorkspaceKey } from '../locales.ts'
 import type { EditorSession } from './documents.ts'
 import css from './documents.module.css'
 
@@ -16,6 +17,9 @@ export interface DocumentPanelActions {
 }
 /** Source editor state and callbacks, with workspace-owned localized copy. */
 export type DocumentPanelProps = PropsLocale<'workspace'> & DocumentPanelActions & {
+  hideFiles?: boolean
+  titleKey?: WorkspaceKey
+  sourceKey?: WorkspaceKey
   collapseEditor: () => void
   sessionId: SessionId | null
   view: EditorSession | undefined
@@ -26,23 +30,25 @@ export type DocumentPanelProps = PropsLocale<'workspace'> & DocumentPanelActions
  * @param props - Session editor state, localized copy, and callbacks.
  * @returns The complete-source editor pane.
  */
-export function DocumentPanel({ sessionId, view, profile, t, collapseEditor, ...actions }: DocumentPanelProps) {
+export function DocumentPanel({ sessionId, view, profile, t, collapseEditor, titleKey = 'editor.title', sourceKey = 'editor.source', hideFiles = false, ...actions }: DocumentPanelProps) {
   const [path, setPath] = useState('')
   const [filesOpen, setFilesOpen] = useState<boolean | undefined>(undefined)
   const [opening, setOpening] = useState(false)
   const document = view?.active === undefined ? undefined : view.documents[view.active]
+  const sourceRef = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => { if (hideFiles && document !== undefined) sourceRef.current?.focus() }, [hideFiles, document?.path])
   const open = async (): Promise<void> => {
     if (sessionId === null || path.trim() === '' || opening) return
     setOpening(true)
     try { await actions.openDocument(sessionId, path.trim()) }
     finally { setOpening(false) }
   }
-  return <section className={css.panel} aria-label={t('editor.title')} data-profile={profile}>
+  return <section className={css.panel} aria-label={t(titleKey)} data-profile={profile}>
     <div className={css.heading}>
-      <strong>{t('editor.title')}</strong>
+      <strong title={document?.path}>{hideFiles ? t(titleKey) : document?.path.split(/[\\/]/).at(-1) ?? t(titleKey)}</strong>
       <button type="button" onClick={collapseEditor} aria-label={t('editor.collapse')} title={t('editor.collapse')}>›</button>
     </div>
-    <details className={css.files} open={filesOpen ?? document === undefined}>
+    {!hideFiles && <details className={css.files} open={filesOpen ?? document === undefined}>
       <summary onClick={(event) => { event.preventDefault(); setFilesOpen(!(filesOpen ?? document === undefined)) }}><span>{t('editor.files')} ({Object.keys(view?.documents ?? {}).length})</span>
         <span className={css.filename} title={document?.path}>{document?.path.split(/[\\/]/).at(-1)}</span>
       </summary>
@@ -60,7 +66,7 @@ export function DocumentPanel({ sessionId, view, profile, t, collapseEditor, ...
             onClick={() => { if (sessionId !== null) void actions.closeDocument(sessionId, file) }}>×</button>
         </div>)}
       </div>
-    </details>
+    </details>}
     {view?.error !== undefined && <p role="alert" className={css.error}>{view.error}</p>}
     {document === undefined ? <div className={css.empty}>{t(sessionId === null ? 'editor.noSession' : 'editor.empty')}</div> : <>
       <div className={css.status}>
@@ -74,7 +80,7 @@ export function DocumentPanel({ sessionId, view, profile, t, collapseEditor, ...
         <details><summary>{t('editor.compare')}</summary><pre>{document.conflict.text}</pre></details>
         <button type="button" disabled={document.busy} onClick={() => { if (sessionId !== null) void actions.rebaseDocument(sessionId, document.path) }}>{t('editor.rebase')}</button>
       </div>}
-      <textarea className={css.source} aria-label={t('editor.source')} spellCheck={profile !== 'coding'} value={document.text}
+      <textarea ref={sourceRef} className={css.source} aria-label={t(sourceKey)} spellCheck={profile !== 'coding'} value={document.text}
         onChange={(event) => { if (sessionId !== null) void actions.editDocument(sessionId, document.path, event.target.value) }}
         onKeyDown={(event) => {
           if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {

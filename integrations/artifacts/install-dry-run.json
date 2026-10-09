@@ -1,0 +1,28 @@
+{
+  "executable": "/home/sushi/.local/share/niftyberg-toolchains/node-v24.19.0/bin/node",
+  "args": [
+    "/mnt/slow-stuff/bharatcode-workflows/apps/cli/lib/bin.js",
+    "plugin",
+    "--profile",
+    "integrations",
+    "add",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/artifacts/arzvaak-dsh-zero-0.1.0.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/artifacts/local-dsh-visuals-0.1.0.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/artifacts/dsh-tool-call-guard-0.1.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/artifacts/michengai-dsh-skills-manager-1.1.10.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/provider-hub/artifacts/arzvaak-dsh-provider-hub-0.1.1-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/subscriptions/artifacts/arzvaak-bharatcode-subscriptions-0.9.7-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/cost-meter/artifacts/arzvaak-bharatcode-cost-meter-1.8.12-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/engram/kenz1117-dsh-engram-0.7.15.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/context/dsh-context-0.64.0.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-zotero-plugin-0.1.0-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/perrylink-dsh-github-0.7.19-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/linxin666-dsh-client-ui-task-board-0.4.5-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-library-0.2.19-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-lsp-actions-0.5.11-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-browser-playwright-0.1.1-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/bharatcode-dsh-novel-continuity-0.2.0-bharatcode.1.tgz",
+    "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-deepread-1.0.1-bharatcode.1.tgz"
+  ],
+  "home": "/home/sushi/.local/share/bharatcode-packed-qualification-20261008"
+}

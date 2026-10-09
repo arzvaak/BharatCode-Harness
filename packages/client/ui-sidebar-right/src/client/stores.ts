@@ -40,6 +40,8 @@ import { GUIDE_KIND, pageAddress, type SidebarRightSeed } from './contract/seed.
 
 /** One session's docking surface: the layout, its sequence, and the id counter. */
 export interface SurfaceState {
+  /** Window-local intent; restored terminal records remain hidden until explicitly opened. */
+  readonly terminalVisible?: boolean
   readonly layout: LayoutState
   readonly history: History
   /** How many ids this surface has minted; carried so replay stays reproducible. */
@@ -198,7 +200,7 @@ function advance(surface: SurfaceState, plan: SurfacePlan, seed: () => SidebarRi
   const after = replay(surface.layout, planned)
   const settled = planSettle(after, counter.mint, after.expanded ? makeTab : undefined)
   const stepped = record(surface.history, surface.layout, [...planned, ...settled])
-  return { layout: stepped.state, history: stepped.history, minted: counter.used() }
+  return { ...surface, layout: stepped.state, history: stepped.history, minted: counter.used() }
 }
 
 /**
@@ -219,6 +221,7 @@ function seat(
 
 /** Declared write set; each entry is one settled intent. */
 type SidebarRightActions = {
+  toggleTerminal: (draft: SidebarRightState, sessionId: string) => void
   open: (draft: SidebarRightState, sessionId: string) => void
   setExpanded: (draft: SidebarRightState, sessionId: string, expanded: boolean) => void
   toggleExpanded: (draft: SidebarRightState, sessionId: string) => void
@@ -270,6 +273,9 @@ export function createSidebarRightStore(
   const handle = defineStore<SidebarRightState, SidebarRightActions>({
     init: (): SidebarRightState => ({ bySession: {} }),
     actions: {
+      toggleTerminal: (d, sessionId: string) => {
+        d.bySession = seat(d, sessionId, surface => ({ ...surface, terminalVisible: surface.terminalVisible !== true }))
+      },
       // Materialize a session's surface without changing it, so the first read
       // after a session switch sees the collapsed empty column rather than nothing.
       open: (d, sessionId: string) => { d.bySession = seat(d, sessionId, surface => surface) },
@@ -306,6 +312,9 @@ export function createSidebarRightStore(
       // closing the tab it replaces. `settled` reports the tab the planner
       // landed on, synchronously, because actions return nothing.
       openContent: (d, sessionId: string, intent, settled) => {
+        if (intent.kind === 'terminal') {
+          d.bySession = seat(d, sessionId, surface => ({ ...surface, terminalVisible: true }))
+        }
         d.bySession = seat(d, sessionId, s => advance(s, (state, mint) => {
           const { kind, contentId, title, replaceTab: replace } = intent
           const ops: LayoutOp[] = [...planSetExpanded(state, true)]
