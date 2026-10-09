@@ -12,6 +12,8 @@ import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { validateArchive } from "../../integrations/extension-store/src/archive.js";
+const qualificationToken = process.env.BC_QUALIFICATION_GITHUB_TOKEN;
+delete process.env.BC_QUALIFICATION_GITHUB_TOKEN;
 const root = resolve(import.meta.dirname, "../..");
 const pnpmManifest = join(root, "node_modules/pnpm/package.json");
 const pnpmBin = join(
@@ -158,8 +160,12 @@ try {
     cwd: consumer,
     env,
   });
+  if (qualificationToken || process.argv.includes('--github-account')) run(process.execPath, [join(root, 'scripts/extensions/packed-pipeline-readonly.mjs'), consumer, ...(!qualificationToken ? ['--use-gh-session'] : [])], {
+    cwd: consumer, env: { ...env, BC_QUALIFICATION_GITHUB_TOKEN: qualificationToken },
+  });
+  else console.log('Packed GitHub account evidence not requested; registration fixtures do not qualify account workflows.');
   console.log(
-    `Packed-install fixture passed: ${selected.size} independent archives on native ${process.platform}. This is not hosted-account qualification.`,
+    `Packed-install fixture passed: ${selected.size} independent archives on native ${process.platform}. Full extension lifecycle and additional accounts/platforms remain unqualified.`,
   );
 } finally {
   rmSync(consumer, { recursive: true, force: true });

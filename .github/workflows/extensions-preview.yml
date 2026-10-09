@@ -13,6 +13,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   qualification:
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/core-qualification.yml
   publish:
     needs: qualification

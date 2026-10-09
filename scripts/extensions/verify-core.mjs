@@ -66,6 +66,11 @@ try {
   assert.equal(unauthenticated.status, 401, "Forged local request admitted");
   const skillsDenied = await fetch(`${address}/api/dsh-skills-manager/state`, { headers: { Origin: address, Cookie: "dsh-auth-forged=arbitrary" } });
   assert.equal(skillsDenied.status, 401, "Unauthenticated skills request admitted");
+  const authDenied = await fetch(`${address}/api/subscriptions-auth.status`, {
+    method: 'POST', headers: { Origin: address, Cookie: 'dsh-auth-forged=arbitrary', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'client-request', rpcId: 'forged-auth-fixture', method: 'subscriptions-auth.status', payload: {} }),
+  });
+  assert.equal(authDenied.status, 401, 'Unauthenticated subscription account request admitted');
   const exchange = await fetch(launchUrl, { redirect: "manual" });
   const cookie = exchange.headers.get("set-cookie")?.split(";")[0];
   assert.ok(cookie, "Native authentication exchange failed");
