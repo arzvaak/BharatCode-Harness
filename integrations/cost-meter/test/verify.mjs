@@ -1804,7 +1804,7 @@ assert.deepEqual(Object.keys(fullPrices.providers).sort(), ['anthropic', 'openai
 for (const [provider, model] of [['opencode', 'gpt5.6 luna(go)'], ['zen', 'deepseek-v4-flash'], ['opencode', 'totally-unknown-xyz'], ['openai', 'GPT-5.6 LUNA']]) {
   assert.equal(providerPriceEntryFor(provider, model, fullPrices).priced, false, 'No silent fuzzy or cross-route pricing: ' + provider + ':' + model)
 }
-assert.equal(providerPriceEntryFor('openai', 'gpt-5.6-luna', fullPrices).priced, true, 'An exact configured direct route remains priced')
+assert.equal(providerPriceEntryFor('openai', 'gpt-6.1-sol', fullPrices).priced, true, 'An exact configured direct route remains priced')
 console.log('[ok] BC exact provider/model pricing and unconfigured-route refusals passed')
 
 // 6.8 未命中列表判定与计费口径一致(v1.5.35):路由 provider 前缀(go:/opencode: 等)下
