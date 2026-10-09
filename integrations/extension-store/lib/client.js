@@ -1971,6 +1971,40 @@ __export(client_exports, {
 module.exports = __toCommonJS(client_exports);
 var import_semver = __toESM(require_semver2(), 1);
 var import_react = __toESM(require("react"), 1);
+
+// src/operations.js
+function validateOperation(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("Invalid extension operation");
+  const { action } = input;
+  const noFields = ["refresh", "disconnect", "clear-cache"];
+  const extensionActions = ["install", "remove", "rollback", "inspect-dependencies", "disconnect-extension", "connect-extension", "profile-enable", "workspace-enable"];
+  if (typeof action !== "string" || ![...noFields, ...extensionActions, "connect", "cancel"].includes(action)) throw Error("Unknown extension operation");
+  const result = { action };
+  if (extensionActions.includes(action)) {
+    if (typeof input.id !== "string" || input.id.length > 4096 || !/^[-a-z0-9]+$/.test(input.id)) throw Error("Invalid extension ID");
+    result.id = input.id;
+  }
+  if (action === "connect" || action === "connect-extension") {
+    const min = action === "connect" ? 10 : 1, max = action === "connect" ? 4096 : 16384;
+    if (typeof input.token !== "string" || input.token.trim().length < min || input.token.length > max) throw Error("Enter a connection credential");
+    result.token = input.token;
+  }
+  if (action === "cancel") {
+    if (typeof input.requestId !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(input.requestId)) throw Error("Invalid installation request");
+    result.requestId = input.requestId;
+  }
+  if (action === "profile-enable" || action === "workspace-enable") {
+    if (typeof input.enabled !== "boolean") throw Error("Invalid activation choice");
+    result.enabled = input.enabled;
+  }
+  if (action === "workspace-enable") {
+    if (typeof input.workspace !== "string" || !input.workspace.trim() || input.workspace.length > 4096) throw Error("Invalid workspace");
+    result.workspace = input.workspace;
+  }
+  return result;
+}
+
+// src/client.jsx
 var import_jsx_runtime = require("react/jsx-runtime");
 var inject = ["slots", "layout"];
 async function request(action) {
@@ -1978,7 +2012,7 @@ async function request(action) {
     method: action ? "POST" : "GET",
     headers: action ? { "Content-Type": "application/json" } : {},
     credentials: "same-origin",
-    ...action ? { body: JSON.stringify(action) } : {}
+    ...action ? { body: JSON.stringify(validateOperation(action)) } : {}
   });
   const value = await response.json();
   if (!response.ok) throw Error(value.error ?? "Extension store unavailable");

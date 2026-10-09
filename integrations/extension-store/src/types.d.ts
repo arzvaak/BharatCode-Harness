@@ -55,3 +55,22 @@ export interface InstalledState {
   records: InstalledExtension[];
   workspaceEnabled: [workspaceId: string, extensionId: string][];
 }
+
+/** Intent-bearing operations use the existing native manager; no independent installer. */
+export type StoreOperation =
+  | { action: "refresh" | "disconnect" | "clear-cache" }
+  | { action: "connect"; token: string }
+  | { action: "install" | "remove" | "rollback" | "inspect-dependencies" | "disconnect-extension"; id: string }
+  | { action: "connect-extension"; id: string; token: string }
+  | { action: "cancel"; requestId: string }
+  | { action: "profile-enable"; id: string; enabled: boolean }
+  | { action: "workspace-enable"; id: string; workspace: string; enabled: boolean };
+export interface WorkspaceActivation { workspaceId: string; extensionId: string; enabled: boolean; }
+export interface QualificationEvidence {
+  platform: "linux" | "win32" | "darwin" | "web";
+  sourceCommit: string;
+  artifactSha256: string;
+  check: "packed-install" | "lifecycle" | "workflow";
+  result: "passed" | "failed" | "blocked";
+  evidence: string;
+}

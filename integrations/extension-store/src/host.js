@@ -12,6 +12,7 @@ import { ExtensionStore } from "./store.js";
 import { configureConnection } from "./connections.js";
 import { RuntimeManager } from "./runtime.js";
 import { trustedRequest, json, body } from "./http.js";
+import { validateOperation } from "./operations.js";
 import { canInstall } from "./contracts.js";
 import { inspectDependencies } from './dependencies.js';
 export const name = "bc-extension-store";
@@ -212,7 +213,7 @@ export async function apply(ctx, config = {}) {
         json(res, 405, { error: "Method not supported" });
         return;
       }
-      const request = await body(req);
+      const request = validateOperation(await body(req));
       const disconnect = new AbortController();
       req.once("aborted", () => disconnect.abort());
       res.once("close", () => { if (!res.writableEnded) disconnect.abort(); });

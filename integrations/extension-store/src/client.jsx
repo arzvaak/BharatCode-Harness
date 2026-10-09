@@ -1,12 +1,13 @@
 import semver from "semver";
 import React, { useEffect, useState } from "react";
+import { validateOperation } from "./operations.js";
 export const inject = ["slots", "layout"];
 async function request(action) {
   const response = await fetch("/api/bc-extension-store", {
     method: action ? "POST" : "GET",
     headers: action ? { "Content-Type": "application/json" } : {},
     credentials: "same-origin",
-    ...(action ? { body: JSON.stringify(action) } : {}),
+    ...(action ? { body: JSON.stringify(validateOperation(action)) } : {}),
   });
   const value = await response.json();
   if (!response.ok) throw Error(value.error ?? "Extension store unavailable");

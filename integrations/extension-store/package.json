@@ -8,7 +8,11 @@
     ".": "./src/host.js",
     "./client": "./lib/client.js",
     "./package.json": "./package.json",
-    "./types": "./src/types.d.ts"
+    "./types": "./src/types.d.ts",
+    "./operations": {
+      "types": "./src/operations.d.ts",
+      "default": "./src/operations.js"
+    }
   },
   "files": [
     "src",

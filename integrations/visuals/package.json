@@ -38,7 +38,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/*.test.js",
+    "test": "node --test tests/*.test.js && node --expose-internals scripts/composition-smoke.mjs",
     "preview": "node scripts/preview.mjs",
     "test:composition": "node --expose-internals scripts/composition-smoke.mjs"
   },

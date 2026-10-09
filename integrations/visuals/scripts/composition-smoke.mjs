@@ -1,11 +1,11 @@
 /** Isolated Loader fixture; does not launch or change the user's Desktop profile. */
 import { registerHooks } from 'node:module';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import assert from 'node:assert/strict';
-const harness = process.env.DSH_SOURCE || '/home/sushi/Applications/deepseek-harness-source';
+const harness = process.env.DSH_SOURCE || fileURLToPath(new URL('../../../', import.meta.url));
 const url = path => pathToFileURL(join(harness, path)).href;
 // Use the built Cordis library, independently of temporary source-checkout test stubs.
 registerHooks({ resolve(specifier, context, next) {
@@ -22,7 +22,7 @@ const ctx = new Context();
 try {
   await writeFile(join(fixture, 'cordis.yml'), [
     `- id: prompt\n  name: ${JSON.stringify(join(harness, 'packages/core/system-prompt/lib/index.js'))}\n  config: {}`,
-    `- id: visuals\n  name: ${JSON.stringify(resolve('src/host.js'))}`,
+    `- id: visuals\n  name: ${JSON.stringify(fileURLToPath(new URL('../src/host.js', import.meta.url)))}`,
   ].join('\n') + '\n');
   await ctx.plugin(Loader, { baseUrl: pathToFileURL(fixture + '/').href });
   await ctx.loader.create({ name: join(harness, 'vendor/include/lib/index.js'), config: { path: 'cordis.yml' } });
