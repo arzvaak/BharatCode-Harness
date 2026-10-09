@@ -55,6 +55,8 @@ test("rejects duplicates, unsafe identifiers and unknown schema", () => {
     (x) => (x.entries[0].runtime.args = [1]),
     (x) => (x.entries[0].dependencyIds = ["../outside"]),
     (x) => (x.entries[0].dependencyIds = ["python", "python"]),
+    (x) => (x.entries[0].dependencyRanges = { outside: "*" }),
+    (x) => { x.entries[0].dependencyIds = ["python"]; x.entries[0].dependencyRanges = { python: "invalid" }; },
   ]) {
     const x = catalog();
     mutate(x);

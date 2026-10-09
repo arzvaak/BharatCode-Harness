@@ -85,3 +85,28 @@ test('deadline reaches quiescence with a descendant retaining stdio', { timeout:
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('signed candidate ranges supplement native minimums before availability is reported', async () => {
+  const runner = async () => ({ available: true, version: '1.5.0' });
+  const [duckdb] = await inspectDependencies(['duckdb'], { runner, ranges: { duckdb: '=1.5.6' } });
+  assert.equal(duckdb.available, false);
+  assert.match(duckdb.reason, /=1.5.6/);
+  const [node] = await inspectDependencies(['node'], { runner, ranges: { node: '>=0.0.0' } });
+  assert.equal(node.available, false, 'candidate ranges cannot relax BC runtime floors');
+  let calls = 0;
+  await assert.rejects(inspectDependencies(['python'], { runner: async () => { calls++; }, ranges: { outside: '*' } }));
+  await assert.rejects(inspectDependencies(['python'], { runner: async () => { calls++; }, ranges: { python: 'invalid' } }));
+  assert.equal(calls, 0);
+});
+
+test('native version parsing never turns development builds into pinned stable releases', async () => {
+  for (const version of ['1.5.6', '1.5.6.dev42', '1.5.6_dev42', '1.5.6rc1', '1.5.6-rc.1']) {
+    const runner = (_command, _args, options) => probeCommand(process.execPath, ['-e', `console.log(${JSON.stringify(version)})`], options);
+    const [result] = await inspectDependencies(['duckdb'], { subprocess, runner, ranges: { duckdb: '=1.5.6' } });
+    assert.equal(result.available, version === '1.5.6', version);
+    if (version === '1.5.6-rc.1') assert.equal(result.version, version);
+  }
+  const runner = (_command, _args, options) => probeCommand(process.execPath, ['-e', 'console.log("jupyter core : 7.0.0.dev0")'], options);
+  const [jupyter] = await inspectDependencies(['jupyter'], { subprocess, runner, ranges: { jupyter: '=7.0.0' } });
+  assert.equal(jupyter.available, false);
+});

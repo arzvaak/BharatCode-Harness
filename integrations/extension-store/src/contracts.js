@@ -59,6 +59,11 @@ export function validateCatalog(value) {
       || new Set(e.dependencyIds).size !== e.dependencyIds.length
       || e.dependencyIds.some(id => !DEPENDENCY_IDS.includes(id))))
       throw Error('Invalid dependency requirements');
+    if (e.dependencyRanges !== undefined && (!object(e.dependencyRanges)
+      || Object.entries(e.dependencyRanges).some(([id, range]) => !(e.dependencyIds ?? []).includes(id)
+        || typeof range !== 'string' || range.length > 256 || !semver.validRange(range))))
+      throw Error(`Invalid dependency version requirements: ${e.id}`);
+
     if (
       (e.kind === "native" && e.scope !== "profile") ||
       (e.kind === "mcp" && e.scope !== "session")

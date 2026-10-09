@@ -222,7 +222,7 @@ export async function apply(ctx, config = {}) {
           const entry = store.catalog.entries.find(e => e.id === request.id);
           if (!entry) throw Error('Unknown extension');
           json(res, 200, { ...(await snapshot()), inspectedDependencies: {
-            id: entry.id, results: await inspectDependencies(entry.dependencyIds ?? [], { signal: disconnect.signal, subprocess: ctx.subprocess }),
+            id: entry.id, results: await inspectDependencies(entry.dependencyIds ?? [], { signal: disconnect.signal, subprocess: ctx.subprocess, ranges: entry.dependencyRanges }),
           } });
           return;
         }

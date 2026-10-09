@@ -62,7 +62,7 @@
       "version": "unqualified",
       "source": "https://github.com/motherduckdb/mcp-server-motherduck",
       "sourceCommit": "41acb581d9bc04e427655ba5178b2c5c01f68cd2",
-      "license": "Unresolved; see upstream terms",
+      "license": "MIT",
       "scope": "session",
       "platforms": [
         "linux",
@@ -71,7 +71,10 @@
       "bcVersion": "0.2.0-rc.2",
       "status": "needs-qualification",
       "requirements": [
-        "Select local analytics route. Distinguish local DuckDB from cloud account requirements. Useful beside Data Insight/SQL, with explicit write capability."
+        "Pinned upstream source is 1.1.0 at 41acb581d9bc04e427655ba5178b2c5c01f68cd2; adapted distributable and Linux/Windows qualification remain unavailable.",
+        "Python >=3.10 and the pinned upstream dependency DuckDB 1.5.6; FastMCP >=4.0.11, Click >=8.5.0 and pytz >=2026.5 need a locked, qualified runtime distribution.",
+        "Local files default to read-only. Select the database path explicitly; in-memory mode requires explicit read-write permission. Set bounded query/output limits before qualification.",
+        "MotherDuck cloud access is a separate optional account route. No cloud token is required for the local DuckDB route."
       ],
       "description": "Query local analytical data and DuckDB databases; optional MotherDuck connection.",
       "tools": [],
@@ -79,7 +82,11 @@
       "dependencyIds": [
         "python",
         "duckdb"
-      ]
+      ],
+      "dependencyRanges": {
+        "python": ">=3.10.0",
+        "duckdb": "=1.5.6"
+      }
     },
     {
       "id": "microsoft-markitdown",
