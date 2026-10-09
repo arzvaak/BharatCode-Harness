@@ -21,11 +21,11 @@ const fixture = await mkdtemp(join(tmpdir(), 'dsh-visuals-composition-'));
 const ctx = new Context();
 try {
   await writeFile(join(fixture, 'cordis.yml'), [
-    `- id: prompt\n  name: ${JSON.stringify(join(harness, 'packages/core/system-prompt/lib/index.js'))}\n  config: {}`,
-    `- id: visuals\n  name: ${JSON.stringify(fileURLToPath(new URL('../src/host.js', import.meta.url)))}`,
+    `- id: prompt\n  name: ${JSON.stringify(url('packages/core/system-prompt/lib/index.js'))}\n  config: {}`,
+    `- id: visuals\n  name: ${JSON.stringify(new URL('../src/host.js', import.meta.url).href)}`,
   ].join('\n') + '\n');
   await ctx.plugin(Loader, { baseUrl: pathToFileURL(fixture + '/').href });
-  await ctx.loader.create({ name: join(harness, 'vendor/include/lib/index.js'), config: { path: 'cordis.yml' } });
+  await ctx.loader.create({ name: url('vendor/include/lib/index.js'), config: { path: 'cordis.yml' } });
   await ctx.loader.await();
   assert.ok(ctx.systemPrompt, 'system prompt service activated through YAML Loader');
   const assembly = await ctx.systemPrompt.assemble();

@@ -1,6 +1,6 @@
 // Verify new sources, project isolation, policy persistence, and real content loading in isolated directories.
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -95,10 +95,11 @@ try {
     await skill(join(plain, directory, "skills", "plain-skill"), "plain-skill");
   }
   await skill(join(copilot.path, "plain-skill"), "plain-skill");
+  const canonicalPlain = await realpath(plain), canonicalNested = await realpath(nested);
   const plainRoots = await core.projectRoots([plain]);
   assert.deepEqual(plainRoots.map((r) => r.kind), ["project-dsh", "project-agents", "project-copilot"], "non-Git workspaces discover native and external sources");
-  assert.ok(plainRoots.every((r) => r.projectRoot === plain));
-  assert.ok((await core.projectRoots([nested])).every((r) => r.projectRoot === nested), "a non-Git subdirectory independently uses its own cwd");
+  assert.ok(plainRoots.every((r) => r.projectRoot === canonicalPlain));
+  assert.ok((await core.projectRoots([nested])).every((r) => r.projectRoot === canonicalNested), "a non-Git subdirectory independently uses its own cwd");
   const plainView = await core.state({ projectCwds: [plain] });
   assert.equal(plainView.roots.filter((r) => r.scope === "project").flatMap((r) => r.skills).length, 3, "the manager UI shows all project copies");
   for (const r of plainRoots) await core.setSkillEnabled(r, "plain-skill", false);
