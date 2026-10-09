@@ -1,5 +1,6 @@
 import * as React from 'react';
 import css from './style.css';
+import { configureMermaidEngine } from './mermaid.js';
 import { installAssistantWrapper } from './integration.js';
 import { VisualFigure, makeAssistantWrapper, en, zh } from './view.js';
 import { examples } from './examples.js';
@@ -7,6 +8,11 @@ import { diagramExamples } from './diagram-examples.js';
 const h = React.createElement;
 export const inject = ['slots', 'locale'];
 export function apply(ctx) {
+  configureMermaidEngine(async () => {
+    if (typeof require.async !== 'function') throw Error('BC client loader does not support local diagram modules');
+    const module = await require.async('./client.mermaid.js');
+    return module.createEngine();
+  });
   ctx.effect(() => { const style = document.createElement('style'); style.dataset.plugin = '@local/dsh-visuals'; style.textContent = css; document.head.append(style); return () => style.remove(); });
   ctx.effect(() => ctx.locale.register('dsh-visuals', { en, zh }));
   const bound = ctx.locale.bind('dsh-visuals');

@@ -31,12 +31,6 @@ cytoscape/dist/cytoscape.esm.mjs:
   /*! Bezier curve function generator. Copyright Gaetan Renaudeau. MIT License: http://en.wikipedia.org/wiki/MIT_License */
   /*! Runge-Kutta spring physics function generator. Adapted from Framer.js, copyright Koen Bok. MIT License: http://en.wikipedia.org/wiki/MIT_License */
 
-mermaid/dist/mermaid.core.mjs:
-  /*! Check if previously processed */
-  /*!
-   * Wait for document loaded before starting the execution
-   */
-
 @zenuml/core/dist/zenuml.esm.mjs:
   /**
    * @license React
@@ -98,4 +92,10 @@ mermaid/dist/mermaid.core.mjs:
    *
    * This source code is licensed under the MIT license found in the
    * LICENSE file in the root directory of this source tree.
+   */
+
+mermaid/dist/mermaid.core.mjs:
+  /*! Check if previously processed */
+  /*!
+   * Wait for document loaded before starting the execution
    */

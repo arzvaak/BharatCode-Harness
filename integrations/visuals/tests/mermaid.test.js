@@ -19,3 +19,18 @@ test('sanitization removes executable HTML, external references and network CSS'
     assert.equal(/<script|foreignObject|<image|javascript:|https:\/\/|onload=/.test(text), false);
   } finally { globalThis.DOMParser = saved.DOMParser; dom.window.close(); }
 });
+
+test('diagram engine loads on demand once and retries a failed local chunk', async () => {
+  const { configureMermaidEngine, validateMermaid } = await import('../src/mermaid.js');
+  let loads = 0, parses = 0;
+  configureMermaidEngine(async () => {
+    loads++;
+    if (loads === 1) throw Error('Local chunk unavailable');
+    return { mermaid: { parse: async () => { parses++; } }, purify: {} };
+  });
+  assert.equal(loads, 0);
+  await assert.rejects(validateMermaid('flowchart TD\nA --> B'), /Local chunk unavailable/);
+  await Promise.all([validateMermaid('flowchart TD\nA --> B'), validateMermaid('flowchart TD\nB --> C')]);
+  assert.equal(loads, 2);
+  assert.equal(parses, 2);
+});

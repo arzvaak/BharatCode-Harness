@@ -1,12 +1,16 @@
 import * as React from 'react';
 const h = React.createElement;
-let enginePromise, renderQueue = Promise.resolve(), sequence = 0;
+let enginePromise, loadEngine, renderQueue = Promise.resolve(), sequence = 0;
+/** The native client loader supplies a package-local, already bundled engine. */
+export function configureMermaidEngine(loader) {
+  loadEngine = loader;
+  enginePromise = undefined;
+}
 async function engine() {
-  if (!enginePromise) enginePromise = (async () => {
-    const [{ default: mermaid }, { default: purify }, { default: zenuml }] = await Promise.all([import('mermaid'), import('dompurify'), import('@mermaid-js/mermaid-zenuml')]);
-    await mermaid.registerExternalDiagrams([zenuml]);
-    return { mermaid, purify };
-  })();
+  if (!enginePromise) enginePromise = Promise.resolve().then(() => {
+    if (!loadEngine) throw Error('Local diagram engine loader is unavailable');
+    return loadEngine();
+  }).catch(error => { enginePromise = undefined; throw error; });
   return enginePromise;
 }
 /** The app owns configuration. Diagram-authored init/config directives cannot override it. */

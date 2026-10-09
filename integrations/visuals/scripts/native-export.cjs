@@ -30,8 +30,11 @@ async function run() {
     '/': Buffer.from('<!doctype html><html lang="en"><meta charset="utf-8"><title>BC owned graphics qualification</title><body><div id="root"></div><script src="/harness.js"></script><script src="/factory.js"></script></body></html>'),
     '/harness.js': readFileSync(process.env.BC_VISUALS_HARNESS),
     '/factory.js': readFileSync(join(__dirname, '../lib/client.js')),
+    '/client.mermaid.js': readFileSync(join(__dirname, '../lib/client.mermaid.js')),
   };
+  let diagramModuleRequests = 0;
   server = createServer((req, res) => {
+    if (req.url === '/client.mermaid.js') diagramModuleRequests++;
     if (!files[req.url]) { res.writeHead(404); res.end(); return; }
     res.setHeader('Content-Type', req.url === '/' ? 'text/html' : 'text/javascript');
     res.end(files[req.url]);
@@ -53,6 +56,7 @@ async function run() {
   await window.loadURL(origin);
   window.focus();
   await waitFor(() => window.webContents.executeJavaScript("Boolean(document.querySelector('.dv-figure svg'))"), 'default chart');
+  assert.equal(diagramModuleRequests, 0, 'charts do not load the diagram engine');
   for (const kind of ['chart', 'diagram']) {
     if (kind === 'diagram') {
       await window.webContents.executeJavaScript("document.querySelectorAll('.dv-gallery-nav button')[7].click()", true);
@@ -90,6 +94,7 @@ async function run() {
     assert.doesNotMatch(svg, /<script\b|javascript:/i);
     console.log(JSON.stringify({ kind, nativeDownloadBytes: Buffer.byteLength(svg), nativeClipboardBytes: Buffer.byteLength(copied) }));
   }
+  assert.equal(diagramModuleRequests, 1, 'diagram engine is served once from the bundled local module');
   assert.deepEqual(externalRequests, [], 'bundled graphics need no external download');
 }
 Promise.race([run(), deadline]).then(() => { process.exitCode = 0; }, error => { console.error(error); process.exitCode = 1; }).finally(async () => {

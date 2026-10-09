@@ -15,8 +15,16 @@ try {
   const entry = join(directory, 'entry.js');
   await writeFile(entry, `import * as React from ${JSON.stringify(join(root,'node_modules/react/index.js'))};
 import {createRoot} from ${JSON.stringify(join(root,'node_modules/react-dom/client.js'))};
+const chunks=new Map();
+const localRequire=name=>{if(name!=='react')throw Error('Unexpected external module');return React};
+localRequire.async=async spec=>{
+  if(spec!=='./client.mermaid.js')throw Error('Unexpected local chunk');
+  if(!chunks.has(spec))await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/client.mermaid.js';script.onload=resolve;script.onerror=()=>reject(Error('Local diagram module unavailable'));document.head.append(script)});
+  return chunks.get(spec);
+};
 window.__ModuleLoader__={load(record){
-  const client=record.factory(name=>{if(name!=='react')throw Error('Unexpected external module');return React});
+  if(record.chunk){if(record.id!=='@local/dsh-visuals'||record.chunk!=='client.mermaid.js')throw Error('Unexpected chunk identity');chunks.set('./'+record.chunk,record.factory(localRequire));return;}
+  const client=record.factory(localRequire);
   const dispose=[];
   const locale={register:()=>()=>{},bind:()=>key=>({gallery:'Visuals',galleryIntro:'Offline core',source:'Source',copy:'Copy source',copied:'Copied',export:'Export SVG',data:'View data'}[key]||key),subscribe:()=>()=>{},getSnapshot:()=>({revision:0})};
   const slots={entries:()=>[],subscribe:()=>()=>{},register(options,Component){if(options.id==='visuals')createRoot(document.getElementById('root')).render(React.createElement(Component));return()=>{}},inject(_name,fn){dispose.push(fn())}};

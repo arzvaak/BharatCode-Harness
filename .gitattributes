@@ -16,4 +16,4 @@ docs/persistence-changes/historical-formats/*.schema.json linguist-generated=tru
 
 # Generated local renderer contains upstream multiline SVG literals. Preserve
 # their bytes rather than trimming inside JavaScript string content.
-integrations/visuals/lib/client.js linguist-generated=true whitespace=-blank-at-eol
+integrations/visuals/lib/client*.js linguist-generated=true whitespace=-blank-at-eol

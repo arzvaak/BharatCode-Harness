@@ -4,6 +4,8 @@ import { VisualFigure } from '../src/view.js';
 import { examples } from '../src/examples.js';
 import { diagramExamples } from '../src/diagram-examples.js';
 import css from '../src/style.css';
+import { configureMermaidEngine } from '../src/mermaid.js';
+configureMermaidEngine(async () => (await import('../src/engine.js')).createEngine());
 const h = React.createElement;
 const style = document.createElement('style');
 style.textContent = css + `body{margin:0;background:#f5f7fb;color:#243044;font-family:system-ui,sans-serif}main{max-width:860px;padding:48px 24px;margin:0 auto}.preview-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:32px}.preview-toolbar h1{flex:1;font-size:29px;letter-spacing:-.9px;font-weight:600;margin:0}.preview-toolbar button{border:1px solid #c6cfdd;background:transparent;color:inherit;border-radius:6px;padding:8px 12px;cursor:pointer}body[data-theme=dark]{background:#171c25;color:#e6edf6;--dsw-alias-bg-layer-1:#202733;--dsw-alias-label-primary:#e6edf6;--dsw-alias-label-secondary:#a2afc2;--dsw-alias-border-l2:#354052;--dsw-alias-interactive-bg-hover:#2b3443}main>p{font-size:14px;color:#76849a;margin-bottom:35px}.dv-figure{margin-bottom:30px}@media(max-width:500px){main{padding:24px 12px}.preview-toolbar h1{font-size:23px}}`;

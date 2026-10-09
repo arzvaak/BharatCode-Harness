@@ -36,3 +36,5 @@ The plugin has not been added to the live Desktop profile or tested in a real mo
 The in-app browser did not report a download event from either SVG export attempt. Serialization is tested, and the browser click did not show an export error, but native Desktop download delivery and clipboard delivery still need a live host check. Source copy reported success in the preview; the browser connector's separate clipboard reader did not return its contents.
 
 No Harness source files, running agent state or live profile metadata were changed. No GitHub repository or marketplace listing was published.
+
+The physical module split was exercised on native Linux with the prebuilt factories: chart startup requested zero diagram modules, and the first diagram requested one bundled local module. SVG download and native clipboard assertions passed for both. Sixteen unit fixtures pass, including failed local-engine loading and retry. Native Windows qualification remains pending.

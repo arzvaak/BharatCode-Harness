@@ -84,3 +84,5 @@ Open `http://127.0.0.1:19391`. The preview uses the same components as the plugi
 Only top-level visual fences are intercepted. Fences inside lists or block quotes remain native code. Prose segments preserve link-reference definitions, but Markdown footnote numbering and automatic list continuation across a graphic are not globally coordinated. Dense diagrams scroll horizontally on narrow screens to preserve legibility. Preview edits reset on remount or source changes.
 
 See `VALIDATION.md` for what has been verified and what still requires live activation.
+
+Charts are immediately available from the standard core client. The diagram engine is shipped in `lib/client.mermaid.js` and loaded through BC’s package-local module loader on the first diagram request. This is a local bundled asset: no network service, extra installation, or enable switch is required. Licence inventories cover both modules.
