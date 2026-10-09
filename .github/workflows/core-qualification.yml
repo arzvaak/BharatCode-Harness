@@ -40,6 +40,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2t64
+          # Configure Electron's supported SUID helper on this ephemeral runner.
+          # Keep renderer sandboxing enabled; never add --no-sandbox to qualify.
+          BC_ELECTRON_HELPER="$(node -e "const r=require('node:module').createRequire(process.cwd()+'/apps/desktop/package.json');process.stdout.write(require('node:path').join(require('node:path').dirname(r('electron')),'chrome-sandbox'))")"
+          test -f "$BC_ELECTRON_HELPER"
+          sudo chown root:root "$BC_ELECTRON_HELPER"
+          sudo chmod 4755 "$BC_ELECTRON_HELPER"
           xvfb-run -a node integrations/visuals/scripts/native-export.mjs
       - name: Native Windows graphics export and clipboard (owned profile)
         if: runner.os == 'Windows'

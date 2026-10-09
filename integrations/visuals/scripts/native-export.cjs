@@ -64,7 +64,8 @@ async function run() {
     await window.webContents.executeJavaScript("[...document.querySelectorAll('.dv-figure button')].find(b=>b.textContent==='Copy source').click()", true);
     await waitFor(async () => (await clipboard.readText()).length > 0, kind + ' clipboard');
     const copied = await clipboard.readText();
-    assert.equal(copied, expected[kind], 'exact original visual source reaches native clipboard');
+    const nativeSource = process.platform === 'win32' ? expected[kind].replace(/\n/g, '\r\n') : expected[kind];
+    assert.equal(copied, nativeSource, 'original source reaches native clipboard with platform line endings');
     const target = join(profile, kind + '.svg');
     let downloadStarted = false;
     const delivered = new Promise((resolve, reject) => {
