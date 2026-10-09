@@ -207,7 +207,7 @@ console.log('[ok] 浏览器端 bundle 语法门禁(client.js vm 编译)通过')
   // 额度区统一后(四类卡片共用 QuotaCard 外壳),折叠头部由 collapseHeader 统一产出;
   // 原先网关来源卡自带的 collapseHeader(open, () => toggleSource(s.id)) 调用形式随之外移。
   assert.ok(/collapseHeader\(open === true, onToggleOpen, name\)/.test(clientSrc), 'gateway 来源卡片标题行走折叠头部(统一外壳经 collapseHeader 产出)')
-  assert.ok(clientSrc.includes("gatewaySourceFetchedAt: '抓取于 {time}'"), 'gatewaySourceFetchedAt 中文文案存在')
+  assert.equal(clientSrc.split("gatewaySourceFetchedAt: 'fetched {time}'").length - 1, 2, 'BC gateway fetched-at copy exists in both locale dictionaries')
   assert.ok(clientSrc.includes("gatewaySourceFetchedAt: 'fetched {time}'"), 'gatewaySourceFetchedAt 英文文案存在')
   console.log('[ok] 网关额度设置 UI 回归(单来源可删 + 折叠标题行 + fetchedAt 文案)通过')
 }
@@ -336,7 +336,7 @@ console.log('[ok] usdFromCost(CNY 折算/USD 原值/非法兜底/往返抵消)�
   assert.equal(sanitizeConfig({ ...sanitizeConfig({}), pricingCurrency: 'x' }).pricingCurrency, 'USD', '非法币种清洗回落 USD')
   zhLedger.config = cnyPatch.config
   // 100 万输入(未命中) + 100 万输出 = 1 + 2 = 3 元,除汇率 7.2 入账。
-  zhLedger.account({ input: 1_000_000, output: 1_000_000, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 's-cny', Date.now())
+  zhLedger.account({ input: 1_000_000, output: 1_000_000, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 's-cny', Date.now(), 'deepseek')
   // 第三方 flat 价(恒美元):3 + 9 = 12 美元原值入账,不随主表币种折算。
   zhLedger.account({ input: 1_000_000, output: 1_000_000, cacheRead: 0, cacheWrite: 0 }, 'flat-model', 's-flat', Date.now(), 'openrouter')
   zhLedger.flush()
@@ -568,7 +568,7 @@ console.log('[ok] 周末全谷价新规(区间/窗口/档位/相位)通过')
   writeFileSync(join(logDir, 'session.jsonl'), records.map(record => JSON.stringify(record)).join('\n') + '\n')
   const ledger = new Ledger(sanitizeConfig({ peakHolidays: [] }), {}, join(root, 'ledger.json'))
   ledger.scheduleWrite = () => {}
-  ledger.account(tokens, 'deepseek-v4-flash', id, midAutumn)
+  ledger.account(tokens, 'deepseek-v4-flash', id, midAutumn, 'deepseek')
   const date = localDayKey(midAutumn)
   const oldCost = ledger.days[date].cost
   ledger.config.peakHolidays = [...DEFAULT_PEAK_HOLIDAYS]
@@ -694,12 +694,12 @@ console.log('[ok] provider 隔离/未知模型/reasoning/旧模型清理断言�
 process.env.DSH_HOME = join(tmpdir(), 'dsh-cost-meter-test-home')
 rmSync(process.env.DSH_HOME, { recursive: true, force: true })
 const ledger = Ledger.open()
-ledger.account({ input: 10000, output: 5000, cacheRead: 90000, cacheWrite: 10000 }, 'deepseek-v4-pro', 'session-legacy', preMs)
-ledger.account({ input: 100, output: 50, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-pro', 'session-a', Date.now())
-ledger.account({ input: 200, output: 80, cacheRead: 10, cacheWrite: 0 }, 'deepseek-v4-flash', 'session-b', Date.now())
-ledger.account({ input: 300, output: 90, cacheRead: 0, cacheWrite: 0 }, 'unknown-model-x', undefined, Date.now())
+ledger.account({ input: 10000, output: 5000, cacheRead: 90000, cacheWrite: 10000 }, 'deepseek-v4-pro', 'session-legacy', preMs, 'deepseek')
+ledger.account({ input: 100, output: 50, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-pro', 'session-a', Date.now(), 'deepseek')
+ledger.account({ input: 200, output: 80, cacheRead: 10, cacheWrite: 0 }, 'deepseek-v4-flash', 'session-b', Date.now(), 'deepseek')
+ledger.account({ input: 300, output: 90, cacheRead: 0, cacheWrite: 0 }, 'unknown-model-x', undefined, Date.now(), 'deepseek')
 // NaN/负数 token 防护:非数字/负数按 0 处理,不污染账本聚合(该调用成本为 0)。
-ledger.account({ input: -100, output: 'not-a-number', cacheRead: null, cacheWrite: undefined }, 'deepseek-v4-pro', 'session-legacy', preMs)
+ledger.account({ input: -100, output: 'not-a-number', cacheRead: null, cacheWrite: undefined }, 'deepseek-v4-pro', 'session-legacy', preMs, 'deepseek')
 ledger.flush()
 const reloaded = Ledger.open()
 const legacyDay = Object.values(reloaded.days).find(d => Array.isArray(d.sessions) && d.sessions.some(s => s.id === 'session-legacy'))
@@ -721,7 +721,7 @@ const patchBad2 = applyConfigPatch(reloaded.config, { unknownKey: 1 })
 console.log('[ok] 未知键被拒:', patchBad2.errors.join(';'))
 
 // 4.1) peakNotice 开关:默认开启,非法值拒绝,合法值生效。
-assert.equal(reloaded.config.peakNotice, true, '默认 peakNotice 开启')
+assert.equal(reloaded.config.peakNotice, false, 'BC peak notice is off by default')
 const patchNoticeBad = applyConfigPatch(reloaded.config, { peakNotice: 'yes' })
 assert.ok(patchNoticeBad.errors.length > 0, 'peakNotice 非布尔被拒')
 const patchNoticeOk = applyConfigPatch(reloaded.config, { peakNotice: false })
@@ -847,7 +847,7 @@ assert.equal(migLedger.pendingWrite, false, '迁移本身不触发落盘(结果�
 const migChoice = applyConfigPatch(migLedger.config, { codingPlans: { minimax: { enabled: true, display: 'settings', refreshMinutes: 15, apiKey: '' } } })
 assert.equal(migChoice.errors.length, 0, '迁移后用户可显式改 display')
 migLedger.config = migChoice.config
-migLedger.account({ input: 1, output: 1, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 'mig-session', Date.now())
+migLedger.account({ input: 1, output: 1, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 'mig-session', Date.now(), 'deepseek')
 migLedger.flush()
 const migReopened = Ledger.open()
 assert.equal(migReopened.config.codingPlans.minimax.display, 'settings', '用户显式选择 settings 被尊重(标记防止重复迁移)')
@@ -860,7 +860,7 @@ writeFileSync(migPath, JSON.stringify({
 }), 'utf8')
 const migAgain = Ledger.open()
 assert.equal(migAgain.config.codingPlans.minimax.display, 'both', '无标记时重跑迁移结果一致(幂等)')
-migAgain.account({ input: 1, output: 1, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 'mig-session', Date.now())
+migAgain.account({ input: 1, output: 1, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 'mig-session', Date.now(), 'deepseek')
 migAgain.flush()
 const migPersisted = JSON.parse(readFileSync(migPath, 'utf8'))
 assert.ok(Array.isArray(migPersisted.migrations) && migPersisted.migrations.includes('v1.5.26-coding-plan-sidebar-display'), 'migrations 标记随 flush 落盘')
@@ -1213,7 +1213,7 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
 // 校验(applyConfigPatch)与清洗(sanitizeConfig)链 + 双端声明与客户端组件接线断言。
 {
   const base = sanitizeConfig({})
-  assert.equal(base.peakAlertEnabled, true, '弹窗提醒默认开启')
+  assert.equal(base.peakAlertEnabled, false, 'BC peak alerts are off by default')
   assert.equal(base.peakAlertAhead, 2, '默认提前 2 分钟')
   assert.equal(base.peakAlertTarget, 'both', '默认提醒峰和谷')
   const patched = applyConfigPatch(base, { peakAlertEnabled: false, peakAlertAhead: 5, peakAlertTarget: 'peak' })
@@ -1227,7 +1227,7 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
   assert.ok(applyConfigPatch(base, { peakAlertTarget: 'nope' }).errors.length > 0, '非法提醒类型被拒')
   assert.ok(applyConfigPatch(base, { peakAlertEnabled: 'yes' }).errors.length > 0, '非布尔开关被拒')
   const conv = sanitizeConfig({ ...base, peakAlertEnabled: 'x', peakAlertAhead: 99, peakAlertTarget: 'y' })
-  assert.equal(conv.peakAlertEnabled, true, '非法开关清洗为开(默认)')
+  assert.equal(conv.peakAlertEnabled, false, 'Invalid alert setting returns to the BC disabled default')
   assert.equal(conv.peakAlertAhead, 2, '越界提前量收敛回 2')
   assert.equal(conv.peakAlertTarget, 'both', '非法类型收敛 both')
   // 双端声明与客户端接线:typert config schema、PeakAlert 组件、浮层注册、类型过滤逻辑、设置 UI。
@@ -1271,7 +1271,7 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
   assert.ok(clientSource.includes("window.cmPeakAlertPreview?.('peak')") && clientSource.includes("window.cmPeakAlertPreview?.('offpeak')"), '设置页预览按钮接线')
   assert.ok(clientSource.includes('peakAlertPreviewLabel') && clientSource.includes('peakAlertPreviewPeak') && clientSource.includes('peakAlertPreviewOffPeak'), '预览按钮文案(zh/en)存在')
   assert.ok(clientSource.includes('peakAlertPreviewTag'), '预览通知标题标记文案存在')
-  assert.ok(clientSource.includes('const peakAlertOn = state?.config?.peakEnabled === true'), '提醒组件仅由峰谷计价控制挂载(提醒开关关闭也可预览)')
+  assert.ok(clientSource.includes('const peakAlertOn = false'), 'BC does not mount upstream peak-price alerts by default')
   assert.ok(clientSource.includes("slots.register({ name: 'sidebar.footer.action', id: 'cost-meter-peak-alert'"), '弹窗组件挂常驻 sidebar 插槽(非仅会话页的 dock)')
   assert.ok(!clientSource.includes("slots.register({ name: 'conversation.composer.dock', id: 'cost-meter-peak-alert'"), '不再挂仅会话页的 dock 插槽')
   assert.ok(clientSource.includes('setPreview(kind)'), '预览状态可设置')
@@ -1285,9 +1285,9 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
 // showSessionId 白名单修复的防回归断言)。
 {
   const base = sanitizeConfig({})
-  assert.equal(base.hideOfficialBalance, false, '隐藏官方余额默认关闭')
+  assert.equal(base.hideOfficialBalance, true, 'BC hides official-provider balance by default')
   assert.equal(base.hideTodayCost, false, '隐藏今日消耗默认关闭')
-  assert.equal(base.sidebarTodayMetric, 'cost', '侧边栏默认显示费用')
+  assert.equal(base.sidebarTodayMetric, 'tokens', 'BC sidebar displays tokens by default')
   assert.equal(applyConfigPatch(base, { sidebarTodayMetric: 'tokens' }).config.sidebarTodayMetric, 'tokens', '可切换显示 Token')
   assert.ok(applyConfigPatch(base, { sidebarTodayMetric: 'unknown' }).errors.length > 0, '未知显示方式被拒绝')
   const patched = applyConfigPatch(base, { hideOfficialBalance: true, hideTodayCost: true })
@@ -1296,7 +1296,7 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
   assert.equal(patched.config.hideTodayCost, true, '隐藏今日消耗可开启')
   assert.ok(applyConfigPatch(base, { hideOfficialBalance: 'yes' }).errors.length > 0, '非布尔 hideOfficialBalance 被拒')
   assert.ok(applyConfigPatch(base, { hideTodayCost: 'yes' }).errors.length > 0, '非布尔 hideTodayCost 被拒')
-  assert.equal(sanitizeConfig({ ...base, hideOfficialBalance: 'x' }).hideOfficialBalance, false, '非法 hideOfficialBalance 清洗为关')
+  assert.equal(sanitizeConfig({ ...base, hideOfficialBalance: 'x' }).hideOfficialBalance, true, 'Invalid balance visibility returns to BC hidden default')
   assert.equal(sanitizeConfig({ ...base, hideTodayCost: 'x' }).hideTodayCost, false, '非法 hideTodayCost 清洗为关')
   const hostTypert = readFileSync(new URL('../lib/typert.host.js', import.meta.url), 'utf8')
   assert.ok(hostTypert.includes('hideOfficialBalance: z.boolean().optional()'), 'typert config 声明 hideOfficialBalance(网关不剥离)')
@@ -1331,7 +1331,7 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
 // 双端声明与接线(conversation.input.dock 横条 + 常驻插槽引导卡)。
 {
   const base = sanitizeConfig({})
-  assert.deepEqual(base.quotaStrip, { enabled: false, budget: true, go: true, plans: true, promptSeen: false }, 'quotaStrip 默认值(关 + 全内容开 + 未引导)')
+  assert.deepEqual(base.quotaStrip, { enabled: false, budget: true, go: true, plans: true, promptSeen: true }, 'BC quota strip is off and upstream onboarding is suppressed')
   const patched = applyConfigPatch(base, { quotaStrip: { enabled: true, promptSeen: true } })
   assert.equal(patched.errors.length, 0, '部分字段补丁通过(mergeDeep 补全其余字段)')
   assert.equal(patched.config.quotaStrip.enabled, true, '横条可开启')
@@ -1351,9 +1351,9 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
   assert.ok(hostTypert.includes('quotaStrip: z.object({') && hostTypert.includes('promptSeen: z.boolean()'), 'typert 声明 quotaStrip 五布尔字段')
   assert.ok(clientSource.includes("enabled: v.quotaStrip?.enabled === true"), 'parseConfig 归一 quotaStrip')
   assert.ok(clientSource.includes("slots.register(\n          { name: 'conversation.input.dock', id: 'cost-meter-qstrip'") || clientSource.includes("{ name: 'conversation.input.dock', id: 'cost-meter-qstrip'"), '横条挂 conversation.input.dock(输入卡片上方)')
-  assert.ok(clientSource.includes("id: 'cost-meter-qstrip-guide'"), '引导卡挂常驻 sidebar 插槽')
-  assert.ok(clientSource.includes('function QuotaStrip(') && clientSource.includes('function QuotaStripGuide('), '两个组件定义存在')
-  assert.ok(clientSource.includes("if (config.quotaStrip?.promptSeen === true) return null"), '引导卡按 promptSeen 门控')
+  assert.ok(!clientSource.includes("id: 'cost-meter-qstrip-guide'"), 'BC does not register the upstream quota onboarding card')
+  assert.ok(clientSource.includes('function QuotaStrip(') && clientSource.includes('function QuotaStripGuide('), 'Retained upstream components remain inspectable but BC omits onboarding registration')
+  assert.ok(clientSource.includes("if (config.quotaStrip?.promptSeen === true) return null"), 'Retained onboarding component respects the suppressed default')
   assert.ok(clientSource.includes("if (strip.enabled !== true) return null"), '横条按 enabled 门控')
   assert.ok(clientSource.includes('cm-qstrip') && clientSource.includes('cm-qchip') && clientSource.includes('cm-qguide'), '横条/引导卡 CSS 类存在')
   assert.ok(clientSource.includes('quotaStripEnable') && clientSource.includes('quotaStripShowBudget') && clientSource.includes('quotaStripShowGo') && clientSource.includes('quotaStripShowPlans'), '设置 UI 开关文案存在')
@@ -1380,7 +1380,7 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
 // balance.clickHintSeen 门控,「知道了」永久消失。
 {
   const base = sanitizeConfig({})
-  assert.equal(base.balance.clickHintSeen, false, 'clickHintSeen 默认未引导')
+  assert.equal(base.balance.clickHintSeen, true, 'BC suppresses upstream balance onboarding by default')
   const patched = applyConfigPatch(base, { balance: { clickHintSeen: true } })
   assert.equal(patched.errors.length, 0, 'clickHintSeen 布尔补丁通过')
   assert.equal(patched.config.balance.clickHintSeen, true, '引导标记可写入且不破坏其余字段')
@@ -1428,7 +1428,7 @@ assert.deepEqual(CODING_PLAN_PROVIDERS.scnet.credentialEnvs, [], 'scnet 不需�
   assert.ok(clientSource.includes('useState(readBalanceClickHintLS)'), 'lsSeen 经 useState 惰性初始化(读一次)')
   assert.ok(clientSource.includes("try { return window.localStorage.getItem(BALANCE_CLICK_HINT_LS_KEY) === '1' } catch (_) { return false }"), 'localStorage 读有 try-catch(隐私模式兜底)')
   assert.ok(clientSource.includes('writeBalanceClickHintLS() // 本地兜底同步落点,不依赖 RPC 成败'), 'dismiss 同步写 localStorage(先于 RPC,不受其成败影响)')
-  assert.ok(clientSource.includes("id: 'cost-meter-balance-click-guide'"), '引导卡挂常驻 sidebar.footer.action 插槽')
+  assert.ok(!clientSource.includes("id: 'cost-meter-balance-click-guide'"), 'BC omits upstream balance onboarding registration')
   assert.ok(clientSource.includes('clickHintSeen: true } })'), '「知道了」写回 clickHintSeen=true')
   // 双语文案:四个 key 在 zh/en 两张表各出现一次(键名出现 ≥ 2 次)。
   for (const key of ['clickToRefresh:', 'balanceClickGuideTitle:', 'balanceClickGuideBody:', 'balanceClickGuideOk:']) {
@@ -1747,54 +1747,36 @@ assert.equal(matchModelId('', dsCandidates), null, '空 id 安全')
 // 6.2 providerPriceEntryFor:auto/exact 与手动覆盖。
 const dsPrices = { models: DEFAULT_PRICE_TABLE.models, default: DEFAULT_PRICE_TABLE.default }
 const autoHit = providerPriceEntryFor('deepseek', 'deepseek-v4-flash-2026-08-01', dsPrices, { mode: 'auto' })
-assert.equal(autoHit.entry.cacheMiss, flash.cacheMiss, 'auto 模式命中 flash 价')
-assert.equal(autoHit.billingMode, 'deepseek-peak', '匹配命中仍走峰谷计费')
+assert.equal(autoHit.priced, false, 'BC refuses an unconfigured suffix model even when legacy auto mode is requested')
+assert.equal(autoHit.entry, null, 'An unconfigured model has no invented rate')
 const exactMiss = providerPriceEntryFor('deepseek', 'deepseek-v4-flash-2026-08-01', dsPrices, { mode: 'exact' })
-assert.equal(exactMiss.entry.cacheMiss, DEFAULT_PRICE_TABLE.default.cacheMiss, 'exact 模式回退默认价')
+assert.equal(exactMiss.priced, false, 'Exact mode does not silently apply the default rate')
 const overrideHit = providerPriceEntryFor('openai', 'gpt-x', providerPrices, { overrides: { 'openai:gpt-x': 'same-model' } })
 assert.equal(overrideHit.priced, true, '手动覆盖命中同 provider 模型')
 assert.equal(overrideHit.entry.cacheMiss, 2, '手动覆盖使用目标价')
-const overrideDefault = providerPriceEntryFor('openai', 'gpt-x', providerPrices, { overrides: { 'openai:gpt-x': 'deepseek:__default__' } })
+const overrideDefault = providerPriceEntryFor('openai', 'gpt-x', { ...providerPrices, default: DEFAULT_PRICE_TABLE.default }, { overrides: { 'openai:gpt-x': 'deepseek:__default__' } })
 assert.equal(overrideDefault.entry.cacheMiss, DEFAULT_PRICE_TABLE.default.cacheMiss, '手动覆盖回退 DeepSeek 默认价')
 const overrideCross = providerPriceEntryFor('openai', 'gpt-x', providerPrices, { overrides: { 'openai:gpt-x': 'anthropic:same-model' } })
 assert.equal(overrideCross.entry.cacheMiss, 3, '跨 provider 覆盖')
-// 6.3 拓展价格目录:厂商/家族分组与关键条目。
+// BC publishes only the verified direct-route price tables preserved in this source.
 const catalog = buildPriceCatalog()
-assert.ok(Object.keys(catalog).length >= 10, '目录含全部内置厂商')
-assert.ok(catalog.deepseek['DeepSeek v4']['deepseek-v4-flash']?.peak !== undefined, 'DeepSeek 目录含峰谷两档')
-assert.ok(catalog.moonshot['Kimi K2']['kimi-k2.6'] !== undefined, 'Kimi 家族分组')
-assert.ok(catalog.anthropic['Claude 4.5']['claude-opus-4-5'] !== undefined, 'Claude 家族分组')
-// 6.3.1 OpenCode Go 订阅非 DeepSeek 的 19 个模型在册,关键模型有价;DeepSeek 以官方主表为准不重复收录。
-const goModels = Object.values(catalog['opencode-go']).reduce((acc, fam) => acc.concat(Object.keys(fam)), [])
-assert.ok(goModels.length >= 19, 'OpenCode Go 目录 ≥19 个模型: ' + goModels.length)
-assert.equal(catalog['opencode-go'] && Object.values(catalog['opencode-go']).flatMap(fam => Object.keys(fam)).includes('deepseek-v4-flash'), true, 'Go 独立收录自己的 DeepSeek 参考价，不再复用直接 API 价')
-assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-luna'].input, 0.2, 'GPT-5.6 Luna 输入价')
-assert.equal(catalog['opencode-go']['GPT']['gpt-5.6-luna'].output, 1.2, 'Go 目录 GPT-5.6 Luna 输出价')
-// v1.7.5(issue #85):智谱官方已公布 GLM-5.3 定价(¥8/¥28/缓存¥2),z-ai 目录按
-// OpenCode Go 核价收录 $1.40/$0.26/$4.40;「维持 unpriced」的旧断言随之退役。
-assert.ok(catalog['z-ai']['GLM-5']['glm-5.3'].input === 1.4, 'GLM-5.3 已核价 $1.40(issue #85 补价)')
-assert.ok(catalog.google['Gemini 3.6 Flash']['gemini-3.6-flash'].output === 3.75, 'Gemini 3.6 Flash 已核价')
-assert.ok(catalog.anthropic['Claude Fable']['claude-fable-5'].output === 50, 'Claude Fable 5 已核价')
-// 6.3.2 OpenCode 目录价格漂移夹具(issue #58):Sol 2026-08 下旬降价六成、glm-5.3 登上 Go 目录价、三个新模型。
-assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].input, 4, 'gpt-5.6-sol 官方当前标准输入价 $4')
-assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].output, 20, 'gpt-5.6-sol 官方当前标准输出价 $20')
-assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].cachedInput, 0.4, 'gpt-5.6-sol 官方当前缓存读价 $0.40')
-assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].longContext.aboveInputTokens, 272000, 'Sol 长上下文档以可执行字段保留')
-assert.equal(catalog['opencode-go']['GLM']['glm-5.3'].input, 1.4, 'opencode-go.glm-5.3 按目录价补齐 $1.40(issue #58)')
-assert.equal(catalog['opencode-go']['GLM']['glm-5.3'].cachedInput, 0.26, 'opencode-go.glm-5.3 缓存读 $0.26')
-assert.ok(catalog.meta?.['Muse Spark']?.['muse-spark-1.2'] !== undefined, 'Zen 新模型 muse-spark-1.2 在册(Meta 家族)')
-assert.equal(catalog.meta['Muse Spark']['muse-spark-1.2'].input, 1.25, 'muse-spark-1.2 输入价')
-assert.ok(catalog.meituan?.['LongCat']?.['longcat-2.0'] !== undefined, 'Go 新模型 longcat-2.0 在册(美团 LongCat)')
-assert.equal(catalog.meituan['LongCat']['longcat-2.0'].cachedInput, 0.006, 'longcat-2.0 缓存读 $0.006')
-assert.equal(catalog['opencode-go']['Muse Spark']['muse-spark-1.2-contributor'].input, 0.1, 'Go 目录 muse-spark-1.2-contributor 输入价 $0.10')
+assert.deepEqual(Object.keys(catalog).sort(), ['anthropic', 'deepseek', 'openai'])
+assert.ok(catalog.deepseek['DeepSeek v4']['deepseek-v4-flash']?.peak !== undefined)
+assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].input, 4)
+assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].output, 20)
+assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].cachedInput, 0.4)
+assert.equal(catalog.openai['GPT-5.6']['gpt-5.6-sol'].longContext.aboveInputTokens, 272000)
+for (const provider of ['opencode-go', 'z-ai', 'google', 'moonshot', 'meta', 'meituan']) {
+  assert.equal(catalog[provider], undefined, 'Unqualified legacy reference rates are excluded: ' + provider)
+}
 // 6.4 Kimi 余额解析与端点白名单。
-assert.equal(parseKimiBalance({ available_balance: 12345 }).balance.text, '余额 ¥123.45', 'Kimi 余额分→元换算')
-assert.equal(parseKimiBalance({ available_balance: 8 }).balance.text, '余额 ¥8.00', '小额视为元单位')
+assert.equal(parseKimiBalance({ available_balance: 12345 }).balance.text, 'Balance ¥123.45', 'Kimi 余额分→元换算')
+assert.equal(parseKimiBalance({ available_balance: 8 }).balance.text, 'Balance ¥8.00', '小额视为元单位')
 assert.equal(parseKimiBalance(null), null, '非法响应安全')
 assert.ok(CODING_PLAN_ENDPOINTS.kimi.every(u => ['api.moonshot.cn', 'api.kimi.com'].includes(new URL(u).host)), 'Kimi 端点官方域名白名单(含订阅端点 api.kimi.com,issue #53)')
 assert.ok(CODING_PLAN_PROVIDERS.kimi !== undefined, 'kimi 已注册')
 // 6.5 配置校验:priceMatch / priceOverrides。
-assert.equal(reloaded.config.priceMatch, 'auto', 'priceMatch 默认 auto')
+assert.equal(reloaded.config.priceMatch, 'exact', 'BC pricing matches exact routes by default')
 const patchMatchBad = applyConfigPatch(reloaded.config, { priceMatch: 'fuzzy' })
 assert.ok(patchMatchBad.errors.length > 0, 'priceMatch 非法值被拒')
 const patchOverrideBad = applyConfigPatch(reloaded.config, { priceOverrides: { 'deepseek:x': 1 } })
@@ -1818,15 +1800,12 @@ assert.equal(matchModelId('gpt5.6 luna(go)', ['gpt-5.6-luna', 'gpt-5.6-sol']), '
 assert.equal(matchModelId('DeepSeek V4 Flash', ['deepseek-v4-flash']), 'deepseek-v4-flash', '归一化等价匹配')
 assert.equal(matchModelId('totally-unknown-xyz', ['gpt-5.6-luna', 'deepseek-v4-flash']), null, '未知模型不误配')
 const fullPrices = sanitizeConfig({}).prices
-assert.ok(Object.keys(fullPrices.providers).length >= 10, '默认配置挂载全部目录厂商(挂载≠直接显示)')
-const lunaViaRouter = providerPriceEntryFor('opencode', 'gpt5.6 luna(go)', fullPrices)
-assert.equal(lunaViaRouter.priced, true, '路由 provider 下宽泛名跨厂商命中')
-assert.equal(lunaViaRouter.entry.output, 1.2, '跨厂商命中取正确价格')
-const dsViaRouter = providerPriceEntryFor('zen', 'deepseek-v4-flash', fullPrices)
-assert.equal(dsViaRouter.billingMode, 'utc-peak', '历史 zen Go 路由使用本渠道 UTC 峰谷参考价；按量 Zen 用 opencode-zen')
-assert.equal(providerPriceEntryFor('opencode', 'totally-unknown-xyz', fullPrices).priced, false, '跨厂商兑底不误配未知模型')
-assert.equal(providerPriceEntryFor('openai', 'GPT-5.6 LUNA', fullPrices).priced, true, '同厂商大小写/空格差异命中')
-console.log('[ok] 宽泛匹配与跨厂商兑底(路由 provider 费用为零修复)断言通过')
+assert.deepEqual(Object.keys(fullPrices.providers).sort(), ['anthropic', 'openai'], 'BC defaults contain the qualified direct-route tables')
+for (const [provider, model] of [['opencode', 'gpt5.6 luna(go)'], ['zen', 'deepseek-v4-flash'], ['opencode', 'totally-unknown-xyz'], ['openai', 'GPT-5.6 LUNA']]) {
+  assert.equal(providerPriceEntryFor(provider, model, fullPrices).priced, false, 'No silent fuzzy or cross-route pricing: ' + provider + ':' + model)
+}
+assert.equal(providerPriceEntryFor('openai', 'gpt-5.6-luna', fullPrices).priced, true, 'An exact configured direct route remains priced')
+console.log('[ok] BC exact provider/model pricing and unconfigured-route refusals passed')
 
 // 6.8 未命中列表判定与计费口径一致(v1.5.35):路由 provider 前缀(go:/opencode: 等)下
 // 实际已正确计价的模型不再误报「未命中」,仅默认价兜底与完全未命中者列入。
@@ -1931,7 +1910,7 @@ assert.equal(dirty.position, 'dock', '非法 position 回落')
 assert.equal(typeof dirty.decimals, 'number', '非法 decimals 回落为数字')
 assert.equal(dirty.exchangeRate, 7.2, '非法汇率回落默认')
 assert.equal(dirty.peakStyle, 'compact', '非法 peakStyle 回落')
-assert.equal(dirty.priceMatch, 'auto', '非法 priceMatch 回落')
+assert.equal(dirty.priceMatch, 'exact', 'Invalid matching mode returns to the BC exact default')
 assert.equal(dirty.peakWindows.length, 0, '非法峰窗条目被过滤')
 assert.deepEqual(dirty.priceOverrides, { ok: 'deepseek-v4-flash' }, '非字符串覆盖被剔除')
 assert.equal(dirty.priceTableDisplay['deepseek:x'], false, '非法 priceTableDisplay 值收敛为收入拓展表')
@@ -1962,7 +1941,7 @@ const sampleState = {
   balance: { status: 'off', message: '', fetchedAt: 0, currency: '', totalBalance: 0, grantedBalance: 0, toppedUpBalance: 0 },
   goQuota: { status: 'off', message: '', fetchedAt: 0, rolling: null, weekly: null, monthly: null },
   codingPlans: {
-    kimi: { enabled: true, display: 'settings', refreshMinutes: 15, apiKey: '', status: 'ok', message: '', fetchedAt: 0, windows: { balance: { resetsAt: '', text: '余额 ¥1.00' } } },
+    kimi: { enabled: true, display: 'settings', refreshMinutes: 15, apiKey: '', status: 'ok', message: '', fetchedAt: 0, windows: { balance: { resetsAt: '', text: 'Balance ¥1.00' } } },
     openrouter: { enabled: true, display: 'settings', refreshMinutes: 15, apiKey: '', status: 'ok', message: '', fetchedAt: 0, windows: { credits: { percent: 12.5, resetsAt: '' } } },
   },
   history: [],
@@ -1977,7 +1956,7 @@ console.log('[ok] stateSchema 漂移回归(目录/文本窗口/新配置键)通�
 // 7.3 新增 coding plan 解析器与端点白名单。
 assert.equal(parseOpenRouterCredits({ data: { total_credits: 10, total_usage: 2.5 } }).credits.percent, 25, 'OpenRouter 已用%')
 assert.equal(parseOpenRouterCredits({ data: { total_credits: 0, total_usage: 1 } }), null, 'OpenRouter 零总额安全')
-assert.equal(parseSiliconFlowInfo({ code: 0, data: { balance: 12.345 } }).balance.text, '余额 ¥12.35', 'SiliconFlow 余额')
+assert.equal(parseSiliconFlowInfo({ code: 0, data: { balance: 12.345 } }).balance.text, 'Balance ¥12.35', 'SiliconFlow 余额')
 assert.equal(parseSiliconFlowInfo({ data: { name: 'x' } }), null, 'SiliconFlow 无余额字段安全')
 assert.ok(CODING_PLAN_ENDPOINTS.openrouter.every(u => new URL(u).host.endsWith('openrouter.ai')), 'OpenRouter 官方域名')
 assert.ok(CODING_PLAN_ENDPOINTS.siliconflow.every(u => new URL(u).host.endsWith('siliconflow.cn')), 'SiliconFlow 官方域名')
@@ -3024,8 +3003,8 @@ console.log('[ok] OpenRouter/SiliconFlow/CommandCode 解析器与白名单通过
   const ledgerB = new Ledger(sanitizeConfig({}), {}, join(rootB167, 'ledger.json'))
   ledgerB.scheduleWrite = () => {}
   // 切换前:USD 口径入账(峰时事件按 USD 表 peak 档)。
-  ledgerB.account(bucketsB, 'deepseek-v4-flash', 'session-b', peakAt167)
-  ledgerB.account({ input: 3000, output: 100, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 'session-c', peakAt167)
+  ledgerB.account(bucketsB, 'deepseek-v4-flash', 'session-b', peakAt167, 'deepseek')
+  ledgerB.account({ input: 3000, output: 100, cacheRead: 0, cacheWrite: 0 }, 'deepseek-v4-flash', 'session-c', peakAt167, 'deepseek')
   const dayKeyB = localDayKey(peakAt167)
   const rowB = ledgerB.days[dayKeyB].sessions.find(s => s.id === 'session-b')
   const rowC = ledgerB.days[dayKeyB].sessions.find(s => s.id === 'session-c')

@@ -1,0 +1,38 @@
+name: Private extension preview
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Immutable catalog revision (positive integer)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: extension-publication
+  cancel-in-progress: false
+jobs:
+  qualification:
+    uses: ./.github/workflows/core-qualification.yml
+  publish:
+    needs: qualification
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v6
+        with:
+          name: packed-core-Linux
+          path: dist/packed-core
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Publish immutable private assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BC_EXTENSION_CATALOG_KEY: ${{ secrets.BC_EXTENSION_CATALOG_KEY }}
+          BC_CATALOG_REVISION: ${{ inputs.revision }}
+        run: node scripts/extensions/publish-preview.mjs

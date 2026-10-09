@@ -10,6 +10,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { PostToolDecision } from '@deepseek-ai/dsh-tools'
+import { Config as McpConfig } from '@deepseek-ai/dsh-mcp-client'
 import { publicToolName, syncTools, type ToolBridgeOptions } from '@deepseek-ai/dsh-mcp-client/src/tools.ts'
 import { createTransport } from '@deepseek-ai/dsh-mcp-client/src/transport.ts'
 import type { Config } from '@deepseek-ai/dsh-mcp-client'
@@ -1232,4 +1233,11 @@ describe('tool execution — non-object args fallback', () => {
       expect.anything(),
     )
   })
+})
+
+it('preserves omitted versus empty allowlists through native config validation', () => {
+  const base = { transport: 'stdio' as const, serverName: 'srv', command: 'fixture' }
+  expect(McpConfig(base).allowedTools).toBeUndefined()
+  expect(McpConfig({ ...base, allowedTools: [] }).allowedTools).toEqual([])
+  expect(McpConfig({ ...base, allowedTools: ['admin.reset'] }).allowedTools).toEqual(['admin.reset'])
 })

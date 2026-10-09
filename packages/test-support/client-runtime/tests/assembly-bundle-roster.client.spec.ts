@@ -318,3 +318,11 @@ it('exhausts uneven linked-bundle search paths before reporting a missing plugin
   symlinkSync(bundle, join(scratch.root, 'app', 'node_modules', '@t', 'deep'), 'junction')
   expect(() => scratch.roster(['@t/base', '@t/deep'])).toThrow('cannot resolve plugin package @t/absent')
 })
+
+it('resolves a bundle runtime row through its own manifest without a self node_modules link', () => {
+  const local = new Scratch()
+  onTestFinished(() => { rmSync(local.root, { recursive: true, force: true }) })
+  writeFileSync(local.anchor, JSON.stringify({ name: '@t/self', dsh: { bundle: { patch: './cordis.patch.yml' }, client: { platform: 'web' } } }))
+  writeFileSync(join(local.root, 'app', 'cordis.patch.yml'), '- insert:\n    - name: "@t/self"\n')
+  expect(local.roster(['@t/self'])).toEqual(['@t/self'])
+})

@@ -2086,19 +2086,52 @@ function Store() {
             ) ? "Disable in workspace" : "Enable in workspace"
           }
         ),
-        record.descriptor.credentialReference && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: (event) => {
-          event.preventDefault();
-          const value = connectionTokens[e.id];
-          setConnectionTokens((current) => ({ ...current, [e.id]: "" }));
-          void run({ action: "connect-extension", id: e.id, token: value });
-        }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-            "Connector credential ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", autoComplete: "new-password", value: connectionTokens[e.id] ?? "", onChange: (event) => setConnectionTokens((current) => ({ ...current, [e.id]: event.target.value })) })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || !connectionTokens[e.id], children: "Save connection" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: busy, onClick: () => run({ action: "disconnect-extension", id: e.id }), children: "Disconnect connector" })
-        ] }),
+        record.descriptor.credentialReference && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+          "form",
+          {
+            onSubmit: (event) => {
+              event.preventDefault();
+              const value = connectionTokens[e.id];
+              setConnectionTokens((current) => ({
+                ...current,
+                [e.id]: ""
+              }));
+              void run({
+                action: "connect-extension",
+                id: e.id,
+                token: value
+              });
+            },
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+                "Connector credential",
+                " ",
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "input",
+                  {
+                    type: "password",
+                    autoComplete: "new-password",
+                    value: connectionTokens[e.id] ?? "",
+                    onChange: (event) => setConnectionTokens((current) => ({
+                      ...current,
+                      [e.id]: event.target.value
+                    }))
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || !connectionTokens[e.id], children: "Save connection" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                "button",
+                {
+                  type: "button",
+                  disabled: busy,
+                  onClick: () => run({ action: "disconnect-extension", id: e.id }),
+                  children: "Disconnect connector"
+                }
+              )
+            ]
+          }
+        ),
         record.descriptor.version !== e.version && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
           "button",
           {

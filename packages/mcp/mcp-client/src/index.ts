@@ -132,7 +132,7 @@ export const Config = z.union([
     failOnStartupError: z.boolean().default(false),
     maxInstructionBytes: z.number().step(1).min(1).default(DEFAULT_MAX_INSTRUCTION_BYTES),
     reconnect: Reconnect,
-    allowedTools: z.array(String),
+    allowedTools: z.union([z.array(String)]),
   }),
   z.object({
     transport: z.const('streamable-http'),
@@ -143,7 +143,7 @@ export const Config = z.union([
     failOnStartupError: z.boolean().default(false),
     maxInstructionBytes: z.number().step(1).min(1).default(DEFAULT_MAX_INSTRUCTION_BYTES),
     reconnect: Reconnect,
-    allowedTools: z.array(String),
+    allowedTools: z.union([z.array(String)]),
   }),
 ]) as z<ConfigInput, Config>
 

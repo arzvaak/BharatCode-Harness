@@ -1,0 +1,63 @@
+name: Core and packed extensions
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+  workflow_call:
+permissions:
+  contents: read
+concurrency:
+  group: core-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm run typecheck
+      - run: node scripts/extensions/core.mjs build
+      - name: Core package checks (compatibility skips are reported)
+        run: node scripts/extensions/core.mjs test
+      - run: node --test integrations/extension-store/tests/*.test.js integrations/ci-pipelines/tests/*.test.js
+      - run: node scripts/extensions/verify-core.mjs
+      - name: Install distributable archives and boot an owned native profile
+        run: node scripts/extensions/packed-core.mjs
+      - uses: actions/upload-artifact@v6
+        with:
+          name: packed-core-${{ runner.os }}
+          path: dist/packed-core
+          retention-days: 14
+      - name: Linux complete unit suite
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          bash scripts/prepare-ci-bubblewrap.sh
+          pnpm run test
+      - name: Native Windows process and installer checks
+        if: runner.os == 'Windows'
+        run: pnpm exec vitest run apps/desktop/tests/installer-packaging.spec.ts packages/boot/plugin-manager/tests packages/mcp/mcp-client/tests
+  verdict:
+    if: always()
+    needs: native
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every native lane
+        env:
+          RESULT: ${{ needs.native.result }}
+        run: test "$RESULT" = success
