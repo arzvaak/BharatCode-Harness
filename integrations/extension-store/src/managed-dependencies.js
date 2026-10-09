@@ -198,7 +198,8 @@ export class ManagedDependencyStore {
     if (this.platform !== 'win32' && (info.mode & 0o111) === 0)
       throw Error('Managed command is not executable');
     const real = await realpath(path);
-    const realRel = relative(record.directory, real);
+    const realDirectory = await realpath(record.directory);
+    const realRel = relative(realDirectory, real);
     if (!realRel || realRel === '..' || realRel.startsWith(`..${sep}`))
       throw Error('Managed command resolves outside its runtime directory');
     return real;
