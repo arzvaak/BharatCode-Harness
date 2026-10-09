@@ -75,7 +75,7 @@ Review found native-authentication and asynchronous-runtime-teardown defects. Bo
 | E3 | Implemented workflow; Windows pending | Independent consumer installs 302 source/SDK/core/optional-CI distributable archives with lifecycle scripts disabled and platform prebuilts retained. Linux result retained; hosted-account fixture skips explicit. |
 | E4 | Partial | Catalog signing, checksums, dependency/licence inventory and immutable version checks implemented. Full dependency SBOM and qualified optional release generation remain pending. |
 | E5 | Gated implementation | Private preview workflow uses repository-scoped `contents: write`; publication only after reusable qualification. No preview release published yet. |
-| E6 | Pending | Promotion helper preserves inventory hashes; actual promotion workflow not implemented/exercised. |
+| E6 | Implemented gate; distribution proof pending | Promotion verifies signed catalog and package inventory, all published archive hashes, exact publication run/attempt and Linux/Windows/verdict/publish success. Same release changes only its prerelease flag; concurrent/unknown write outcomes restore preview status or report explicit manual recovery. Four fixtures pass; no published release exists to exercise promotion. |
 | E7 | Pending | Core wired into desktop runtime; native OS installers, launch/export tests and supported signing not completed. Missing signing prerequisites must be configured, not bypassed. |
 | E8 | Pending | Published-artifact upgrade/withdrawal/failed activation/rollback not exercised. |
 | E9 | Partial ledger | This ledger records completion and gaps; installation/release conventions in `integrations/extension-store/README.md`. Final release notes, published install instructions and cold/warm/memory/context baseline comparison remain pending. |
@@ -104,6 +104,8 @@ The latest full native repository run passes 1,881 files / 39,041 tests and fail
 Core-package tests complete their inventory but remain red on Cost Meter's legacy upstream verification: BC English copy, defaults, suppressed onboarding, explicit provider fixtures, qualified catalog and strict pricing assertions have been reconciled; remaining upstream assumptions must be assessed against the adapted source. This failure must block publication.
 
 The signing key is provisioned as repository secret `BC_EXTENSION_CATALOG_KEY`; only its public verification key is shipped. No preview release, stable promotion, installer release or OS-signing credential is claimed. GitHub account read-only list/inspect/jobs passed against an existing private-repository run (37837305056); logs/reruns and GitLab real-account workflows remain unqualified.
+
+Promotion review reproduced and fixed evidence-run substitution, unsigned extra archives, and post-write failure recovery. The release inventory now has its own Ed25519 signature and records the publishing run and attempt. Four fixtures cover stable byte retention, tampering/evidence refusal, concurrent mutation and lost responses. The complete store/pipeline fixture inventory passes 37 tests. Promotion has not been invoked; required native qualification is still red.
 
 A single fresh owned-profile Linux measurement recorded 876 ms until authenticated core readiness and 392,355,840 bytes host RSS after five idle seconds, with zero optional runtimes and a 34,445-byte catalog projection. This is not a cold/warm renderer or baseline comparison; renderer, engine initialization and request-context measurements remain pending.
 

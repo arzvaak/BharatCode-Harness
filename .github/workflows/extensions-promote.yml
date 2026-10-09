@@ -1,0 +1,36 @@
+name: Promote private extension preview
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Published preview catalog revision
+        required: true
+        type: string
+      publication_run_id:
+        description: Successful original Private extension preview workflow run
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: extension-publication
+  cancel-in-progress: false
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Verify published artifacts and original native qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BC_CATALOG_REVISION: ${{ inputs.revision }}
+          BC_PREVIEW_RUN_ID: ${{ inputs.publication_run_id }}
+        run: node scripts/extensions/promote-preview.mjs

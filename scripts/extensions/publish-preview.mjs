@@ -2,17 +2,20 @@ import { verifyCatalog } from "../../integrations/extension-store/src/contracts.
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, sign } from "node:crypto";
 import { signCatalog } from "./catalog-release.mjs";
 const repository = "arzvaak/Bharatcode-Harness";
 const key = process.env.BC_EXTENSION_CATALOG_KEY;
 delete process.env.BC_EXTENSION_CATALOG_KEY;
 const revision = Number(process.env.BC_CATALOG_REVISION);
+const publicationRunId = Number(process.env.GITHUB_RUN_ID);
+const publicationRunAttempt = Number(process.env.GITHUB_RUN_ATTEMPT);
 if (
   !key ||
   !Number.isSafeInteger(revision) ||
   revision < 1 ||
-  !process.env.GITHUB_SHA
+  !process.env.GITHUB_SHA || !Number.isSafeInteger(publicationRunId) || publicationRunId < 1 ||
+  !Number.isSafeInteger(publicationRunAttempt) || publicationRunAttempt < 1
 )
   throw Error("Signing secret, positive revision and CI commit required");
 function gh(args) {
@@ -84,12 +87,18 @@ await writeFile(
       revision,
       channel: "preview",
       commit: process.env.GITHUB_SHA,
+      publicationRunId,
+      publicationRunAttempt,
       catalogSha256: signed.sha256,
       assets: inventory.assets,
     },
     null,
     2,
   ),
+);
+await writeFile(
+  "dist/catalog/release-manifest.sig",
+  sign(null, await readFile("dist/catalog/release-manifest.json"), key).toString("base64") + "\n",
 );
 await writeFile(
   "dist/catalog/SHA256SUMS",
