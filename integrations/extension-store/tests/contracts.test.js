@@ -94,6 +94,52 @@ test("supports declared BC version ranges independently of extension version", (
   assert.equal(canInstall(e, "linux", "0.3.0"), false);
 });
 
+function managedPythonBundle() {
+  const bundle = {
+    id: "python-data-runtime",
+    version: "3.12.14",
+    source: "https://github.com/astral-sh/python-build-standalone",
+    sourceCommit: "b".repeat(40),
+    license: "PSF-2.0",
+    status: "qualified",
+    provides: { python: "3.12.14" },
+    platforms: ["linux"],
+    artifacts: {
+      linux: { assetName: "python-data-runtime-linux.tgz", assetId: 234, bytes: 1024, sha256: "c".repeat(64), format: "tar.gz", unpackedBytes: 4096 },
+    },
+    commands: { linux: { python: "bin/python3" } },
+  };
+  bundle.qualificationEvidence = ["archive-safety", "version-probe", "cancellation", "removal"].map(check => ({
+    platform: "linux", check, sourceCommit: bundle.sourceCommit, artifactSha256: bundle.artifacts.linux.sha256,
+    result: "passed", evidence: "https://github.com/arzvaak/Bharatcode-Harness/actions/runs/123",
+  }));
+  return bundle;
+}
+test("managed runtime bundles require a qualified, hash-bound artifact for each platform", () => {
+  const x = catalog();
+  x.managedDependencies = [managedPythonBundle()];
+  assert.equal(validateCatalog(x).managedDependencies.length, 1);
+  for (const mutate of [
+    value => value.managedDependencies.push(value.managedDependencies[0]),
+    value => value.managedDependencies.push({ ...value.managedDependencies[0], id: 'other-python-runtime' }),
+    value => { value.managedDependencies[0].artifacts.linux.sha256 = "bad"; },
+    value => { value.managedDependencies[0].commands.linux.python = "../outside"; },
+    value => { value.managedDependencies[0].artifacts.linux.bytes = 0; },
+    value => { value.managedDependencies[0].qualificationEvidence[0].artifactSha256 = "d".repeat(64); },
+    value => { value.managedDependencies[0].qualificationEvidence.pop(); },
+    value => { value.managedDependencies[0].status = "unqualified"; },
+    value => {
+      value.managedDependencies[0].provides = { duckdb: '1.5.6' };
+      value.managedDependencies[0].commands.linux = { duckdb: 'bin/duckdb' };
+    },
+  ]) {
+    const invalid = catalog();
+    invalid.managedDependencies = [managedPythonBundle()];
+    mutate(invalid);
+    assert.throws(() => validateCatalog(invalid));
+  }
+});
+
 test("installed state refuses corrupt flags, duplicate identity and orphan activation", async () => {
   const { validateInstalledState } = await import("../src/contracts.js");
   assert.throws(() =>

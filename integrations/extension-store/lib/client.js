@@ -1977,12 +1977,17 @@ function validateOperation(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("Invalid extension operation");
   const { action } = input;
   const noFields = ["refresh", "disconnect", "clear-cache"];
-  const extensionActions = ["install", "remove", "rollback", "inspect-dependencies", "disconnect-extension", "connect-extension", "profile-enable", "workspace-enable"];
+  const extensionActions = ["install", "remove", "rollback", "inspect-dependencies", "setup-dependencies", "remove-dependency", "disconnect-extension", "connect-extension", "profile-enable", "workspace-enable"];
   if (typeof action !== "string" || ![...noFields, ...extensionActions, "connect", "cancel"].includes(action)) throw Error("Unknown extension operation");
   const result = { action };
   if (extensionActions.includes(action)) {
     if (typeof input.id !== "string" || input.id.length > 4096 || !/^[-a-z0-9]+$/.test(input.id)) throw Error("Invalid extension ID");
     result.id = input.id;
+  }
+  if (action === "remove-dependency") {
+    if (typeof input.version !== "string" || !/^[A-Za-z0-9][A-Za-z0-9.+-]{0,127}$/.test(input.version))
+      throw Error("Invalid managed runtime version");
+    result.version = input.version;
   }
   if (action === "connect" || action === "connect-extension") {
     const min = action === "connect" ? 10 : 1, max = action === "connect" ? 4096 : 16384;
@@ -2004,9 +2009,38 @@ function validateOperation(input) {
   return result;
 }
 
+// src/locales.js
+var NS = "bc.extension-store";
+var en = {
+  nav: "Extensions",
+  setupManagedRequirements: "Set up managed requirements",
+  managedRequirementsAvailable: "A signed compatible runtime is available for explicit setup.",
+  managedRequirementsInstalled: "Compatible managed requirements are installed. Activation still checks their versions.",
+  managedRuntimes: "Managed runtimes",
+  removeRuntime: "Remove runtime",
+  unverifiedRuntime: "Unverified runtime",
+  clearCaches: "Clear downloaded package and runtime cache",
+  dependencyManagedInstalled: "A verified managed runtime is installed. Extension qualification still applies.",
+  dependencyManagedAvailable: "A signed, platform-qualified runtime is available after explicit setup; nothing was downloaded.",
+  dependencyLocalOnly: "Local version inspection only. No qualified managed runtime release is available."
+};
+var zh = {
+  nav: "\u6269\u5C55",
+  setupManagedRequirements: "\u8BBE\u7F6E\u6258\u7BA1\u4F9D\u8D56",
+  managedRequirementsAvailable: "\u53EF\u663E\u5F0F\u8BBE\u7F6E\u5DF2\u7B7E\u540D\u4E14\u517C\u5BB9\u7684\u8FD0\u884C\u65F6\u3002",
+  managedRequirementsInstalled: "\u5DF2\u5B89\u88C5\u517C\u5BB9\u7684\u6258\u7BA1\u4F9D\u8D56\uFF1B\u542F\u7528\u65F6\u4ECD\u4F1A\u68C0\u67E5\u5176\u7248\u672C\u3002",
+  managedRuntimes: "\u6258\u7BA1\u8FD0\u884C\u65F6",
+  removeRuntime: "\u79FB\u9664\u8FD0\u884C\u65F6",
+  unverifiedRuntime: "\u672A\u9A8C\u8BC1\u7684\u8FD0\u884C\u65F6",
+  clearCaches: "\u6E05\u9664\u5DF2\u4E0B\u8F7D\u7684\u8F6F\u4EF6\u5305\u548C\u8FD0\u884C\u65F6\u7F13\u5B58",
+  dependencyManagedInstalled: "\u5DF2\u5B89\u88C5\u7ECF\u8FC7\u9A8C\u8BC1\u7684\u6258\u7BA1\u8FD0\u884C\u65F6\uFF1B\u6269\u5C55\u8D44\u683C\u8981\u6C42\u4ECD\u7136\u9002\u7528\u3002",
+  dependencyManagedAvailable: "\u53EF\u5728\u663E\u5F0F\u8BBE\u7F6E\u540E\u4F7F\u7528\u5DF2\u7B7E\u540D\u4E14\u9002\u7528\u4E8E\u6B64\u5E73\u53F0\u7684\u8FD0\u884C\u65F6\uFF1B\u5C1A\u672A\u4E0B\u8F7D\u4EFB\u4F55\u5185\u5BB9\u3002",
+  dependencyLocalOnly: "\u4EC5\u68C0\u67E5\u672C\u5730\u7248\u672C\uFF1B\u5F53\u524D\u6CA1\u6709\u7B26\u5408\u8D44\u683C\u7684\u6258\u7BA1\u8FD0\u884C\u65F6\u7248\u672C\u3002"
+};
+
 // src/client.jsx
 var import_jsx_runtime = require("react/jsx-runtime");
-var inject = ["slots", "layout"];
+var inject = ["slots", "layout", "locale"];
 async function request(action) {
   const response = await fetch("/api/bc-extension-store", {
     method: action ? "POST" : "GET",
@@ -2018,7 +2052,7 @@ async function request(action) {
   if (!response.ok) throw Error(value.error ?? "Extension store unavailable");
   return value;
 }
-function Store() {
+function Store({ t = (key) => key } = {}) {
   const [view, setView] = (0, import_react.useState)(), [tab, setTab] = (0, import_react.useState)("Extensions"), [query, setQuery] = (0, import_react.useState)(""), [error, setError] = (0, import_react.useState)(""), [busy, setBusy] = (0, import_react.useState)(false), [token, setToken] = (0, import_react.useState)(""), [connectionTokens, setConnectionTokens] = (0, import_react.useState)({}), [dependencyResults, setDependencyResults] = (0, import_react.useState)({}), [workspace, setWorkspace] = (0, import_react.useState)("");
   const run = async (action) => {
     setBusy(true);
@@ -2062,6 +2096,15 @@ function Store() {
   }) && e.platforms.includes(view.platform) && e.artifact && ["packed-install", "lifecycle", "workflow"].every(
     (x) => e.qualification?.[view.platform]?.includes(x)
   );
+  const installedRequirements = (e) => e.kind === "mcp" && (e.dependencyIds ?? []).length > 0 && e.dependencyIds.every((id) => dependencyResults[e.id]?.some((result) => result.id === id && result.available && result.managedSetup === "installed"));
+  const canSetUpRequirements = (e) => {
+    if (e.kind !== "mcp" || !(e.dependencyIds?.length > 0) || !dependencyResults[e.id]?.some((result) => !result.available)) return false;
+    const pythonIds = e.dependencyIds.filter((id) => ["python", "jupyter", "duckdb"].includes(id));
+    const otherIds = e.dependencyIds.filter((id) => !pythonIds.includes(id));
+    const bundles = view?.catalog.managedDependencies ?? [];
+    return (!pythonIds.length || bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && pythonIds.every((id) => bundle.provides[id] && import_semver.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")))) && otherIds.every((id) => bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && bundle.provides[id] && import_semver.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")));
+  };
+  const dependencyStatusText = (status) => t(status === "installed" ? "dependencyManagedInstalled" : status === "available" ? "dependencyManagedAvailable" : "dependencyLocalOnly");
   const filtered = entries.filter(
     (e) => (tab === "Installed" ? installed.some((x) => x.id === e.id) : tab === "Workflow Packs" ? e.kind === "pack" : tab === "Connections" ? e.kind === "mcp" : e.kind !== "pack" && e.kind !== "mcp") && `${e.name} ${e.description ?? ""}`.toLowerCase().includes(query.toLowerCase())
   );
@@ -2091,8 +2134,20 @@ function Store() {
           ": ",
           result.available ? `found ${result.version}` : result.reason,
           ". ",
-          result.note
-        ] }, result.id))
+          dependencyStatusText(result.managedSetup)
+        ] }, result.id)),
+        record && canSetUpRequirements(e) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: t("managedRequirementsAvailable") }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              disabled: busy || !qualifies(e),
+              onClick: () => run({ action: "setup-dependencies", id: e.id }),
+              children: t("setupManagedRequirements")
+            }
+          )
+        ] }),
+        record && installedRequirements(e) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: t("managedRequirementsInstalled") })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: e.source, target: "_blank", rel: "noreferrer", children: "Upstream source" }),
@@ -2217,7 +2272,7 @@ function Store() {
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Expand BC with tools and connected applications. Core graphics and workflow features are already included." })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", { "aria-label": "Extension categories", children: ["Extensions", "Connections", "Workflow Packs", "Installed"].map(
-      (t) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { "aria-pressed": tab === t, onClick: () => setTab(t), children: t }, t)
+      (t2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { "aria-pressed": tab === t2, onClick: () => setTab(t2), children: t2 }, t2)
     ) }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
       "Search extensions",
@@ -2269,10 +2324,28 @@ function Store() {
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run({ action: "disconnect" }), children: "Disconnect" })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run({ action: "refresh" }), children: "Refresh signed catalog" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run({ action: "clear-cache" }), children: "Clear downloaded package cache" }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run({ action: "clear-cache" }), children: t("clearCaches") }),
     view && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: view.diagnostic }),
     error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "alert", children: error }),
     busy && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: "Working\u2026" }),
+    (view?.managedDependencies?.length ?? 0) > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
+        t("managedRuntimes"),
+        " (",
+        view.managedDependencies.length,
+        ")"
+      ] }),
+      view.managedDependencies.map((bundle) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+        bundle.id,
+        " ",
+        bundle.version,
+        " \xB7 ",
+        Object.entries(bundle.provides).map(([id, version]) => `${id} ${version}`).join(", "),
+        " \xB7 ",
+        bundle.verified ? bundle.license : t("unverifiedRuntime"),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run({ action: "remove-dependency", id: bundle.id, version: bundle.version }), children: t("removeRuntime") })
+      ] }, `${bundle.id}/${bundle.version}`))
+    ] }),
     view?.operations.map((id) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
       "button",
       {
@@ -2290,6 +2363,8 @@ function Store() {
   ] });
 }
 function apply(ctx) {
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), "bc-extension-store: dictionaries");
+  const t = ctx.locale.bind(NS);
   ctx.effect(() => {
     const style = document.createElement("style");
     style.textContent = ".bc-store{padding:24px;max-width:1200px;margin:auto;color:var(--dsh-text-primary,inherit)}.bc-store nav{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.bc-store label{display:inline-flex;gap:8px;margin:12px}.bc-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px}.bc-store-card{border:1px solid var(--dsh-border,#8886);border-radius:12px;padding:18px}.bc-store button{padding:8px 12px;margin:4px;cursor:pointer}.bc-store button:disabled{opacity:.5;cursor:default}.bc-store [role=alert]{color:var(--dsh-danger,#c44)}.bc-store-card p{overflow-wrap:anywhere}.bc-store-card li{margin-bottom:6px}";
@@ -2303,14 +2378,15 @@ function apply(ctx) {
         name: "sidebar.panellist",
         id: "bc-extensions",
         order: 1,
-        label: () => "Extensions"
+        label: () => t("nav"),
+        locale: NS
       },
       () => import_react.default.createElement("span", { "aria-hidden": true }, "\uFF0B")
     )
   );
   ctx.slots.inject(
     "main",
-    () => ctx.slots.register({ name: "main", key: "bc-extensions" }, Store)
+    () => ctx.slots.register({ name: "main", key: "bc-extensions", locale: NS, inject: () => ({ t }) }, Store)
   );
 }
 return module.exports;}});

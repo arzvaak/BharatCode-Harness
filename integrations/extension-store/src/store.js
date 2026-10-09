@@ -11,6 +11,8 @@ import {
 import { join } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { validateArchive } from "./archive.js";
+import { ManagedDependencyStore } from './managed-dependencies.js';
+import { inspectDependencies } from './dependencies.js';
 import {
   verifyCatalog,
   canInstall,
@@ -36,6 +38,31 @@ const ok = (result) => {
     );
   return result;
 };
+function releaseAssetMap(rows) {
+  if (!Array.isArray(rows)) throw Error('Invalid release asset inventory');
+  const assets = new Map();
+  const ids = new Set();
+  for (const asset of rows) {
+    if (!asset || typeof asset.name !== 'string' || !asset.name || asset.name.length > 512
+      || !Number.isSafeInteger(asset.id) || asset.id < 1 || ids.has(asset.id)
+      || !Number.isSafeInteger(asset.size) || asset.size < 1 || assets.has(asset.name))
+      throw Error('Invalid or duplicate release asset inventory');
+    assets.set(asset.name, { id: asset.id, size: asset.size });
+    ids.add(asset.id);
+  }
+  return assets;
+}
+function validateManagedReleaseAssets(catalog, assets) {
+  for (const bundle of catalog.managedDependencies ?? []) {
+    if (bundle.status !== 'qualified') continue;
+    for (const platform of bundle.platforms) {
+      const artifact = bundle.artifacts[platform];
+      const asset = assets.get(artifact.assetName);
+      if (!asset || asset.size !== artifact.bytes || (artifact.assetId !== undefined && asset.id !== artifact.assetId))
+        throw Error('Managed dependency artifact differs from the signed release inventory');
+    }
+  }
+}
 export class ExtensionStore {
   constructor(options) {
     this.options = options;
@@ -49,9 +76,18 @@ export class ExtensionStore {
     );
     this.installed = [];
     this.workspaceEnabled = [];
+    this.releaseAssets = new Map();
     this.archives = [];
     this.queue = Promise.resolve();
     this.operations = new Map();
+    this.dependencies = new ManagedDependencyStore({
+      directory: options.directory,
+      transport: options.transport,
+      platform: options.platform,
+      subprocess: options.subprocess,
+      probeRunner: options.dependencyProbeRunner,
+      assetResolver: name => this.releaseAssets.get(name),
+    });
     this.diagnostic = "No signed catalog fetched yet";
   }
   exclusive(fn) {
@@ -74,6 +110,12 @@ export class ExtensionStore {
         envelope.signature,
         this.options.publicKey,
       );
+      try {
+        this.releaseAssets = releaseAssetMap(envelope.assets ?? []);
+        validateManagedReleaseAssets(this.catalog, this.releaseAssets);
+      } catch {
+        this.releaseAssets = new Map();
+      }
       this.verifiedHash = createHash("sha256").update(bytes).digest("hex");
       this.diagnostic = "Verified cached catalog";
     } catch (error) {
@@ -94,8 +136,8 @@ export class ExtensionStore {
             ),
           );
         } catch (e) {
-          if (e.code === "ENOENT") return;
-          throw e;
+          if (e.code === "ENOENT") x = { schemaVersion: 1, records: [], workspaceEnabled: [] };
+          else throw e;
         }
       }
       const state = validateInstalledState(x);
@@ -105,8 +147,9 @@ export class ExtensionStore {
       if (error.code !== "ENOENT")
         throw Error(
           "Installed extension state is invalid; preserve it for recovery",
-        );
+      );
     }
+    await this.dependencies.load(this.catalog);
   }
   async downloaded() {
     const directory = join(this.options.directory, "archives");
@@ -157,6 +200,7 @@ export class ExtensionStore {
       bcVersion: this.options.bcVersion,
       archives: this.archives,
       operations: [...this.operations.keys()],
+      managedDependencies: this.dependencies.view(),
     });
   }
   refresh(signal) {
@@ -196,6 +240,8 @@ export class ExtensionStore {
             value.revision < this.catalog.revision
           )
             throw Error("Catalog revision or channel mismatch");
+          const releaseAssets = releaseAssetMap(r.assets);
+          validateManagedReleaseAssets(value, releaseAssets);
           const prior = this.catalog;
           if (
             value.revision === prior.revision &&
@@ -207,11 +253,14 @@ export class ExtensionStore {
           await mkdir(this.options.directory, { recursive: true, mode: 0o700 });
           await atomic(
             join(this.options.directory, "catalog-envelope.json"),
-            JSON.stringify({ bytes: bytes.toString("base64"), signature }),
+            JSON.stringify({ bytes: bytes.toString("base64"), signature,
+              assets: [...releaseAssets].map(([name, asset]) => ({ name, ...asset })) }),
           );
           this.catalog = value;
+          this.releaseAssets = releaseAssets;
           this.verifiedHash = createHash("sha256").update(bytes).digest("hex");
           this.diagnostic = "Verified private preview catalog";
+          await this.dependencies.load(value);
           return this.view();
         } catch (e) {
           if (signal?.aborted) throw e;
@@ -316,6 +365,108 @@ export class ExtensionStore {
     operation.abort();
     return true;
   }
+  async installDependencies(id, signal) {
+    return this.exclusive(async () => {
+      const entry = this.catalog.entries.find(candidate => candidate.id === id);
+      if (!entry || entry.kind !== 'mcp' || !canInstall(entry, this.options.platform, this.options.bcVersion)
+        || !this.installed.some(record => record.id === id))
+        throw Error('Install a qualified MCP extension before setting up its managed dependencies');
+      const requestId = randomUUID();
+      const abort = new AbortController();
+      const cancel = signal ? AbortSignal.any([signal, abort.signal]) : abort.signal;
+      this.operations.set(requestId, abort);
+      try {
+        const inspected = await this.inspectEntryDependencies(entry, cancel);
+        cancel.throwIfAborted();
+        const missing = (entry.dependencyIds ?? []).filter(id => !inspected.find(result => result.id === id)?.available);
+        const pythonIds = (entry.dependencyIds ?? []).filter(id => ['python', 'jupyter', 'duckdb'].includes(id));
+        const missingPython = missing.filter(id => pythonIds.includes(id));
+        const installedNonPythonInvalid = missing.filter(dependencyId => !pythonIds.includes(dependencyId)
+          && this.dependencies.installedBundle(dependencyId, entry.dependencyRanges?.[dependencyId] ?? '*'));
+        if (installedNonPythonInvalid.length)
+          throw Error(`Remove the existing managed runtime before setting it up again: ${installedNonPythonInvalid.join(', ')}`);
+        const plan = [];
+        if (missingPython.length) {
+          if (this.dependencies.pythonBundleFor(pythonIds, entry.dependencyRanges ?? {}, true))
+            throw Error(`Remove the existing managed Python runtime before setting it up again: ${pythonIds.join(', ')}`);
+          const bundle = this.dependencies.pythonBundleFor(pythonIds, entry.dependencyRanges ?? {});
+          if (!bundle)
+            throw Error(`No single qualified managed runtime covers the Python requirements: ${pythonIds.join(', ')}`);
+          plan.push(bundle);
+        }
+        plan.push(...this.dependencies.plan(missing.filter(id => !pythonIds.includes(id)), entry.dependencyRanges ?? {}));
+        for (const bundle of plan) {
+          cancel.throwIfAborted();
+          await this.dependencies.install(bundle, cancel);
+        }
+        await this.dependencies.load(this.catalog);
+        return this.view();
+      } finally {
+        this.operations.delete(requestId);
+      }
+    });
+  }
+  async inspectEntryDependencies(entry, signal, { managed = true } = {}) {
+    const ids = entry.dependencyIds ?? [];
+    const ranges = entry.dependencyRanges ?? {};
+    const installed = new Map(ids.map(dependencyId => [dependencyId,
+      managed ? this.dependencies.installedBundle(dependencyId, ranges[dependencyId] ?? '*') : undefined]));
+    const commands = managed ? await this.dependencies.commandsFor(ids, ranges) : {};
+    const pythonIds = ids.filter(id => ['python', 'jupyter', 'duckdb'].includes(id));
+    const pythonBundle = managed ? this.dependencies.pythonBundleFor(pythonIds, ranges, true) : undefined;
+    const availablePythonBundle = managed ? this.dependencies.pythonBundleFor(pythonIds, ranges) : undefined;
+    const managedStatus = Object.fromEntries(ids.map(dependencyId => {
+      const pythonDependency = pythonIds.includes(dependencyId);
+      return [dependencyId, !managed ? 'unavailable'
+        : pythonDependency ? pythonBundle ? 'installed' : availablePythonBundle ? 'available' : 'unavailable'
+          : installed.get(dependencyId) ? 'installed'
+            : this.dependencies.hasQualifiedBundle(dependencyId, ranges[dependencyId] ?? '*') ? 'available' : 'unavailable'];
+    }));
+    const expectedVersions = Object.fromEntries(ids.flatMap(dependencyId => {
+      if (pythonIds.includes(dependencyId))
+        return pythonBundle && Object.hasOwn(pythonBundle.provides, dependencyId)
+          ? [[dependencyId, pythonBundle.provides[dependencyId]]] : [];
+      const record = installed.get(dependencyId);
+      return record ? [[dependencyId, record.bundle.provides[dependencyId]]] : [];
+    }));
+    const results = await inspectDependencies(entry.dependencyIds ?? [], {
+      platform: this.options.platform,
+      commands,
+      ranges,
+      managed: managedStatus,
+      expectedVersions,
+      runner: this.options.dependencyProbeRunner,
+      subprocess: this.options.subprocess,
+      signal,
+    });
+    return results;
+  }
+  async verifyDependencies(entry, signal, options) {
+    return this.inspectEntryDependencies(entry, signal, options);
+  }
+  async resolveRuntimeCommand(entry, command) {
+    const dependencyIds = entry.dependencyIds ?? [];
+    if (command === 'python' || command === 'python3') {
+      return this.dependencies.resolvePythonFor(dependencyIds, entry.dependencyRanges ?? {});
+    }
+    if (!dependencyIds.includes(command)) return undefined;
+    return this.dependencies.resolveCommand(command, entry.dependencyRanges?.[command] ?? '*');
+  }
+  async removeDependency(bundleId, version) {
+    return this.exclusive(async () => {
+      const record = this.dependencies.records.find(item => item.id === bundleId && item.version === version);
+      if (!record) throw Error('Managed runtime is not installed');
+      const provided = record.verified ? new Set(Object.keys(record.bundle.provides)) : undefined;
+      for (const installed of this.installed) {
+        const active = installed.enabled || this.workspaceEnabled.some(([, id]) => id === installed.id);
+        const dependencies = installed.descriptor.dependencyIds ?? [];
+        if (active && (provided ? dependencies.some(id => provided.has(id)) : dependencies.length > 0))
+          throw Error('Disable dependent extensions in every scope before removing this runtime');
+      }
+      await this.dependencies.remove(bundleId, version);
+      return this.view();
+    });
+  }
   async activation(workspace, id, enabled) {
     return this.exclusive(async () => {
       const record = this.installed.find((r) => r.id === id);
@@ -369,6 +520,7 @@ export class ExtensionStore {
         recursive: true,
         force: true,
       });
+      await this.dependencies.clearCache();
       await this.downloaded();
       return this.view();
     });

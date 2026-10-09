@@ -19,6 +19,37 @@ test('local inspection uses an existing runtime and never downloads or injects t
   assert.equal(result[0].managedSetup, 'unavailable');
 });
 
+test('a qualified store runtime path takes precedence during bounded version inspection', async () => {
+  const [result] = await inspectDependencies(['python'], {
+    platform: 'win32', commands: { python: process.execPath }, subprocess,
+  });
+  assert.equal(result.command, process.execPath);
+  assert.equal(result.available, true);
+  await assert.rejects(inspectDependencies(['python'], {
+    runner: async () => ({ available: true, version: '3.12.0' }),
+    commands: { outside: '/tmp/untrusted' },
+  }), /executable map/);
+  const [mismatch] = await inspectDependencies(['python'], {
+    runner: async () => ({ available: true, version: '3.12.15' }),
+    expectedVersions: { python: '3.12.14' },
+  });
+  assert.equal(mismatch.available, false);
+  assert.match(mismatch.reason, /exactly 3\.12\.14/);
+});
+
+test('Python module probes use the selected interpreter for every requirement', async () => {
+  const commands = [];
+  const result = await inspectDependencies(['python', 'duckdb'], {
+    commands: { python: '/managed/python' },
+    runner: async (command, args) => {
+      commands.push(command);
+      return { available: true, version: args[0] === '--version' ? '3.12.14' : '1.5.6' };
+    },
+  });
+  assert.deepEqual(commands, ['/managed/python', '/managed/python']);
+  assert.deepEqual(result.map(item => item.available), [true, true]);
+});
+
 test('missing, incompatible and excessive-output probes produce bounded diagnostics', async () => {
   const missing = await probeCommand('bc-missing-fixture-runtime', ['--version'], { subprocess });
   assert.equal(missing.available, false);

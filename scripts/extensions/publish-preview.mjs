@@ -48,9 +48,13 @@ if (
 )
   throw Error("Qualified Linux inventory required");
 const files = [];
+const releaseAssets = [];
+const names = new Set();
 for (const asset of inventory.assets) {
   if (!/^[A-Za-z0-9._-]+\.tgz$/.test(asset.name))
     throw Error("Invalid archive filename");
+  if (names.has(asset.name)) throw Error("Duplicate release asset filename");
+  names.add(asset.name);
   const path = join(directory, asset.name);
   const bytes = await readFile(path);
   if (
@@ -61,10 +65,49 @@ for (const asset of inventory.assets) {
   if (!asset.license || asset.license === "UNRESOLVED")
     throw Error("Package licence inventory incomplete");
   files.push(path);
+  releaseAssets.push(asset);
 }
 const catalog = JSON.parse(
   await readFile("integrations/extension-store/catalog.json"),
 );
+const qualifiedRuntimeNames = new Set((catalog.managedDependencies ?? []).flatMap(bundle =>
+  bundle.status === "qualified" ? bundle.platforms.map(platform => bundle.artifacts[platform].assetName) : []));
+const managedDirectory = resolve("dist/managed-dependencies");
+let managedInventory = { assets: [] };
+try {
+  managedInventory = JSON.parse(await readFile(join(managedDirectory, "inventory.json")));
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
+if (!Array.isArray(managedInventory.assets)) throw Error("Invalid managed dependency inventory");
+for (const asset of managedInventory.assets) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*\.tgz$/.test(asset.name) || names.has(asset.name)
+    || !Number.isSafeInteger(asset.bytes) || asset.bytes < 1 || asset.bytes > 512 * 1024 * 1024
+    || !/^[a-f0-9]{64}$/.test(asset.sha256 ?? "") || !asset.license || asset.license === "UNRESOLVED"
+    || !/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(asset.sourceCommit ?? "")
+    || !["linux", "win32", "darwin"].includes(asset.platform)
+    || !/^[a-z0-9-]+$/.test(asset.bundleId ?? ""))
+    throw Error("Invalid managed dependency asset inventory");
+  if (!qualifiedRuntimeNames.has(asset.name)) throw Error("Unreferenced managed dependency asset refused");
+  const path = join(managedDirectory, asset.name);
+  const bytes = await readFile(path);
+  if (bytes.length !== asset.bytes || createHash("sha256").update(bytes).digest("hex") !== asset.sha256)
+    throw Error("Managed dependency artifact bytes differ from its inventory");
+  files.push(path);
+  releaseAssets.push(asset);
+  names.add(asset.name);
+}
+for (const bundle of catalog.managedDependencies ?? []) {
+  if (bundle.status !== "qualified") continue;
+  for (const platform of bundle.platforms) {
+    const artifact = bundle.artifacts[platform];
+    const matches = releaseAssets.filter(asset => asset.name === artifact.assetName);
+    if (matches.length !== 1 || matches[0].platform !== platform || matches[0].bundleId !== bundle.id
+      || matches[0].sourceCommit !== bundle.sourceCommit || matches[0].license !== bundle.license
+      || matches[0].bytes !== artifact.bytes || matches[0].sha256 !== artifact.sha256)
+      throw Error(`Managed dependency release evidence is missing for ${bundle.id} (${platform})`);
+  }
+}
 catalog.revision = revision;
 catalog.channel = "preview";
 const signed = signCatalog(
@@ -90,7 +133,7 @@ await writeFile(
       publicationRunId,
       publicationRunAttempt,
       catalogSha256: signed.sha256,
-      assets: inventory.assets,
+      assets: releaseAssets,
     },
     null,
     2,
@@ -103,7 +146,7 @@ await writeFile(
 await writeFile(
   "dist/catalog/SHA256SUMS",
   `${signed.sha256}  catalog.json\n` +
-    inventory.assets.map((a) => `${a.sha256}  ${a.name}\n`).join(""),
+    releaseAssets.map((a) => `${a.sha256}  ${a.name}\n`).join(""),
 );
 await writeFile(
   "dist/catalog/RELEASE.md",

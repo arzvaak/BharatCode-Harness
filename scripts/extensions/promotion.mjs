@@ -10,7 +10,7 @@ export async function qualifyPromotion({ release, run, jobs, publicKey, asset })
   const assets = new Map();
   for (const item of release.assets ?? []) {
     if (assets.has(item.name) || !Number.isSafeInteger(item.id) || item.id < 1 ||
-        !Number.isSafeInteger(item.size) || item.size < 1 || item.size > 256 * 1024 * 1024)
+        !Number.isSafeInteger(item.size) || item.size < 1 || item.size > 512 * 1024 * 1024)
       throw Error("Invalid or duplicate published asset");
     assets.set(item.name, item);
   }
@@ -49,7 +49,7 @@ export async function qualifyPromotion({ release, run, jobs, publicKey, asset })
         !Number.isSafeInteger(item.bytes) || item.bytes < 1 || item.bytes !== assets.get(item.name)?.size)
       throw Error("Invalid preview package inventory");
     names.add(item.name);
-    if (hash(await read(item.name, 256 * 1024 * 1024)) !== item.sha256)
+    if (hash(await read(item.name, 512 * 1024 * 1024)) !== item.sha256)
       throw Error("Published package hash changed");
   }
   for (const item of catalog.entries) {
@@ -60,6 +60,19 @@ export async function qualifyPromotion({ release, run, jobs, publicKey, asset })
       const owned = manifest.assets.find(a => a.name === published?.name);
       if (!owned || owned.bytes !== item.artifact.bytes || owned.sha256 !== item.artifact.sha256)
         throw Error("Qualified catalog artifact is absent from its signed release inventory");
+    }
+  }
+  for (const bundle of catalog.managedDependencies ?? []) {
+    if (bundle.status !== "qualified") continue;
+    for (const platform of bundle.platforms) {
+      const descriptor = bundle.artifacts[platform];
+      const published = release.assets.filter(asset => asset.name === descriptor.assetName);
+      const owned = manifest.assets.filter(asset => asset.name === descriptor.assetName);
+      if (published.length !== 1 || owned.length !== 1 || published[0].size !== descriptor.bytes
+        || owned[0].bytes !== descriptor.bytes || owned[0].sha256 !== descriptor.sha256
+        || owned[0].platform !== platform || owned[0].bundleId !== bundle.id
+        || owned[0].sourceCommit !== bundle.sourceCommit || owned[0].license !== bundle.license)
+        throw Error(`Managed dependency artifact is absent from the signed release inventory: ${bundle.id}/${platform}`);
     }
   }
   if ([...assets.keys()].some(name => name.endsWith(".tgz") && !names.has(name)))

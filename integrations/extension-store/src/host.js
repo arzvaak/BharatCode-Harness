@@ -14,7 +14,6 @@ import { RuntimeManager } from "./runtime.js";
 import { trustedRequest, json, body } from "./http.js";
 import { validateOperation } from "./operations.js";
 import { canInstall } from "./contracts.js";
-import { inspectDependencies } from './dependencies.js';
 export const name = "bc-extension-store";
 export const inject = [
   "webServer",
@@ -79,6 +78,7 @@ export async function apply(ctx, config = {}) {
       write: async (value) => table.put(stateKey, value),
     },
     manager: ctx.pluginManager,
+    subprocess: ctx.subprocess,
     platform: process.platform,
     bcVersion: getDshRuntimeVersion(),
     seed,
@@ -93,12 +93,16 @@ export async function apply(ctx, config = {}) {
       throw Error("Session is not attached to a registered workspace");
     return workspace.id;
   }
-  const runtime = new RuntimeManager(async ({ workspace, session, entry }) => {
+  const runtime = new RuntimeManager(async ({ workspace, session, entry, signal }) => {
     const agent = ctx.agents.get(session);
     if (!agent || workspaceFor(session) !== workspace)
       throw Error("Live session/workspace ownership mismatch");
     if (!entry.runtime || entry.kind !== "mcp")
       throw Error("No qualified MCP runtime");
+    const dependencyChecks = await store.verifyDependencies(entry, signal);
+    const missingDependency = dependencyChecks.find(result => !result.available);
+    if (missingDependency)
+      throw Error(`${missingDependency.title}: ${missingDependency.reason ?? 'a compatible runtime is required'}`);
     const serverName = `bc_${createHash("sha256").update(entry.id).digest("hex").slice(0, 16)}`;
     const settings = {
       ...entry.runtime,
@@ -117,6 +121,10 @@ export async function apply(ctx, config = {}) {
         maxAttempts: 10,
       },
     };
+    const managedCommand = await store.resolveRuntimeCommand(entry, settings.command);
+    if (managedCommand) settings.command = managedCommand;
+    else if (settings.command === 'python' && process.platform !== 'win32'
+      && (entry.dependencyIds ?? []).some(id => ['python', 'jupyter', 'duckdb'].includes(id))) settings.command = 'python3';
     if (entry.credentialReference) {
       const ref = credentialRef(entry.credentialReference);
       const secret = await ctx.credentials.resolve(ref);
@@ -222,7 +230,7 @@ export async function apply(ctx, config = {}) {
           const entry = store.catalog.entries.find(e => e.id === request.id);
           if (!entry) throw Error('Unknown extension');
           json(res, 200, { ...(await snapshot()), inspectedDependencies: {
-            id: entry.id, results: await inspectDependencies(entry.dependencyIds ?? [], { signal: disconnect.signal, subprocess: ctx.subprocess, ranges: entry.dependencyRanges }),
+            id: entry.id, results: await store.inspectEntryDependencies(entry, disconnect.signal),
           } });
           return;
         }
@@ -259,6 +267,25 @@ export async function apply(ctx, config = {}) {
             );
           await store.install(request.id, disconnect.signal);
           break;
+        case "setup-dependencies":
+          if (runtime.hasWork(request.id))
+            throw Error("Stop extension runtimes before setting up dependencies");
+          await store.installDependencies(request.id, disconnect.signal);
+          break;
+        case "remove-dependency":
+          if (ctx.agents.list().some((agent) => agent.status === "running"))
+            throw Error("Wait for active agent work to finish before removing a managed runtime");
+          {
+            const bundle = store.dependencies.records.find(item => item.id === request.id && item.version === request.version);
+            const provided = bundle?.verified ? new Set(Object.keys(bundle.bundle.provides)) : undefined;
+            if (store.installed.some(record => runtime.hasWork(record.id)
+              && (provided
+                ? (record.descriptor.dependencyIds ?? []).some(id => provided.has(id))
+                : (record.descriptor.dependencyIds ?? []).length > 0)))
+              throw Error("Stop dependent extension runtimes before removing this managed runtime");
+          }
+          await store.removeDependency(request.id, request.version);
+          break;
         case "cancel":
           store.cancel(request.requestId);
           break;
@@ -269,6 +296,14 @@ export async function apply(ctx, config = {}) {
             );
           if (typeof request.enabled !== "boolean")
             throw Error("Invalid activation choice");
+          if (request.enabled) {
+            const record = store.installed.find(item => item.id === request.id);
+            if (record) {
+              const missing = (await store.verifyDependencies(record.descriptor, disconnect.signal, { managed: false }))
+                .find(result => !result.available);
+              if (missing) throw Error(`${missing.title}: ${missing.reason ?? 'a compatible local runtime is required'}`);
+            }
+          }
           await store.profileEnabled(request.id, request.enabled);
           break;
         case "workspace-enable": {
@@ -283,11 +318,14 @@ export async function apply(ctx, config = {}) {
             throw Error("Install a qualified release first");
           if (!ctx.workspaceRegistry.get(request.workspace))
             throw Error("Unknown workspace");
-          if (request.enabled === true)
+          if (request.enabled === true) {
+            const missing = (await store.verifyDependencies(entry, disconnect.signal))
+              .find(result => !result.available);
+            if (missing) throw Error(`${missing.title}: ${missing.reason ?? 'a compatible runtime is required'}`);
             runtime.enable(request.workspace, entry);
-          else if (request.enabled === false)
+          } else if (request.enabled === false) {
             await runtime.disable(request.workspace, entry.id);
-          else throw Error("Invalid activation choice");
+          } else throw Error("Invalid activation choice");
           await store.activation(request.workspace, entry.id, request.enabled);
           break;
         }

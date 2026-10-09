@@ -35,7 +35,8 @@
       "inject": [
         "@deepseek-ai/dsh-client-ui-renderer",
         "@deepseek-ai/dsh-client-ui-layout",
-        "@deepseek-ai/dsh-client-ui-sidebar"
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-locale"
       ]
     }
   },
@@ -46,11 +47,12 @@
   "dependencies": {
     "@deepseek-ai/dsh-mcp-client": "workspace:*",
     "@deepseek-ai/dsh-credentials": "workspace:*",
+    "@deepseek-ai/dsh-storage-domain": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:*",
     "semver": "7.7.4",
     "zod": "4.4.3",
-    "@deepseek-ai/dsh-storage-domain": "workspace:*",
-    "@deepseek-ai/dsh-app-boot": "workspace:*"
+    "@deepseek-ai/dsh-app-boot": "workspace:*",
+    "tar": "^7.5.22"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

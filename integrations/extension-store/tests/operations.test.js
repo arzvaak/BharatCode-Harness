@@ -15,4 +15,7 @@ test('validated operations retain only their owned fields without adding default
   assert.deepEqual(validateOperation({action:'workspace-enable',id:'duckdb',workspace:'workspace:fixture',enabled:false,token:'unrelated'}),{action:'workspace-enable',id:'duckdb',enabled:false,workspace:'workspace:fixture'});
   assert.deepEqual(validateOperation({action:'refresh',id:'ignored'}),{action:'refresh'});
   assert.deepEqual(validateOperation({action:'connect-extension',id:'duckdb',token:'owned token'}),{action:'connect-extension',id:'duckdb',token:'owned token'});
+  assert.deepEqual(validateOperation({action:'setup-dependencies',id:'duckdb',dependencyIds:['outside']}),{action:'setup-dependencies',id:'duckdb'});
+  assert.deepEqual(validateOperation({action:'remove-dependency',id:'python-data-runtime',version:'3.12.14',directory:'/outside'}),{action:'remove-dependency',id:'python-data-runtime',version:'3.12.14'});
+  assert.throws(() => validateOperation({action:'remove-dependency',id:'python-data-runtime',version:'../outside'}));
 });

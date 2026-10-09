@@ -20,13 +20,47 @@ function fixture() {
     ["fixture-1.0.0.tgz", archive],
   ]);
   return {
-    publicKey, manifest, values,
+    privateKey, publicKey, manifest, values,
     release: { id: 42, tag_name: "extensions-preview-7", draft: false, prerelease: true,
       assets: [...values].map(([name, bytes], i) => ({ id: i + 1, name, size: bytes.length })) },
     run: { id: 91, run_attempt: 1, head_sha: manifest.commit, status: "completed", conclusion: "success", path: ".github/workflows/extensions-preview.yml" },
     jobs: ["qualification / native (ubuntu-latest)", "qualification / native (windows-latest)", "qualification / verdict", "publish"].map(name => ({ name, run_attempt: 1, status: "completed", conclusion: "success" })),
     asset(id) { const name = this.release.assets.find(a => a.id === id).name; return Promise.resolve(this.values.get(name)); },
+};
+}
+function addManagedRuntime(f) {
+  const archive = Buffer.from('qualified managed Python runtime');
+  const sourceCommit = 'b'.repeat(40);
+  const sha256 = hash(archive);
+  const bundle = {
+    id: 'python-data-runtime', version: '3.12.14',
+    source: 'https://github.com/astral-sh/python-build-standalone', sourceCommit,
+    license: 'PSF-2.0', status: 'qualified', provides: { python: '3.12.14' }, platforms: ['linux'],
+    artifacts: { linux: { assetName: 'python-data-runtime-linux.tgz', bytes: archive.length, sha256, format: 'tar.gz', unpackedBytes: 4096 } },
+    commands: { linux: { python: 'bin/python3' } },
   };
+  bundle.qualificationEvidence = ['archive-safety', 'version-probe', 'cancellation', 'removal'].map(check => ({
+    platform: 'linux', check, sourceCommit, artifactSha256: sha256, result: 'passed',
+    evidence: 'https://github.com/arzvaak/Bharatcode-Harness/actions/runs/123',
+  }));
+  const catalog = Buffer.from(JSON.stringify({ schemaVersion: 1, revision: 7, channel: 'preview', entries: [], managedDependencies: [bundle] }));
+  f.manifest = { ...f.manifest, catalogSha256: hash(catalog), assets: [
+    ...f.manifest.assets,
+    { name: bundle.artifacts.linux.assetName, bytes: archive.length, sha256, license: bundle.license,
+      platform: 'linux', bundleId: bundle.id, sourceCommit },
+  ] };
+  const manifest = Buffer.from(JSON.stringify(f.manifest));
+  f.values.set('catalog.json', catalog);
+  f.values.set('catalog.sig', Buffer.from(sign(null, catalog, f.privateKey).toString('base64')));
+  f.values.set('release-manifest.json', manifest);
+  f.values.set('release-manifest.sig', Buffer.from(sign(null, manifest, f.privateKey).toString('base64')));
+  f.values.set(bundle.artifacts.linux.assetName, archive);
+  for (const [name, bytes] of f.values) {
+    const existing = f.release.assets.find(asset => asset.name === name);
+    if (existing) existing.size = bytes.length;
+    else f.release.assets.push({ id: Math.max(...f.release.assets.map(asset => asset.id)) + 1, name, size: bytes.length });
+  }
+  return bundle.artifacts.linux.assetName;
 }
 test("promotion retains every published byte and returns only a release stability change", async () => {
   const f = fixture();
@@ -36,6 +70,17 @@ test("promotion retains every published byte and returns only a release stabilit
   assert.equal(result.releaseId, 42);
   assert.deepEqual(f.release, before);
   assert.equal(result.catalogSha256, f.manifest.catalogSha256);
+});
+test('promotion requires every qualified managed runtime in the signed release inventory', async () => {
+  const f = fixture();
+  const runtime = addManagedRuntime(f);
+  await qualifyPromotion({ ...f, asset: f.asset.bind(f) });
+  f.values.set(runtime, Buffer.alloc(f.values.get(runtime).length, 0));
+  await assert.rejects(qualifyPromotion({ ...f, asset: f.asset.bind(f) }), /hash changed/);
+  const missing = fixture();
+  addManagedRuntime(missing);
+  missing.release.assets = missing.release.assets.filter(asset => asset.name !== runtime);
+  await assert.rejects(qualifyPromotion({ ...missing, asset: missing.asset.bind(missing) }), /absent from the signed release inventory|Published asset size changed|missing or oversized|Invalid preview package inventory/i);
 });
 test("promotion refuses tampering, mismatched source and incomplete native evidence", async () => {
   for (const mutate of [

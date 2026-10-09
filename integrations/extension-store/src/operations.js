@@ -8,12 +8,17 @@ export function validateOperation(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error('Invalid extension operation');
   const { action } = input;
   const noFields = ['refresh', 'disconnect', 'clear-cache'];
-  const extensionActions = ['install', 'remove', 'rollback', 'inspect-dependencies', 'disconnect-extension', 'connect-extension', 'profile-enable', 'workspace-enable'];
+  const extensionActions = ['install', 'remove', 'rollback', 'inspect-dependencies', 'setup-dependencies', 'remove-dependency', 'disconnect-extension', 'connect-extension', 'profile-enable', 'workspace-enable'];
   if (typeof action !== 'string' || ![...noFields, ...extensionActions, 'connect', 'cancel'].includes(action)) throw Error('Unknown extension operation');
   const result = { action };
   if (extensionActions.includes(action)) {
     if (typeof input.id !== 'string' || input.id.length > 4096 || !/^[-a-z0-9]+$/.test(input.id)) throw Error('Invalid extension ID');
     result.id = input.id;
+  }
+  if (action === 'remove-dependency') {
+    if (typeof input.version !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9.+-]{0,127}$/.test(input.version))
+      throw Error('Invalid managed runtime version');
+    result.version = input.version;
   }
   if (action === 'connect' || action === 'connect-extension') {
     const min = action === 'connect' ? 10 : 1, max = action === 'connect' ? 4096 : 16384;

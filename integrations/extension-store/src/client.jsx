@@ -1,7 +1,8 @@
 import semver from "semver";
 import React, { useEffect, useState } from "react";
 import { validateOperation } from "./operations.js";
-export const inject = ["slots", "layout"];
+import { en, NS, zh } from './locales.js';
+export const inject = ["slots", "layout", "locale"];
 async function request(action) {
   const response = await fetch("/api/bc-extension-store", {
     method: action ? "POST" : "GET",
@@ -13,7 +14,7 @@ async function request(action) {
   if (!response.ok) throw Error(value.error ?? "Extension store unavailable");
   return value;
 }
-export function Store() {
+export function Store({ t = key => key } = {}) {
   const [view, setView] = useState(),
     [tab, setTab] = useState("Extensions"),
     [query, setQuery] = useState(""),
@@ -72,6 +73,22 @@ export function Store() {
     ["packed-install", "lifecycle", "workflow"].every((x) =>
       e.qualification?.[view.platform]?.includes(x),
     );
+  const installedRequirements = (e) => e.kind === 'mcp' && (e.dependencyIds ?? []).length > 0
+    && e.dependencyIds.every(id => dependencyResults[e.id]?.some(result =>
+      result.id === id && result.available && result.managedSetup === 'installed'));
+  const canSetUpRequirements = (e) => {
+    if (e.kind !== 'mcp' || !(e.dependencyIds?.length > 0)
+      || !dependencyResults[e.id]?.some(result => !result.available)) return false;
+    const pythonIds = e.dependencyIds.filter(id => ['python', 'jupyter', 'duckdb'].includes(id));
+    const otherIds = e.dependencyIds.filter(id => !pythonIds.includes(id));
+    const bundles = view?.catalog.managedDependencies ?? [];
+    return (!pythonIds.length || bundles.some(bundle => bundle.status === 'qualified' && bundle.platforms.includes(view.platform)
+      && pythonIds.every(id => bundle.provides[id] && semver.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? '*'))))
+      && otherIds.every(id => bundles.some(bundle => bundle.status === 'qualified' && bundle.platforms.includes(view.platform)
+        && bundle.provides[id] && semver.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? '*')));
+  };
+  const dependencyStatusText = (status) => t(status === 'installed' ? 'dependencyManagedInstalled'
+    : status === 'available' ? 'dependencyManagedAvailable' : 'dependencyLocalOnly');
   const filtered = entries.filter(
     (e) =>
       (tab === "Installed"
@@ -109,8 +126,14 @@ export function Store() {
           {e.dependencyIds?.length > 0 && <div>
             <button disabled={busy} onClick={() => run({ action: 'inspect-dependencies', id: e.id })}>Inspect local requirements</button>
             {dependencyResults[e.id]?.map(result => <p key={result.id}>
-              {result.title}: {result.available ? `found ${result.version}` : result.reason}. {result.note}
+              {result.title}: {result.available ? `found ${result.version}` : result.reason}. {dependencyStatusText(result.managedSetup)}
             </p>)}
+            {record && canSetUpRequirements(e) && <>
+              <p>{t('managedRequirementsAvailable')}</p>
+              <button disabled={busy || !qualifies(e)}
+                onClick={() => run({ action: 'setup-dependencies', id: e.id })}>{t('setupManagedRequirements')}</button>
+            </>}
+            {record && installedRequirements(e) && <p>{t('managedRequirementsInstalled')}</p>}
           </div>}
           <p>
             <a href={e.source} target="_blank" rel="noreferrer">
@@ -306,11 +329,18 @@ export function Store() {
         Refresh signed catalog
       </button>
       <button disabled={busy} onClick={() => run({ action: "clear-cache" })}>
-        Clear downloaded package cache
+        {t('clearCaches')}
       </button>
       {view && <p role="status">{view.diagnostic}</p>}
       {error && <p role="alert">{error}</p>}
       {busy && <p role="status">Working…</p>}
+      {(view?.managedDependencies?.length ?? 0) > 0 && <details>
+        <summary>{t('managedRuntimes')} ({view.managedDependencies.length})</summary>
+        {view.managedDependencies.map(bundle => <p key={`${bundle.id}/${bundle.version}`}>
+          {bundle.id} {bundle.version} · {Object.entries(bundle.provides).map(([id, version]) => `${id} ${version}`).join(', ')} · {bundle.verified ? bundle.license : t('unverifiedRuntime')}
+          <button disabled={busy} onClick={() => run({ action: 'remove-dependency', id: bundle.id, version: bundle.version })}>{t('removeRuntime')}</button>
+        </p>)}
+      </details>}
       {view?.operations.map((id) => (
         <button
           key={id}
@@ -331,6 +361,8 @@ export function Store() {
   );
 }
 export function apply(ctx) {
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'bc-extension-store: dictionaries');
+  const t = ctx.locale.bind(NS);
   ctx.effect(() => {
     const style = document.createElement("style");
     style.textContent =
@@ -344,12 +376,13 @@ export function apply(ctx) {
         name: "sidebar.panellist",
         id: "bc-extensions",
         order: 1,
-        label: () => "Extensions",
+        label: () => t('nav'),
+        locale: NS,
       },
       () => React.createElement("span", { "aria-hidden": true }, "＋"),
     ),
   );
   ctx.slots.inject("main", () =>
-    ctx.slots.register({ name: "main", key: "bc-extensions" }, Store),
+    ctx.slots.register({ name: "main", key: "bc-extensions", locale: NS, inject: () => ({ t }) }, Store),
   );
 }
