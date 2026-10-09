@@ -151,7 +151,7 @@ function harness(overrides: {
         case 'prompt':
           return { accepted: true }
         case 'selectModel':
-          return { ok: true }
+          return { selected: request.args.request }
         case 'modelCatalog':
           return overrides.catalog ?? catalog()
         case 'projections':

@@ -202,9 +202,9 @@ describe('HostExecutionRunner', () => {
           expect(payload).toEqual({
             sessionId: 'session-model',
             provider: 'deepseek',
-            modelId: 'deepseek-chat',
+            model: 'deepseek-chat',
           })
-          return { currentModel: { provider: 'deepseek', modelId: 'deepseek-chat' } }
+          return { selected: { provider: 'deepseek', model: 'deepseek-chat' } }
         }
         if (request.method === 'prompt') {
           order.push('prompt')
@@ -219,6 +219,32 @@ describe('HostExecutionRunner', () => {
     }
     await expect(new HostExecutionRunner(gateway).launch(taskWithModel)).resolves.toBe('session-model')
     expect(order).toEqual(['create', 'rename', 'selectModel', 'prompt'])
+  })
+
+  it.each([false, true])('refuses to prompt when a pinned model fails or is not acknowledged (reuse=%s)', async reuse => {
+    for (const outcome of ['rejected', 'missing', 'wrong-model', 'wrong-provider']) {
+      const prompt = vi.fn()
+      const gateway = {
+        stream: fakeStream(async () => ({ async *[Symbol.asyncIterator]() { yield snapshot([], 0, false) } })),
+        invoke: fakeInvoke(async request => {
+          if (request.namespace === 'agentPresets') return { presets: [] }
+          if (request.method === 'create') return { sessionId: 'pinned-model-session' }
+          if (request.method === 'rename') return { title: 'pinned', seq: 1 }
+          if (request.method === 'selectModel') {
+            if (outcome === 'rejected') throw new Error('model unavailable')
+            if (outcome === 'missing') return undefined
+            return { selected: { provider: outcome === 'wrong-provider' ? 'another-provider' : 'deepseek', model: outcome === 'wrong-model' ? 'another-model' : 'deepseek-chat' } }
+          }
+          if (request.method === 'prompt') return prompt()
+          throw new Error('unexpected call ' + request.method)
+        }),
+      }
+      const task = { ...createTask({ title: 'Pinned', description: '', prompt: 'hello' }, 1, 'task-pin'), model: 'deepseek/deepseek-chat' }
+      const failure = await new HostExecutionRunner(gateway).launch(task, reuse ? { reuseSessionId: 'pinned-model-session' } : {}).catch(error => error)
+      expect(failure, outcome).toBeInstanceOf(SessionLaunchError)
+      expect(failure.sessionId).toBe('pinned-model-session')
+      expect(prompt, outcome).not.toHaveBeenCalled()
+    }
   })
 
   it('fails closed on a stale workspace or unacknowledged permission command', async () => {

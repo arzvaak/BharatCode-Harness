@@ -468,14 +468,14 @@ export class HostExecutionRunner {
       const slashIdx = rawModel.indexOf('/')
       const provider = slashIdx >= 0 ? rawModel.slice(0, slashIdx).trim() : undefined
       const modelId = slashIdx >= 0 ? rawModel.slice(slashIdx + 1).trim() : rawModel
-      try {
-        await this.invoke('session', 'selectModel', {
-          sessionId,
-          ...(provider ? { provider } : {}),
-          model: modelId,
-        })
-      } catch (modelError) {
-        console.warn(`[dsh-task-board] failed to select model "${task.model}" for session ${sessionId}, falling back to default:`, modelError)
+      if (!provider || !modelId) throw new Error('Pinned task model must name provider/model')
+      const result = await this.invoke('session', 'selectModel', {
+        sessionId,
+        provider,
+        model: modelId,
+      }) as { selected?: { provider?: string; model?: string } } | undefined
+      if (result?.selected?.provider !== provider || result.selected.model !== modelId) {
+        throw new Error('Pinned task model was not acknowledged by the host: ' + rawModel)
       }
     }
     await this.invoke('session', 'prompt', {
