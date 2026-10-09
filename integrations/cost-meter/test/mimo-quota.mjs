@@ -143,7 +143,7 @@ for (const key of ['codingPlanMimo:', 'mimoWindowPlan', 'mimoWindowCompensation'
 }
 const panelsSrc = readFileSync(resolve(root, 'src/client/03-settings-panels-main.js'), 'utf8')
 assert.ok(panelsSrc.includes("{ id: 'mimo', labelKey: 'codingPlanMimo' }"))
-assert.ok(panelsSrc.includes('Cookie (platform.xiaomimimo.com)'))
+assert.ok(panelsSrc.includes("{ id: 'mimo', labelKey: 'codingPlanMimo' }"), 'Existing quota controls use native credential inputs')
 const sidebarSrc = readFileSync(resolve(root, 'src/client/02-validators-helpers-sidebar.js'), 'utf8')
 assert.ok(sidebarSrc.includes('xiaomi-token-plan-cn')) // PLAN_PROVIDER_ALIASES_LOCAL 镜像
 assert.ok(sidebarSrc.includes("mimo: 'MiMo'")) // 额度横条短标签

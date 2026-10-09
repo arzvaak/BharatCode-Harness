@@ -5,11 +5,11 @@ import { __testProjection } from '../lib/index.js'
 import { Ledger, sanitizeConfig } from '../lib/store.js'
 
 const { makeCostUsageProjection } = __testProjection
-const ledger = new Ledger(sanitizeConfig({ peakEnabled: false, prices: { models: { test: { input: 2, cachedInput: 0.2, output: 10 } } } }), {}, '')
+const ledger = new Ledger(sanitizeConfig({ peakEnabled: false, prices: { providers: { openai: { models: { test: { input: 2, cachedInput: 0.2, output: 10 } } } } } }), {}, '')
 const def = makeCostUsageProjection(ledger)
 const at = Date.parse('2026-09-11T06:00:00Z')
 const header = { version: 3, id: 'ordinary', createdAt: at, isSeeded: false }
-const request = (seq, time = at + seq + 1) => ({ type: 'request/header', seq, time, data: { reason: 'initial', header: { config: { provider: 'deepseek', model: 'test' } } } })
+const request = (seq, time = at + seq + 1) => ({ type: 'request/header', seq, time, data: { reason: 'initial', header: { config: { provider: 'openai', model: 'test' } } } })
 const usageData = (turn, input) => ({ turn, step: 1, chunk: { type: 'usage', usage: { inputTokens: input, outputTokens: 10, cacheReadTokens: 0, cacheWriteTokens: 0, reasoningTokens: 0 } } })
 const usage = (seq, turn, input, time = at + seq + 1) => ({ type: 'assistant/chunk', seq, time, data: usageData(turn, input) })
 const endSeed = seq => ({ type: 'session/end-seed', seq, time: at + seq + 1, data: {} })
@@ -17,7 +17,7 @@ const fold = (events, initial = def.init(header, 0)) => events.reduce((state, ev
 const roundTrip = state => def.stateSchema.parse(JSON.parse(JSON.stringify(state)))
 const initialEvents = [request(0), usage(1, 1, 100), endSeed(2), usage(3, 2, 200)]
 
-assert.equal(def.stateVersion, 11, '旧错误 checkpoint 必须失效后重放')
+assert.equal(def.stateVersion, 12, '旧错误 checkpoint 必须失效后重放')
 let ordinary = fold(initialEvents)
 assert.equal(ordinary.totals.input, 300, '普通会话恢复后继续调用，重启前用量保留')
 assert.equal(ordinary.shadow.totals.input, 0, '已知无继承的普通会话无需累计种子影子')

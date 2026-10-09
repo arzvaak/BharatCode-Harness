@@ -8,6 +8,9 @@ window.__ModuleLoader__.load({
     const amount = (row, basis) => basis === 'total' ? row.cost : basis === 'plan' ? Math.max(0, row.cost - row.apiCost) : row.apiCost
     const tokens = row => row.input + row.cacheRead + row.cacheWrite + row.output
     const pct = (part, total) => total > 0 ? (100 * part / total).toFixed(1) + '%' : '—'
+    const cacheStatus = row => row.calls >= 3 && row.input >= 100_000 && row.cacheRead === 0
+      ? el('span', { title: 'Zero cache hits on long calls may mean a relay removed cache fields. Check the original usage records.' }, 'unreported?')
+      : pct(row.cacheRead, row.input + row.cacheRead + row.cacheWrite)
     const shiftDate = (key, days) => new Date(Date.parse(key) + days * 86400000).toISOString().slice(0, 10)
 
     // These strict wire readers mirror typert.host.js; no additional runtime library.
@@ -247,7 +250,7 @@ window.__ModuleLoader__.load({
             metric(text('API cost', 'API cost'), money(top.apiCost), text('Recorded estimate', 'Recorded estimate')),
             metric(text('Plan equivalent', 'Plan equivalent'), money(Math.max(0, top.cost - top.apiCost)), text('Not an actual debit', 'Not an actual debit')),
             metric(text('Calls', 'Calls'), top.calls.toLocaleString(), data.sessionCount + text(' conversations · average ', ' conversations · average ') + money(top.calls ? amount(top, basis) / top.calls : 0)),
-            metric(text('Cache hit rate', 'Cache hit rate'), pct(top.cacheRead, top.input + top.cacheRead + top.cacheWrite), formatTokens(tokens(top)) + ' Tokens')),
+            metric(text('Cache hit rate', 'Cache hit rate'), cacheStatus(top), formatTokens(tokens(top)) + ' Tokens')),
           scope.id ? el(SessionDetail, { key: JSON.stringify([scope.id, from, to, provider, model, basis]), api, query: { ...query, from: data.from, to: data.to, offset: 0 }, revision, money, formatTokens, text }) : null,
           data.models.some(r => !r.priced) ? el('p', { className: 'cm-stat-note' }, text('Some models have no configured price. Amounts may be incomplete; unpriced usage is not free.', 'Some models have no configured price. Amounts may be incomplete; unpriced usage is not free.')) : null,
           !top.calls && !top.cost ? el('p', { className: 'cm-stat-empty' }, text('No recorded usage in this range.', 'No recorded usage in this range.')) : null,
@@ -268,7 +271,7 @@ window.__ModuleLoader__.load({
           !scope.id ? el('section', { className: 'cm-stat-panel' },
             el('div', { className: 'cm-stat-panel-head' }, el('h3', null, text('Cost by conversation', 'Cost by conversation')), el('span', { className: 'cm-stat-sub' }, state.config.includeSubagentCost ? text('Select for details · includes subagents, each call counted once', 'Select for details · includes subagents, each call counted once') : text('Select a conversation for details', 'Select a conversation for details'))),
             el('div', { className: 'cm-stat-scroll' }, el('table', { className: 'cm-stat-table' }, el('thead', null, el('tr', null, ...[text('Conversation', 'Conversation'), text('Calls', 'Calls'), 'API', text('Plan equivalent', 'Plan equivalent'), text('Cache hits', 'Cache hits')].map(v => el('th', { key: v }, v)))),
-              el('tbody', null, data.sessions.map(row => el('tr', { key: row.id }, el('td', null, el('button', { type: 'button', title: row.id, onClick: () => chooseScope({ id: row.id, title: row.title }) }, row.title)), el('td', null, row.calls.toLocaleString()), el('td', null, money(row.apiCost)), el('td', null, money(Math.max(0, row.cost - row.apiCost))), el('td', null, pct(row.cacheRead, row.input + row.cacheRead + row.cacheWrite))))))),
+              el('tbody', null, data.sessions.map(row => el('tr', { key: row.id }, el('td', null, el('button', { type: 'button', title: row.id, onClick: () => chooseScope({ id: row.id, title: row.title }) }, row.title)), el('td', null, row.calls.toLocaleString()), el('td', null, money(row.apiCost)), el('td', null, money(Math.max(0, row.cost - row.apiCost))), el('td', null, cacheStatus(row))))))),
             data.unassignedCost > 1e-8 ? el('p', { className: 'cm-stat-note' }, text('Cost not linked to a conversation: ', 'Cost not linked to a conversation: ') + money(data.unassignedCost)) : null,
             el(Pager, { offset, count: data.sessionCount, size: 25, onChange: setOffset, text })) : null)) : null)
     }

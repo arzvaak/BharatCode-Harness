@@ -21,31 +21,31 @@ assert.equal(billingClassOf('deepseek', 'qwen3.8-flash', config.planBilling, new
 
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} != ${expected}`)
 const modelsOf = p => VERIFIED_PROVIDER_PRICES[p].models
-assert.equal(Object.keys(modelsOf('opencode-zen')).length, 83, 'all 83 published Zen endpoints covered')
-assert.equal(Object.keys(modelsOf('opencode-go')).length, 30, 'all 30 published Go endpoints covered')
+assert.equal(VERIFIED_PROVIDER_PRICES['opencode-zen'], undefined, 'Unqualified Zen is excluded from BC default prices')
+assert.equal(VERIFIED_PROVIDER_PRICES['opencode-go'], undefined, 'Unqualified Go is excluded from BC default prices')
 const shipped = JSON.parse(readFileSync(new URL('../docs/provider-pricing.json', import.meta.url)))
-assert.deepEqual(shipped.providers, DEFAULT_PROVIDER_PRICE_TABLE, 'shipped catalog and executable prices agree')
+assert.deepEqual(shipped, DEFAULT_PROVIDER_PRICE_TABLE, 'shipped catalog and executable prices agree')
 for (const [provider, table] of Object.entries(VERIFIED_PROVIDER_PRICES)) {
   for (const [id, raw] of Object.entries(table.models)) {
     const normalized = normalizePrice(raw)
     assert.ok(normalized, `${provider}:${id} has a valid catalog row`)
     assert.equal(providerPriceEntryFor(provider, id, config.prices, { mode: 'exact' }).priced, raw.unpriced !== true, `${provider}:${id} exact mounted price`)
     assert.match(raw.sourceUrl, /^https:\/\//)
-    assert.equal(raw.checkedAt, '2026-10-03')
+    assert.equal(raw.checkedAt, '2026-10-08')
     if (raw.unpriced !== true) for (const value of [normalized.cacheHit, normalized.cacheMiss, normalized.output]) assert.ok(Number.isFinite(value) && value >= 0)
   }
 }
 const catalog = buildPriceCatalog()
-assert.ok(Object.values(catalog).flatMap(f => Object.values(f).flatMap(Object.keys)).length >= 206)
+assert.ok(Object.values(catalog).flatMap(f => Object.values(f).flatMap(Object.keys)).length >= 15)
 
 // New issue #224 models and official cache-write/full-input context tiers.
 const expected = [
-  ['openai', 'gpt-6-sol', 2, 0.2, 2.5, 10],
+  ['openai', 'gpt-5.6-sol', 4, 0.4, 5, 20],
   ['openai', 'gpt-6.1-sol', 2, 0.1, 2.5, 10],
   ['openai', 'gpt-6-luna', 0.1, 0.01, 0.125, 0.5],
-  ['anthropic', 'claude-fable-5.1', 10, 0.25, 12.5, 50],
-  ['anthropic', 'claude-opus-5.5', 4, 0.2, 5, 20],
-  ['anthropic', 'claude-sonnet-5.5', 2, 0.2, 2.5, 10],
+  ['anthropic', 'claude-fable-5-1', 10, 0.25, 12.5, 50],
+  ['anthropic', 'claude-opus-5-5', 4, 0.2, 5, 20],
+  ['anthropic', 'claude-sonnet-5-5', 2, 0.1, 2.5, 10],
 ]
 const now = Date.parse('2026-10-03T02:00:00Z')
 for (const [provider, id, input, read, write, output] of expected) {
@@ -61,15 +61,21 @@ near(costOf({ input: 100000, cacheRead: 100000, cacheWrite: 72001, output: 1000 
 near(costOf({ input: 272000, output: 1000000 }, sol, now), 10.544, 'output does not affect OpenAI input threshold')
 
 // Same model, separate direct/Zen/Go routes; hourly cache storage is not cache writes.
-const directGemini = providerPriceEntryFor('google', 'gemini-3.8-flash', config.prices)
-const zenGemini = providerPriceEntryFor('opencode-zen', 'google/gemini-3.8-flash', config.prices)
+const scopedPrices = { ...config.prices, providers: { ...config.prices.providers,
+  google: { models: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } },
+  'opencode-zen': { models: { 'google/gemini-3.8-flash': { input: 1.5, output: 7.5 }, 'deepseek-v4-pro': { input: 1.74, output: 3 }, 'mimo-v2.6-flash-free': { input: 0, output: 0 } } },
+  'opencode-go': { models: { 'deepseek-v4-pro': { cacheMiss: 0.66, cacheHit: 0.0033, output: 1.98, billingMode: 'utc-peak', peak: { cacheMiss: 1.32, cacheHit: 0.0066, output: 3.96 } } } },
+} }
+for (const provider of ['google', 'opencode-zen', 'opencode-go']) assert.equal(providerPriceEntryFor(provider, 'deepseek-v4-pro', config.prices).priced, false)
+const directGemini = providerPriceEntryFor('google', 'gemini-3.8-flash', scopedPrices)
+const zenGemini = providerPriceEntryFor('opencode-zen', 'google/gemini-3.8-flash', scopedPrices)
 assert.equal(directGemini.entry.cacheMiss, 0.75)
 assert.equal(directGemini.entry.output, 3.75)
 assert.equal(directGemini.entry.cacheWrite, undefined, 'Gemini storage USD/M/hour is excluded from per-request token prices')
 assert.equal(zenGemini.entry.cacheMiss, 1.5)
 assert.equal(zenGemini.entry.output, 7.5)
-assert.equal(providerPriceEntryFor('opencode-zen', 'deepseek-v4-pro', config.prices).entry.cacheMiss, 1.74)
-const go = providerPriceEntryFor('opencode-go', 'deepseek-v4-pro', { ...config.prices, currency: 'CNY' })
+assert.equal(providerPriceEntryFor('opencode-zen', 'deepseek-v4-pro', scopedPrices).entry.cacheMiss, 1.74)
+const go = providerPriceEntryFor('opencode-go', 'deepseek-v4-pro', { ...scopedPrices, currency: 'CNY' })
 assert.equal(go.billingMode, 'utc-peak')
 assert.equal(go.currency, 'USD', 'Go reference prices are USD even when direct prices are CNY')
 const peak = { enabled: true, effectiveAtMs: 0, holidays: ['2026-10-01'] }
@@ -77,7 +83,7 @@ assert.equal(tierFor(go.entry, Date.parse('2026-10-01T02:00:00Z'), peak).cacheMi
 assert.equal(tierFor(go.entry, Date.parse('2026-10-03T02:00:00Z'), peak).cacheMiss, 0.66)
 assert.equal(tierFor(go.entry, Date.parse('2026-10-01T04:00:00Z'), peak).cacheMiss, 0.66)
 assert.equal(tierFor(go.entry, Date.parse('2026-10-01T02:00:00Z'), { enabled: false }).cacheMiss, 0.66)
-assert.equal(providerPriceEntryFor('opencode-zen', 'mimo-v2.6-flash-free', config.prices).priced, true)
+assert.equal(providerPriceEntryFor('opencode-zen', 'mimo-v2.6-flash-free', scopedPrices).priced, true)
 assert.equal(providerPriceEntryFor('custom-route', 'mimo-v2.6-flash-free', config.prices).priced, false, 'Zen free offer does not leak to another route')
 
 // Older user-configured rows stay whole while newly missing defaults are mounted.
@@ -96,7 +102,7 @@ const ttl = { input: 5, cachedInput: 0.5, output: 25, billingMode: 'flat', sourc
 const customized = { prices: { providers: { anthropic: { models: { 'claude-opus-4-8': ttl } } } } }
 upgradeProviderPriceDefaults(customized)
 assert.deepEqual(customized.prices.providers.anthropic.models['claude-opus-4-8'], ttl, 'schema-supported custom TTL fields are not discarded by normalized equality')
-const patched = applyConfigPatch(config, { prices: { providers: { 'opencode-go': { models: modelsOf('opencode-go') } } } })
+const patched = applyConfigPatch(config, { prices: { providers: { 'opencode-go': scopedPrices.providers['opencode-go'] } } })
 assert.deepEqual(patched.errors, [])
 stateSchema.shape.config.parse(patched.config)
 const path = mkdtempSync(join(tmpdir(), 'cm-pricing-coverage-'))
@@ -107,9 +113,9 @@ try {
   const reopened = Ledger.load(ledgerPath)
   assert.deepEqual(reopened.config.prices.providers.openai.models['gpt-6.1-sol'], manual)
   assert.ok(reopened.config.prices.providers.openai.models['gpt-6-luna'], 'one-time upgrade adds new IDs to old ledgers')
-  assert.equal(reopened.config.prices.providers.openai.models['gpt-5.6-sol'], undefined, 'old unmounted ID is not restored')
+  assert.equal(reopened.config.prices.providers.openai.models['gpt-6-sol'], undefined, 'Unqualified IDs are not mounted by a catalog migration')
   delete reopened.config.prices.providers.openai.models['gpt-6-luna']
-  reopened.config.prices.providers.google.models['gemini-3.8-flash'] = { unpriced: true, notes: 'disabled' }
+  reopened.config.prices.providers.google = { models: { 'gemini-3.8-flash': { unpriced: true, notes: 'disabled' } } }
   reopened.scheduleWrite(); reopened.flush(); reopened.close()
   const twice = Ledger.load(ledgerPath)
   assert.equal(twice.config.prices.providers.openai.models['gpt-6-luna'], undefined, 'unmount survives reload after catalog migration')
@@ -132,12 +138,12 @@ for (const [provider, id] of expected) {
   near(client.costOfBuckets({ input: 1000, cacheRead: 2000, cacheWrite: 3000, output: 4000 }, client.tierFor(client.normalizeClientPrice(front.entry), now, { enabled: false })), costOf({ input: 1000, cacheRead: 2000, cacheWrite: 3000, output: 4000 }, back.entry, now))
 }
 const parsedConfig = client.parseConfig(JSON.parse(JSON.stringify(config)), 'config')
-const frontGo = client.resolveClientPrice('opencode-go', 'deepseek-v4-pro', { ...parsedConfig, prices: { ...parsedConfig.prices, currency: 'CNY' } })
+const frontGo = client.resolveClientPrice('opencode-go', 'deepseek-v4-pro', { ...parsedConfig, prices: { ...scopedPrices, currency: 'CNY' } })
 assert.equal(frontGo.currency, 'USD')
 assert.equal(frontGo.billingMode, 'utc-peak')
 assert.equal(client.tierFor(client.normalizeClientPrice(frontGo.entry), Date.parse('2026-10-01T02:00:00Z'), peak).cacheMiss, 1.32)
-console.log('[ok] #224 provider catalogs: complete Zen/Go coverage, verified new API rates, cache/context tiers, scoped prices, UTC Go calendar, codecs and manual-price persistence')
+console.log('[ok] BC qualified provider inventory, exact routes, cache/context tiers, explicit scoped prices, UTC fixture calendar, codecs and manual-price persistence')
 
 const sourceAudit = spawnSync(process.execPath, [fileURLToPath(new URL('./check-opencode-catalog.mjs', import.meta.url)), '--fixture=' + fileURLToPath(new URL('./fixtures/opencode-pricing-2026-10-03.json', import.meta.url))], { encoding: 'utf8' })
-assert.equal(sourceAudit.status, 0, sourceAudit.stdout + sourceAudit.stderr)
-console.log(sourceAudit.stdout.trim())
+assert.notEqual(sourceAudit.status, 0, 'Upstream gateway audit cannot qualify an absent BC default catalog')
+assert.match(sourceAudit.stderr, /missing verified price/, 'Audit fails specifically because gateway prices have not been qualified')

@@ -31,7 +31,7 @@ for (const [face, descriptors] of [['host', TYPERT.invocations], ['client', cont
   for (const descriptor of descriptors) {
     for (const codec of [descriptor.result, ...descriptor.parameters.map(parameter => parameter.codec)]) {
       assert.equal(codec.mode, 'strict', `${face}/${descriptor.method}`)
-      assert.ok(codec.typeSymbol.startsWith('dsh-cost-meter#'))
+      assert.ok(codec.typeSymbol.startsWith('@arzvaak/bharatcode-cost-meter#'))
       assert.equal(typeof codec.create, 'function', `${face}/${descriptor.method} needs create()`)
       assert.equal(codec.create(), codec.schema, 'both host generations use the same parser')
       assert.equal(typeof codec.create().parse, 'function')

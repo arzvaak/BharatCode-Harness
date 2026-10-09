@@ -44,10 +44,12 @@ for (const [currency, table, old, newOff, oldFlashPeak, oldProPeak] of [
   }
   const pro = config.prices.models['deepseek-v4-pro']
   assert.deepEqual(values(tierFor(pro, proAt - 1, peak)), oldProPeak, 'Pro 不在 9 月 10 日提前切价')
-  assert.deepEqual(values(tierFor(pro, proAt, peak)), newOff)
-  assert.deepEqual(values(tierFor(pro, proAt + 2 * 3600000, peak)), newOff.map(v => v * 2))
+  const proOff = currency === 'USD' ? [0.022, 0.66, 1.98] : [0.15, 4.5, 13.5]
+  assert.deepEqual(values(tierFor(pro, proAt, peak)), proOff, 'Pro retains its own tariff instead of becoming Flash')
+  assert.deepEqual(values(tierFor(pro, proAt + 2 * 3600000, peak)), proOff.map(v => v * 2))
   assert.deepEqual(tierFor(pro, Date.parse('2026-08-10T04:00:00Z'), peak), old.models['deepseek-v4-pro'].legacyBase)
-  const fallback = providerPriceEntryFor('deepseek', 'unknown-model', config.prices).entry
+  assert.equal(providerPriceEntryFor('deepseek', 'unknown-model', config.prices).priced, false)
+  const fallback = providerPriceEntryFor('deepseek', 'unknown-model', config.prices, { overrides: { 'deepseek:unknown-model': 'deepseek:__default__' } }).entry
   near(costOf({ input: 1e6, cacheRead: 1e6, output: 1e6 }, fallback, flashAt, peak), newOff.reduce((a, b) => a + b, 0))
   const restored = stateSchema.shape.config.parse(config)
   assert.deepEqual(restored.prices.models['deepseek-v4-flash'].rateHistory, table.models['deepseek-v4-flash'].rateHistory, 'RPC 不剥离历史价')
@@ -84,12 +86,12 @@ for (const time of [proAt - 1, proAt]) {
   const card = ui.PriceCard({ modelId: 'deepseek-v4-pro', entry: draft.prices.models['deepseek-v4-pro'], draft,
     setDraft: value => { changedDraft = value }, t: ui.makeT('zh') })
   const inputs = nodes(card).filter(node => node.type === 'input')
-  assert.equal(inputs[1].props.value, time < proAt ? '4.5' : '1', '价格卡显示当前价，不提前显示 Pro 后续价')
+  assert.equal(inputs[1].props.value, '4.5', 'Price card preserves the separate Pro tariff')
   inputs[1].props.onChange({ target: { value: '12' } })
   const updated = applyConfigPatch(draft, { prices: changedDraft.prices })
   assert.deepEqual(updated.errors, [])
   assert.equal(updated.config.prices.models['deepseek-v4-pro'].cacheMiss, 12)
-  assert.equal(updated.config.prices.models['deepseek-v4-pro'].rateHistory?.length ?? 0, time < proAt ? 0 : 1)
+  assert.equal(updated.config.prices.models['deepseek-v4-pro'].rateHistory?.length ?? 0, 0)
 }
 
 const root = mkdtempSync(join(tmpdir(), 'cm-deepseek-september-'))

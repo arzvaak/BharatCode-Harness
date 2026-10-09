@@ -1356,7 +1356,16 @@
         !row.priced ? (en ? ' (price unavailable)' : ' (price unavailable)') : row.bucket === 'reasoning' && row.rate === 0 ? (en ? ' (no separate charge)' : ' (no separate charge)') : '')
       return el('details', { className: 'cm-note', style: { fontSize: 12, marginTop: 6 } },
         el('summary', { style: { cursor: 'pointer' } }, en ? 'Turn cost' : 'Turn cost', value?.found ? ' ≈ ' + money(config.showTotalWithPlan ? value.cost : value.apiCost) + (value.rows.some(r => !r.priced) ? (en ? ' + unpriced usage' : ' + unpriced usage') : '') : error ? ' ⚠' : ''),
-        error ? el('div', { role: 'alert' }, error) : el('div', { role: 'alert' }, error))
+        error ? el('div', { role: 'alert' }, error) : value?.found ? el('div', null,
+          ...value.rows.map(rowView),
+          config.showTotalWithPlan !== true && value.cost > value.apiCost
+            ? el('div', null, 'Plan ≈ ' + money(value.cost - value.apiCost)) : null,
+          Array.isArray(value.calls) && value.calls.length ? el('details', null,
+            el('summary', null, 'Individual calls (' + value.calls.length + ')'),
+            ...value.calls.map((call, i) => el('div', { key: i },
+              (kinds[call.kind] ?? call.kind) + ' · ' + call.provider + ':' + call.model
+                + (call.longContext ? ' · long context' : '') + ' · ' + (call.priced ? money(call.cost) : 'price unavailable'),
+              ...(call.rows ?? []).map(rowView)))) : null) : null)
     }
 
     function SessionCost(props) {

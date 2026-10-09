@@ -11,7 +11,7 @@ const fingerprint = raw => {
   return createHash('sha256').update(JSON.stringify(rates)).digest('hex')
 }
 const baseline = (ledger, id) => ledger.openrouterPriceHashes?.[id]
-  ?? fingerprint(DEFAULT_PROVIDER_PRICE_TABLE.openrouter.models[id])
+  ?? fingerprint(DEFAULT_PROVIDER_PRICE_TABLE.openrouter?.models?.[id])
 const managed = (ledger, id, entry) => baseline(ledger, id) === fingerprint(entry)
 
 /** 只估算 OpenRouter 零费用桶；已记金额、其他厂商和显式映射保持原样。 */

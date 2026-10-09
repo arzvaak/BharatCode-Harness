@@ -34,7 +34,9 @@
         el('button', { type: 'button', className: 'cm-btn cm-stat-entry cm-stat-' + (props.entryPosition || 'dock'), title: label, 'aria-label': label, 'aria-haspopup': 'dialog', onClick: () => setOpenedId(props.sessionId) }, en ? 'Cost details' : 'Cost details'),
         open ? el('dialog', { ref: dialog, role: 'dialog', 'aria-label': label, onCancel: () => setOpenedId(null), style: { width: 'min(1160px,94vw)', maxHeight: '90vh', padding: 24, borderRadius: 16, border: '1px solid var(--dsw-alias-border-l1)', color: 'var(--dsw-alias-label-primary)', background: 'var(--dsw-alias-bg-base,#fff)' } },
           el('button', { type: 'button', className: 'cm-btn', autoFocus: true, 'aria-label': en ? 'Close' : 'Close', onClick: () => setOpenedId(null), style: { float: 'right' } }, '×'),
-          state ? el(BillingStatistics, { key: props.sessionId, state, api: props.api, sessionId: props.sessionId }) : el(BillingStatistics, { key: props.sessionId, state, api: props.api, sessionId: props.sessionId })) : null)
+          state ? el(BillingStatistics, { key: props.sessionId, state, api: props.api, sessionId: props.sessionId }) : el(Fragment, null,
+            el('p', { role: 'alert', className: 'cm-note' }, snapshot?.error || 'Usage ledger is unavailable.'),
+            el('button', { type: 'button', className: 'cm-btn', onClick: props.api?.reload, disabled: snapshot?.status === 'loading' }, 'Retry'))) : null)
     }
 
     function ExternalUsagePanel({ state, t }) {

@@ -31,7 +31,8 @@ const catalog = buildPriceCatalog()
 assert.equal(catalog.openai['GPT-6 Astra']['gpt-6-astra'].cacheWrite, 12.5)
 catalog.openai['GPT-6 Astra']['gpt-6-astra'].longContext.cacheWrite = 999
 assert.equal(raw.longContext.cacheWrite, 25, '目录挂载不改默认表')
-for (const provider of ['openai', 'opencode-zen']) {
+assert.equal(providerPriceEntryFor('opencode-zen', 'gpt-6-astra', clean.prices).priced, false, 'Unconfigured gateway cannot borrow the direct OpenAI rate')
+for (const provider of ['openai']) {
   const resolved = providerPriceEntryFor(provider, 'gpt-6-astra', clean.prices)
   assert.equal(resolved.billingMode, 'flat')
   assert.equal(resolved.priced, true)

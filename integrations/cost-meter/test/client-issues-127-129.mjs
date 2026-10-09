@@ -123,8 +123,8 @@ const e = environment()
   assert.equal(requests.length, 2, 'state polling with unchanged prices must not reread every turn')
   cfg = { ...cfg, locale: 'zh', showTotalWithPlan: true }
   card.render(p('two'))
-  assert.match(textOf(card.tree), /本轮费用\s+≈ \$0\.0002/)
-  assert.match(textOf(card.tree), /输入/)
+  assert.match(textOf(card.tree), /Turn cost\s+≈ \$0\.0002/)
+  assert.match(textOf(card.tree), /Input/)
   assert.equal(requests.length, 2)
   card.render({ ...p('two'), turn: { start: { seq: 1 } } })
   assert.equal(card.tree, null, 'unfinished turns do not request partial totals')
@@ -201,7 +201,7 @@ for (const locale of ['en', 'zh']) {
     const card = e.mount(e.ui.DockLine, { useProjection: () => ({ ...usage(0, 1), ...tokens }), useCost: pick => pick({ state: { config: dockConfig } }) })
     const text = textOf(card.tree)
     assert.ok(text.includes(expected))
-    assert.ok(text.indexOf(expected) < text.indexOf(locale === 'en' ? 'Input' : '输入'))
+    assert.ok(text.indexOf(expected) < text.indexOf('Input'))
     card.dispose()
   }
 }

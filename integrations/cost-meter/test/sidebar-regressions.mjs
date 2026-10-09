@@ -28,30 +28,30 @@ let combinations = 0
 for (const sidebarSimple of [false, true]) for (const wide of [false, true]) for (const budget of [false, true])
 for (const hideTodayCost of [false, true]) for (const peakEnabled of [false, true]) for (const peakNotice of [false, true])
 for (const peakStyle of ['compact', 'classic']) for (const go of [false, true]) {
-  state.config = sanitizeConfig({ sidebarSimple, hideTodayCost, peakEnabled, peakNotice, peakStyle,
+  state.config = sanitizeConfig({ currency: 'CNY', symbol: '¥', exchangeRate: 7.2, sidebarTodayMetric: 'cost', hideOfficialBalance: false, sidebarSimple, hideTodayCost, peakEnabled, peakNotice, peakStyle,
     balance: { display: 'sidebar', showProgressBar: true }, budget: { enabled: budget, amount: 10 }, goQuota: { enabled: go, display: 'sidebar' } })
   const tree = render(ui.SidebarFooter({ wide, useCost: pick => pick({ state }) }))
   const peakClasses = ['cm-peak-strip', 'cm-peak-classic', 'cm-peak-rail', 'cm-peak-rail-classic']
   const strips = nodes(tree).filter(n => peakClasses.some(cls => hasClass(n, cls)))
-  const expected = peakEnabled && peakNotice && (!wide || budget || !hideTodayCost) ? 1 : 0
+  const expected = 0 // Global sidebar has no authoritative provider route, even with peak display selected.
   assert.equal(strips.length, expected, JSON.stringify({ sidebarSimple, wide, budget, hideTodayCost, peakEnabled, peakNotice, peakStyle, go }))
   if (expected) assert.ok(hasClass(strips[0], wide ? peakStyle === 'classic' ? 'cm-peak-classic' : 'cm-peak-strip' : peakStyle === 'classic' ? 'cm-peak-rail-classic' : 'cm-peak-rail'))
   const summaries = nodes(tree).filter(n => hasClass(n, 'cm-simple-summary'))
   assert.equal(summaries.length, sidebarSimple && wide && !hideTodayCost ? 1 : 0)
   if (sidebarSimple && wide && budget && !hideTodayCost) {
-    assert.match(text(summaries[0]), /今日 \/ 本月预算.*¥1 \/ ¥10/)
+    assert.match(text(summaries[0]), /Today \/ This month budget.*¥1 \/ ¥10/)
     assert.ok(hasClass(summaries[0], 'warn'), '按本月已用 80% 预警，不能按今日 10% 降级')
     assert.ok(nodes(tree).some(n => n.type === 'tooltip' && String(n.props.label).includes('80.0%')))
   }
   combinations++
 }
 
-for (const [period, label, used] of [['day', '今日', 1], ['month', '本月', 8], ['all', '累计', 9], ['custom', '自定义区间', 5]]) {
-  state.config = sanitizeConfig({ locale: 'zh', sidebarSimple: true, budget: { enabled: true, amount: 10, period, customStart: '2026-09-01', customEnd: '2026-09-10' } })
+for (const [period, label, used] of [['day', 'Today', 1], ['month', 'This month', 8], ['all', 'All time', 9], ['custom', 'Custom range', 5]]) {
+  state.config = sanitizeConfig({ currency: 'CNY', symbol: '¥', exchangeRate: 7.2, sidebarTodayMetric: 'cost', locale: 'zh', sidebarSimple: true, budget: { enabled: true, amount: 10, period, customStart: '2026-09-01', customEnd: '2026-09-10' } })
   state.budgetUsed = used / 7.2
   const tree = render(ui.BudgetBoxContent({ state, wide: true, summary: true }))
-  assert.match(text(tree), new RegExp(`今日 / ${label}预算`))
-  assert.match(String(tree.props.label), new RegExp(`已用 ¥${used} / ¥10`))
+  assert.match(text(tree), new RegExp(`Today / ${label} budget`))
+  assert.match(String(tree.props.label), new RegExp(`Used ¥${used} / ¥10`))
 }
 let stopped = 0
 const box = render(ui.BalanceBox({ state, wide: true }))

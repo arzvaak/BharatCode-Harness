@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { mkdtempSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { Ledger, sanitizeConfig } from '../lib/store.js'
-import { OPENROUTER_MODELS_URL, parseOpenRouterModels, providerPriceEntryFor } from '../lib/pricing.js'
+import { OPENROUTER_MODELS_URL, parseOpenRouterModels, providerPriceEntryFor, normalizePrice } from '../lib/pricing.js'
 import { createOpenRouterPriceRefresh, repairOpenRouterLedger } from '../lib/openrouter-pricing.js'
 import { apply } from '../lib/index.js'
 import { stateSchema } from '../lib/typert.host.js'
@@ -39,6 +40,11 @@ try {
   ledger.days['2026-09-17'] = { cost: 18, apiCost: 18, byProviderModel: structuredClone(buckets),
     sessions: [{ id: 'session', cost: 18, apiCost: 18, byProviderModel: structuredClone(buckets) }] }
   const untouched = ['openrouter:qwen/qwen3.8-flash', 'custom/model:example', 'openrouter:vendor/mapped']
+  assert.equal(repairOpenRouterLedger(ledger).recostedBuckets, 0, 'No unqualified default OpenRouter price is fabricated')
+  const fixtureRate = { input: 0.1, output: 0.2, billingMode: 'flat' }
+  ledger.config.prices.providers.openrouter = { models: { 'meta/muse-spark-1.3-contributor': fixtureRate } }
+  const { sourceUrl, checkedAt, notes, ...rateFields } = normalizePrice(fixtureRate)
+  ledger.openrouterPriceHashes['meta/muse-spark-1.3-contributor'] = createHash('sha256').update(JSON.stringify(rateFields)).digest('hex')
   assert.equal(repairOpenRouterLedger(ledger).recostedBuckets, 2)
   assert.equal(ledger.days['2026-09-17'].byProviderModel[key].cost, 0.1)
   for (const id of untouched) {

@@ -1,12 +1,21 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { DEFAULT_PROVIDER_PRICE_TABLE, DEFAULT_PRICE_TABLE, buildPriceCatalog, costOf, normalizePrice, providerPriceEntryFor, usdFromCost } from '../lib/pricing.js'
+import { DEFAULT_PROVIDER_PRICE_TABLE as CORE_PROVIDER_PRICES, DEFAULT_PRICE_TABLE, buildPriceCatalog, costOf, normalizePrice, providerPriceEntryFor, usdFromCost } from '../lib/pricing.js'
 
-// MiMo V2.6 三个型号补价:此前目录只有 2.5 系,mimo-v2.6-* 一律被模糊匹配到
-// mimo-v2.5,pro 少算 3.1 倍、速度优先档少算 31 倍。价目以官方 pay-as-you-go
-// 页为准(USD 表:命中 $0.0036/$0.0028/$0.036、未命中 $0.435/$0.14/$4.35、
-// 输出 $0.87/$0.28/$8.7),Go 目录条目随 Go 表值(pro 命中 $0.003625)。
-
+// MiMo is unqualified in BC. Explicit fixture-owned rates exercise arithmetic,
+// currency and route isolation without introducing automatic provider prices.
+const models = {
+  'mimo-v2.6-pro': { cacheHit: 0.0036, cacheMiss: 0.435, output: 0.87, cny: { cacheHit: 0.025, cacheMiss: 3, output: 6 } },
+  'mimo-v2.6-flash': { cacheHit: 0.0028, cacheMiss: 0.14, output: 0.28, cny: { cacheHit: 0.02, cacheMiss: 1, output: 2 } },
+  'mimo-v2.6-pro-ultraspeed': { cacheHit: 0.036, cacheMiss: 4.35, output: 8.7, cny: { cacheHit: 0.25, cacheMiss: 30, output: 60 } },
+  'mimo-v2.5': { input: 0.14, output: 0.28, notes: '即将下线 fixture' },
+  'mimo-v2.5-pro': { input: 0.435, output: 0.87, notes: '即将下线 fixture' },
+}
+const DEFAULT_PROVIDER_PRICE_TABLE = { ...CORE_PROVIDER_PRICES, xiaomi: { models }, 'opencode-go': { models: {
+  'mimo-v2.6-pro': { cacheHit: 0.003625, cacheMiss: 0.435, output: 0.87 },
+  'mimo-v2.6-flash': { cacheHit: 0.0028, cacheMiss: 0.14, output: 0.28 },
+} } }
+assert.equal(CORE_PROVIDER_PRICES.xiaomi, undefined, 'Unqualified MiMo has no automatic tariff')
 const prices = { models: DEFAULT_PRICE_TABLE, default: DEFAULT_PRICE_TABLE.default, providers: DEFAULT_PROVIDER_PRICE_TABLE }
 const near = (actual, expected, label) => assert.ok(Math.abs(actual - expected) < 1e-12, `${label}: ${actual} != ${expected}`)
 const tiersOf = (provider, model) => {
@@ -47,18 +56,18 @@ const tiersOf = (provider, model) => {
   assert.notEqual(pro.cacheMiss, DEFAULT_PROVIDER_PRICE_TABLE.xiaomi.models['mimo-v2.5'].input, 'pro 未误套 mimo-v2.5 价')
   // 变体形态(大小写 / 日期快照后缀)同样精确命中 2.6 条目。
   for (const variant of ['MiMo-V2.6-Pro-UltraSpeed', 'mimo-v2.6-pro-ultraspeed-2026-09-28']) {
-    near(tiersOf('xiaomi', variant).cacheMiss, 4.35, `${variant} 命中 ultraspeed 条目`)
+    assert.equal(providerPriceEntryFor('xiaomi', variant, prices).priced, false, 'Unconfigured variant stays unpriced')
   }
   for (const variant of ['MiMo-V2.6-Pro', 'mimo-v2.6-pro-2026-09-28']) {
-    near(tiersOf('xiaomi', variant).cacheMiss, 0.435, `${variant} 命中 pro 条目`)
+    assert.equal(providerPriceEntryFor('xiaomi', variant, prices).priced, false, 'Unconfigured variant stays unpriced')
   }
 }
 
 // ③ DSH 侧渠道别名与空 provider 走同一份价(跨目录兜底取 xiaomi 条目)。
 {
   for (const provider of ['mimo', 'xiaomimimo', 'xiaomi-token-plan-cn', 'xiaomi-token-plan-sgp', '']) {
-    near(tiersOf(provider, 'mimo-v2.6-pro-ultraspeed').cacheMiss, 4.35, `${provider || '(空)'} 渠道兜底命中 ultraspeed`)
-    near(tiersOf(provider, 'mimo-v2.6-flash').cacheMiss, 0.14, `${provider || '(空)'} 渠道兜底命中 flash`)
+    assert.equal(providerPriceEntryFor(provider, 'mimo-v2.6-pro-ultraspeed', prices).priced, false, 'No cross-route fallback')
+    assert.equal(providerPriceEntryFor(provider, 'mimo-v2.6-flash', prices).priced, false, 'No cross-route fallback')
   }
 }
 
@@ -74,7 +83,7 @@ const tiersOf = (provider, model) => {
   // Go 目录没有速度优先档，不应套用普通 pro 的价格。
   const goUltra = providerPriceEntryFor('opencode-go', 'mimo-v2.6-pro-ultraspeed', prices, { mode: 'auto' })
   assert.equal(goUltra.priced, false, 'Go 目录内 ultraspeed 保持未定价')
-  assert.equal(providerPriceEntryFor('openai-codex', 'gpt-6-luna', prices).entry.cacheMiss, 0.1, '新核价 Luna 使用自身价格，不借用 Astra')
+  assert.equal(providerPriceEntryFor('openai-codex', 'gpt-6-luna', prices).priced, false, 'Subscription route has no API tariff')
   assert.equal(providerPriceEntryFor('openai-codex', 'gpt-6-astra-unlisted-variant', prices).priced, false, '未知 GPT-6 变体不借用 Astra 价格')
   const old = DEFAULT_PROVIDER_PRICE_TABLE.xiaomi.models
   near(old['mimo-v2.5'].input, 0.14, '2.5 未命中价保持不变')
@@ -97,18 +106,13 @@ const tiersOf = (provider, model) => {
   assert.equal(normalizePrice({ input: 1, output: 2, cny: { cacheHit: -1, cacheMiss: 2, output: 3 } }), null, '非法人民币档位被拒绝')
 }
 
-// ⑤ 家族分组与随包 json 同步(挂载入口与外部对表消费)。
+// Shipped defaults stay synchronized and exclude unqualified routes.
 {
   const catalog = buildPriceCatalog()
-  assert.deepEqual(Object.keys(catalog.xiaomi['MiMo V2.6']), ['mimo-v2.6-pro', 'mimo-v2.6-flash', 'mimo-v2.6-pro-ultraspeed'], 'xiaomi 目录 V2.6 家族三型号')
-  assert.ok(catalog.xiaomi['MiMo V2.5']['mimo-v2.5'] !== undefined, 'V2.5 家族保留')
-  assert.ok(catalog['opencode-go']['MiMo']['mimo-v2.6-pro'] !== undefined && catalog['opencode-go']['MiMo']['mimo-v2.6-flash'] !== undefined, 'Go 目录 MiMo 家族含 2.6 两型号')
+  assert.equal(catalog.xiaomi, undefined)
+  assert.equal(catalog['opencode-go'], undefined)
   const shipped = JSON.parse(readFileSync(new URL('../docs/provider-pricing.json', import.meta.url), 'utf8'))
-  for (const id of ['mimo-v2.6-pro', 'mimo-v2.6-flash', 'mimo-v2.6-pro-ultraspeed']) {
-    assert.ok(shipped.providers.xiaomi.models[id] !== undefined, `发布的 json 目录含 ${id}`)
-  }
-  assert.ok(shipped.providers['opencode-go'].models['mimo-v2.6-pro'] !== undefined, '发布的 json 目录 Go 侧含 mimo-v2.6-pro')
-  near(shipped.providers.xiaomi.models['mimo-v2.6-pro-ultraspeed'].output, 8.7, '发布的 json 目录 ultraspeed 输出价')
+  assert.deepEqual(shipped, CORE_PROVIDER_PRICES)
 }
 
 // ⑥ 计价冒烟:1M 未命中输入 + 1M 输出。

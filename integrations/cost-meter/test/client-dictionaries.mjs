@@ -17,7 +17,7 @@ function readMessages(code) {
   return JSON.parse(JSON.stringify(factory(() => ({})).__messages))
 }
 const original = readMessages(source.replace('exports.apply = apply', 'exports.__messages = MESSAGES; exports.apply = apply'))
-const emitted = readMessages(runtime.replace(/return ([A-Za-z_$][\w$]*)\.apply=/,
-  (_, exports) => `return ${exports}.__messages=${dictionary[1]},${exports}.apply=`))
+const emitted = readMessages(runtime.replace(/([A-Za-z_$][\w$]*)\.apply=/,
+  (_, exports) => `${exports}.__messages=${dictionary[1]},${exports}.apply=`))
 assert.deepEqual(emitted, original, 'every locale/key/value in emitted bundle must match readable source')
 console.log('[ok] lossless client dictionaries:', Object.keys(original.zh).length, 'zh +', Object.keys(original.en).length, 'en translations')

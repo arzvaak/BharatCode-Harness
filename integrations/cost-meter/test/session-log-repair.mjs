@@ -35,7 +35,7 @@ try {
     assert.equal(preview.written, false)
     assert.deepEqual(readFileSync(path), source)
     assert.equal(readdirSync(directory).length, 1, 'dry run writes no backup, temp or lock')
-    await assert.rejects(repairSessionLog(path, { write: true }), /会话锁/)
+    await assert.rejects(repairSessionLog(path, { write: true }), /host session lock/)
     const result = await repairSessionLog(path, { write: true, acquireLease: mockLease })
     assert.equal(result.written, true)
     assert.deepEqual(readFileSync(result.backup), source, 'backup is an exact copy of original compressed bytes')
@@ -50,11 +50,11 @@ try {
     assert.deepEqual(new Set(listSessionLogs(root)), new Set(compressed ? [path, join(root, 'basic', 'plain', 'session.v3.jsonl')] : [path]))
     writeFileSync(path, Buffer.concat([source, compressed ? Buffer.from([1, 2]) : Buffer.from('{')]))
     const torn = readFileSync(path)
-    await assert.rejects(repairSessionLog(path, { write: true, acquireLease: mockLease }), /尾帧|末行/)
+    await assert.rejects(repairSessionLog(path, { write: true, acquireLease: mockLease }), /final (?:line|frame) is incomplete/)
     assert.deepEqual(readFileSync(path), torn)
     assert.equal(readdirSync(directory).filter(name => name.endsWith('.tmp')).length, 0, 'failure removes only its own staged file')
     writeFileSync(path, source)
-    await assert.rejects(repairSessionLog(path, { write: true, acquireLease: async () => { appendFileSync(path, compressed ? zlib.zstdCompressSync(Buffer.from('\n')) : '\n'); return mockLease() } }), /已变化/)
+    await assert.rejects(repairSessionLog(path, { write: true, acquireLease: async () => { appendFileSync(path, compressed ? zlib.zstdCompressSync(Buffer.from('\n')) : '\n'); return mockLease() } }), /changed/)
   }
   if (zlib.zstdCompressSync) {
     const directory = join(root, 'split', 'session-split')
@@ -78,7 +78,7 @@ try {
   const linkedFile = join(actualDirectory, 'session.v3.jsonl')
   writeFileSync(linkedFile, Buffer.concat(records('alias').map(text)))
   try {
-    await assert.rejects(repairSessionLog(join(aliasPath, 'session.v3.jsonl')), /目录链接|符号链接/)
+    await assert.rejects(repairSessionLog(join(aliasPath, 'session.v3.jsonl')), /symbolic links/i)
     if (process.platform === 'win32') {
       // Actual filesystem 8.3 spelling, if enabled on the test volume. No path is executed.
       const short = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '$fso = New-Object -ComObject Scripting.FileSystemObject; $fso.GetFolder($env:CM_REPAIR_ALIAS_DIRECTORY).ShortPath'], { encoding: 'utf8', env: { ...process.env, CM_REPAIR_ALIAS_DIRECTORY: actualDirectory } })

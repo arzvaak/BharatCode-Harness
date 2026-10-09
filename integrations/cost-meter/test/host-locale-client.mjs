@@ -66,7 +66,7 @@ async function scenario({ initial = 'zh', explicit = 'auto', late = false, brows
   const fiber = ctx.plugin(main); await fiber; await wait()
   const entry = () => registrations.get('settings.section:cost-meter')
   const label = () => entry()?.options.label
-  const expected = language => language === 'en' ? 'Cost' : '费用'
+  const expected = () => 'Cost' // BC reconciles both locale dictionaries to English copy.
   const fallback = () => metaLocale || (browserData.language?.startsWith('zh') ? 'zh' : 'en')
   const face = () => !malformed && (active === 'zh' || active === 'en') ? active : fallback()
   assert.equal(label(), baseline ? 'Cost' : expected(explicit === 'auto' ? (!late && !noService ? face() : fallback()) : explicit), baseline ? '#226 baseline reproduces browser English despite DSH Chinese' : 'first registered language')

@@ -20,7 +20,8 @@ const React = { createElement: el, Fragment: 'fragment', useEffect() {},
 }
 const ui = factory(name => name === 'react' ? React : { Tooltip: 'tooltip' }).test
 const nodes = n => Array.isArray(n) ? n.flatMap(nodes) : n && typeof n === 'object' ? [n, ...nodes(n.children)] : []
-const base = sanitizeConfig({ sidebarStyle: 'compact', quotaStrip: { promptSeen: true }, balance: { clickHintSeen: true }, hideOfficialBalance: true, goQuota: { enabled: false } })
+assert.equal(sanitizeConfig({}).sidebarSimplePromptSeen, true, 'BC suppresses upstream onboarding by default')
+const base = sanitizeConfig({ sidebarSimplePromptSeen: false, sidebarStyle: 'compact', quotaStrip: { promptSeen: true }, balance: { clickHintSeen: true }, hideOfficialBalance: true, goQuota: { enabled: false } })
 assert.equal(base.sidebarSimple, false, '旧配置保留当前布局')
 assert.equal(base.sidebarStyle, 'compact')
 for (const field of ['sidebarSimple', 'sidebarSimplePromptSeen']) {
@@ -81,7 +82,7 @@ assert.equal(ui.BalanceClickGuide({ useCost, api }), null, '新旧引导不会�
 
 const totals = { cost: 1, calls: 1, input: 100, output: 20, cacheRead: 0, cacheWrite: 0 }
 const win = { percent: 25, resetsAt: new Date(Date.now() + 3600000).toISOString() }
-config = sanitizeConfig({ ...base, budget: { enabled: true }, codingPlans: { kimi: { enabled: true, display: 'sidebar' } }, sidebarSimple: true, sidebarSimplePromptSeen: true })
+config = sanitizeConfig({ ...base, peakNotice: true, budget: { enabled: true }, codingPlans: { kimi: { enabled: true, display: 'sidebar' } }, sidebarSimple: true, sidebarSimplePromptSeen: true })
 const state = { config, today: totals, month: totals, total: totals, codingPlans: { kimi: { status: 'ok', windows: { daily: win }, fetchedAt: Date.now() } }, gatewayQuotas: { sources: [] } }
 ui.codexQuotaCache.status = 'unavailable'
 const footer = wide => { hooks = []; hookIndex = 0; return ui.SidebarFooter({ wide, useCost: pick => pick({ state }), api }) }
@@ -96,7 +97,7 @@ state.config = { ...config, sidebarSimple: false }
 const standard = footer(true)
 assert.match(standard.props.className, /compact/)
 assert.doesNotMatch(standard.props.className, /simple/)
-assert.equal(countCards(standard) + 1, countCards(simple), '简化模式保留预算与额度，并独立挂载峰谷条')
+assert.equal(countCards(standard), countCards(simple), 'Both layouts retain budget and quota cards; the global sidebar cannot infer a provider peak route')
 console.log('[ok] #118 简化显示：选择/拒绝、保存失败重试、防重入、RPC 与重启持久化、引导串行、布局恢复及键盘滚动')
 
 // 保存被拒绝或长期等待时，关闭提示不伪装成已保存设置。

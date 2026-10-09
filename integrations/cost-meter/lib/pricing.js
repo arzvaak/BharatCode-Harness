@@ -645,7 +645,9 @@ export function upgradeDeepSeekPriceTable(prices) {
     const oldEntry = kind === 'default' ? old.default : old.models[kind] ?? old.models['deepseek-v4-flash-vision-exp']
     const newEntry = kind === 'default' ? current.default : current.models[kind]
     if (!matches(entry, oldEntry) && !matches(entry, newEntry)) return
-    object[id] = { ...entry, ...structuredClone(newEntry) }
+    const updated = { ...entry, ...structuredClone(newEntry) }
+    if (JSON.stringify(updated) === JSON.stringify(entry)) return
+    object[id] = updated
     changed.push(id)
   }
   for (const id of Object.keys(prices.models ?? {})) {

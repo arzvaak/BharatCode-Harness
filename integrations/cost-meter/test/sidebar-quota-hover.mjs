@@ -24,11 +24,11 @@ const assertNoNativeTitle = node => {
 }
 const zh = ui.makeT('zh'), en = ui.makeT('en')
 const end = new Date(now + 90 * 60000).toISOString()
-assert.equal(ui.formatResetCountdown(end, zh, now), '剩余 1小时30分')
+assert.equal(ui.formatResetCountdown(end, zh, now), '1h 30m left')
 assert.equal(ui.formatResetCountdown(end, en, now), '1h 30m left')
-assert.equal(ui.formatResetCountdown(new Date(now + 1000).toISOString(), zh, now), '剩余 1分钟')
+assert.equal(ui.formatResetCountdown(new Date(now + 1000).toISOString(), zh, now), '1m left')
 assert.equal(ui.formatResetCountdown(new Date(now + 2 * 86400000 + 3 * 3600000).toISOString(), en, now), '2d 3h left')
-assert.equal(ui.formatResetCountdown(end, zh, now + 90 * 60000), '已到重置时间')
+assert.equal(ui.formatResetCountdown(end, zh, now + 90 * 60000), 'Reset time reached')
 for (const resetsAt of ['', 'invalid', null, 42, undefined]) assert.equal(ui.miniMaxResetText({ resetsAt }, zh, now), '')
 const win = { percent: 25, resetsAt: end }
 const view = ui.miniMaxRow('完整的长窗口名称', win, 'remaining', zh)
@@ -49,13 +49,13 @@ for (const card of cards) {
   const before = card()
   assertNoNativeTitle(before)
   assert.equal(before.props.label.props.style.whiteSpace, 'pre-line')
-  assert.match(before.props.label.children[0], /剩余 75%/)
-  assert.match(before.props.label.children[0], /剩余 1小时30分/)
+  assert.match(before.props.label.children[0], /75% remaining/)
+  assert.match(before.props.label.children[0], /1h 30m left/)
   const oldUpdates = updates
   now += 31 * 60000
   before.children[0].props.onMouseEnter()
   assert.equal(updates, oldUpdates + 1, '悬停触发重新渲染')
-  assert.match(card().props.label.children[0], /剩余 59分钟/)
+  assert.match(card().props.label.children[0], /59m left/)
   before.children[0].props.onFocus()
   assert.equal(updates, oldUpdates + 2, '键盘聚焦也更新')
 }
@@ -72,7 +72,7 @@ for (const rail of [
 }
 const gateway = ui.GatewayQuotaBox({ source: { id: 'test' }, snapshot, state })
 assert.match(gateway.props.label.children[0], /Codex · Weekly long account window/)
-assert.doesNotMatch(gateway.props.label.children[0], /left|Resets:/, '浏览器为英文时仍遵守中文配置')
+assert.match(gateway.props.label.children[0], /left/, 'BC quota descriptions remain English in both locale dictionaries')
 console.log('[ok] 侧栏提示：四类卡片无重复原生提示，保留中英文、方向、重置倒计时、悬停/聚焦与账号标签')
 
 if (process.argv.includes('--fixture')) {

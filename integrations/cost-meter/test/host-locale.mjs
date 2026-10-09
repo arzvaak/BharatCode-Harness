@@ -14,7 +14,7 @@ let preference = 'zh', active
 const ctx = { get: name => name === 'locale' ? active : name === 'settings' ? {
   describe: options => { assert.deepEqual(options, { redactSecrets: true }); return [{ ns: 'other', value: { preference: 'en' } }, { ns: 'locale', value: { preference } }] },
 } : undefined }
-assert.equal(localeOf({ locale: 'auto' }, ctx), 'zh')
+assert.equal(localeOf({ locale: 'auto' }, ctx), 'en')
 assert.equal(localeOf({ locale: 'en' }, ctx), 'en')
 preference = 'en'
 assert.equal(localeOf({ locale: 'zh' }, ctx), 'zh')
@@ -25,7 +25,7 @@ active = { getSnapshot: () => ({ active: 'fr' }) }
 assert.equal(hostLocaleOf(ctx), 'en', 'unsupported optional face falls through to saved supported preference')
 active = undefined; preference = undefined
 assert.equal(hostLocaleOf(ctx), null)
-assert.equal(localeOf({ locale: 'auto' }, ctx), 'zh', 'unobservable browser/native preference retains the Host compatibility fallback')
+assert.equal(localeOf({ locale: 'auto' }, ctx), 'en', 'unobservable browser/native preference retains the Host compatibility fallback')
 
 const work = mkdtempSync(join(tmpdir(), 'cm-host-locale-'))
 const names = ['DSH_HOME', 'DEEPSEEK_API_KEY', 'DSH_DEEPSEEK_API_KEY', 'DEEPSEEK_BALANCE_API_KEY', 'OPENCODE_GO_API_KEY', 'OPENCODE_API_KEY', 'GO_API_KEY']
@@ -50,9 +50,9 @@ try {
   let state = await service.getState()
   assert.equal(state.meta.locale, 'zh')
   assert.equal(state.config.locale, 'auto')
-  assert.match(state.goQuota.message, /未找到/)
+  assert.match(state.goQuota.message, /key/i)
   stateSchema.parse(JSON.parse(JSON.stringify(state)))
-  assert.match((await service.refreshBalance()).message, /关闭/)
+  assert.match((await service.refreshBalance()).message, /off/i)
   // No explicit refresh: a language event must invalidate the soft cached missing-key message.
   preference = 'en'; emit('settings/document-updated')
   state = await service.getState()
@@ -61,16 +61,16 @@ try {
   assert.doesNotMatch(state.goQuota.message, /未找到/)
   assert.match((await service.refreshBalance()).message, /off/i)
   state = await service.updateConfig({ locale: 'zh' })
-  assert.match(state.goQuota.message, /未找到/)
+  assert.match(state.goQuota.message, /key/i)
   assert.equal(state.config.locale, 'zh')
   assert.equal(state.meta.locale, 'en', 'shared preference remains independent of explicit plugin override')
   await assert.rejects(service.updateConfig({ locale: 'en', decimals: -1 }), /rejected/i)
-  await assert.rejects(service.updateConfig({ locale: 'zh', decimals: -1 }), /配置/)
+  await assert.rejects(service.updateConfig({ locale: 'zh', decimals: -1 }), /rejected/i)
   await service.updateConfig({ locale: 'auto' })
   // Hosts lacking events still recompute language at the next RPC; no new side-channel/persistence.
   preference = 'zh'
   state = await service.getState()
-  assert.match(state.goQuota.message, /未找到/)
+  assert.match(state.goQuota.message, /key/i)
   preference = undefined
   state = await service.getState()
   assert.equal(Object.hasOwn(state.meta, 'locale'), false, 'missing preference is omitted, not fabricated')

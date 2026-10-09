@@ -51,7 +51,7 @@ function check(provider, model, expected, config = cfg()) {
   comparisons++
 }
 
-// Only recognized upstream namespaces are auto aliases. Exact mode preserves full IDs.
+// Billing requires an exact admitted route; upstream namespace aliases do not establish a price.
 for (const [provider, model, input] of [
   ['openai', 'openai/gpt-6.1-sol', 2],
   ['google', 'google/gemini-3.8-flash', 0.75],
@@ -59,7 +59,7 @@ for (const [provider, model, input] of [
   ['custom-api', 'openai/gpt-6.1-sol', 2],
   ['llm-openai', 'openai/gpt-6.1-sol', 2],
 ]) {
-  check(provider, model, { priced: true, input })
+  check(provider, model, { priced: false })
   check(provider, model, { priced: false }, cfg('exact'))
 }
 check('openai', 'gpt-6.1-sol', { priced: true, input: 2 }, cfg('exact'))
@@ -70,7 +70,7 @@ check('opencode-zen', 'unknown/gemini-3.8-flash', { priced: false })
 
 // Explicit Zen PAYG IDs select their own catalog; legacy IDs/override keys stay compatible.
 for (const provider of ['opencode-zen', 'llm-opencode-zen']) {
-  check(provider, 'google/gemini-3.8-flash', { priced: true, input: 1.5 })
+  check(provider, 'google/gemini-3.8-flash', { priced: false })
   check(provider, 'gemini-3.8-flash', { priced: true, input: 1.5 }, cfg('exact'))
   check(provider, 'google/gemini-3.8-flash', { priced: false }, cfg('exact'))
 }
@@ -81,34 +81,34 @@ check('opencode-zen', 'gemini-3.7-flash', { priced: false })
 check('opencode-go', 'gemini-3.7-flash', { priced: false })
 
 // Provider-specific DeepSeek prices and calendars must not be replaced by direct rates.
-check('opencode-zen', 'deepseek/deepseek-v4-flash', { priced: true, input: 0.4, mode: 'flat' })
-check('opencode-go', 'deepseek/deepseek-v4-flash', { priced: true, input: 0.22, mode: 'utc-peak' })
-check('deepseek', 'deepseek/deepseek-v4-flash', { priced: true, input: 0.15, mode: 'deepseek-peak' })
+check('opencode-zen', 'deepseek/deepseek-v4-flash', { priced: false })
+check('opencode-go', 'deepseek/deepseek-v4-flash', { priced: false })
+check('deepseek', 'deepseek/deepseek-v4-flash', { priced: false })
 check('opencode-go', 'deepseek-v4-flash', { priced: true, input: 0.22, mode: 'utc-peak', currency: 'USD' }, cfg('auto', {}, { ...prices, currency: 'CNY' }))
 
 // Scoped routing prices never leak into another provider's fallback rates.
 for (const model of ['zen-only-model', 'go-only-model', 'router-only-model']) {
   check('custom-api', model, { priced: false })
   check('openai', model, { priced: false })
-  check('deepseek', model, { priced: true, input: 0.15, mode: 'deepseek-peak' })
+  check('deepseek', model, { priced: false })
 }
 check('anthropic', 'gemini-3.8-flash', { priced: false })
 check('google', 'gpt-6.1-sol', { priced: false })
 check('anthropic', 'openai/gpt-6.1-sol', { priced: false })
 check('zen', 'gpt-6.1-sol', { priced: false })
 check('opencode', 'gpt-6.1-sol', { priced: false })
-check('zen', 'deepseek-v4-flash', { priced: true, input: 0.22, mode: 'utc-peak' })
+check('zen', 'deepseek-v4-flash', { priced: false })
 
 for (const provider of ['openai', 'anthropic', 'google', 'openrouter', 'ollama', 'opencode-zen', 'opencode-go']) {
-  const own = provider === 'opencode-zen' ? { input: 0.4, mode: 'flat' } : provider === 'opencode-go' ? { input: 0.22, mode: 'utc-peak' } : { input: 0.15, mode: 'deepseek-peak' }
-  for (const mode of ['auto', 'exact']) check(provider, 'legacy-model', { priced: true, ...own }, cfg(mode, { [provider + ':legacy-model']: 'deepseek-v4-flash' }))
+  const own = provider === 'opencode-zen' ? { priced: true, input: 0.4, mode: 'flat' } : provider === 'opencode-go' ? { priced: true, input: 0.22, mode: 'utc-peak' } : { priced: false }
+  for (const mode of ['auto', 'exact']) check(provider, 'legacy-model', own, cfg(mode, { [provider + ':legacy-model']: 'deepseek-v4-flash' }))
 }
 const fallbackPrices = { ...prices, models: { ...prices.models, 'deepseek-v4-pro': directDeepSeek } }
 for (const provider of ['openrouter', 'ollama', 'opencode-zen', 'opencode-go']) {
-  for (const mode of ['auto', 'exact']) check(provider, 'legacy-missing', { priced: true, input: 0.15, mode: 'deepseek-peak' }, cfg(mode, { [provider + ':legacy-missing']: 'deepseek-v4-pro' }, fallbackPrices))
+  for (const mode of ['auto', 'exact']) check(provider, 'legacy-missing', { priced: false }, cfg(mode, { [provider + ':legacy-missing']: 'deepseek-v4-pro' }, fallbackPrices))
 }
 const ownLegacy = { ...prices, providers: { ...prices.providers, zen: { models: { 'gpt-6.1-sol': flat(99) } } } }
-check('zen', 'openai/gpt-6.1-sol', { priced: true, input: 99 }, cfg('auto', {}, ownLegacy))
+check('zen', 'openai/gpt-6.1-sol', { priced: false }, cfg('auto', {}, ownLegacy))
 check('zen', 'gpt-6.1-sol', { priced: true, input: 99 }, cfg('exact', {}, ownLegacy))
 const disabledDS = { ...prices, models: { 'deepseek-v4-flash': { unpriced: true } } }
 check('deepseek', 'deepseek-v4-flash', { priced: false }, cfg('auto', {}, disabledDS))
@@ -128,10 +128,10 @@ for (const variant of [':free', ':online', ' (free)', ' (online)']) {
   check('opencode-zen', 'openai/gpt-6.1-sol' + variant, { priced: false })
 }
 
-// Known local origins keep zero-cost precedence; explicit override remains an escape hatch.
+// Local origins remain unpriced even when an override points at a cloud tariff.
 for (const provider of ['ollama', 'llm-ollama', 'lmstudio', 'vllm']) check(provider, 'openai/gpt-6-astra', { priced: false })
 check('custom-api', 'ollama/gpt-6-astra', { priced: false })
-check('ollama', 'gpt-6-astra', { priced: true, input: 10 }, cfg('auto', { 'ollama:gpt-6-astra': 'openai:gpt-6-astra' }))
+check('ollama', 'gpt-6-astra', { priced: false }, cfg('auto', { 'ollama:gpt-6-astra': 'openai:gpt-6-astra' }))
 
 // Non-exact aliases must be unique; candidate date/version snapshots are never stripped.
 for (const [model, candidates, expected] of [
@@ -186,7 +186,7 @@ for (const [provider, model, input] of [
   ['openai', 'gpt-6.1-sol/2026-10-01', 2],
   ['openai', 'gpt-6.1-sol:v2', 2],
 ]) {
-  check(provider, model, { priced: true, input })
+  check(provider, model, { priced: false })
   if (provider !== 'deepseek') check(provider, model, { priced: false }, cfg('exact'))
 }
 for (const [provider, model] of [
@@ -226,7 +226,7 @@ for (const mode of ['auto', 'exact']) {
 for (const provider of ['', 'deepseek', 'custom-api']) {
   for (const model of [' ollama/gpt-6-astra', '\tgguf:qwen3.5', ' LMStudio:gpt-6-astra ']) check(provider, model, { priced: false })
 }
-check('custom-api', ' ollama/gpt-6-astra', { priced: true, input: 10 }, cfg('auto', { 'custom-api: ollama/gpt-6-astra': 'openai:gpt-6-astra' }))
+check('custom-api', ' ollama/gpt-6-astra', { priced: false }, cfg('auto', { 'custom-api: ollama/gpt-6-astra': 'openai:gpt-6-astra' }))
 
 // Disabled entries block default billing and cross-provider guessing.
 check('custom-api', 'deepseek-v4-flash', { priced: false }, cfg('auto', {}, disabledDS))
@@ -239,7 +239,7 @@ const disabledForeign = { ...prices, providers: { ...prices.providers, openai: {
 for (const provider of ['', 'deepseek', 'deepseek-official', 'custom-api']) check(provider, 'disabled-model', { priced: false }, cfg('auto', {}, disabledForeign))
 const dsAmbiguous = { ...ambiguous, models: { 'shared-model': directDeepSeek } }
 check('custom-api', 'shared-model', { priced: false }, cfg('auto', {}, dsAmbiguous))
-check('custom-api', 'deepseek:shared-model', { priced: true, input: 0.15 }, cfg('auto', {}, dsAmbiguous))
+check('custom-api', 'deepseek:shared-model', { priced: false }, cfg('auto', {}, dsAmbiguous))
 check('deepseek', 'shared-model', { priced: true, input: 0.15 }, cfg('auto', {}, dsAmbiguous))
 const decoratedAmbiguous = { models: {}, default: {}, providers: {
   openai: { models: { 'shared-model-v2': flat(1) } },
@@ -247,7 +247,7 @@ const decoratedAmbiguous = { models: {}, default: {}, providers: {
 } }
 for (const provider of ['custom-api', 'deepseek']) {
   check(provider, 'shared-model-v2-2026-10-01', { priced: false }, cfg('auto', {}, decoratedAmbiguous))
-  check(provider, 'shared-model-v2', { priced: true, input: 1 }, cfg('auto', {}, decoratedAmbiguous))
+  check(provider, 'shared-model-v2', { priced: false }, cfg('auto', {}, decoratedAmbiguous))
   const reversed = { ...decoratedAmbiguous, providers: Object.fromEntries(Object.entries(decoratedAmbiguous.providers).reverse()) }
   check(provider, 'shared-model-v2-2026-10-01', { priced: false }, cfg('auto', {}, reversed))
 }
@@ -255,7 +255,7 @@ for (const legacy of ['zen', 'opencode']) {
   const legacyScoped = { ...prices, providers: { ...prices.providers, [legacy]: { models: { 'legacy-only-model': flat(99) } } } }
   check(legacy, 'legacy-only-model', { priced: true, input: 99 }, cfg('auto', {}, legacyScoped))
   check('custom-api', 'legacy-only-model', { priced: false }, cfg('auto', {}, legacyScoped))
-  check('deepseek', 'legacy-only-model', { priced: true, input: 0.15 }, cfg('auto', {}, legacyScoped))
+  check('deepseek', 'legacy-only-model', { priced: false }, cfg('auto', {}, legacyScoped))
 }
 
 
@@ -268,7 +268,7 @@ const actual = defaultConfig()
 for (const provider of ['', 'deepseek', 'deepseek-official', 'custom-api']) {
   for (const model of ['gpt-5.5-pro', 'nvidia/nemotron-3-ultra-550b-a55b']) check(provider, model, { priced: false }, actual)
 }
-check('opencode-zen', 'gpt-5.5-pro', { priced: true, input: 30 }, actual)
+check('opencode-zen', 'gpt-5.5-pro', { priced: false }, actual)
 
 
 // An explicit namespace cannot collapse into another vendor's punctuation alias.
@@ -277,8 +277,8 @@ const qualifiedCollision = { models: { 'shared-model': directDeepSeek }, default
   google: { models: { 'openai-gpt-6.1-sol': flat(200) } },
 } }
 for (const separator of ['/', ':']) {
-  check('custom-api', 'deepseek' + separator + 'shared-model', { priced: true, input: 0.15 }, cfg('auto', {}, qualifiedCollision))
-  check('custom-api', 'openai' + separator + 'gpt-6.1-sol', { priced: true, input: 2 }, cfg('auto', {}, qualifiedCollision))
+  check('custom-api', 'deepseek' + separator + 'shared-model', { priced: false }, cfg('auto', {}, qualifiedCollision))
+  check('custom-api', 'openai' + separator + 'gpt-6.1-sol', { priced: false }, cfg('auto', {}, qualifiedCollision))
   check('openai', 'deepseek' + separator + 'shared-model', { priced: false }, cfg('auto', {}, qualifiedCollision))
 }
 
@@ -296,19 +296,18 @@ try {
   assert.equal(reopened.days[date].cost, 9, 'reload preserves recorded costs')
   assert.deepEqual(reopened.days[date].byProviderModel[oldKey], recorded, 'reload does not rename or reprice historical model buckets')
   reopened.account({ input: 1000000, output: 0 }, ' OpenAI : GPT 6.1 Sol ', null, Date.now(), 'openai')
-  assert.equal(reopened.days[date].cost, 11, 'future calls use the newly recognized direct rate')
+  assert.equal(reopened.days[date].cost, 9, 'Unconfigured display-name variants do not invent future prices')
   assert.deepEqual(reopened.days[date].byProviderModel[oldKey], recorded, 'future matching leaves existing history intact')
-  assert.equal(reopened.days[date].byProviderModel['openai: OpenAI : GPT 6.1 Sol '].cost, 2, 'the original incoming provider/model identity is retained')
+  assert.equal(reopened.days[date].byProviderModel['openai: OpenAI : GPT 6.1 Sol '].cost, 0, 'the original incoming provider/model identity is retained')
   reopened.scheduleWrite(); reopened.flush(); reopened.close()
   const twice = Ledger.load(file)
-  assert.equal(twice.days[date].cost, 11)
+  assert.equal(twice.days[date].cost, 9)
   assert.deepEqual(twice.days[date].byProviderModel[oldKey], recorded)
   twice.close()
 } finally { rmSync(work, { recursive: true, force: true }) }
 
 
-// Naming-style coverage: transport display names and compatibility punctuation
-// share an identity only when the resulting catalog alias is unique.
+// Billing refuses display-name and punctuation variants rather than borrowing a catalog identity.
 for (const [provider, model, input] of [
   ['openai', 'ＧＰＴ－６．１－Ｓｏｌ', 2],
   ['openai', ' ＯＰＥＮＡＩ：ＧＰＴ　６．１　Ｓｏｌ ', 2],
@@ -323,7 +322,7 @@ for (const [provider, model, input] of [
   ['opencode-zen', 'Ｇｏｏｇｌｅ／Ｇｅｍｉｎｉ－３．８－Ｆｌａｓｈ', 1.5],
   ['opencode-go', 'Ｇｏｏｇｌｅ：Ｇｅｍｉｎｉ－３．８－Ｆｌａｓｈ', 3],
 ]) {
-  check(provider, model, { priced: true, input })
+  check(provider, model, { priced: false })
   check(provider, model, { priced: false }, cfg('exact'))
 }
 for (const model of ['gрt-6.1-sol', 'gpt-6.1-sοl']) check('openai', model, { priced: false })

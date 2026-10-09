@@ -58,11 +58,13 @@ for (const [currency, table] of [['USD', DEFAULT_PRICE_TABLE], ['CNY', DEFAULT_P
   const flash = table.models['deepseek-v4-flash']
   assert.deepEqual(table.default, flash, '内置默认价包含 Flash 全档位')
   for (const model of ['default', 'unknown-deepseek-model']) {
-    const entry = providerPriceEntryFor('deepseek', model, cfg.prices).entry
+    assert.equal(providerPriceEntryFor('deepseek', model, cfg.prices).priced, false, 'BC does not silently price unknown models')
+    const overrides = { ['deepseek:' + model]: 'deepseek:__default__' }
+    const entry = providerPriceEntryFor('deepseek', model, cfg.prices, { overrides }).entry
     near(costOf(tokens, entry, now, peak), costOf(tokens, flash, now, peak), '峰时回退与明确 Flash 一致')
     near(costOf(tokens, entry, now, peak), costOf(tokens, baseOf(flash), now, peak) * 2, '复现的半价路径恢复峰价')
     for (const time of [now, Date.parse('2026-09-08T05:30:00Z'), Date.parse('2026-09-12T07:30:00Z'), Date.parse('2026-08-10T07:30:00Z')]) {
-      const clientEntry = ui.resolveClientPrice('deepseek', model, ui.parseConfig(cfg, 'config')).entry
+      const clientEntry = ui.resolveClientPrice('deepseek', model, { ...ui.parseConfig(cfg, 'config'), priceOverrides: overrides }).entry
       near(ui.costOfBuckets(tokens, ui.tierFor(clientEntry, time, peak)), costOf(tokens, flash, time, peak), '客户端/服务端峰、谷、周末、历史一致')
     }
     const mapped = providerPriceEntryFor('custom', model, cfg.prices, { overrides: { ['custom:' + model]: 'deepseek:__default__' } })
@@ -92,6 +94,7 @@ const previousHome = process.env.DSH_HOME
 const cleanup = []
 try {
   const cfg = sanitizeConfig({ legacyAutoImportedAt: 1, prices: { ...structuredClone(DEFAULT_PRICE_TABLE_CNY), currency: 'CNY', default: baseOf(DEFAULT_PRICE_TABLE_CNY.default) } })
+  cfg.priceOverrides['deepseek:default'] = 'deepseek:__default__'
   const ledger = new Ledger(cfg, {}, join(root, 'ledger.json'))
   ledger.scheduleWrite = () => {}
   // 模拟已升级过 1.7.14 的存量账本，验证本次迁移本身完成修复。
@@ -154,7 +157,7 @@ try {
   assert.equal(fromShards.recostedSessions, 1, '同一会话多份分段日志正确合并')
   near(day.sessions.find(s => s.id === 'complete').cost, after.cost, '分段重放与单份完整日志费用一致')
 
-  const projection = __testProjection.makeCostUsageProjection({ config: sanitizeConfig({ prices: { ...DEFAULT_PRICE_TABLE_CNY, currency: 'CNY' } }) })
+  const projection = __testProjection.makeCostUsageProjection({ config: sanitizeConfig({ prices: { ...DEFAULT_PRICE_TABLE_CNY, currency: 'CNY' }, priceOverrides: { 'deepseek:default': 'deepseek:__default__' } }) })
   let state = projection.init()
   state = projection.apply(state, { type: 'request/header', seq: 0, time: now - 1, data: { header: { config: { provider: 'deepseek', model: 'default' } } } })
   state = projection.apply(state, { type: 'assistant/message', seq: 1, time: now, data: { usage: { inputTokens: tokens.input, cacheReadTokens: tokens.cacheRead, outputTokens: tokens.output } } })
