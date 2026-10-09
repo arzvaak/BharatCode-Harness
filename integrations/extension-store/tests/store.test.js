@@ -30,6 +30,10 @@ async function fixture() {
       sha256: createHash("sha256").update(bytes).digest("hex"),
     },
   };
+  e.qualificationEvidence = ['packed-install', 'lifecycle', 'workflow'].map(check => ({
+    platform: 'linux', check, sourceCommit: e.sourceCommit, artifactSha256: e.artifact.sha256,
+    result: 'passed', evidence: 'https://github.com/arzvaak/Bharatcode-Harness/actions/runs/123',
+  }));
   const cat = Buffer.from(
     JSON.stringify({
       schemaVersion: 1,

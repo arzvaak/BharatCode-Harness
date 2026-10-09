@@ -27,6 +27,7 @@ export interface ExtensionDescriptor {
   packageName?: string;
   credentialReference?: string;
   artifact?: { assetId: number; bytes: number; sha256: string };
+  qualificationEvidence?: QualificationEvidence[];
   qualification?: Partial<
     Record<"linux" | "win32" | "darwin" | "web", string[]>
   >;

@@ -32,6 +32,10 @@ const entry = {
     args: ["-m", "duckdb_mcp"],
   },
 };
+entry.qualificationEvidence = entry.platforms.flatMap(platform => ['packed-install', 'lifecycle', 'workflow'].map(check => ({
+  platform, check, sourceCommit: entry.sourceCommit, artifactSha256: entry.artifact.sha256,
+  result: 'passed', evidence: 'https://github.com/arzvaak/Bharatcode-Harness/actions/runs/123',
+})));
 const catalog = () => ({
   schemaVersion: 1,
   revision: 1,
@@ -123,4 +127,26 @@ test("checked-in discovery catalog obeys scope boundaries and never qualifies un
     () => validateCatalog({ ...catalog(), entries: [unsafe] }),
     /credential/,
   );
+});
+test('qualification must identify the exact source and immutable artifact for every advertised platform', () => {
+  for (const mutate of [
+    e => delete e.qualificationEvidence,
+    e => { e.qualificationEvidence[0].artifactSha256 = 'b'.repeat(64); },
+    e => { e.qualificationEvidence[0].sourceCommit = 'b'.repeat(40); },
+    e => { e.qualificationEvidence[0].result = 'blocked'; },
+    e => { e.qualificationEvidence = e.qualificationEvidence.filter(x => x.platform !== 'win32'); },
+    e => { e.qualificationEvidence[0].evidence = 'javascript:untrusted'; },
+    e => { e.qualificationEvidence[0].sourceCommit = [entry.sourceCommit]; },
+    e => { e.qualificationEvidence.push({ ...e.qualificationEvidence[0] }); },
+    e => { e.qualificationEvidence.push({ ...e.qualificationEvidence[0], platform: 'darwin' }); },
+  ]) {
+    const value = catalog();
+    value.entries[0].qualificationEvidence = ['linux', 'win32'].flatMap(platform => ['packed-install', 'lifecycle', 'workflow'].map(check => ({
+      platform, check, sourceCommit: entry.sourceCommit, artifactSha256: entry.artifact.sha256,
+      result: 'passed', evidence: 'https://github.com/arzvaak/Bharatcode-Harness/actions/runs/123',
+    })));
+    mutate(value.entries[0]);
+    assert.throws(() => validateCatalog(value), /qualification|incomplete/i);
+    assert.equal(canInstall(value.entries[0], 'linux', '0.2.0-rc.2'), false);
+  }
 });

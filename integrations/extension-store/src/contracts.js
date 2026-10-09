@@ -16,6 +16,22 @@ export const STATUSES = [
 const text = (x) => typeof x === "string" && x.length > 0 && x.length <= 4096;
 const strings = (x) => Array.isArray(x) && x.length <= 256 && x.every(text);
 const object = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
+function validEvidence(record) {
+  if (!object(record) || !['linux', 'win32', 'darwin', 'web'].includes(record.platform)
+    || !REQUIRED_EVIDENCE.includes(record.check) || !['passed', 'failed', 'blocked'].includes(record.result)
+    || typeof record.sourceCommit !== 'string' || !/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(record.sourceCommit)
+    || typeof record.artifactSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(record.artifactSha256) || !text(record.evidence)) return false;
+  try { const url = new URL(record.evidence); return url.protocol === 'https:' && !url.username && !url.password; }
+  catch { return false; }
+}
+function exactQualification(entry) {
+  const records = entry.qualificationEvidence;
+  return Array.isArray(records) && records.length <= 12 && records.every(record => validEvidence(record) && entry.platforms.includes(record.platform))
+    && new Set(records.map(r => r.platform + '/' + r.check)).size === records.length
+    && entry.platforms.every(platform => REQUIRED_EVIDENCE.every(check => records.some(record =>
+      record.platform === platform && record.check === check && record.result === 'passed'
+      && record.sourceCommit === entry.sourceCommit && record.artifactSha256 === entry.artifact?.sha256)));
+}
 export function validateCatalog(value) {
   if (
     !object(value) ||
@@ -113,12 +129,18 @@ export function validateCatalog(value) {
         !/^([a-f0-9]{40}|[a-f0-9]{64})$/.test(e.sourceCommit ?? "") ||
         e.license === "UNRESOLVED" ||
         !e.platforms.length ||
+        !exactQualification(e) ||
         e.platforms.some(
           (p) =>
             !REQUIRED_EVIDENCE.every((x) => e.qualification?.[p]?.includes(x)),
         ))
     )
       throw Error("Qualified release is incomplete");
+    if (e.qualificationEvidence !== undefined && (!Array.isArray(e.qualificationEvidence)
+      || e.qualificationEvidence.length > 12 || !e.qualificationEvidence.every(validEvidence)
+      || e.qualificationEvidence.some(record => !e.platforms.includes(record.platform))
+      || new Set(e.qualificationEvidence.map(r => r.platform + '/' + r.check)).size !== e.qualificationEvidence.length))
+      throw Error('Invalid qualification evidence records');
     if (
       e.qualification !== undefined &&
       (!object(e.qualification) ||
@@ -179,6 +201,7 @@ export function canInstall(e, platform, bcVersion) {
     semver.satisfies(bcVersion, e.bcVersion, { includePrerelease: true }) &&
     e.platforms.includes(platform) &&
     Boolean(e.artifact) &&
+    exactQualification(e) &&
     REQUIRED_EVIDENCE.every((x) => e.qualification?.[platform]?.includes(x))
   );
 }
