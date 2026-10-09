@@ -1,5 +1,20 @@
 # Validation — 7 October 2026
 
+## Native export qualification added 9 October 2026
+
+`scripts/native-export.mjs` loads the actual bundled client factory in an owned
+Electron 44 profile with renderer sandboxing enabled. External requests are
+blocked. On Linux under an owned Xvfb display, both the default chart and bundled
+Mermaid sequence diagram rendered, exported through native download delivery
+(7,228 and 40,876 bytes), and copied their exact original source through the native
+clipboard (239 and 229 bytes). The fixture uses Electron 44's asynchronous
+clipboard API and deletes its profile after the process exits. Both platform CI
+lanes now run this check. Windows results remain pending.
+
+This establishes native export/clipboard delivery for an owned factory fixture.
+Full desktop startup, model-generated mixed chat and installer qualification
+remain separate acceptance checks.
+
 ## Verified
 
 - `npm test`: 15 passing tests. Coverage includes signed/zero numeric ranges, bounded inputs, source routing, closed streaming fences, literal hostile labels, cross-segment link definitions, native content preservation, slot late registration/disposal, diagram sanitization, SVG serialization and actual prebuilt factory activation/disposal.

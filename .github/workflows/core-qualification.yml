@@ -32,6 +32,18 @@ jobs:
       - run: pnpm run build
       - run: pnpm run typecheck
       - run: node scripts/extensions/core.mjs build
+      - name: Prepare pinned Electron for native graphics checks
+        run: node -e "require(require.resolve('electron/install.js', {paths:['./apps/desktop']}))"
+      - name: Native Linux graphics export and clipboard (owned display/profile)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2t64
+          xvfb-run -a node integrations/visuals/scripts/native-export.mjs
+      - name: Native Windows graphics export and clipboard (owned profile)
+        if: runner.os == 'Windows'
+        run: node integrations/visuals/scripts/native-export.mjs
       - name: Core package checks (compatibility skips are reported)
         run: node scripts/extensions/core.mjs test
       - run: node --test integrations/extension-store/tests/*.test.js integrations/ci-pipelines/tests/*.test.js
