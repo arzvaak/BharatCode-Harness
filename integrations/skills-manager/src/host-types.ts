@@ -35,6 +35,7 @@ export interface Agent {
     };
 }
 interface Services {
+    connection: { requestRejection(request: IncomingMessage): 401 | 403 | undefined };
     sessions: Sessions;
     agents: {
         list: () => Agent[];

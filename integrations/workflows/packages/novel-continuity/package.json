@@ -41,5 +41,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/akira399/dsh-novel-writer.git"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-llm": "workspace:*",
+    "@deepseek-ai/dsh-util-values": "workspace:*"
   }
 }

@@ -32,5 +32,6 @@
   },
   "scripts": {
     "test": "node test/guard.test.mjs"
-  }
+  },
+  "peerDependencies": {}
 }

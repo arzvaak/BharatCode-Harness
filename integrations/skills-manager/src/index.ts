@@ -33,7 +33,7 @@ import { registerPluginUpdater } from "./plugin-updater.js";
 import { createRepositoryManager } from "./repositories.js";
 
 const name = "skills-manager";
-const inject = ["webServer", "webRuntime", "skills", "tools", "sessions"];
+const inject = ["webServer", "webRuntime", "skills", "tools", "sessions", "connection"];
 const CLIENT_MARKER_HEADER = "x-dsh-skills-manager";
 const MAX_LOG_BYTES = 1 << 20;
 // Folder uploads allow 64 MiB of raw content; Base64 adds about one-third, with extra room for up to 1,000 paths.
@@ -402,6 +402,12 @@ function apply(ctx: HostContext) {
         return snapshot;
       };
       try {
+        const connection = ctx.get?.("connection") as { requestRejection(request: IncomingMessage): 401 | 403 | undefined } | undefined;
+        const rejection = connection?.requestRejection(req) ?? (connection ? undefined : 503);
+        if (rejection !== undefined) {
+          json(res, rejection, { ok: false, code: "error.proto.forbidden", error: "Authenticated application access required" });
+          return;
+        }
         const hostError = validateRequestOrigin(req, trustedHosts);
         if (hostError) {
           json(res, hostError.statusCode, { ok: false, code: hostError.code, error: hostError.error });

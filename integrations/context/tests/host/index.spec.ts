@@ -7,11 +7,12 @@
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, test } from 'vitest'
+import { describe, test, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import SessionStore from '@deepseek-ai/dsh-session'
 import type { Session } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import * as versionProbe from '../../src/host/version'
 import { apply, inject, name } from '../../src/host/index'
 import { createContextTimelineDefinition } from '../../src/host/timeline'
 import { BASELINE_DSH_VERSION } from '../../src/shared/version'
@@ -29,8 +30,12 @@ async function bootWithHome(home: string) {
   ctx.provide('dshHomePath', (...segments: string[]) => join(HOMES, home, ...segments))
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjectionRegistry)
-  const fiber = await ctx.plugin(plugin, noConfig)
-  return { ctx, fiber }
+  const original = versionProbe.detectHarnessVersion
+  const probe = vi.spyOn(versionProbe, 'detectHarnessVersion').mockImplementation(context => original(context, () => { throw Error('No running fixture anchor') }))
+  try {
+    const fiber = await ctx.plugin(plugin, noConfig)
+    return { ctx, fiber }
+  } finally { probe.mockRestore() }
 }
 
 /** Poll until the pending plugin fiber has started and folded the log. */

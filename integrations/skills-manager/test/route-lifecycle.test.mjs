@@ -19,6 +19,7 @@ for (const [name, value] of Object.entries({
   skills: { registerProvider() { return () => {}; } },
   tools: {},
   sessions: {},
+  connection: { requestRejection() { return undefined; } },
 })) ctx.provide(name, value);
 
 try {

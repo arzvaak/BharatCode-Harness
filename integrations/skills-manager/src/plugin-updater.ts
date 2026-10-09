@@ -202,6 +202,12 @@ function registerPluginUpdater(ctx: HostContext, options: UpdateOptions) {
     path: options.endpoint,
     handler: async (request, response) => {
       try {
+        const connection = host.get?.("connection") as { requestRejection(request: IncomingMessage): 401 | 403 | undefined } | undefined;
+        const rejection = connection?.requestRejection(request) ?? (connection ? undefined : 503);
+        if (rejection !== undefined) {
+          json(response, rejection, { error: "Authenticated application access required" });
+          return;
+        }
         const target = runtime(host);
         if (request.method === "GET" || request.method === "HEAD") {
           const payload = await status(options, target);

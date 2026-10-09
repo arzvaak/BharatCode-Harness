@@ -20,7 +20,7 @@ import {
 import { registerPluginUpdater } from "./plugin-updater.js";
 import { createRepositoryManager } from "./repositories.js";
 const name = "skills-manager";
-const inject = ["webServer", "webRuntime", "skills", "tools", "sessions"];
+const inject = ["webServer", "webRuntime", "skills", "tools", "sessions", "connection"];
 const CLIENT_MARKER_HEADER = "x-dsh-skills-manager";
 const MAX_LOG_BYTES = 1 << 20;
 const MAX_UPLOAD_BODY_BYTES = 88 << 20;
@@ -332,6 +332,12 @@ function apply(ctx) {
         return snapshot;
       };
       try {
+        const connection = ctx.get?.("connection");
+        const rejection = connection?.requestRejection(req) ?? (connection ? void 0 : 503);
+        if (rejection !== void 0) {
+          json(res, rejection, { ok: false, code: "error.proto.forbidden", error: "Authenticated application access required" });
+          return;
+        }
         const hostError = validateRequestOrigin(req, trustedHosts);
         if (hostError) {
           json(res, hostError.statusCode, { ok: false, code: hostError.code, error: hostError.error });

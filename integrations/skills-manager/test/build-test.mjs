@@ -51,7 +51,7 @@ const manifest = JSON.parse(await readFile(new URL("../package.json", import.met
 await ok(typeof manifest.scripts?.build === "string" && manifest.scripts.build.length > 0, "package defines a build command");
 await ok(manifest.scripts?.test?.includes("build-test.mjs"), "test command enforces the source-layout contract");
 await ok(manifest.engines?.node === "^22.19.0 || >=24.0.0", "package uses the shared Node LTS baseline");
-await ok(manifest.packageManager === "pnpm@11.22.0", "package pins the shared pnpm version");
+await ok(manifest.packageManager === "pnpm@11.28.5", "package pins the shared pnpm version");
 
 await ok(manifest.scripts?.typecheck === "tsc --noEmit", "type checking is an independent gate");
 await ok(manifest.scripts?.test?.includes("typecheck"), "full test command runs type checking first");

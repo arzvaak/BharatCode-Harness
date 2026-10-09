@@ -2493,6 +2493,7 @@ applyHost({
     emitted.push(Array.from(arguments));
   },
   get(name) {
+    if (name === "connection") return { requestRejection() { return undefined; } };
     if (name === "sessions") {
       return {
         list() {

@@ -31,7 +31,7 @@
 // block).
 
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -214,7 +214,7 @@ describe('detectHarnessVersion — running anchor', () => {
     // default package root (the real one, which contains the repo's
     // node_modules) performs the discard.
     const ctx = ctxWithHome(homeResolver('old'))
-    assert.equal(detectHarnessVersion(ctx, runningResolver('module-skips-cli')), '0.1.1-rc.2')
+    assert.equal(detectHarnessVersion(ctx, runningResolver('module-skips-cli'), join(HOMES, 'module-skips-cli')), '0.1.1-rc.2')
   })
 
   test('never probes the CLI package from the running anchor', () => {
@@ -300,12 +300,13 @@ describe('detectHarnessVersion — degradation arms (fail open)', () => {
     assert.equal(detectHarnessVersion(hostile, NO_RUNNING), undefined)
   })
 
-  test('the default running anchor discards this package own devDependencies', () => {
+  test('the default running anchor trusts the workspace SDK outside the plugin closure', () => {
     // In the repository the default anchor resolves the repo's pinned
     // devDependencies, which live inside this package's tree: nothing is
     // trusted and there is no home service, so the probe answers undefined
     // (the gate fails open) instead of reading the repo's devDependencies.
-    assert.equal(detectHarnessVersion(new Context()), undefined)
+    const manifest = JSON.parse(readFileSync(createRequire(import.meta.url).resolve('@deepseek-ai/dsh-session/package.json'), 'utf8'))
+    assert.equal(detectHarnessVersion(new Context()), manifest.version)
   })
 
   test('a resolving package whose manifest never matches → undefined', () => {

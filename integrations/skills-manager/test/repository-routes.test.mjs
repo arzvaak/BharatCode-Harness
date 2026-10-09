@@ -13,6 +13,7 @@ globalThis.fetch = (url, options) => interceptedDownload && String(url).startsWi
 const { apply } = await import("../lib/index.js");
 let route;
 apply({
+  get(name) { return name === "connection" ? { requestRejection() { return undefined; } } : undefined; },
   effect(register) { return register(); },
   skills: { registerProvider() { return () => {}; } },
   webRuntime: { trustedHosts: [] },

@@ -962,35 +962,35 @@ export interface Config {
 }
 /** The cordis `Config` validator and the Config-form generation's served schema. */
 export declare const Config: z$1<Schemastery.ObjectS<NoInfer<{
-  maxRequestSteps: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxKeptTurns: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxEvents: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxNodes: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxArchiveNodes: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxFileOps: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  defaultPlacement: z$1<"all" | "sidebar" | "tab", "all" | "sidebar" | "tab", Mode>;
-  defaultGranularity: z$1<"step" | "turn", "step" | "turn", Mode>;
-  defaultTrendMode: z$1<"delta" | "total", "delta" | "total", Mode>;
-  defaultDeltaBase: z$1<"step" | "turn", "step" | "turn", Mode>;
-  defaultToolSort: z$1<"count" | "name" | "size", "count" | "name" | "size", Mode>;
-  defaultFileSort: z$1<"count" | "latest" | "path", "count" | "latest" | "path", Mode>;
-  insightsEntry: z$1<"hide" | "show", "hide" | "show", Mode>;
-  defaultDurationCurve: z$1<"hide" | "show", "hide" | "show", Mode>;
+  maxRequestSteps: z$1<number, number, "defined">;
+  maxKeptTurns: z$1<number, number, "defined">;
+  maxEvents: z$1<number, number, "defined">;
+  maxNodes: z$1<number, number, "defined">;
+  maxArchiveNodes: z$1<number, number, "defined">;
+  maxFileOps: z$1<number, number, "defined">;
+  defaultPlacement: z$1<"all" | "sidebar" | "tab", "all" | "sidebar" | "tab", "defined">;
+  defaultGranularity: z$1<"step" | "turn", "step" | "turn", "defined">;
+  defaultTrendMode: z$1<"delta" | "total", "delta" | "total", "defined">;
+  defaultDeltaBase: z$1<"step" | "turn", "step" | "turn", "defined">;
+  defaultToolSort: z$1<"count" | "name" | "size", "count" | "name" | "size", "defined">;
+  defaultFileSort: z$1<"count" | "latest" | "path", "count" | "latest" | "path", "defined">;
+  insightsEntry: z$1<"hide" | "show", "hide" | "show", "defined">;
+  defaultDurationCurve: z$1<"hide" | "show", "hide" | "show", "defined">;
 }>>, Schemastery.ObjectT<NoInfer<{
-  maxRequestSteps: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxKeptTurns: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxEvents: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxNodes: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxArchiveNodes: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  maxFileOps: z$1<number, number, Mode extends "volatile" | "volatile-defined" ? "volatile-defined" : "defined">;
-  defaultPlacement: z$1<"all" | "sidebar" | "tab", "all" | "sidebar" | "tab", Mode>;
-  defaultGranularity: z$1<"step" | "turn", "step" | "turn", Mode>;
-  defaultTrendMode: z$1<"delta" | "total", "delta" | "total", Mode>;
-  defaultDeltaBase: z$1<"step" | "turn", "step" | "turn", Mode>;
-  defaultToolSort: z$1<"count" | "name" | "size", "count" | "name" | "size", Mode>;
-  defaultFileSort: z$1<"count" | "latest" | "path", "count" | "latest" | "path", Mode>;
-  insightsEntry: z$1<"hide" | "show", "hide" | "show", Mode>;
-  defaultDurationCurve: z$1<"hide" | "show", "hide" | "show", Mode>;
+  maxRequestSteps: z$1<number, number, "defined">;
+  maxKeptTurns: z$1<number, number, "defined">;
+  maxEvents: z$1<number, number, "defined">;
+  maxNodes: z$1<number, number, "defined">;
+  maxArchiveNodes: z$1<number, number, "defined">;
+  maxFileOps: z$1<number, number, "defined">;
+  defaultPlacement: z$1<"all" | "sidebar" | "tab", "all" | "sidebar" | "tab", "defined">;
+  defaultGranularity: z$1<"step" | "turn", "step" | "turn", "defined">;
+  defaultTrendMode: z$1<"delta" | "total", "delta" | "total", "defined">;
+  defaultDeltaBase: z$1<"step" | "turn", "step" | "turn", "defined">;
+  defaultToolSort: z$1<"count" | "name" | "size", "count" | "name" | "size", "defined">;
+  defaultFileSort: z$1<"count" | "latest" | "path", "count" | "latest" | "path", "defined">;
+  insightsEntry: z$1<"hide" | "show", "hide" | "show", "defined">;
+  defaultDurationCurve: z$1<"hide" | "show", "hide" | "show", "defined">;
 }>>, "plain">;
 //#endregion
 //#region src/host/index.d.ts

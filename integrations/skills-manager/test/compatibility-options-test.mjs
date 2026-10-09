@@ -45,9 +45,9 @@ assertHostPeers(manifest.peerDependencies);
 for (const [name, range] of Object.entries(manifest.peerDependencies)) {
   if (name.startsWith("@deepseek-ai/dsh-")) assert.equal(range, peerRange, name);
 }
-assert.equal(manifest.devDependencies["@deepseek-ai/cordis"], "4.0.4");
+assert.equal(manifest.devDependencies["@deepseek-ai/cordis"], "workspace:*");
 for (const [name, version] of Object.entries(manifest.devDependencies)) {
-  if (name.startsWith("@deepseek-ai/dsh-")) assert.equal(version, developmentHost, name);
+  if (name.startsWith("@deepseek-ai/dsh-")) assert.equal(version, "workspace:*", name);
 }
 const missing = { ...manifest.peerDependencies };
 delete missing["@deepseek-ai/dsh-web-app"];
