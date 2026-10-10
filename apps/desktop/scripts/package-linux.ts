@@ -53,7 +53,7 @@ async function main(): Promise<void> {
     mkdirSync(paths.artifacts, { recursive: true })
     await execute('package-linux', ['exec', 'electron-builder', '--config', 'electron-builder.config.mjs', '--linux', '--x64', '--publish', 'never', ...(values.dir ? ['--dir'] : [])], appRoot)
     await execute('smoke-packaged-runtime', ['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts'], appRoot)
-    writeFileSync(join(paths.artifacts, 'linux-preview-build.json'), JSON.stringify({ schemaVersion: 1, target: 'linux-x64', version, ...readDesktopBuildCommit(root), updateMode: 'github', updateRepository: 'arzvaak/BharatCode-Extensions', updateChannel: 'rc', run: run.directory }, null, 2) + '\n')
+    writeFileSync(join(paths.artifacts, 'linux-preview-build.json'), JSON.stringify({ schemaVersion: 1, target: 'linux-x64', version, ...readDesktopBuildCommit(root), updateMode: 'github', updateRepository: 'arzvaak/BharatCode-Harness', updateChannel: 'rc', run: run.directory }, null, 2) + '\n')
     success = true
     console.log(`Linux preview artifacts: ${paths.artifacts}`)
   } finally { run.finish(success) }

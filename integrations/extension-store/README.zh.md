@@ -39,5 +39,7 @@
 
 只有当已签名目录包含适用于缺失依赖、当前 CPU 架构且通过当前平台资格检查的兼容运行时时，扩展卡片才会显示 **Set up managed requirements**。设置过程会验证已签名的发布清单、精确资源大小和 SHA-256，限制归档解压范围，检查所提供的版本，并以原子操作激活运行时。源目录将 x64 Typst 运行时标记为待资格检查，发布前不可用。原生资格检查会将按哈希固定的上游 Linux 和 Windows 可执行文件连同 Apache 许可证和第三方声明重新打包；各平台检查已签名软件包的安装、重新加载、PDF/SVG 输出、取消和移除。发布过程要求每个声明支持的平台都有原生检查报告，并将精确归档纳入已签名发布清单。公共预览支持显式的仅 Linux 描述符：目录修订版 3 在托管原生资格检查通过后发布适用于 Linux x64 的 Typst 0.15.1；Windows 和 ARM64 不可用。未指定平台子集时，组装器仍要求 Linux 和 Windows 两份报告。其他托管运行时仍不可用。**Managed runtimes** 会列出已安装版本并提供逐个移除操作；有 agent 工作正在运行或仍有依赖该运行时的扩展运行时处于活动状态时，将拒绝移除。
 
-Linux release 包含 AppImage、Fedora RPM 和 Debian DEB 安装包及公开 GitHub 更新源。营销页源码位于 `site/`；`node scripts/extensions/test-marketing-site.mjs` 在本机检查桌面与移动端交互。全部本机发布检查通过后，用 `node scripts/extensions/publish-linux.mjs` 发布 release，再用 `node scripts/extensions/publish-marketing-site.mjs` 部署本机组装的网站。公开仓库只允许 Pages 部署工作流；私有应用构建及测试 Actions 保持禁用。部署仅上传预构建静态内容，不运行应用构建或测试任务。
+Linux release 包含 AppImage、Fedora RPM 和 Debian DEB 安装包及公开 GitHub 更新源。营销页源码位于 `site/`；`node scripts/extensions/test-marketing-site.mjs` 在本机检查桌面与移动端交互。全部本机发布检查通过后，用 `node scripts/extensions/publish-linux.mjs` 发布 release，再用 `node scripts/extensions/publish-marketing-site.mjs` 部署本机组装的网站。公开仓库只允许 Pages 部署工作流；应用构建及测试 Actions 保持禁用。部署仅上传预构建静态内容，不运行应用构建或测试任务。
 营销网站默认跟随系统配色；访客选择浅色或深色模式后会记住该偏好。“View on GitHub”按钮打开公开仓库。
+
+应用的公开网站与 Linux 发布版本使用 `arzvaak/BharatCode-Harness`。`BharatCode-Extensions` 保留扩展目录，并为已安装的旧应用构建保留兼容更新源。

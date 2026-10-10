@@ -1,8 +1,10 @@
-# DeepSeek Harness
+# BharatCode Harness
 
 English | [中文](README.zh.md)
 
-DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
+BharatCode Harness (`dsh`) is a desktop for chat, coding, research and writing, based on the open-source [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness).
+
+[Website and Linux downloads](https://arzvaak.github.io/BharatCode-Harness/) | [Releases](https://github.com/arzvaak/BharatCode-Harness/releases) | [Extensions](https://github.com/arzvaak/BharatCode-Extensions)
 
 It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
 

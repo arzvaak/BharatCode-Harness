@@ -11,8 +11,8 @@ const directory = await mkdtemp(join(tmpdir(), 'bc-marketing-'));
 await cp(join(root, 'integrations/extension-store/site'), directory, { recursive: true });
 const version = '0.2.0-rc.2.20261010.1';
 const tag = `v${version}`;
-const packages = Object.fromEntries(['rpm', 'deb', 'AppImage'].map(kind => { const name = `bharatcode-${version}-linux-x86_64.${kind}`; return [kind, { name, url: `https://github.com/arzvaak/BharatCode-Extensions/releases/download/${tag}/${name}` }]; }));
-await writeFile(join(directory, 'release.json'), JSON.stringify({ version, url: `https://github.com/arzvaak/BharatCode-Extensions/releases/tag/${tag}`, packages }));
+const packages = Object.fromEntries(['rpm', 'deb', 'AppImage'].map(kind => { const name = `bharatcode-${version}-linux-x86_64.${kind}`; return [kind, { name, url: `https://github.com/arzvaak/BharatCode-Harness/releases/download/${tag}/${name}` }]; }));
+await writeFile(join(directory, 'release.json'), JSON.stringify({ version, url: `https://github.com/arzvaak/BharatCode-Harness/releases/tag/${tag}`, packages }));
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = createServer(async (request, response) => {
   try {
@@ -45,7 +45,7 @@ try {
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), `sudo dnf install ./${packages.rpm.name}`);
   const evidence = join(root, 'dist/marketing-qualification'); await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: join(evidence, 'desktop.png'), fullPage: true });
-  assert.equal(await page.getByRole('link', { name: 'View on GitHub', exact: true }).getAttribute('href'), 'https://github.com/arzvaak/BharatCode-Extensions');
+  assert.equal(await page.getByRole('link', { name: 'View on GitHub', exact: true }).getAttribute('href'), 'https://github.com/arzvaak/BharatCode-Harness');
   await page.getByRole('button', { name: 'Use dark mode', exact: true }).click();
   assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
   assert.equal(await page.getByRole('button', { name: 'Use light mode', exact: true }).getAttribute('aria-pressed'), 'true');
@@ -76,11 +76,11 @@ try {
   assert.equal(await restrictedPage.evaluate(() => document.documentElement.dataset.theme), 'light');
   await restricted.close();
   for (const invalid of [{ version, url: 'https://malicious.invalid/', packages },
-    { version, url: `https://github.com/arzvaak/BharatCode-Extensions/releases/tag/${tag}`, packages: { ...packages, AppImage: { ...packages.AppImage, url: 'https://malicious.invalid/download' } } }]) {
+    { version, url: `https://github.com/arzvaak/BharatCode-Harness/releases/tag/${tag}`, packages: { ...packages, AppImage: { ...packages.AppImage, url: 'https://malicious.invalid/download' } } }]) {
     await page.unroute('**/release.json');
     await page.route('**/release.json', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(invalid) }));
     await page.reload(); await page.getByRole('status').getByText(/Direct downloads are unavailable/).waitFor();
-    for (const kind of ['rpm', 'deb', 'AppImage']) assert.equal(await page.locator(`[data-package="${kind}"]`).getAttribute('href'), 'https://github.com/arzvaak/BharatCode-Extensions/releases');
+    for (const kind of ['rpm', 'deb', 'AppImage']) assert.equal(await page.locator(`[data-package="${kind}"]`).getAttribute('href'), 'https://github.com/arzvaak/BharatCode-Harness/releases');
   }
   await writeFile(join(evidence, 'result.json'), JSON.stringify({ result: 'passed', workflows: true, keyboard: true, downloads: true, clipboard: true, mobile: true, rejectedInvalidRelease: true }, null, 2) + '\n');
   console.log('Marketing site: workflows, keyboard, downloads, clipboard, mobile layout, and invalid-release fallback passed');

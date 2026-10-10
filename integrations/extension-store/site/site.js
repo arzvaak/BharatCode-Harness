@@ -51,7 +51,7 @@ async function loadRelease() {
     const response = await fetch('./release.json', { cache: 'no-cache' });
     if (!response.ok) throw Error('Release manifest unavailable');
     const release = await response.json();
-    const expected = 'https://github.com/arzvaak/BharatCode-Extensions/releases/';
+    const expected = 'https://github.com/arzvaak/BharatCode-Harness/releases/';
     if (typeof release.version !== 'string' || !/^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$/.test(release.version) || release.url !== `${expected}tag/v${release.version}`) throw Error('Invalid release manifest');
     for (const kind of ['rpm', 'deb', 'AppImage']) {
       const asset = release.packages?.[kind];

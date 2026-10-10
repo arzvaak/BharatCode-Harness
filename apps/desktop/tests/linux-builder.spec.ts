@@ -6,7 +6,7 @@ it('packages a self-contained Linux preview with GitHub updates and native distr
   expect(config.productName).toBe('BharatCode')
   expect(config.linux.target).toEqual(['AppImage', 'deb', 'rpm'])
   expect(config.electronDist).toContain('linux-x64')
-  expect(config.publish).toEqual([{ provider: 'github', owner: 'arzvaak', repo: 'BharatCode-Extensions', channel: 'rc', releaseType: 'prerelease' }])
+  expect(config.publish).toEqual([{ provider: 'github', owner: 'arzvaak', repo: 'BharatCode-Harness', channel: 'rc', releaseType: 'prerelease' }])
   expect(config.deb.packageName).toBe('bharatcode-harness')
   expect(config.rpm.packageName).toBe('bharatcode-harness')
   expect(config.deb.depends).toContain('libasound2t64 | libasound2')

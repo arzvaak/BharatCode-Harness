@@ -7,7 +7,7 @@ import { requireLocalRelease } from './local-release.mjs';
 const root = resolve(import.meta.dirname, '../..');
 requireLocalRelease(root);
 execFileSync(process.execPath, ['scripts/extensions/build-marketing-site.mjs'], { cwd: root, stdio: 'inherit' });
-const repository = 'arzvaak/BharatCode-Extensions';
+const repository = 'arzvaak/BharatCode-Harness';
 const temporary = mkdtempSync(join(tmpdir(), 'bc-pages-'));
 const git = args => execFileSync('git', args, { cwd: temporary, encoding: 'utf8' }).trim();
 const api = (path, body, method = 'PUT') => {

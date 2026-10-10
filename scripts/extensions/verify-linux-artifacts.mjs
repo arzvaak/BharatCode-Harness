@@ -28,7 +28,7 @@ for (const kind of ['AppImage', 'deb', 'rpm']) {
 const config = load(readFileSync(join(directory, 'linux-unpacked/resources/app-update.yml'), 'utf8'));
 assert.equal(config.provider, 'github');
 assert.equal(config.owner, 'arzvaak');
-assert.equal(config.repo, 'BharatCode-Extensions');
+assert.equal(config.repo, 'BharatCode-Harness');
 assert.equal(config.channel, 'rc');
 const rpm = join(directory, names.find(name => name.endsWith('.rpm')));
 assert.match(execFileSync('rpm', ['-qp', '--qf', '%{NAME} %{ARCH}', rpm], { encoding: 'utf8' }), /^bharatcode-harness x86_64$/);

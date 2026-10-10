@@ -106,7 +106,7 @@ export function createElectronBuilderConfig(
       dshDesktopAppId: appId,
       dshMandatoryUpdatePolicy: policy,
       ...linuxPreview ? { desktopName: 'bharatcode-harness.desktop',
-        homepage: 'https://arzvaak.github.io/BharatCode-Extensions/',
+        homepage: 'https://arzvaak.github.io/BharatCode-Harness/',
         description: 'BharatCode Harness: chat, code, research, and write in one desktop workspace.',
         author: { name: 'BharatCode', email: 'arzvaak@users.noreply.github.com' } } : {},
       ...buildVersion === productVersion ? {} : { version: buildVersion },
@@ -262,7 +262,7 @@ export function createElectronBuilderConfig(
     },
     detectUpdateChannel: false,
     publish: linuxPreview
-      ? [{ provider: 'github', owner: 'arzvaak', repo: 'BharatCode-Extensions', channel: 'rc', releaseType: 'prerelease' }]
+      ? [{ provider: 'github', owner: 'arzvaak', repo: 'BharatCode-Harness', channel: 'rc', releaseType: 'prerelease' }]
       : update === undefined ? null : [{ provider: 'generic', url: update.publicUrl, channel: 'nightly' }],
   }
 }
