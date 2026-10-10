@@ -113,8 +113,6 @@ If a required `gh`, `pnpm`, build, test, or generator command fails because the 
 
 ### Run relevant checks locally
 
-Releases require [local gates](apps/desktop/README.md#linux-preview).
-
 Before pushing, follow [dsh-pre-push-checks](.agents/skills/dsh-pre-push-checks/SKILL.md); report only commands run. After `gh stack sync`, validate immediately; do not merge before checks pass.
 
 - Match evidence to the surface: focused behavior tests, model/user-output snapshots, `doc-sync` for docs, built smokes for published paths, and real-API e2e for providers.
