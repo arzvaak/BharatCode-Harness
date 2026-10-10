@@ -108,6 +108,8 @@ export interface PiAiProviderProfile {
    * unset fields from the installed model of the same id.
    */
   models?: PiAiModelProfile[]
+  /** Refresh this route from its authenticated endpoint on startup and credential changes. */
+  autoImport?: boolean
   /**
    * Installed-catalog customizations by model id: each entry reshapes that
    * one model with the same fields a {@link models} entry takes, while the
@@ -329,6 +331,7 @@ const profile = z.object({
   api: z.union(supportedProtocols()),
   baseURL: z.string(),
   models: z.array(modelProfile),
+  autoImport: z.boolean(),
   modelOverrides: z.dict(modelOverride),
   compat: compatProfile,
   defaultContextWindow: z.number().step(1).min(1).default(DEFAULT_CONTEXT_WINDOW),

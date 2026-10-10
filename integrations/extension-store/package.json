@@ -1,0 +1,65 @@
+{
+  "name": "@bharatcode/extension-store",
+  "version": "0.1.0-preview.1",
+  "type": "module",
+  "license": "MIT",
+  "description": "Public BC extension catalog, verified downloads and demand-based runtime management.",
+  "exports": {
+    ".": "./src/host.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./types": "./src/types.d.ts",
+    "./operations": {
+      "types": "./src/operations.d.ts",
+      "default": "./src/operations.js"
+    }
+  },
+  "files": [
+    "src",
+    "lib",
+    "catalog.json",
+    "catalog-public-key.pem",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.0-rc.2"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-mcp-client": "workspace:*",
+    "@deepseek-ai/dsh-credentials": "workspace:*",
+    "@deepseek-ai/dsh-storage-domain": "workspace:*",
+    "@deepseek-ai/schemastery": "workspace:*",
+    "semver": "7.7.4",
+    "zod": "4.4.3",
+    "@deepseek-ai/dsh-app-boot": "workspace:*",
+    "tar": "^7.5.22"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "react": "18.3.1",
+    "@deepseek-ai/cordis": "workspace:*",
+    "@deepseek-ai/dsh-subprocess-local": "workspace:*"
+  },
+  "peerDependencies": {}
+}

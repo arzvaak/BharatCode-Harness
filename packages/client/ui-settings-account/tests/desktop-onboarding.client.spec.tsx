@@ -65,26 +65,19 @@ it('covers the application without showing an unfinished step while durable sett
   expect(document.querySelector('[data-desktop-onboarding]')).toBeNull()
 })
 
-it.each(['zero', 'positive', 'bonus', 'failed', 'loading'] as const)('always offers recharge with %s balance and only confirms known unavailable credit', async (balance) => {
+it.each(['zero', 'positive', 'bonus', 'failed', 'loading'] as const)('allows provider setup later with %s legacy provider balance', async (balance) => {
   const operations = mount('credit', balance)
-  expect(screen.getByRole('button', { name: zh.onboardingTopUp })).toBeTruthy()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingLater })) })
-  if (balance === 'zero') {
-    expect(screen.getByRole('dialog', { name: zh.onboardingNoCreditTitle })).toBeTruthy()
-    expect(operations.update).not.toHaveBeenCalled()
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingUnderstood })) })
-  }
+  expect(screen.queryByRole('button', { name: zh.onboardingTopUp })).toBeNull()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingSetUpLater })) })
   expect(operations.update).toHaveBeenCalledWith({ step: 'purpose' })
+  expect(operations.openPlatformPage).not.toHaveBeenCalled()
 })
 
-it('stays on credit after the viewer returns from the shared recharge page', async () => {
+it('continues from provider setup without opening a billing page', async () => {
   const operations = mount('credit')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingTopUp })) })
-  expect(operations.openPlatformPage).toHaveBeenCalledWith('top-up', expect.any(Function))
-  // The shared host owns Back and the post-top-up read; this flow keeps the
-  // credit page available through the return.
-  await act(async () => { operations.back() })
-  expect(document.querySelector('[data-desktop-onboarding="credit"]')).toBeTruthy()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingContinue })) })
+  expect(operations.update).toHaveBeenCalledWith({ step: 'purpose' })
+  expect(operations.openPlatformPage).not.toHaveBeenCalled()
 })
 
 it('allows both purposes and retains choices across back navigation', async () => {
@@ -162,14 +155,12 @@ it.each(['welcome', 'credit', 'purpose', 'process'] as const)('records English %
     .toMatchFileSnapshot(`./expected/onboarding-${step}-en.txt`)
 })
 
-it.each([zh, en])('offers Continue and recharge for a balance confirmed before entry', async (copy) => {
+it.each([zh, en])('offers Continue and Set up later regardless of a provider balance', async (copy) => {
   const operations = mount('credit', 'positive', 'ready', copy, true)
-  expect(screen.queryByRole('button', { name: copy.onboardingLater })).toBeNull()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.onboardingFundedTopUp })) })
-  expect(operations.openPlatformPage).toHaveBeenCalledWith('top-up', expect.any(Function))
-  await act(async () => { operations.back() })
-  expect(operations.update).not.toHaveBeenCalled()
-  expect(document.querySelector('[data-desktop-onboarding="credit"]')).toBeTruthy()
+  expect(screen.getByRole('button', { name: copy.onboardingSetUpLater })).toBeTruthy()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: copy.onboardingContinue })) })
+  expect(operations.openPlatformPage).not.toHaveBeenCalled()
+  expect(operations.update).toHaveBeenCalledWith({ step: 'purpose' })
 })
 
 it('continues directly from funded credit', async () => {
@@ -190,14 +181,11 @@ it.each([zh, en])('keeps purpose descriptions unchanged when selecting and desel
   }
 })
 
-it('keeps the recharge request releasable so the flow can still leave credit', async () => {
+it('returns from provider setup to the branded welcome page', async () => {
   const operations = mount('credit')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingTopUp })) })
-  expect(operations.openPlatformPage).toHaveBeenCalledWith('top-up', expect.any(Function))
-  await act(async () => { operations.back() })
-  expect(document.querySelector('[data-desktop-onboarding="credit"]')).toBeTruthy()
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingBack })) })
   expect(document.querySelector('[data-desktop-onboarding="welcome"]')).toBeTruthy()
+  expect(operations.openPlatformPage).not.toHaveBeenCalled()
 })
 
 it('closes skip confirmation when saving fails so the page can show retry', async () => {
@@ -209,15 +197,12 @@ it('closes skip confirmation when saving fails so the page can show retry', asyn
   expect(document.querySelector('[data-desktop-onboarding="purpose"]')).toBeTruthy()
 })
 
-it.each(['zero', 'positive', 'bonus', 'failed', 'loading'] as const)('confirms skipping the credit page with %s balance before completion', async (balance) => {
+it.each(['zero', 'positive', 'bonus', 'failed', 'loading'] as const)('lets users skip remaining setup with %s provider balance', async (balance) => {
   const operations = mount('credit', balance)
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip })) })
-  expect(screen.getByRole('dialog', { name: zh.onboardingNoCreditTitle })).toBeTruthy()
-  expect(screen.queryByRole('dialog', { name: zh.onboardingSkipTitle })).toBeNull()
-  expect(operations.complete).not.toHaveBeenCalled()
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingUnderstood })) })
+  expect(screen.getByRole('dialog', { name: zh.onboardingSkipTitle })).toBeTruthy()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingEnter })) })
   expect(operations.complete).toHaveBeenCalledWith('skipped')
-  expect(operations.update).not.toHaveBeenCalled()
 })
 
 it('retries a rejected settings write from the page alert', async () => {
@@ -280,12 +265,11 @@ it('traps Tab in confirmation, closes it, and keeps the selected page', async ()
   expect(screen.queryByRole('dialog')).toBeNull()
 })
 
-it('opens recharge directly from a credit warning', async () => {
+it('does not warn users about credits when setting up providers later', async () => {
   const h = mount('credit', 'zero')
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingLater })) })
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingGoTopUp })) })
-  expect(h.openPlatformPage).toHaveBeenCalledWith('top-up', expect.any(Function))
-  expect(screen.queryByRole('dialog', { name: zh.onboardingNoCreditTitle })).toBeNull()
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingSetUpLater })) })
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(h.openPlatformPage).not.toHaveBeenCalled()
 })
 
 it('does not render a finished flow', () => {
@@ -339,12 +323,12 @@ it('reports visible pages once, funded Continue, and popup close', async () => {
   const b = mount('credit', 'positive', 'ready', zh, true)
   expect(b.track).toHaveBeenCalledExactlyOnceWith('onboarding_page_view', { page_name: 'onboarding_recharge' })
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingSkip })) })
-  expect(b.track).toHaveBeenCalledWith('onboarding_popup_view', { popup_name: 'skip_charge' })
+  expect(b.track).toHaveBeenCalledWith('onboarding_popup_view', { popup_name: 'skip_setting' })
   b.track.mockClear()
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.close })) })
-  expect(b.track).toHaveBeenCalledExactlyOnceWith('onboarding_popup_click', { popup_name: 'skip_charge', button_name: 'close' })
+  expect(b.track).toHaveBeenCalledExactlyOnceWith('onboarding_popup_click', { popup_name: 'skip_setting', button_name: 'close' })
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: zh.onboardingContinue })) })
-  expect(b.track).toHaveBeenCalledWith('onboarding_page_click', { page_name: 'onboarding_recharge', button_name: 'continue' })
+  expect(b.track).toHaveBeenCalledWith('onboarding_page_click', { page_name: 'onboarding_recharge', button_name: 'later' })
   expect(b.track).toHaveBeenCalledWith('onboarding_page_view', { page_name: 'onboarding_use_case' })
 })
 

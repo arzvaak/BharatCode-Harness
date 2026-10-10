@@ -177,6 +177,9 @@ export function createAssembledRemote(options: AssembledRemoteOptions = {}): Ass
   mock.stream('session/control', (_args, stream) => {
     stream.push(structuredClone(fixture.control))
   })
+  mock.stream('workspaceFiles/changes', (_args, stream) => {
+    stream.push({ kind: 'ready' })
+  })
   mock.stream('job/list', (_args, stream) => {
     stream.push({ type: 'rows', jobs: [] })
   })
@@ -227,6 +230,10 @@ export function createAssembledRemote(options: AssembledRemoteOptions = {}): Ass
   // disabled, so the Schedule client does not mount and no case here reads the
   // catalog or the per-Session list. Both stay declared so an enabled
   // composition reads empty lists instead of a missing-rule failure.
+  // No evidence has been explicitly attached to these fixture sessions.
+  mock.unary('knowledge/usingContext', () => ok([]))
+  mock.unary('knowledge/search', () => ok({ hits: [], hasMore: false }))
+  mock.unary('workspaceFiles/list', () => ok({ path: '', entries: [], truncated: false }))
   mock.unary('schedule/catalog', () => ok([]))
   mock.unary('schedule/list', () => ok([]))
   mock.unary('session/projections', (request: unknown) => {

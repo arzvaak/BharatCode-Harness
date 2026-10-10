@@ -46,3 +46,10 @@ worktrees/
 .agents/worktrees/
 .typert-*/
 native/system/test/bin/
+
+# Local execution evidence may include fixture output; do not distribute logs.
+.workspace/core-extension-store/*.log
+
+.workspace/core-extension-store/*.png
+
+.workspace/core-extension-store/changed-files.txt

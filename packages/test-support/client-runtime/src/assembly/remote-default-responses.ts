@@ -13,8 +13,10 @@ export const remoteDefaultResponses: RemoteTable = {
   unary: {
     // api-session-controller `sessions.handleConnected()` on `connection/reset`.
     'session/list': ok({ items: [] }),
-    // ui-workspace startup with no entries; first-use initialization is ineligible.
-    'workspace/initializeDefault': ok(undefined),
+    // ui-workspace opens an independent blank Session on an empty installation.
+    'session/create': ok({ sessionId: 'client-runtime-startup' }),
+    // ui-workspace reads the selected Session's optional evidence handoffs.
+    'knowledge/usingContext': ok([]),
     // ui-settings `mirror.ensure()` at apply and again on `connection/reset`.
     'settings/describe': ok({ writable: true, hasDocument: false, namespaces: [] }),
     // ui-model-selection `ModelDirectoryResolver` constructor.
@@ -47,6 +49,8 @@ export const remoteDefaultResponses: RemoteTable = {
     'session/follow',
   ],
   stream: {
+    // The default blank Session stays loading; tests that need a projection supply their own frames.
+    'session/follow': openStream([]),
     // api-session-controller client `apply`: the control stream's opening baseline, then open.
     'session/control': openStream([{ type: 'baseline', value: { projections: {} } }]),
     // ui-settings-account shares the account snapshot across settings and the sidebar menu.

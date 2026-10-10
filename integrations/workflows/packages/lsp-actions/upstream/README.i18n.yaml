@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/workflows/packages/lsp-actions/upstream/README.md
+/upstream-seam-extension-tracking:
+  en: ca2520fd02b210ef
+  zh: cf52d336bcfb4409
+/upstream-seam-extension-tracking/status:
+  en: 6da7b0bab8e81bbf
+  zh: d99e2afe48662e00
+/upstream-seam-extension-tracking/status/current-patch-drift-2026-09-18-base-dsh-v0-1-6-alpha-2:
+  en: fb21df831195e127
+  zh: dfcf624ff29d27a9
+/upstream-seam-extension-tracking/re-verification-procedure:
+  en: 25e3c147aca6ceef
+  zh: dd3ca408f73dac49
+/upstream-seam-extension-tracking/migration-path-once-the-seam-lands:
+  en: 28bc2bd8f70c8a78
+  zh: 8ad246e038b3e7c2
+/upstream-seam-extension-tracking/files:
+  en: 36380f55ce277acd
+  zh: f3ef1012a63ef3d3

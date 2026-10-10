@@ -2,16 +2,10 @@
  * Answering "which models can this provider serve?" for the configuration
  * surface's "fetch available models" action.
  *
- * A route the installed pi-ai catalog ships is answered **from that catalog**,
- * with no network call at all: pi-ai's registry is the authoritative list for
- * its own providers, and it carries the capacities a listing endpoint would
- * not disclose. Only a route the catalog does not describe — a gateway, a
- * self-hosted server — is interrogated over the wire.
- *
- * Neither path is a catalog refresh. Nothing here is stored: the request
- * carries a draft the user is still editing, and the reply is candidate
- * metadata the surface offers for adoption. `cordis.patch.yml` remains the only
- * thing that decides what a route serves.
+ * An explicit endpoint is queried using its authenticated model listing. A
+ * request without an endpoint inherits the installed catalog. Disclosed
+ * capacities, modalities and reasoning levels survive discovery and adoption;
+ * missing metadata remains unknown rather than inventing capabilities.
  *
  * OpenAI-compatible and Anthropic Messages protocols are interrogated through
  * their native model-listing endpoints. The parser accepts the standard
@@ -25,7 +19,8 @@
 import { INVALID_CREDENTIAL_CODE, LlmError, normalizeApiKey } from '@deepseek-ai/dsh-llm'
 import type { LlmDiscoveredModel, LlmModelDiscoveryOperation } from '@deepseek-ai/dsh-llm'
 import { attributionHeaders } from '@deepseek-ai/dsh-llm'
-import { catalogModels } from './catalog.ts'
+import { catalogModels, MODALITIES, THINKING_LEVELS } from './catalog.ts'
+import { getSupportedThinkingLevels } from './models.ts'
 
 /**
  * Protocols whose model listing this module can read. OpenAI protocols use
@@ -71,6 +66,13 @@ interface ListingTopProvider {
 /** One entry of a supported `GET /models` reply. */
 interface ListingEntry {
   id?: unknown
+  input?: unknown
+  input_modalities?: unknown
+  reasoning?: unknown
+  reasoningEfforts?: unknown
+  reasoning_efforts?: unknown
+  supported_reasoning_levels?: unknown
+  metadata?: ListingEntry | null
   /** Common gateway extensions; absent from the official listings. */
   name?: unknown
   display_name?: unknown
@@ -101,6 +103,40 @@ function label(...candidates: readonly unknown[]): string | undefined {
     if (typeof candidate === 'string' && candidate.length > 0) return candidate
   }
   return undefined
+}
+
+/** Read explicit effort maps or advertised levels without deriving tiers from a boolean. */
+function listedReasoning(entry: ListingEntry | null): LlmDiscoveredModel['reasoningEfforts'] {
+  const raw = entry?.reasoningEfforts ?? entry?.reasoning_efforts
+    ?? entry?.supported_reasoning_levels ?? entry?.metadata?.reasoningEfforts
+    ?? entry?.metadata?.reasoning_efforts ?? entry?.metadata?.supported_reasoning_levels
+  if (raw === false || entry?.reasoning === false || entry?.metadata?.reasoning === false) return false
+  const efforts: Exclude<LlmDiscoveredModel['reasoningEfforts'], false | undefined> = {}
+  if (Array.isArray(raw)) {
+    for (const row of raw as unknown[]) {
+      const effort = typeof row === 'string' ? row
+        : row !== null && typeof row === 'object' ? label((row as { effort?: unknown }).effort) : undefined
+      if (effort !== undefined && (THINKING_LEVELS as readonly string[]).includes(effort)) {
+        Object.assign(efforts, { [effort]: effort === 'off' ? null : effort })
+      }
+    }
+  } else if (raw !== null && typeof raw === 'object') {
+    for (const level of THINKING_LEVELS) {
+      const wire = (raw as Record<string, unknown>)[level]
+      if ((typeof wire === 'string' && wire.length > 0) || (level === 'off' && wire === null)) {
+        Object.assign(efforts, { [level]: wire })
+      }
+    }
+  }
+  return Object.keys(efforts).some(level => level !== 'off') ? efforts : undefined
+}
+
+/** Read supported modalities; unknown strings do not become request capabilities. */
+function listedInput(entry: ListingEntry | null): LlmDiscoveredModel['inputModalities'] {
+  const raw = entry?.input_modalities ?? entry?.input ?? entry?.metadata?.input
+  if (!Array.isArray(raw)) return undefined
+  const input = MODALITIES.filter(modality => raw.includes(modality))
+  return input.length > 0 ? input : undefined
 }
 
 /**
@@ -219,9 +255,13 @@ function readListing(body: unknown): LlmDiscoveredModel[] {
       entry?.limit?.output,
       entry?.top_provider?.max_completion_tokens,
     )
+    const reasoningEfforts = listedReasoning(entry)
+    const inputModalities = listedInput(entry)
     models.push({
       id,
       name,
+      ...reasoningEfforts === undefined ? {} : { reasoningEfforts },
+      ...inputModalities === undefined ? {} : { inputModalities },
       ...contextWindow === undefined ? {} : { contextWindow },
       ...maxTokens === undefined ? {} : { maxTokens },
     })
@@ -270,9 +310,8 @@ export async function discoverModels(
   request: LlmModelDiscoveryOperation,
   storedProfile?: () => StoredModelDiscoveryProfile | undefined,
 ): Promise<readonly LlmDiscoveredModel[]> {
-  // A catalog route already has its answer, and a better one: the installed
-  // entries carry context windows and output caps no listing endpoint reports.
-  if (request.provider !== undefined) {
+  // No endpoint means catalog inheritance; an explicit endpoint owns its listing.
+  if (request.provider !== undefined && !request.baseURL) {
     const installed = catalogModels(request.provider)
     if (installed.size > 0) {
       return [...installed.values()].map(model => ({
@@ -281,6 +320,9 @@ export async function discoverModels(
         contextWindow: model.contextWindow,
         maxTokens: model.maxTokens,
         inputModalities: [...model.input],
+        reasoningEfforts: model.reasoning
+          ? Object.fromEntries(getSupportedThinkingLevels(model).map(level => [level, model.thinkingLevelMap?.[level] ?? (level === 'off' ? null : level)]))
+          : false,
       }))
     }
   }

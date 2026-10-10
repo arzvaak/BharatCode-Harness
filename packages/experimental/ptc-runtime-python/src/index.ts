@@ -498,9 +498,9 @@ const MIN_CPYTHON = { major: 3, minor: 10 } as const
 /** Fixed load-time probe bound; a configured executable must not hang plugin activation. */
 const PYTHON_PROBE_TIMEOUT_MS = 5_000
 
-/** The only host environment fact exposed to the child. */
+/** Expose the platform temp directory and a fixed locale without ambient host state. */
 function pythonEnvironment(): NodeJS.ProcessEnv {
-  return { TMPDIR: tmpdir() }
+  return { TMPDIR: tmpdir(), LC_ALL: 'C' }
 }
 
 /** Fail load unless `bin` is a responsive CPython 3.10+ interpreter. */
@@ -508,7 +508,7 @@ function validatePythonBin(bin: string): void {
   let output: string
   try {
     output = execFileSync(bin, [
-      '-I',
+      '-I', '-X', 'utf8',
       '-c',
       'import sys; print(sys.implementation.name, sys.version_info.major, sys.version_info.minor, sys.version_info.micro)',
     ], {
@@ -1193,9 +1193,10 @@ export class PythonPtcRuntime extends PtcRuntime {
       // right after the done frame, before any finalization-time flush could
       // run. The `_LogStream` replacement of `sys.stdout`/`sys.stderr` is
       // unaffected (it is a Python object, not the C-level stdio buffer).
-      child = spawn(this.pythonBin, ['-u', '-I', bootstrapPath], {
+      child = spawn(this.pythonBin, ['-u', '-I', '-X', 'utf8', bootstrapPath], {
         cwd: request.cwd,
-        // Preserve only the platform temp directory. macOS system Python emits a
+        // Pin the C locale to avoid mapping the host locale archive into RLIMIT_AS.
+        // Explicit UTF-8 mode preserves Unicode paths and output. macOS Python emits a
         // startup warning when TMPDIR is absent; ambient credentials, PATH, HOME,
         // and other host state remain unavailable to model code.
         env: pythonEnvironment(),

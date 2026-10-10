@@ -51,7 +51,7 @@ dsh --profile headless [--json] [--session-id <id>] [<task>... | -]
 
 投影规则：
 
-- 文本与推理只从已提交的 `assistant/message` 投影，绝不来自实时的 attempt 增量。被重试或丢弃的 attempt 会追加 `assistant/attempt`，投影直接忽略，因此事件流永远不会承载持久化日志中不存在的内容（[只在提交点发布状态](../../../../packages/AGENTS.md)）。
+- 文本与推理只从已提交的 `assistant/message` 投影，绝不来自实时的 attempt 增量。被重试或丢弃的 attempt 会追加 `assistant/attempt`，投影直接忽略，因此事件流永远不会承载持久化日志中不存在的内容（[只在提交点发布状态](../../../../packages/DEVELOPER_GUIDE.md)）。
 - 每个已提交的内容块按内容顺序变成恰好一条 `text` 或 `thinking` 事件；`tool-call` 块不投影，因为 `tool/call` 事件已经拥有它。`user/message` 回显和内部会话事件（标题、模型选择、投影、检查点、目标、子 agent）都不投影。
 - `tool/result` 仅在其 `surfaceOp` 为 `append` 时投影。压缩对旧结果的替换属于历史，投影它会产生没有对应 `tool_call` 的 call id。
 - 每个被投影的字符串与对象键都限制在 8 KiB；被截断的事件带 `truncated: true`，单条序列化事件行（含换行）限制在 32 KiB——超长事件保留标量字段、丢弃结构化字段，极端情况下只剩 `type` 与 `truncated`，嵌套达到 64 层及以上的负载会在该深度被截断，因此任何合法输入都不会让限界递归溢出。进程级 `error` 事件同样受限；字面量 `__proto__` 参数键会作为数据复制，而不经过继承的 setter；空工具参数字符串会投影为 `{}`，与执行器保持一致；JSON 无法往返的参数（例如溢出为 `Infinity` 的 `1e400`）保留原始文本，而不是 `JSON.stringify` 会报告的 `null`。终止 `final` 事件刻意不做限长：它承载与默认模式相同的无损答案。

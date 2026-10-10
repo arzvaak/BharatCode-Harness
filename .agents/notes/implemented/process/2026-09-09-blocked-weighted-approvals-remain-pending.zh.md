@@ -12,13 +12,15 @@ Status: implemented
 
 ## 决策
 
+本记录保留上游 DeepSeek Harness 的决策依据。下文固定版本的 CI 文件及工作流测试链接指向上游 `dsh-v0.2.0-rc.2` 发布标签；其中的运行器、触发器和发布行为描述适用于该上游实现。BharatCode 当前的验证流程以[分支 CI](../../../../.github/workflows/ci.yml)和[开发文档](../../../../docs/development.zh.md)为准。
+
 完成的加权批准评估会在 PR 为 draft、批准点数少于要求，或具有写权限的评审人存在仍然生效的 `CHANGES_REQUESTED` 评审时发布 `pending`。阻塞性评审的优先级高于点数总和，因此即使计入的批准已经达到阈值，状态仍保持 pending。
 
 只有在 PR 已进入 ready 状态、达到点数阈值且不存在阻塞性评审时，评估才发布 `success`。独立的 `weighted approval publisher` Actions job 报告评估和状态发布是否完成。评估故障会发布 `error` commit status，并使该 job 失败。
 
 ## 验证
 
-[批准策略测试](../../../../.github/review-ownership/check-approval.test.mjs)锁定已达到阈值但仍有 blocker 的场景，以及准确发布的 `pending` payload。[工作流测试](../../../../scripts/ci-workflow.spec.ts)锁定独立的 publisher job 名称。
+[批准策略测试](../../../../.github/review-ownership/check-approval.test.mjs)锁定已达到阈值但仍有 blocker 的场景，以及准确发布的 `pending` payload。[工作流测试](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/ci-workflow.spec.ts)锁定独立的 publisher job 名称。
 
 ## 考虑过的替代方案
 

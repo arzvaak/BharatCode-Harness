@@ -1,0 +1,2465 @@
+{
+  "capturedAt": "2026-10-03T04:23:56.685844+00:00",
+  "unit": "per 1M tokens",
+  "currency": "USD",
+  "audit": {
+    "opencode": {
+      "source": {
+        "key": "zen",
+        "url": "https://opencode.ai/docs/zen",
+        "fetchedAt": "2026-10-03T04:21:24.872925+00:00",
+        "httpStatus": 200,
+        "tableCount": 3
+      },
+      "endpointCount": 83,
+      "pricedModelCount": 83,
+      "endpoints": [
+        [
+          "GPT 6 Astra",
+          "gpt-6-astra",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 6 Sol",
+          "gpt-6-sol",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 6.1 Sol",
+          "gpt-6.1-sol",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 6 Luna",
+          "gpt-6-luna",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.6 Sol",
+          "gpt-5.6-sol",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.6 Terra",
+          "gpt-5.6-terra",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.6 Luna",
+          "gpt-5.6-luna",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.5",
+          "gpt-5.5",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.5 Pro",
+          "gpt-5.5-pro",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.4",
+          "gpt-5.4",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.4 Pro",
+          "gpt-5.4-pro",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.4 Mini",
+          "gpt-5.4-mini",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.4 Nano",
+          "gpt-5.4-nano",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.3 Codex",
+          "gpt-5.3-codex",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.3 Codex Spark",
+          "gpt-5.3-codex-spark",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.2",
+          "gpt-5.2",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.2 Codex",
+          "gpt-5.2-codex",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.1",
+          "gpt-5.1",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.1 Codex",
+          "gpt-5.1-codex",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.1 Codex Max",
+          "gpt-5.1-codex-max",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.1 Codex Mini",
+          "gpt-5.1-codex-mini",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5",
+          "gpt-5",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5 Codex",
+          "gpt-5-codex",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5 Nano",
+          "gpt-5-nano",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Claude Fable 5.1",
+          "claude-fable-5-1",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Fable 5",
+          "claude-fable-5",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Opus 5.5",
+          "claude-opus-5-5",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Opus 5",
+          "claude-opus-5",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Opus 4.8",
+          "claude-opus-4-8",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Opus 4.7",
+          "claude-opus-4-7",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Opus 4.6",
+          "claude-opus-4-6",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Opus 4.5",
+          "claude-opus-4-5",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Sonnet 5",
+          "claude-sonnet-5",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Sonnet 4.6",
+          "claude-sonnet-4-6",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Sonnet 4.5",
+          "claude-sonnet-4-5",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Claude Haiku 4.5",
+          "claude-haiku-4-5",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Gemini 3.8 Flash",
+          "gemini-3.8-flash",
+          "https://opencode.ai/zen/v1/models/gemini-3.8-flash",
+          "@ai-sdk/google"
+        ],
+        [
+          "Gemini 3.7 Flash",
+          "gemini-3.7-flash",
+          "https://opencode.ai/zen/v1/models/gemini-3.7-flash",
+          "@ai-sdk/google"
+        ],
+        [
+          "Gemini 3.6 Flash",
+          "gemini-3.6-flash",
+          "https://opencode.ai/zen/v1/models/gemini-3.6-flash",
+          "@ai-sdk/google"
+        ],
+        [
+          "Gemini 3.5 Flash",
+          "gemini-3.5-flash",
+          "https://opencode.ai/zen/v1/models/gemini-3.5-flash",
+          "@ai-sdk/google"
+        ],
+        [
+          "Gemini 3.5 Flash Lite",
+          "gemini-3.5-flash-lite",
+          "https://opencode.ai/zen/v1/models/gemini-3.5-flash-lite",
+          "@ai-sdk/google"
+        ],
+        [
+          "Gemini 3.1 Pro",
+          "gemini-3.1-pro",
+          "https://opencode.ai/zen/v1/models/gemini-3.1-pro",
+          "@ai-sdk/google"
+        ],
+        [
+          "Gemini 3 Flash",
+          "gemini-3-flash",
+          "https://opencode.ai/zen/v1/models/gemini-3-flash",
+          "@ai-sdk/google"
+        ],
+        [
+          "Grok 4.7",
+          "grok-4.7",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Grok 4.6",
+          "grok-4.6",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Grok 4.5",
+          "grok-4.5",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Grok Build 0.1",
+          "grok-build-0.1",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Muse Spark 1.3",
+          "muse-spark-1.3",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Muse Spark 1.2",
+          "muse-spark-1.2",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Qwen3.8 Max",
+          "qwen3.8-max",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Qwen3.8 Flash",
+          "qwen3.8-flash",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Qwen3.7 Max",
+          "qwen3.7-max",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Qwen3.7 Plus",
+          "qwen3.7-plus",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Qwen3.6 Plus",
+          "qwen3.6-plus",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Qwen3.5 Plus",
+          "qwen3.5-plus",
+          "https://opencode.ai/zen/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "DeepSeek V4.1 Flash",
+          "deepseek-v4.1-flash",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "DeepSeek V4 Pro",
+          "deepseek-v4-pro",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "DeepSeek V4 Flash",
+          "deepseek-v4-flash",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "DeepSeek V4 Flash Vision Exp",
+          "deepseek-v4-flash-vision-exp",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiniMax M3",
+          "minimax-m3",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiniMax M2.7",
+          "minimax-m2.7",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiniMax M2.5",
+          "minimax-m2.5",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "GLM 5.3 Flash",
+          "glm-5.3-flash",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "GLM 5.3",
+          "glm-5.3",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "GLM 5.2",
+          "glm-5.2",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "GLM 5.1",
+          "glm-5.1",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "GLM 5",
+          "glm-5",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Kimi K2.5",
+          "kimi-k2.5",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Kimi K2.6",
+          "kimi-k2.6",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Kimi K2.7 Code",
+          "kimi-k2.7-code",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Kimi K3",
+          "kimi-k3",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Jev 1.13",
+          "jev-1.13",
+          "https://opencode.ai/zen/v1/systemone",
+          "-"
+        ],
+        [
+          "Jev 1.13 Free",
+          "jev-1.13-free",
+          "https://opencode.ai/zen/v1/systemone",
+          "-"
+        ],
+        [
+          "Big Pickle",
+          "big-pickle",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Space Bunny Free",
+          "space-bunny-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "LongCat 2.5 Preview Free",
+          "longcat-2.5-preview-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiMo-V2.6-Flash Free",
+          "mimo-v2.6-flash-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiMo-V2.5 Free",
+          "mimo-v2.5-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Ling 3.1 Flash Free",
+          "ling-3.1-flash-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Ling 3.0 Flash Fin Free",
+          "ling-3.0-flash-fin-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Nemotron 3 Ultra Free",
+          "nemotron-3-ultra-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Nemotron 3.5 Lightning Free",
+          "nemotron-3.5-lightning-free",
+          "https://opencode.ai/zen/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Muse Spark 1.3 Contributor Free",
+          "muse-spark-1.3-contributor-free",
+          "https://opencode.ai/zen/v1/responses",
+          "@ai-sdk/openai"
+        ]
+      ],
+      "priceRows": [
+        {
+          "id": "big-pickle",
+          "row": [
+            "Big Pickle",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "space-bunny-free",
+          "row": [
+            "Space Bunny Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "longcat-2.5-preview-free",
+          "row": [
+            "LongCat 2.5 Preview Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.6-flash-free",
+          "row": [
+            "MiMo-V2.6-Flash Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.5-free",
+          "row": [
+            "MiMo-V2.5 Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "ling-3.1-flash-free",
+          "row": [
+            "Ling 3.1 Flash Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "ling-3.0-flash-fin-free",
+          "row": [
+            "Ling 3.0 Flash Fin Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "nemotron-3-ultra-free",
+          "row": [
+            "Nemotron 3 Ultra Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "nemotron-3.5-lightning-free",
+          "row": [
+            "Nemotron 3.5 Lightning Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "muse-spark-1.3-contributor-free",
+          "row": [
+            "Muse Spark 1.3 Contributor Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "jev-1.13-free",
+          "row": [
+            "Jev 1.13 Free",
+            "Free",
+            "Free",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "id": "jev-1.13",
+          "row": [
+            "Jev 1.13",
+            "$0.042",
+            "Free",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "id": "minimax-m3",
+          "row": [
+            "MiniMax M3",
+            "$0.30",
+            "$1.20",
+            "$0.06",
+            "-"
+          ]
+        },
+        {
+          "id": "minimax-m2.7",
+          "row": [
+            "MiniMax M2.7",
+            "$0.30",
+            "$1.20",
+            "$0.06",
+            "-"
+          ]
+        },
+        {
+          "id": "minimax-m2.5",
+          "row": [
+            "MiniMax M2.5",
+            "$0.30",
+            "$1.20",
+            "$0.06",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.3-flash",
+          "row": [
+            "GLM 5.3 Flash",
+            "$0.15",
+            "$0.50",
+            "$0.03",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.3",
+          "row": [
+            "GLM 5.3",
+            "$1.40",
+            "$4.40",
+            "$0.26",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.2",
+          "row": [
+            "GLM 5.2",
+            "$1.40",
+            "$4.40",
+            "$0.26",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.1",
+          "row": [
+            "GLM 5.1",
+            "$1.40",
+            "$4.40",
+            "$0.26",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5",
+          "row": [
+            "GLM 5",
+            "$1.00",
+            "$3.20",
+            "$0.20",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k2.7-code",
+          "row": [
+            "Kimi K2.7 Code",
+            "$0.95",
+            "$4.00",
+            "$0.19",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k3",
+          "row": [
+            "Kimi K3",
+            "$3.00",
+            "$15.00",
+            "$0.30",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k2.6",
+          "row": [
+            "Kimi K2.6",
+            "$0.95",
+            "$4.00",
+            "$0.16",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k2.5",
+          "row": [
+            "Kimi K2.5",
+            "$0.60",
+            "$3.00",
+            "$0.10",
+            "-"
+          ]
+        },
+        {
+          "id": "qwen3.8-max",
+          "row": [
+            "Qwen3.8 Max",
+            "$2.00",
+            "$6.00",
+            "$0.25",
+            "$2.50"
+          ]
+        },
+        {
+          "id": "qwen3.8-flash",
+          "row": [
+            "Qwen3.8 Flash",
+            "$0.15",
+            "$0.47",
+            "$0.016",
+            "$0.20"
+          ]
+        },
+        {
+          "id": "qwen3.7-max",
+          "row": [
+            "Qwen3.7 Max",
+            "$2.50",
+            "$7.50",
+            "$0.50",
+            "$3.125"
+          ]
+        },
+        {
+          "id": "qwen3.7-plus",
+          "row": [
+            "Qwen3.7 Plus",
+            "$0.40",
+            "$1.60",
+            "$0.04",
+            "$0.50"
+          ]
+        },
+        {
+          "id": "qwen3.6-plus",
+          "row": [
+            "Qwen3.6 Plus",
+            "$0.50",
+            "$3.00",
+            "$0.05",
+            "$0.625"
+          ]
+        },
+        {
+          "id": "qwen3.5-plus",
+          "row": [
+            "Qwen3.5 Plus",
+            "$0.20",
+            "$1.20",
+            "$0.02",
+            "$0.25"
+          ]
+        },
+        {
+          "id": "deepseek-v4.1-flash",
+          "row": [
+            "DeepSeek V4.1 Flash",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-pro",
+          "row": [
+            "DeepSeek V4 Pro",
+            "$1.74",
+            "$3.48",
+            "$0.145",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "row": [
+            "DeepSeek V4 Flash",
+            "$0.14",
+            "$0.28",
+            "$0.028",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash-vision-exp",
+          "row": [
+            "DeepSeek V4 Flash Vision Exp",
+            "$0.14",
+            "$0.28",
+            "$0.028",
+            "-"
+          ]
+        },
+        {
+          "id": "claude-fable-5-1",
+          "row": [
+            "Claude Fable 5.1",
+            "$10.00",
+            "$50.00",
+            "$0.25",
+            "$12.50"
+          ]
+        },
+        {
+          "id": "claude-fable-5",
+          "row": [
+            "Claude Fable 5",
+            "$10.00",
+            "$50.00",
+            "$1.00",
+            "$12.50"
+          ]
+        },
+        {
+          "id": "claude-opus-5-5",
+          "row": [
+            "Claude Opus 5.5",
+            "$4.00",
+            "$20.00",
+            "$0.20",
+            "$5.00"
+          ]
+        },
+        {
+          "id": "claude-opus-5",
+          "row": [
+            "Claude Opus 5",
+            "$5.00",
+            "$25.00",
+            "$0.50",
+            "$6.25"
+          ]
+        },
+        {
+          "id": "claude-opus-4-8",
+          "row": [
+            "Claude Opus 4.8",
+            "$5.00",
+            "$25.00",
+            "$0.50",
+            "$6.25"
+          ]
+        },
+        {
+          "id": "claude-opus-4-7",
+          "row": [
+            "Claude Opus 4.7",
+            "$5.00",
+            "$25.00",
+            "$0.50",
+            "$6.25"
+          ]
+        },
+        {
+          "id": "claude-opus-4-6",
+          "row": [
+            "Claude Opus 4.6",
+            "$5.00",
+            "$25.00",
+            "$0.50",
+            "$6.25"
+          ]
+        },
+        {
+          "id": "claude-opus-4-5",
+          "row": [
+            "Claude Opus 4.5",
+            "$5.00",
+            "$25.00",
+            "$0.50",
+            "$6.25"
+          ]
+        },
+        {
+          "id": "claude-sonnet-5",
+          "row": [
+            "Claude Sonnet 5",
+            "$2.00",
+            "$10.00",
+            "$0.20",
+            "$2.50"
+          ]
+        },
+        {
+          "id": "claude-sonnet-4-6",
+          "row": [
+            "Claude Sonnet 4.6",
+            "$3.00",
+            "$15.00",
+            "$0.30",
+            "$3.75"
+          ]
+        },
+        {
+          "id": "claude-sonnet-4-5",
+          "row": [
+            "Claude Sonnet 4.5 (≤ 200K tokens)",
+            "$3.00",
+            "$15.00",
+            "$0.30",
+            "$3.75"
+          ]
+        },
+        {
+          "id": "claude-sonnet-4-5",
+          "row": [
+            "Claude Sonnet 4.5 (> 200K tokens)",
+            "$6.00",
+            "$22.50",
+            "$0.60",
+            "$7.50"
+          ]
+        },
+        {
+          "id": "claude-haiku-4-5",
+          "row": [
+            "Claude Haiku 4.5",
+            "$1.00",
+            "$5.00",
+            "$0.10",
+            "$1.25"
+          ]
+        },
+        {
+          "id": "gemini-3.8-flash",
+          "row": [
+            "Gemini 3.8 Flash",
+            "$1.50",
+            "$7.50",
+            "$0.15",
+            "-"
+          ]
+        },
+        {
+          "id": "gemini-3.7-flash",
+          "row": [
+            "Gemini 3.7 Flash",
+            "$1.50",
+            "$7.50",
+            "$0.15",
+            "-"
+          ]
+        },
+        {
+          "id": "gemini-3.6-flash",
+          "row": [
+            "Gemini 3.6 Flash",
+            "$1.50",
+            "$7.50",
+            "$0.15",
+            "-"
+          ]
+        },
+        {
+          "id": "gemini-3.5-flash",
+          "row": [
+            "Gemini 3.5 Flash",
+            "$1.50",
+            "$9.00",
+            "$0.15",
+            "-"
+          ]
+        },
+        {
+          "id": "gemini-3.5-flash-lite",
+          "row": [
+            "Gemini 3.5 Flash Lite",
+            "$0.30",
+            "$2.50",
+            "$0.03",
+            "-"
+          ]
+        },
+        {
+          "id": "gemini-3.1-pro",
+          "row": [
+            "Gemini 3.1 Pro (≤ 200K tokens)",
+            "$2.00",
+            "$12.00",
+            "$0.20",
+            "-"
+          ]
+        },
+        {
+          "id": "gemini-3.1-pro",
+          "row": [
+            "Gemini 3.1 Pro (> 200K tokens)",
+            "$4.00",
+            "$18.00",
+            "$0.40",
+            "-"
+          ]
+        },
+        {
+          "id": "gemini-3-flash",
+          "row": [
+            "Gemini 3 Flash",
+            "$0.50",
+            "$3.00",
+            "$0.05",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.7",
+          "row": [
+            "Grok 4.7 (≤ 200K tokens)",
+            "$2.00",
+            "$6.00",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.7",
+          "row": [
+            "Grok 4.7 (> 200K tokens)",
+            "$4.00",
+            "$12.00",
+            "$1.00",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.6",
+          "row": [
+            "Grok 4.6 (≤ 200K tokens)",
+            "$2.00",
+            "$6.00",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.6",
+          "row": [
+            "Grok 4.6 (> 200K tokens)",
+            "$4.00",
+            "$12.00",
+            "$1.00",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.5",
+          "row": [
+            "Grok 4.5 (≤ 200K tokens)",
+            "$2.00",
+            "$6.00",
+            "$0.30",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.5",
+          "row": [
+            "Grok 4.5 (> 200K tokens)",
+            "$4.00",
+            "$12.00",
+            "$0.60",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-build-0.1",
+          "row": [
+            "Grok Build 0.1",
+            "$1.00",
+            "$2.00",
+            "$0.20",
+            "-"
+          ]
+        },
+        {
+          "id": "muse-spark-1.3",
+          "row": [
+            "Muse Spark 1.3",
+            "$1.25",
+            "$4.25",
+            "$0.15",
+            "-"
+          ]
+        },
+        {
+          "id": "muse-spark-1.2",
+          "row": [
+            "Muse Spark 1.2",
+            "$1.25",
+            "$4.25",
+            "$0.15",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-6-astra",
+          "row": [
+            "GPT 6 Astra (≤ 272K tokens)",
+            "$10.00",
+            "$50.00",
+            "$1.00",
+            "$12.50"
+          ]
+        },
+        {
+          "id": "gpt-6-astra",
+          "row": [
+            "GPT 6 Astra (> 272K tokens)",
+            "$20.00",
+            "$75.00",
+            "$2.00",
+            "$25.00"
+          ]
+        },
+        {
+          "id": "gpt-6-sol",
+          "row": [
+            "GPT 6 Sol (≤ 272K tokens)",
+            "$2.00",
+            "$10.00",
+            "$0.20",
+            "$2.50"
+          ]
+        },
+        {
+          "id": "gpt-6-sol",
+          "row": [
+            "GPT 6 Sol (> 272K tokens)",
+            "$4.00",
+            "$15.00",
+            "$0.40",
+            "$5.00"
+          ]
+        },
+        {
+          "id": "gpt-6.1-sol",
+          "row": [
+            "GPT 6.1 Sol (≤ 272K tokens)",
+            "$2.00",
+            "$10.00",
+            "$0.10",
+            "$2.50"
+          ]
+        },
+        {
+          "id": "gpt-6.1-sol",
+          "row": [
+            "GPT 6.1 Sol (> 272K tokens)",
+            "$4.00",
+            "$15.00",
+            "$0.20",
+            "$5.00"
+          ]
+        },
+        {
+          "id": "gpt-6-luna",
+          "row": [
+            "GPT 6 Luna (≤ 272K tokens)",
+            "$0.10",
+            "$0.50",
+            "$0.01",
+            "$0.125"
+          ]
+        },
+        {
+          "id": "gpt-6-luna",
+          "row": [
+            "GPT 6 Luna (> 272K tokens)",
+            "$0.20",
+            "$0.75",
+            "$0.02",
+            "$0.25"
+          ]
+        },
+        {
+          "id": "gpt-5.6-sol",
+          "row": [
+            "GPT 5.6 Sol (≤ 272K tokens)",
+            "$4.00",
+            "$20.00",
+            "$0.40",
+            "$5.00"
+          ]
+        },
+        {
+          "id": "gpt-5.6-sol",
+          "row": [
+            "GPT 5.6 Sol (> 272K tokens)",
+            "$8.00",
+            "$30.00",
+            "$0.80",
+            "$10.00"
+          ]
+        },
+        {
+          "id": "gpt-5.6-terra",
+          "row": [
+            "GPT 5.6 Terra (≤ 272K tokens)",
+            "$2.00",
+            "$12.00",
+            "$0.20",
+            "$2.50"
+          ]
+        },
+        {
+          "id": "gpt-5.6-terra",
+          "row": [
+            "GPT 5.6 Terra (> 272K tokens)",
+            "$4.00",
+            "$18.00",
+            "$0.40",
+            "$5.00"
+          ]
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "row": [
+            "GPT 5.6 Luna (≤ 272K tokens)",
+            "$0.20",
+            "$1.20",
+            "$0.02",
+            "$0.25"
+          ]
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "row": [
+            "GPT 5.6 Luna (> 272K tokens)",
+            "$0.40",
+            "$1.80",
+            "$0.04",
+            "$0.50"
+          ]
+        },
+        {
+          "id": "gpt-5.5",
+          "row": [
+            "GPT 5.5 (≤ 272K tokens)",
+            "$5.00",
+            "$30.00",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.5",
+          "row": [
+            "GPT 5.5 (> 272K tokens)",
+            "$10.00",
+            "$45.00",
+            "$1.00",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.5-pro",
+          "row": [
+            "GPT 5.5 Pro",
+            "$30.00",
+            "$180.00",
+            "$30.00",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.4",
+          "row": [
+            "GPT 5.4 (≤ 272K tokens)",
+            "$2.50",
+            "$15.00",
+            "$0.25",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.4",
+          "row": [
+            "GPT 5.4 (> 272K tokens)",
+            "$5.00",
+            "$22.50",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.4-pro",
+          "row": [
+            "GPT 5.4 Pro",
+            "$30.00",
+            "$180.00",
+            "$30.00",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.4-mini",
+          "row": [
+            "GPT 5.4 Mini",
+            "$0.75",
+            "$4.50",
+            "$0.075",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.4-nano",
+          "row": [
+            "GPT 5.4 Nano",
+            "$0.20",
+            "$1.25",
+            "$0.02",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.3-codex-spark",
+          "row": [
+            "GPT 5.3 Codex Spark",
+            "$1.75",
+            "$14.00",
+            "$0.175",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.3-codex",
+          "row": [
+            "GPT 5.3 Codex",
+            "$1.75",
+            "$14.00",
+            "$0.175",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.2",
+          "row": [
+            "GPT 5.2",
+            "$1.75",
+            "$14.00",
+            "$0.175",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.2-codex",
+          "row": [
+            "GPT 5.2 Codex",
+            "$1.75",
+            "$14.00",
+            "$0.175",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.1",
+          "row": [
+            "GPT 5.1",
+            "$1.07",
+            "$8.50",
+            "$0.107",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.1-codex",
+          "row": [
+            "GPT 5.1 Codex",
+            "$1.07",
+            "$8.50",
+            "$0.107",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.1-codex-max",
+          "row": [
+            "GPT 5.1 Codex Max",
+            "$1.25",
+            "$10.00",
+            "$0.125",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5.1-codex-mini",
+          "row": [
+            "GPT 5.1 Codex Mini",
+            "$0.25",
+            "$2.00",
+            "$0.025",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5",
+          "row": [
+            "GPT 5",
+            "$1.07",
+            "$8.50",
+            "$0.107",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5-codex",
+          "row": [
+            "GPT 5 Codex",
+            "$1.07",
+            "$8.50",
+            "$0.107",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-5-nano",
+          "row": [
+            "GPT 5 Nano",
+            "$0.05",
+            "$0.40",
+            "$0.005",
+            "-"
+          ]
+        }
+      ]
+    },
+    "opencode-go": {
+      "source": {
+        "key": "go",
+        "url": "https://opencode.ai/docs/go",
+        "fetchedAt": "2026-10-03T04:21:24.922319+00:00",
+        "httpStatus": 200,
+        "tableCount": 9
+      },
+      "endpointCount": 30,
+      "pricedModelCount": 30,
+      "endpoints": [
+        [
+          "Grok 4.7",
+          "grok-4.7",
+          "https://opencode.ai/zen/go/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Grok 4.6",
+          "grok-4.6",
+          "https://opencode.ai/zen/go/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 6 Luna",
+          "gpt-6-luna",
+          "https://opencode.ai/zen/go/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GPT 5.6 Luna",
+          "gpt-5.6-luna",
+          "https://opencode.ai/zen/go/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "GLM-5.3-Flash",
+          "glm-5.3-flash",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "GLM-5.3",
+          "glm-5.3",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "GLM-5.2",
+          "glm-5.2",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Kimi K3",
+          "kimi-k3",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Kimi K2.7 Code",
+          "kimi-k2.7-code",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Kimi K2.6",
+          "kimi-k2.6",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "LongCat-2.0",
+          "longcat-2.0",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "LongCat 2.5 Preview Free",
+          "longcat-2.5-preview-free",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "DeepSeek V4.1 Flash",
+          "deepseek-v4.1-flash",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "DeepSeek V4 Pro",
+          "deepseek-v4-pro",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "DeepSeek V4 Flash",
+          "deepseek-v4-flash",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "DeepSeek V4 Flash Vision Exp",
+          "deepseek-v4-flash-vision-exp",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiMo-V2.6-Flash",
+          "mimo-v2.6-flash",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiMo-V2.6-Pro",
+          "mimo-v2.6-pro",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiMo-V2.5",
+          "mimo-v2.5",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiMo-V2.5-Pro",
+          "mimo-v2.5-pro",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "MiniMax M3",
+          "minimax-m3",
+          "https://opencode.ai/zen/go/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "MiniMax M2.7",
+          "minimax-m2.7",
+          "https://opencode.ai/zen/go/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Muse Spark 1.3 Contributor",
+          "muse-spark-1.3-contributor",
+          "https://opencode.ai/zen/go/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Muse Spark 1.2 Contributor",
+          "muse-spark-1.2-contributor",
+          "https://opencode.ai/zen/go/v1/responses",
+          "@ai-sdk/openai"
+        ],
+        [
+          "Qwen3.8 Max",
+          "qwen3.8-max",
+          "https://opencode.ai/zen/go/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Qwen3.8 Flash",
+          "qwen3.8-flash",
+          "https://opencode.ai/zen/go/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Qwen3.7 Plus",
+          "qwen3.7-plus",
+          "https://opencode.ai/zen/go/v1/messages",
+          "@ai-sdk/anthropic"
+        ],
+        [
+          "Hy4 preview",
+          "hy4-preview",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Hy3",
+          "hy3",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ],
+        [
+          "Space Bunny Free",
+          "space-bunny-free",
+          "https://opencode.ai/zen/go/v1/chat/completions",
+          "@ai-sdk/openai-compatible"
+        ]
+      ],
+      "priceRows": [
+        {
+          "id": "glm-5.3-flash",
+          "row": [
+            "GLM-5.3-Flash",
+            "$0.15",
+            "$0.50",
+            "$0.03",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.3",
+          "row": [
+            "GLM-5.3",
+            "$1.40",
+            "$4.40",
+            "$0.26",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.2",
+          "row": [
+            "GLM-5.2",
+            "$1.40",
+            "$4.40",
+            "$0.26",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k3",
+          "row": [
+            "Kimi K3",
+            "$3.00",
+            "$15.00",
+            "$0.30",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k2.7-code",
+          "row": [
+            "Kimi K2.7 Code",
+            "$0.95",
+            "$4.00",
+            "$0.19",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k2.6",
+          "row": [
+            "Kimi K2.6",
+            "$0.95",
+            "$4.00",
+            "$0.16",
+            "-"
+          ]
+        },
+        {
+          "id": "longcat-2.0",
+          "row": [
+            "LongCat-2.0",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "longcat-2.5-preview-free",
+          "row": [
+            "LongCat 2.5 Preview Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.6-flash",
+          "row": [
+            "MiMo-V2.6-Flash",
+            "$0.14",
+            "$0.28",
+            "$0.0028",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.6-pro",
+          "row": [
+            "MiMo-V2.6-Pro",
+            "$0.435",
+            "$0.87",
+            "$0.003625",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.5",
+          "row": [
+            "MiMo-V2.5",
+            "$0.14",
+            "$0.28",
+            "$0.0028",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.5-pro",
+          "row": [
+            "MiMo-V2.5-Pro",
+            "$0.435",
+            "$0.87",
+            "$0.003625",
+            "-"
+          ]
+        },
+        {
+          "id": "minimax-m3",
+          "row": [
+            "MiniMax M3",
+            "$0.30",
+            "$1.20",
+            "$0.06",
+            "-"
+          ]
+        },
+        {
+          "id": "minimax-m2.7",
+          "row": [
+            "MiniMax M2.7",
+            "$0.30",
+            "$1.20",
+            "$0.06",
+            "$0.375"
+          ]
+        },
+        {
+          "id": "muse-spark-1.3-contributor",
+          "row": [
+            "Muse Spark 1.3 Contributor",
+            "$0.10",
+            "$0.20",
+            "$0.002",
+            "-"
+          ]
+        },
+        {
+          "id": "muse-spark-1.2-contributor",
+          "row": [
+            "Muse Spark 1.2 Contributor",
+            "$0.10",
+            "$0.20",
+            "$0.002",
+            "-"
+          ]
+        },
+        {
+          "id": "qwen3.8-max",
+          "row": [
+            "Qwen3.8 Max",
+            "$2.00",
+            "$6.00",
+            "$0.25",
+            "$2.50"
+          ]
+        },
+        {
+          "id": "qwen3.8-flash",
+          "row": [
+            "Qwen3.8 Flash",
+            "$0.15",
+            "$0.47",
+            "$0.016",
+            "$0.20"
+          ]
+        },
+        {
+          "id": "qwen3.7-plus",
+          "row": [
+            "Qwen3.7 Plus (≤ 256K tokens)",
+            "$0.40",
+            "$1.60",
+            "$0.04",
+            "$0.50"
+          ]
+        },
+        {
+          "id": "qwen3.7-plus",
+          "row": [
+            "Qwen3.7 Plus (> 256K tokens)",
+            "$1.20",
+            "$4.80",
+            "$0.12",
+            "$1.50"
+          ]
+        },
+        {
+          "id": "deepseek-v4.1-flash",
+          "row": [
+            "DeepSeek V4.1 Flash (Off-Peak)",
+            "$0.15",
+            "$0.60",
+            "$0.003",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4.1-flash",
+          "row": [
+            "DeepSeek V4.1 Flash (Peak)",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-pro",
+          "row": [
+            "DeepSeek V4 Pro (Off-Peak)",
+            "$0.66",
+            "$1.98",
+            "$0.022",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-pro",
+          "row": [
+            "DeepSeek V4 Pro (Peak)",
+            "$1.32",
+            "$3.96",
+            "$0.044",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "row": [
+            "DeepSeek V4 Flash (Off-Peak)",
+            "$0.15",
+            "$0.60",
+            "$0.003",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "row": [
+            "DeepSeek V4 Flash (Peak)",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash-vision-exp",
+          "row": [
+            "DeepSeek V4 Flash Vision Exp (Off-Peak)",
+            "$0.15",
+            "$0.60",
+            "$0.003",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash-vision-exp",
+          "row": [
+            "DeepSeek V4 Flash Vision Exp (Peak)",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "hy4-preview",
+          "row": [
+            "Hy4 preview",
+            "$0.834",
+            "$2.501",
+            "$0.042",
+            "-"
+          ]
+        },
+        {
+          "id": "hy3",
+          "row": [
+            "Hy3",
+            "$0.14",
+            "$0.58",
+            "$0.035",
+            "-"
+          ]
+        },
+        {
+          "id": "space-bunny-free",
+          "row": [
+            "Space Bunny Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.7",
+          "row": [
+            "Grok 4.7 (≤ 200K tokens)",
+            "$2.00",
+            "$6.00",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.7",
+          "row": [
+            "Grok 4.7 (> 200K tokens)",
+            "$4.00",
+            "$12.00",
+            "$1.00",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.6",
+          "row": [
+            "Grok 4.6 (≤ 200K tokens)",
+            "$2.00",
+            "$6.00",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.6",
+          "row": [
+            "Grok 4.6 (> 200K tokens)",
+            "$4.00",
+            "$12.00",
+            "$1.00",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-6-luna",
+          "row": [
+            "GPT 6 Luna (≤ 272K tokens)",
+            "$0.10",
+            "$0.50",
+            "$0.01",
+            "$0.125"
+          ]
+        },
+        {
+          "id": "gpt-6-luna",
+          "row": [
+            "GPT 6 Luna (> 272K tokens)",
+            "$0.20",
+            "$0.75",
+            "$0.02",
+            "$0.25"
+          ]
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "row": [
+            "GPT 5.6 Luna (≤ 272K tokens)",
+            "$0.20",
+            "$1.20",
+            "$0.02",
+            "$0.25"
+          ]
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "row": [
+            "GPT 5.6 Luna (> 272K tokens)",
+            "$0.40",
+            "$1.80",
+            "$0.04",
+            "$0.50"
+          ]
+        },
+        {
+          "id": "glm-5.3-flash",
+          "row": [
+            "GLM-5.3-Flash",
+            "$0.15",
+            "$0.50",
+            "$0.03",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.3",
+          "row": [
+            "GLM-5.3",
+            "$1.40",
+            "$4.40",
+            "$0.26",
+            "-"
+          ]
+        },
+        {
+          "id": "glm-5.2",
+          "row": [
+            "GLM-5.2",
+            "$1.40",
+            "$4.40",
+            "$0.26",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k3",
+          "row": [
+            "Kimi K3",
+            "$3.00",
+            "$15.00",
+            "$0.30",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k2.7-code",
+          "row": [
+            "Kimi K2.7 Code",
+            "$0.95",
+            "$4.00",
+            "$0.19",
+            "-"
+          ]
+        },
+        {
+          "id": "kimi-k2.6",
+          "row": [
+            "Kimi K2.6",
+            "$0.95",
+            "$4.00",
+            "$0.16",
+            "-"
+          ]
+        },
+        {
+          "id": "longcat-2.0",
+          "row": [
+            "LongCat-2.0",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "longcat-2.5-preview-free",
+          "row": [
+            "LongCat 2.5 Preview Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.6-flash",
+          "row": [
+            "MiMo-V2.6-Flash",
+            "$0.14",
+            "$0.28",
+            "$0.0028",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.6-pro",
+          "row": [
+            "MiMo-V2.6-Pro",
+            "$0.435",
+            "$0.87",
+            "$0.003625",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.5",
+          "row": [
+            "MiMo-V2.5",
+            "$0.14",
+            "$0.28",
+            "$0.0028",
+            "-"
+          ]
+        },
+        {
+          "id": "mimo-v2.5-pro",
+          "row": [
+            "MiMo-V2.5-Pro",
+            "$0.435",
+            "$0.87",
+            "$0.003625",
+            "-"
+          ]
+        },
+        {
+          "id": "minimax-m3",
+          "row": [
+            "MiniMax M3",
+            "$0.30",
+            "$1.20",
+            "$0.06",
+            "-"
+          ]
+        },
+        {
+          "id": "minimax-m2.7",
+          "row": [
+            "MiniMax M2.7",
+            "$0.30",
+            "$1.20",
+            "$0.06",
+            "$0.375"
+          ]
+        },
+        {
+          "id": "muse-spark-1.3-contributor",
+          "row": [
+            "Muse Spark 1.3 Contributor",
+            "$0.10",
+            "$0.20",
+            "$0.002",
+            "-"
+          ]
+        },
+        {
+          "id": "muse-spark-1.2-contributor",
+          "row": [
+            "Muse Spark 1.2 Contributor",
+            "$0.10",
+            "$0.20",
+            "$0.002",
+            "-"
+          ]
+        },
+        {
+          "id": "qwen3.8-max",
+          "row": [
+            "Qwen3.8 Max",
+            "$2.00",
+            "$6.00",
+            "$0.25",
+            "$2.50"
+          ]
+        },
+        {
+          "id": "qwen3.8-flash",
+          "row": [
+            "Qwen3.8 Flash",
+            "$0.15",
+            "$0.47",
+            "$0.016",
+            "$0.20"
+          ]
+        },
+        {
+          "id": "qwen3.7-plus",
+          "row": [
+            "Qwen3.7 Plus (≤ 256K tokens)",
+            "$0.40",
+            "$1.60",
+            "$0.04",
+            "$0.50"
+          ]
+        },
+        {
+          "id": "qwen3.7-plus",
+          "row": [
+            "Qwen3.7 Plus (> 256K tokens)",
+            "$1.20",
+            "$4.80",
+            "$0.12",
+            "$1.50"
+          ]
+        },
+        {
+          "id": "deepseek-v4.1-flash",
+          "row": [
+            "DeepSeek V4.1 Flash (Off-Peak)",
+            "$0.15",
+            "$0.60",
+            "$0.003",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4.1-flash",
+          "row": [
+            "DeepSeek V4.1 Flash (Peak)",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-pro",
+          "row": [
+            "DeepSeek V4 Pro (Off-Peak)",
+            "$0.66",
+            "$1.98",
+            "$0.022",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-pro",
+          "row": [
+            "DeepSeek V4 Pro (Peak)",
+            "$1.32",
+            "$3.96",
+            "$0.044",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "row": [
+            "DeepSeek V4 Flash (Off-Peak)",
+            "$0.15",
+            "$0.60",
+            "$0.003",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "row": [
+            "DeepSeek V4 Flash (Peak)",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash-vision-exp",
+          "row": [
+            "DeepSeek V4 Flash Vision Exp (Off-Peak)",
+            "$0.15",
+            "$0.60",
+            "$0.003",
+            "-"
+          ]
+        },
+        {
+          "id": "deepseek-v4-flash-vision-exp",
+          "row": [
+            "DeepSeek V4 Flash Vision Exp (Peak)",
+            "$0.30",
+            "$1.20",
+            "$0.006",
+            "-"
+          ]
+        },
+        {
+          "id": "hy4-preview",
+          "row": [
+            "Hy4 preview",
+            "$0.834",
+            "$2.501",
+            "$0.042",
+            "-"
+          ]
+        },
+        {
+          "id": "hy3",
+          "row": [
+            "Hy3",
+            "$0.14",
+            "$0.58",
+            "$0.035",
+            "-"
+          ]
+        },
+        {
+          "id": "space-bunny-free",
+          "row": [
+            "Space Bunny Free",
+            "Free",
+            "Free",
+            "Free",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.7",
+          "row": [
+            "Grok 4.7 (≤ 200K tokens)",
+            "$2.00",
+            "$6.00",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.7",
+          "row": [
+            "Grok 4.7 (> 200K tokens)",
+            "$4.00",
+            "$12.00",
+            "$1.00",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.6",
+          "row": [
+            "Grok 4.6 (≤ 200K tokens)",
+            "$2.00",
+            "$6.00",
+            "$0.50",
+            "-"
+          ]
+        },
+        {
+          "id": "grok-4.6",
+          "row": [
+            "Grok 4.6 (> 200K tokens)",
+            "$4.00",
+            "$12.00",
+            "$1.00",
+            "-"
+          ]
+        },
+        {
+          "id": "gpt-6-luna",
+          "row": [
+            "GPT 6 Luna (≤ 272K tokens)",
+            "$0.10",
+            "$0.50",
+            "$0.01",
+            "$0.125"
+          ]
+        },
+        {
+          "id": "gpt-6-luna",
+          "row": [
+            "GPT 6 Luna (> 272K tokens)",
+            "$0.20",
+            "$0.75",
+            "$0.02",
+            "$0.25"
+          ]
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "row": [
+            "GPT 5.6 Luna (≤ 272K tokens)",
+            "$0.20",
+            "$1.20",
+            "$0.02",
+            "$0.25"
+          ]
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "row": [
+            "GPT 5.6 Luna (> 272K tokens)",
+            "$0.40",
+            "$1.80",
+            "$0.04",
+            "$0.50"
+          ]
+        }
+      ]
+    }
+  }
+}

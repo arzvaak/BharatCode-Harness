@@ -3,7 +3,7 @@
  * AST distinguishes paragraphs—including those in lists and blockquotes—from
  * multiline structural nodes. The checker never rewrites; symlinked instruction
  * files are deduped. VitePress frontmatter and custom-container delimiters are
- * masked before parsing. The owning convention is in `docs/AGENTS.md`.
+ * masked before parsing. The owning convention is in `docs/DEVELOPER_GUIDE.md`.
  */
 
 import { readFileSync } from 'node:fs'
@@ -14,7 +14,7 @@ import { isArchivedAgentNotePath, uniqueRepoFiles } from './repo-files.ts'
 
 const root = resolve(import.meta.dirname, '..')
 
-/** Files to check: doc-typecheck's scope, system-prompt expected outputs, and the AGENTS.md pair. */
+/** Files to check: doc-typecheck's scope, system-prompt expected outputs, and the DEVELOPER_GUIDE.md pair. */
 const PATTERNS = [
   'README.md',
   'README.zh.md',
@@ -24,9 +24,9 @@ const PATTERNS = [
   'packages/*/*/*.md',
   'snapshots/**/system-prompt.expected.md',
   'packages/**/system-prompt.expected.md',
-  'AGENTS.md',
-  'packages/AGENTS.md',
-  'snapshots/AGENTS.md',
+  'DEVELOPER_GUIDE.md',
+  'packages/DEVELOPER_GUIDE.md',
+  'snapshots/DEVELOPER_GUIDE.md',
 ]
 
 /** A located hard-wrap: a prose paragraph spanning more than one source line. */

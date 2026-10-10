@@ -102,7 +102,21 @@
     "@deepseek-ai/dsh-agent-preset": "workspace:*",
     "@deepseek-ai/dsh-experimental-voice-input-bundle": "workspace:*",
     "@deepseek-ai/dsh-experimental-auto-review": "workspace:*",
-    "@local/max-tokens-continue": "workspace:*"
+    "@local/max-tokens-continue": "workspace:*",
+    "@arzvaak/dsh-zero": "workspace:*",
+    "@local/dsh-visuals": "workspace:*",
+    "dsh-tool-call-guard": "workspace:*",
+    "@michengai/dsh-skills-manager": "workspace:*",
+    "@arzvaak/dsh-provider-hub": "workspace:*",
+    "@arzvaak/bharatcode-subscriptions": "workspace:*",
+    "@arzvaak/bharatcode-cost-meter": "workspace:*",
+    "dsh-context": "workspace:*",
+    "@linxin666/dsh-client-ui-task-board": "workspace:*",
+    "dsh-library": "workspace:*",
+    "dsh-lsp-actions": "workspace:*",
+    "@bharatcode/dsh-novel-continuity": "workspace:*",
+    "dsh-deepread": "workspace:*",
+    "@bharatcode/extension-store": "workspace:*"
   },
   "devDependencies": {
     "@agentclientprotocol/sdk": "1.4.0",

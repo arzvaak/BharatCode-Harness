@@ -9,7 +9,7 @@ kind: "package-reference"
 
 ## 概述
 
-使用本包可从 Web Client 预览 Session 文件系统允许读取的文件。它按页读取 UTF-8 文本、按有界窗口或完整文件读取原始字节、从基文件目录解析关联文件，并报告文件元数据。可以跟随一个文件或一个目录直接子项的变化。文件读取和监听可以指向工作区外路径；目录列举和监听仍限定于工作区。本服务不提供修改操作。
+使用本包可从 Web Client 预览 Session 文件系统允许读取的文件。它按页读取 UTF-8 文本、按有界窗口或完整文件读取原始字节、从基文件目录解析关联文件，并报告文件元数据。可以跟随一个文件或一个目录直接子项的变化。文件读取和监听可以指向工作区外路径；目录列举和监听仍限定于工作区。完整可编辑读取保留源文本。版本检查保存仅在所选会话工作区内发布；其他进程修改文件时，返回含当前内容的冲突结果。
 
 ## 目录
 
@@ -29,6 +29,8 @@ kind: "package-reference"
 
 | 方法 | 返回 | 用途 |
 |---|---|---|
+| `readEditable(path)` | `EditableWorkspaceDocument` | 完整 UTF-8 源文本与读取版本，保留换行符 |
+| `saveEditable(path, { text, expectedVersion })` | `SaveWorkspaceDocumentResult` | 工作区内的原子版本检查保存，或当前内容冲突 |
 | `stat(path)` | `WorkspaceFileStat { absolutePath, version, bytes? }` | 一个普通文件的身份、版本与大小，不含内容 |
 | `read(path, { offset?, limit? })` | `WorkspaceFileText` = stat + `{ offset, text, lines, eof }` | UTF-8 文本文件的一个行窗口；`lines` 计行数，使单个空行与越过文件末尾的页可区分 |
 | `readBytes(path, { range?, baseFile? })` | `WorkspaceFileBytes` = stat + `{ offset, data, eof }` | 以 `Uint8Array` 返回完整文件或有界字节范围；可从另一个文件所在目录解析目标 |
@@ -143,7 +145,7 @@ Typert 生成 `./typert` 与 `./remote` 暴露的 Host 与 Client Remote 产物�
 - **仅目录受限**——目录列举与监听限定在 Session 工作区内；文件读取与监听沿用文件系统后端的读取权限。
 - **没有总行数**——页只报告 `eof`，不报告后面还有多少行；需要总数的消费方要翻到末尾或按 `bytes` 估算。
 - **超长单行没有页**——超过 `maxBytes` 的单行在包含它的每个窗口都以 `too-large` 失败，因为页按行而非按字节切。
-- **读取不具备事务性**——结果元数据来自内容读取之前的 stat；并发写入可能使报告版本与返回内容不一致。
+- **预览读取不具备事务性**——预览结果元数据来自内容读取之前的 stat；并发写入可能使报告版本与返回内容不一致。`readEditable` 在读取后再次检查版本，变化时拒绝该次读取。
 - **generation 队列无界**——一个 `changes` generation 会缓冲操作观察与目标失效通知直到消费方 pull；停滞的消费方会在流的生命期内持续增长 Host 内存。
 - **`maxEntries` 限制的是答案，不是列举**——`list` 让 `ctx.fs.listDir` 列出全部子项后再截断数组，远超上限的目录仍让 Host 付出整个列举的代价（`fs-local` 上每个子项一次 stat）；要限制这份工作，需要文件系统 seam 的 `listDir` 支持上限。
 - **失效流保留元数据**——Host 结束 `changes` 或流终态失败后，已打开的值保持最后已知状态，直到重新打开。

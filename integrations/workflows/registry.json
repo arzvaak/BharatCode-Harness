@@ -1,0 +1,163 @@
+{
+  "harnessVersion": "0.2.0-rc.2",
+  "plugins": [
+    {
+      "id": "zotero",
+      "package": "dsh-zotero-plugin",
+      "version": "0.1.0-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/zotero",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-zotero-plugin-0.1.0-bharatcode.1.tgz",
+      "sha256": "73f71aba5939ffc97ba62a5a229ccd7a82ad3a3de890cc82242c571b5bf9b78b",
+      "upstream": {
+        "url": "https://github.com/evanliu3594/dsh-zotero-plugin",
+        "sha": "25016b08c83d4600044da5548167a95461412423"
+      },
+      "purpose": "Search Zotero references, inspect notes and attachments, and export BibTeX.",
+      "workflow": "Search Zotero references, inspect notes and attachments, and export BibTeX.",
+      "tests": "10 canonical tools; local HTTP fixture and real ToolRuntime passed.",
+      "limitations": "Requires a running Zotero desktop local API or a configured Zotero Web API library. No personal reference library was accessed.",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/zotero/cordis.patch.yml"
+    },
+    {
+      "id": "github",
+      "package": "@perrylink/dsh-github",
+      "version": "0.7.19-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/github",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/perrylink-dsh-github-0.7.19-bharatcode.1.tgz",
+      "sha256": "3717dd1a0b3242ba5369dfae12f13bb89399c4f38ec680493a00d03494a8642e",
+      "upstream": {
+        "url": "https://github.com/PerryLink/dsh-github",
+        "sha": "5bd360b3615c02f45c79c0a9709cd413930d1031"
+      },
+      "purpose": "Review GitHub repositories, issues, pull requests, checks, and diffs.",
+      "workflow": "Review GitHub repositories, issues, pull requests, checks, and diffs.",
+      "tests": "185 tests passed; 3 external E2E skipped. Native settings.section registration/disposal/reactivation passed in real SlotRegistry (primitive render boundary stubbed).",
+      "limitations": "",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/github/cordis.patch.yml"
+    },
+    {
+      "id": "task-board",
+      "package": "@linxin666/dsh-client-ui-task-board",
+      "version": "0.4.5-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/task-board",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/linxin666-dsh-client-ui-task-board-0.4.5-bharatcode.1.tgz",
+      "sha256": "1d0d4c382c0ae9524f502042449a721e403e3043798a54765c00e6c4ec6b3757",
+      "upstream": {
+        "url": "https://github.com/zhu1090093659/dsh-web.git",
+        "sha": "4c9d58741eedced1265e26bfb04105c0ca343ba4"
+      },
+      "purpose": "Run host-authoritative tasks with frozen instructions, acceptance checks, and scheduling.",
+      "workflow": "Run host-authoritative tasks with frozen instructions, acceptance checks, and scheduling.",
+      "tests": "833 tests passed; 1 optional external test skipped; native host/client bundles rebuilt.",
+      "limitations": "",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/task-board/cordis.patch.yml"
+    },
+    {
+      "id": "library",
+      "package": "dsh-library",
+      "version": "0.2.19-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/library",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-library-0.2.19-bharatcode.1.tgz",
+      "sha256": "ddbb16c6f3c87cf640d73a792c3476ac032cfad972e251fea0761e217ebfccf7",
+      "upstream": {
+        "url": "git+https://github.com/PerryLink/dsh-library.git",
+        "sha": "cfec631aec779956fbcc2c66decb434826c93bac"
+      },
+      "purpose": "Maintain a local source library, retrieve passages, and evaluate references and citations.",
+      "workflow": "Maintain a local source library, retrieve passages, and evaluate references and citations.",
+      "tests": "89 tests passed including actual composition.",
+      "limitations": "",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/library/cordis.patch.yml"
+    },
+    {
+      "id": "lsp-actions",
+      "package": "dsh-lsp-actions",
+      "version": "0.5.11-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/lsp-actions",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-lsp-actions-0.5.11-bharatcode.1.tgz",
+      "sha256": "cfee3770e365b42a0305a724cd22f04bb88085f41d1c782c2a0dc2b12499d0ee",
+      "upstream": {
+        "url": "https://github.com/PerryLink/dsh-lsp-actions",
+        "sha": "50468c8e1f9996078298e246615516b6574fabe4"
+      },
+      "purpose": "Use diagnostics, formatting, symbols, completion, signature help, inlay hints, and rename.",
+      "workflow": "Use diagnostics, formatting, symbols, completion, signature help, inlay hints, and rename.",
+      "tests": "368 tests passed; 9 environment-dependent skipped.",
+      "limitations": "Configure language servers or the official LSP seam. The default empty server map reports LSP_ACTION_UNAVAILABLE; server installation is outside this package.",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/lsp-actions/cordis.patch.yml"
+    },
+    {
+      "id": "browser-playwright",
+      "package": "dsh-browser-playwright",
+      "version": "0.1.1-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/browser-playwright",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-browser-playwright-0.1.1-bharatcode.1.tgz",
+      "sha256": "f28ee38e09c661a1b5aa787054acfe0e79d6864b10479a176c7b7043501aa0a4",
+      "upstream": {
+        "url": "https://github.com/ChenyuHeee/dsh-browser-playwright",
+        "sha": "57ebe45fb906b6977312a0c7562d407faee4b449"
+      },
+      "purpose": "Browse and extract research sources with scoped tabs, snapshots, screenshots and interactions.",
+      "workflow": "Browse and extract research sources with scoped tabs, snapshots, screenshots and interactions.",
+      "tests": "47 local browser fixture tests passed using cached Chromium; live website tests omitted.",
+      "limitations": "Configure channel chromium for the installed Playwright browser. Model extraction needs a configured model. No external site navigation was used in verification.",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/browser-playwright/cordis.patch.yml"
+    },
+    {
+      "id": "novel-continuity",
+      "package": "@bharatcode/dsh-novel-continuity",
+      "version": "0.2.0-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/novel-continuity",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/bharatcode-dsh-novel-continuity-0.2.0-bharatcode.1.tgz",
+      "sha256": "6c2ebd57bb4ba13e2af83c54a7c21ede7c39d85c827dc7f84912be9a8ec3e05c",
+      "upstream": {
+        "url": "https://github.com/akira399/dsh-novel-writer.git",
+        "sha": "b9e49227aa70f7e42d8a348fc104180d2fe497e7"
+      },
+      "purpose": "Keep versioned writing projects, chapter context, lorebook, variables, and continuity audits.",
+      "workflow": "Keep versioned writing projects, chapter context, lorebook, variables, and continuity audits.",
+      "tests": "Real ToolRuntime project, lore, chapter, context, stats, audit, and disposal test passed.",
+      "limitations": "Scoped fork of the upstream core and canonical tools. The original writing workbench, presets, persona packs, and duplicate UI are omitted. Chapter targets retain upstream character-count semantics. Configure dataDir for isolated projects.",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/novel-continuity/cordis.patch.yml"
+    },
+    {
+      "id": "deepread",
+      "package": "dsh-deepread",
+      "version": "1.0.1-bharatcode.1",
+      "source": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/deepread",
+      "artifact": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/artifacts/dsh-deepread-1.0.1-bharatcode.1.tgz",
+      "sha256": "6d80d676c5faf598c13b99c1176532247398dca5b5f7c7bed0ee2822b4c19ddc",
+      "upstream": {
+        "url": "git+https://github.com/xiehuan123/dsh-deepread.git",
+        "sha": "9462f1e546b94a7f27e77abaf3d9ee3fedf7f746"
+      },
+      "purpose": "Extract local or pasted sources and generate English evidence reports, book synthesis, and model-free budget estimates.",
+      "workflow": "Extract local or pasted sources and generate English evidence reports, book synthesis, and model-free budget estimates.",
+      "tests": "Real ToolRuntime estimate, local file reading, quick and book reporting, English prompts/output, schema rejection and disposal passed.",
+      "limitations": "Scoped fork of the original source/PDF extraction, model JSON retry, chunk synthesis, budget, calibration and URL cache engine. Modes quick/deep/book and English only. The duplicate shell, batch, maps, Feynman, background jobs, packaged skill and automatic disk exports are omitted. Reports require a configured model; estimate does not call a model.",
+      "patch": "/mnt/slow-stuff/bharatcode-workflows/integrations/workflows/packages/deepread/cordis.patch.yml"
+    }
+  ],
+  "deferred": [
+    {
+      "repository": "zenstory-ai/oh-story-dsh",
+      "reason": "Large duplicate writing workbench and persona/role bundles; selected bounded canonical dsh-novel-writer core instead."
+    },
+    {
+      "repository": "Hongcheng-LI/dsh-zotero",
+      "reason": "Duplicate Zotero integration; selected smaller local-API and Web-API tool plugin."
+    },
+    {
+      "repository": "1841220388zzzcccxxx-star/dsh-git-graph",
+      "reason": "Duplicate coding shell with extensive untranslated UI and self-update path; selected GitHub review tools instead."
+    },
+    {
+      "repository": "awol2005ex3/dsh-export-session",
+      "reason": "DOM-dependent export shell with CDN loading; existing reader/writer export tools cover the useful boundary."
+    },
+    {
+      "repository": "wloops/dsh-git-worktree",
+      "reason": "Larger duplicate worktree manager shell; runtime core already supplies worktrees."
+    }
+  ]
+}

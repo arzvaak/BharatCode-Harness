@@ -1,6 +1,7 @@
-DeepSeek Harness
-DeepSeek Harness
-Welcome to DeepSeek Harness
-Build potential. Explore intelligence.
-Sign in
-Add API Key
+BharatCode
+BharatCode
+Welcome to BharatCode
+BharatCode is the default. Add your access key, or set up Codex, Google, Muse, OpenCode, or Mistral in Settings → Providers after entering the app.
+Get started
+DeepSeek account (optional)
+BharatCode access key

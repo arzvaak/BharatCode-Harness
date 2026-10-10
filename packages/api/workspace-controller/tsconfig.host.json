@@ -12,17 +12,46 @@
     "src/default-workspace.ts",
     "src/directory-picker.ts",
     "src/feed.ts",
-    "src/default-directory.ts"
+    "src/default-directory.ts",
+    "src/knowledge.ts",
+    "src/documents.ts"
   ],
   "references": [
-    { "path": "../../../vendor/cordis" },
-    { "path": "../../../vendor/schemastery" },
-    { "path": "../../core/session" },
-    { "path": "../../host/directory-picker" },
-    { "path": "../../storage/storage-domain" },
-    { "path": "../../typert/protocol" },
-    { "path": "../../util/deque" },
-    { "path": "../../util/native-command" },
-    { "path": "../../workspace/workspace" }
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../core/session"
+    },
+    {
+      "path": "../../host/directory-picker"
+    },
+    {
+      "path": "../../storage/storage-domain"
+    },
+    {
+      "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../util/deque"
+    },
+    {
+      "path": "../../util/native-command"
+    },
+    {
+      "path": "../../workspace/workspace"
+    },
+    {
+      "path": "../session-controller/tsconfig.host.json"
+    },
+    {
+      "path": "../../session-query/session-query"
+    },
+    {
+      "path": "../../context/session-reference"
+    }
   ]
 }

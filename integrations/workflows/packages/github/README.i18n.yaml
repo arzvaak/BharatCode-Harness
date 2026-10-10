@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/workflows/packages/github/README.md
+/perrylink-dsh-github:
+  en: 70d6b1bd471befc2
+  zh: 0b8c84ebd3dea4ac

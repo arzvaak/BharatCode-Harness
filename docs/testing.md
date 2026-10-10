@@ -2,7 +2,7 @@
 
 English | [中文](testing.zh.md)
 
-How this repo tests, tier by tier, and the rules that keep a green suite meaningful. Commands live in root [AGENTS.md](../AGENTS.md); linked Agent Notes carry the rationale.
+How this repo tests, tier by tier, and the rules that keep a green suite meaningful. Commands live in root [AGENTS.md](../DEVELOPER_GUIDE.md); linked Agent Notes carry the rationale.
 
 ## Tiers
 

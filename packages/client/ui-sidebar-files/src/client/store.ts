@@ -41,6 +41,7 @@ export type LevelState =
  * the Host reports it, and a child is the parent joined with the entry name.
  */
 export interface FilesTabState {
+  selectedPath?: string
   autoRefresh: boolean
   /** Absolute path of the workspace root this tree is rooted at. */
   root: string
@@ -72,6 +73,7 @@ function bucket(state: FilesState, tabId: TabId): FilesTabState {
 
 /** The tree store's write set; every action names the tab it writes. */
 type FilesActions = {
+  select: (draft: FilesState, tabId: TabId, path: string) => void
   autoRefresh: (draft: FilesState, tabId: TabId, enabled: boolean) => void
   start: (draft: FilesState, tabId: TabId, root: string) => void
   loading: (draft: FilesState, tabId: TabId, path: string) => void
@@ -94,6 +96,7 @@ export function createFilesStore(): EngineStoreHandle<FilesState, FilesActions> 
   return defineStore({
     init: (): FilesState => ({ byTab: {} }),
     actions: {
+      select: (d, tabId: TabId, path: string) => { bucket(d, tabId).selectedPath = path },
       autoRefresh: (d, tabId: TabId, enabled: boolean) => { bucket(d, tabId).autoRefresh = enabled },
       /**
        * Seed one tab's tree at its workspace root, with the root expanded.

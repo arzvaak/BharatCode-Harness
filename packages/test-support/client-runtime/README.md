@@ -158,7 +158,10 @@ Read these pages when the package-level contract is not enough. They move from t
 
 -----
 
+The default Remote script creates a blank standalone startup Session and leaves its follow stream open without frames; tests requiring a ready Session supply their own follow projection.
+
 <a id="model-experience"></a>
+
 ## Model Experience
 
 None, as this package is browser-side test infrastructure; nothing here reaches a model request.

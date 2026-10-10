@@ -1,0 +1,103 @@
+{
+  "name": "@michengai/dsh-skills-manager",
+  "version": "1.1.10",
+  "description": "DSH Skills Manager \u2014 Load and safely manage local Agent Skills in DeepSeek Harness",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arzvaak/dsh-skills-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MichengAI/dsh-skills-manager/issues"
+  },
+  "homepage": "https://github.com/MichengAI/dsh-skills-manager#readme",
+  "type": "module",
+  "packageManager": "pnpm@11.28.5",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "locale",
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-locale"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "npm run typecheck && npm run build && node test/build-test.mjs && node test/route-lifecycle.test.mjs && node test/repositories.test.mjs && node test/repository-ui.test.mjs && node test/theme-select.test.mjs && node test/host-fallback.test.mjs && node test/repository-routes.test.mjs && node test/core-test.mjs && node test/readonly-discovery.test.mjs && node test/project-sources.test.mjs && node test/locale-test.mjs && node --test test/plugin-updater.test.mjs && node test/plugin-update-locale.test.mjs && node test/client-scope.test.mjs && node test/compatibility-options-test.mjs && node test/starter-skills.test.mjs",
+    "verify": "node scripts/sync-hosts.mjs && npm test && npm run pack:check && node test/pack-test.mjs",
+    "pack:check": "npm pack --dry-run --json",
+    "prepack": "npm run typecheck && npm run build",
+    "prepublishOnly": "npm run verify",
+    "test:compat": "node scripts/test-host-compatibility.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1 <5.0.0",
+    "@deepseek-ai/dsh-client-locale": "0.1.2-rc.1 || 0.1.5-rc.1 || 0.1.5-rc.2 || 0.1.5-rc.3 || 0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.2-rc.1 || 0.1.5-rc.1 || 0.1.5-rc.2 || 0.1.5-rc.3 || 0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2",
+    "@deepseek-ai/dsh-host-webserver": "0.1.2-rc.1 || 0.1.5-rc.1 || 0.1.5-rc.2 || 0.1.5-rc.3 || 0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2",
+    "@deepseek-ai/dsh-session": "0.1.2-rc.1 || 0.1.5-rc.1 || 0.1.5-rc.2 || 0.1.5-rc.3 || 0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2",
+    "@deepseek-ai/dsh-skill": "0.1.2-rc.1 || 0.1.5-rc.1 || 0.1.5-rc.2 || 0.1.5-rc.3 || 0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2",
+    "@deepseek-ai/dsh-tools": "0.1.2-rc.1 || 0.1.5-rc.1 || 0.1.5-rc.2 || 0.1.5-rc.3 || 0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2",
+    "@deepseek-ai/dsh-web-app": "0.1.2-rc.1 || 0.1.5-rc.1 || 0.1.5-rc.2 || 0.1.5-rc.3 || 0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:*",
+    "@deepseek-ai/dsh-client-locale": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-primitives": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-slots": "workspace:*",
+    "@deepseek-ai/dsh-host-webserver": "workspace:*",
+    "@deepseek-ai/dsh-scope": "workspace:*",
+    "@deepseek-ai/dsh-session": "workspace:*",
+    "@deepseek-ai/dsh-skill": "workspace:*",
+    "@deepseek-ai/dsh-tools": "workspace:*",
+    "@deepseek-ai/dsh-web-app": "workspace:*",
+    "@types/node": "22.20.4",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "antd": "6.6.5",
+    "esbuild": "0.25.0",
+    "react": "^18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "skill",
+    "skills",
+    "cordis"
+  ],
+  "dependencies": {
+    "fflate": "0.8.3"
+  }
+}

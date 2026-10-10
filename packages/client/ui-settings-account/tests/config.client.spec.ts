@@ -12,7 +12,7 @@ it('injects configured contact options and removes the listener on disposal', as
   await ctx.plugin({ Config, apply }, { contactSource: 'harness', bonusAckRetryDelayMs: 25, bonusAckRetryMaxDelayMs: 100 })
   const table: IndexInjection[] = []
   ctx.emit('webserver/index-inject', table)
-  expect(table).toEqual([{ kind: 'global', name: CONTACT_CONFIG_GLOBAL, value: {
+  expect(table).toEqual([{ kind: 'global', name: '__BC_LOCAL_PROFILE__', value: { name: '' } }, { kind: 'global', name: CONTACT_CONFIG_GLOBAL, value: {
     contactFormUrl: config.contactFormUrl, contactSource: config.contactSource,
     bonusAckRetryDelayMs: 25, bonusAckRetryMaxDelayMs: 100,
   } }])

@@ -53,7 +53,7 @@ function mount(initiallyDone = false, initiallyLoading = false) {
   // This entry consumes only its injected selectors; the shell owns the global hooks.
   const globals = {} as GlobalStandardProps
   const element = () => <DesktopOnboardingEntry {...globals}
-    useOnboarding={select => select(state)} useAccount={select => select(account)}
+    renderSlot={() => null} useOnboarding={select => select(state)} useAccount={select => select(account)}
     update={async () => true} complete={async () => true} retry={async () => true}
     t={key => key in zh ? zh[key as AccountKey] : key} />
   const view = render(element())

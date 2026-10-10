@@ -37,6 +37,7 @@ describe('web e2e: hovering a clipped session title marquees it to its far edge'
     tripwire = watchConsole(page)
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    await page.getByRole('button', { name: 'All chats', exact: true }).click()
   }, 120_000)
 
   afterAll(async () => {

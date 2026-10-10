@@ -38,7 +38,9 @@
     "upload:win:x64": "tsx scripts/upload-target.ts win-x64",
     "upload:latest:mac:arm64": "tsx scripts/upload-target.ts mac-arm64 --latest",
     "upload:latest:mac:x64": "tsx scripts/upload-target.ts mac-x64 --latest",
-    "upload:latest:win:x64": "tsx scripts/upload-target.ts win-x64 --latest"
+    "upload:latest:win:x64": "tsx scripts/upload-target.ts win-x64 --latest",
+    "package:linux:x64": "tsx scripts/package-linux.ts",
+    "package:linux:x64:dir": "tsx scripts/package-linux.ts --dir"
   },
   "dependencies": {
     "electron-updater": "^6.8.9",
@@ -65,7 +67,7 @@
     "extract-zip": "^2.0.1",
     "js-yaml": "^4.2.0",
     "koffi": "3.1.1",
-    "pnpm": "11.7.0",
+    "pnpm": "11.28.5",
     "sharp": "^0.35.3",
     "typescript": "^6.0.3",
     "@deepseek-ai/dsh-deepseek-account": "workspace:*",

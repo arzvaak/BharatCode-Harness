@@ -27,6 +27,7 @@ it('omits development artifacts while preserving executable modules, assets and 
     'node-pty/prebuilds/win32-x64/conpty.pdb',
     '@koromix/koffi-win32-x64/win32_x64/koffi.lib',
     '@mixmark-io/domino/test/entities.html',
+    'undici/lib/llhttp/.gitkeep',
     '@deepseek-ai/libreoffice-kit-wasm/assets/soffice.data',
     '@deepseek-ai/libreoffice-kit-darwin-arm64/bin/libreoffice-kit',
     '.modules.yaml', '.pnpm-workspace-state-v1.json', '.bin/tool', '.pnpm/cache',

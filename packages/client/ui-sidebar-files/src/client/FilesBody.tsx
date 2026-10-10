@@ -95,7 +95,7 @@ function Entry({ parent, entry, tree }: { parent: string; entry: WorkspaceDirect
   if (entry.type === 'file') {
     return (
       <li className={css.item} data-files-entry="file" data-files-path={path}>
-        <button type="button" className={css.row} onClick={() => { tree.onOpen(path) }}>
+        <button type="button" className={css.row} aria-current={tree.state.selectedPath === path ? 'true' : undefined} onClick={() => { tree.onOpen(path) }}>
           <FileTypeIcon kind={classifyFileType(entry.name)} size={16} className={css.fileIcon} />
           <span className={css.name}>{entry.name}</span>
         </button>
@@ -139,7 +139,7 @@ function Level({ path, tree }: { path: string; tree: TreeContext }): ReactNode {
 /** The file tree's body: the workspace root and whatever the reader has opened under it. */
 export function FilesBody({
   useTabInfo, sessionId, useSessions, useStore, actions,
-  start, refresh, setAutoRefresh, toggle, t, renderSlot,
+  start, refresh, setAutoRefresh, toggle, t, renderSlot, openFile,
 }: FilesBodyProps): ReactNode {
   const { tab } = useTabInfo()
   useEffect(() => tab.actions.bindCommands({ refresh: () => { refresh(tab.id) } }), [tab.actions, tab.id, refresh])
@@ -184,7 +184,10 @@ export function FilesBody({
     state,
     onToggle: (parent, path) => { toggle(tab.id, parent, path, state.expanded, signal) },
     // Every row is under the tree's root, so its address is session-relative.
-    onOpen: (path) => { tabActions.openResource(fileAddressFor(sessionId, state.root, path)) },
+    onOpen: (path) => {
+      actions.select(tab.id, path)
+      if (openFile?.(path) !== true) tabActions.openResource(fileAddressFor(sessionId, state.root, path))
+    },
     t,
   }
   const reload = (): void => {

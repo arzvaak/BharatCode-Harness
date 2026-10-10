@@ -4,6 +4,7 @@
  * @module @deepseek-ai/dsh-terminal-bash
  */
 
+import { randomUUID } from 'node:crypto'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
@@ -123,24 +124,30 @@ async function startupSession(
       await session.initialize(signal)
       return
     }
+    await session.initialize(signal)
     // pwsh cannot install its prompt from the environment. Write the prompt
     // function through the session, pin UTF-8 output before user input, and
-    // accept only backend stdin_read evidence; echoed setup source containing
-    // the printable prompt is not readiness. Follow-up sends bridge silence
+    // wait for its per-session acknowledgement, delivered controlled prompt and backend stdin_read evidence.
+    // Echoed setup source and the initial line editor are not readiness. Follow-up sends bridge silence
     // settlements during startup, while one absolute deadline bounds them.
+    const nonce = randomUUID()
+    const ready = `DSH_READY_${nonce}`
+    const setup = ENCODING_PREAMBLE + PWSH_PROMPT_SETUP + `; Write-Output ('DSH_READY_' + '${nonce}')`
     let viewport = ''
+    let first = true
     for (;;) {
-      const first = viewport.length === 0
       startupOperation = session.startSend({
-        text: first ? ENCODING_PREAMBLE + PWSH_PROMPT_SETUP : '',
+        text: first ? setup : '',
         submit: first,
         ...signal !== undefined ? { signal } : {},
       })
       const result = await startupOperation.done
       if (result.waitReason === 'session_exit') throw new Error('PTY shell exited during startup')
       if (result.waitReason === 'timeout') throw new Error('PTY shell did not reach readiness before startup timeout')
-      viewport = result.viewport
-      if (result.waitReason === 'stdin_read') break
+      first = false
+      viewport += result.viewport
+      if (result.waitReason === 'stdin_read' && viewport.endsWith(CONTROLLED_PROMPT)
+        && viewport.split(/\r?\n/).some(line => line.trim() === ready)) break
     }
     session.motd = viewport
   }

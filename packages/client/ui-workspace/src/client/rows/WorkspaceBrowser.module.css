@@ -2,7 +2,7 @@
   --dsh-session-list-edge-inset: var(--dsh-sidebar-inline-padding);
   --dsh-session-list-scrollbar-width: 5px;
   --dsh-session-list-scrollbar-offset: 2px;
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -71,8 +71,10 @@
 }
 
 .sectionLabel {
+  display: flex;
+  gap: 8px;
   flex: none;
-  max-width: 45%;
+  max-width: 65%;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -297,7 +299,7 @@
 
 /* List seat: always mounted so the shell foot never moves. */
 .listArea {
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -317,7 +319,7 @@
 
 /* Relative for the bottom fade overlay. */
 .treeBody {
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -327,6 +329,7 @@
 /* Bottom fade: compact overlay pinned to the visible bottom,
    transparent -> sidebar fill so it tracks the theme. */
 .fade {
+  display: none;
   position: absolute;
   left: 0;
   right: var(--dsh-session-list-edge-inset);
@@ -339,6 +342,7 @@
 /* macOS desktop: the sidebar is translucent over window vibrancy, so the
    opaque fill gradient would paint a solid smear instead of a fade. */
 :global([data-platform='darwin']) .fade {
+  display: none;
   display: none;
 }
 
@@ -356,9 +360,9 @@
    and remaining padding equal the shell's right inset, with or without
    overflow, so moving the bar does not move the rows. */
 .list {
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: visible;
   margin-left: -4px;
   margin-right: var(--dsh-session-list-scrollbar-offset);
   padding-left: 4px;
@@ -618,4 +622,18 @@
   .headerActions {
     transition: none;
   }
+}
+
+.browseMode {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.browseMode[aria-pressed='true'] {
+  opacity: 1;
 }

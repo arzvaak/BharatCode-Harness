@@ -1,0 +1,72 @@
+{
+  "name": "@arzvaak/dsh-provider-hub",
+  "version": "0.1.1-bharatcode.1",
+  "type": "module",
+  "license": "MIT",
+  "description": "BharatCode and OpenAI-compatible provider setup alongside existing subscription logins for DeepSeek Harness.",
+  "exports": {
+    ".": "./src/host.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.0-rc.2"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.js",
+    "test:composition": "node --expose-internals scripts/composition.mjs",
+    "test:compatibility": "node --test tests/subscriptions.compat.js"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "jsdom": "26.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arzvaak/dsh-provider-hub.git"
+  },
+  "homepage": "https://github.com/arzvaak/dsh-provider-hub#readme",
+  "bugs": {
+    "url": "https://github.com/arzvaak/dsh-provider-hub/issues"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "bharatcode",
+    "openai-compatible",
+    "chatgpt",
+    "github-copilot"
+  ],
+  "dependencies": {
+    "@muse-code/sdk": "1.4.4"
+  }
+}

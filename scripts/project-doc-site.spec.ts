@@ -20,7 +20,7 @@ const roots: string[] = []
 const repositoryRoot = resolve(import.meta.dirname, '..')
 
 function unexpectedWebsiteMarkdown(files: readonly string[]): string[] {
-  return files.filter(file => file.endsWith('.md') && file !== 'website/AGENTS.md').sort()
+  return files.filter(file => file.endsWith('.md') && file !== 'website/DEVELOPER_GUIDE.md').sort()
 }
 
 afterEach(() => {
@@ -51,7 +51,7 @@ function fixture(): { root: string; pages: DocsPage[] } {
 describe('website source layout', () => {
   it('rejects Markdown outside the subtree instructions', () => {
     expect(unexpectedWebsiteMarkdown([
-      'website/AGENTS.md',
+      'website/DEVELOPER_GUIDE.md',
       'website/docs.ts',
       'website/zh-CN/api/harness/service.md',
     ])).toEqual(['website/zh-CN/api/harness/service.md'])
@@ -361,7 +361,7 @@ describe('docsPages locale routes', () => {
       expect(projected).toContain('layout: false')
       expect(projected).toContain('http-equiv: refresh')
       expect(projected).toContain('content: 0; url=./guide/quickstart')
-      expect(projected).not.toContain('# DeepSeek Harness')
+      expect(projected).not.toContain('# BharatCode Harness')
     }
   })
 
@@ -778,7 +778,7 @@ describe('raw Markdown projection of the published manifest', () => {
     for (const route of ['index.md', 'en/index.md']) {
       const home = new TextDecoder().decode(readFileSync(join(mirror, route)))
       expect(home.startsWith('---'), route).toBe(false)
-      expect(home, route).toContain('# DeepSeek Harness')
+      expect(home, route).toContain('# BharatCode Harness')
     }
   })
 

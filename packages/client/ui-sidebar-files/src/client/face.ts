@@ -114,6 +114,8 @@ export function childPath(parent: string, name: string): string {
 
 /** The tree's injected business face, as the body receives it. */
 export interface FilesInjected {
+  /** Optional workspace-editor claim; unclaimed files use their rich resource viewer. */
+  readonly openFile?: (path: string) => boolean
   /** Refresh the open directory tree. @param tabId - owning tab. */
   readonly refresh: (tabId: TabId) => void
   /** Control automatic rereads without closing watches. @param tabId - owning tab. @param enabled - automatic-refresh setting. */

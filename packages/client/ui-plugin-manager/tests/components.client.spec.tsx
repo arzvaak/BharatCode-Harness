@@ -882,7 +882,7 @@ describe('PluginManagerPage', () => {
 
   it.each([
     { locale: en, placeholder: 'for example dsh-plugin-whale-pet' },
-    { locale: zh, placeholder: '例如 dsh-plugin-whale-pet' },
+    { locale: zh, placeholder: 'for example dsh-plugin-whale-pet' },
   ])('uses the package example in $placeholder and the install guide', ({ locale, placeholder }) => {
     const { actions, setLanguage } = renderTab({ install: { ...IDLE_INSTALL, open: true } })
     setLanguage(locale)
@@ -1389,8 +1389,8 @@ describe('PluginManagerPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: en.cancel }))
     expect(actions.closeInstall).toHaveBeenCalledOnce()
     setLanguage(zh)
-    expect(screen.getByRole('dialog', { name: kind === 'timeout' ? '连接 GitHub 超时' : '无法访问 GitHub' })).toBeTruthy()
-    expect(screen.getByText('请尝试其他安装来源。')).toBeTruthy()
+    expect(screen.getByRole('dialog', { name: kind === 'timeout' ? zh.installGithubTimeoutTitle : zh.installGithubFailedTitle })).toBeTruthy()
+    expect(screen.getByText(zh.installGithubFailedDescription)).toBeTruthy()
     set({ install: { ...IDLE_INSTALL, open: true, mirrorRecovery: true, registries: REGISTRIES, registry: { kind: 'offered', registry: MIRROR } } })
     const form = within(screen.getByRole('dialog', { name: zh.installTitle }))
     expect(form.queryByText(zh.installDescription)).toBeNull()
@@ -1402,7 +1402,7 @@ describe('PluginManagerPage', () => {
     expect(form.getAllByRole('button')).toEqual([
       form.getByRole('button', { name: zh.close }),
       form.getByRole('button', { name: zh.installGuideToggle }),
-      form.getByRole('button', { name: '安装源 中国大陆镜像源' }),
+      form.getByRole('button', { name: zh.registryToggle + ' ' + zh.registryNpmmirror }),
       form.getByRole('button', { name: zh.installRun }),
     ])
   })
@@ -1443,8 +1443,8 @@ describe('PluginManagerPage', () => {
     expect(screen.getByRole('button', { name: en.installUseGithubMirror })).toBeTruthy()
     setLanguage(zh)
     set({ install: failed })
-    expect(screen.getByRole('button', { name: '试试其他方式' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: '改用国内镜像' })).toBeNull()
+    expect(screen.getByRole('button', { name: zh.installTryAnotherWay })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: zh.installUseGithubMirror })).toBeNull()
   })
 
   it('keeps the ordinary failure view for registry errors, other hosts, and unavailable mirrors', () => {

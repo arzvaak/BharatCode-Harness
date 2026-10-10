@@ -1209,7 +1209,10 @@ export function WorkspaceBrowser({
       <div className={css.sectionHeader}>
         {wide && (
           <span className={clsx(css.sectionLabel, css.wide, searchExpanded && css.sectionLabelHidden)}>
-            {groupBy === 'flat' ? t('section.sessions') : t('section.workspaces')}
+            <button type="button" className={css.browseMode} aria-pressed={groupBy === 'flat'}
+              onClick={() => { actions.setGroupBy('flat') }}>{t('browse.allChats')}</button>
+            <button type="button" className={css.browseMode} aria-pressed={groupBy !== 'flat'}
+              onClick={() => { actions.setGroupBy('workspace') }}>{t('section.workspaces')}</button>
           </span>
         )}
         {wide && (

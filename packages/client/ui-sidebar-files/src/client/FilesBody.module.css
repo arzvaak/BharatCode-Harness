@@ -33,6 +33,8 @@
 }
 
 .body {
+  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
   flex: 1 1 auto;
   min-height: 0;
   /* The workspace list's 2px scrollbar offset (ui-workspace WorkspaceBrowser
@@ -176,3 +178,5 @@
 .titleIcon {
   flex: none;
 }
+
+.row[aria-current="true"] { background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-brand-primary); }

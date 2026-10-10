@@ -51,7 +51,7 @@ const env: NodeJS.ProcessEnv = {
   DSH_DESKTOP_OPEN_DEVTOOLS: '0',
 }
 delete env.ELECTRON_RUN_AS_NODE
-const child = spawn(electron, [appRoot, `--user-data-dir=${userData}`], {
+const child = spawn(electron, [appRoot, '--force-renderer-accessibility', `--user-data-dir=${userData}`], {
   cwd: appRoot, stdio: 'inherit', env,
 })
 child.on('error', (error) => { console.error(error); process.exitCode = 1 })

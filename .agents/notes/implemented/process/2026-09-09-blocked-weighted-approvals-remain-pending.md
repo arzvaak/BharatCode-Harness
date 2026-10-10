@@ -12,13 +12,15 @@ Publishing `failure` for that review state conflates the approval decision with 
 
 ## Decision
 
+This record preserves the upstream DeepSeek Harness decision rationale. Pinned CI-file and workflow-test links below refer to the upstream `dsh-v0.2.0-rc.2` release tag; runner, trigger, and publication descriptions apply to that upstream implementation. The current BharatCode validation workflows are owned by [fork CI](../../../../.github/workflows/ci.yml) and the [development guide](../../../../docs/development.md).
+
 A completed weighted approval evaluation publishes `pending` when the pull request is a draft, has fewer than the required approval points, or has an effective `CHANGES_REQUESTED` review from a write-capable reviewer. A blocking review dominates the point total, so the status remains pending even when counted approvals reach the threshold.
 
 The evaluation publishes `success` only when the pull request is ready, the point threshold is met, and no blocking review exists. The separate `weighted approval publisher` Actions job reports whether evaluation and status publication completed. An evaluation failure publishes an `error` commit status and fails that job.
 
 ## Verification
 
-[Approval policy tests](../../../../.github/review-ownership/check-approval.test.mjs) pin the threshold-reaching blocker case and the exact published `pending` payload. [Workflow tests](../../../../scripts/ci-workflow.spec.ts) pin the separate publisher job name.
+[Approval policy tests](../../../../.github/review-ownership/check-approval.test.mjs) pin the threshold-reaching blocker case and the exact published `pending` payload. [Workflow tests](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/ci-workflow.spec.ts) pin the separate publisher job name.
 
 ## Alternatives considered
 

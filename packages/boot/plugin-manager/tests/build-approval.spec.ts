@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { expect, it, onTestFinished } from 'vitest'
 import { parse } from 'yaml'
-import { approveBuilds, readPendingBuilds } from '../src/build-approval.ts'
+import { approveBuilds, readPendingBuilds, recordPendingBuilds } from '../src/build-approval.ts'
 
 function fixture(text?: string) {
   const dir = mkdtempSync(join(tmpdir(), 'build-approval-'))
@@ -65,5 +65,27 @@ it.each([
 ])('rejects shared YAML approval nodes without changing permissions: %s', async (original) => {
   const { dir, filename } = fixture(original)
   await expect(approveBuilds(dir, ['native'])).rejects.toThrow()
+  expect(readFileSync(filename, 'utf8')).toBe(original)
+})
+
+it('merges new blocked selectors with existing pending decisions', async () => {
+  const { dir, filename } = fixture('allowBuilds:\n  old-tool@1.0.0: set this to true or false\n  trusted@1.0.0: true\n  denied@1.0.0: false\n')
+  mkdirSync(join(dir, 'node_modules'))
+  writeFileSync(join(dir, 'node_modules', '.modules.yaml'), 'ignoredBuilds:\n  - new-tool@2.0.0\n  - trusted@1.0.0\n  - denied@1.0.0\n')
+  expect(await recordPendingBuilds(dir)).toEqual(['old-tool@1.0.0', 'new-tool@2.0.0'])
+  expect(parse(readFileSync(filename, 'utf8'))).toMatchObject({ allowBuilds: { 'trusted@1.0.0': true, 'denied@1.0.0': false } })
+})
+
+it('retains pending decisions when modules metadata is unavailable', async () => {
+  const { dir } = fixture('allowBuilds:\n  old-tool@1.0.0: set this to true or false\n')
+  expect(await recordPendingBuilds(dir)).toEqual(['old-tool@1.0.0'])
+})
+
+it.each(['null', '[]', 'true'])('rejects non-mapping modules metadata %s without changing approvals', async (text) => {
+  const original = 'allowBuilds:\n  trusted@1.0.0: true\n'
+  const { dir, filename } = fixture(original)
+  mkdirSync(join(dir, 'node_modules'))
+  writeFileSync(join(dir, 'node_modules', '.modules.yaml'), text)
+  await expect(recordPendingBuilds(dir)).rejects.toThrow('pnpm modules metadata must be a YAML mapping')
   expect(readFileSync(filename, 'utf8')).toBe(original)
 })

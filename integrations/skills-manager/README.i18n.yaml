@@ -1,0 +1,43 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/skills-manager/README.md
+/:
+  en: f2081b7bae46f79e
+  zh: f2081b7bae46f79e
+/dsh-skills-manager:
+  en: 68c96a55c32b5845
+  zh: a5d535a41dcee289
+/dsh-skills-manager/features:
+  en: 5cd67636398e9609
+  zh: 70fc0aab7c4ab28b
+/dsh-skills-manager/screenshots:
+  en: ad0ad60d6718f253
+  zh: 5f5b567bf5ceac26
+/dsh-skills-manager/installation:
+  en: e1cb174511d5e12f
+  zh: cc474b6efbdd3d8a
+/dsh-skills-manager/installation/ask-an-agent-to-install-it:
+  en: 774263b7bae9df16
+  zh: fdd7b60aa6459178
+/dsh-skills-manager/installation/install-manually:
+  en: 450e1779725c9b64
+  zh: 59379c91b16db7cc
+/dsh-skills-manager/usage:
+  en: ea6cf78b33bad25e
+  zh: 3cd04aaf576b0682
+/dsh-skills-manager/usage/repository-boundaries:
+  en: 1fb3d0eeb5a41223
+  zh: 0b0aa8c10aa132c7
+/dsh-skills-manager/supported-agent-directories:
+  en: 97ac063fe71d150b
+  zh: b04363371bebdb09
+/dsh-skills-manager/dsh-product-ecosystem:
+  en: 664162cedf4c2a70
+  zh: 7d094a7b9779e1ec
+/dsh-skills-manager/feedback-and-contributions:
+  en: afd6128b3078204b
+  zh: 4470306d0a145419
+/dsh-skills-manager/license:
+  en: 3bf6912d4acce2ec
+  zh: 990021099d565267

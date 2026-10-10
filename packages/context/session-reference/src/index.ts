@@ -36,6 +36,8 @@ import type {
 } from './types.ts'
 import { formatSessionReferenceMention, parseSessionReferenceText } from './uri.ts'
 
+export { retainReferencedSession } from './projection.ts'
+
 export type * from './types.ts'
 export type { Config, SessionReferenceErrorCode } from './config.ts'
 export {

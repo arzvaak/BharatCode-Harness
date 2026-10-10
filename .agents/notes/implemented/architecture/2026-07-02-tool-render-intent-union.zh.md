@@ -36,7 +36,7 @@ interface GenericResultView { card: 'generic'; title?: string; content?: Content
 interface TerminalResultView { card: 'terminal'; title?: string; output?: string; exitCode?: number; signal?: string }
 ```
 
-`card` 在每个变体上都是**必填**的——真正的判别字段，而非可选默认值。bridge 执行 `switch (view.card) { case 'generic': … case 'terminal': … case 'diff': … default: assertNever(view) }`。该联合类型是**封闭的**（遵循 [switch 穷举约定](../../../../AGENTS.md)）：第四种渲染意图（表格、图表）无论如何需要新的 bridge 代码来渲染，因此一个由插件添加但被 bridge 静默丢弃的变体，比编译错误更糟糕。新增变体会在 bridge 的 switch 处中断编译——这正是我们想要的信号。
+`card` 在每个变体上都是**必填**的——真正的判别字段，而非可选默认值。bridge 执行 `switch (view.card) { case 'generic': … case 'terminal': … case 'diff': … default: assertNever(view) }`。该联合类型是**封闭的**（遵循 [switch 穷举约定](../../../../DEVELOPER_GUIDE.md)）：第四种渲染意图（表格、图表）无论如何需要新的 bridge 代码来渲染，因此一个由插件添加但被 bridge 静默丢弃的变体，比编译错误更糟糕。新增变体会在 bridge 的 switch 处中断编译——这正是我们想要的信号。
 
 ### 为什么带标签联合类型优于字段集合
 

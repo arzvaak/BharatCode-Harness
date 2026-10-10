@@ -24,6 +24,7 @@ export function desktopRuntimeFileExclusion(
   const nameParts = packageParts[0]?.startsWith('@') ? 2 : 1
   const name = packageParts.slice(0, nameParts).join('/')
   const entry = packageParts.slice(nameParts).join('/')
+  if (name === 'undici' && entry === 'lib/llhttp/.gitkeep') return 'Undici source placeholder'
   if (name.startsWith('@deepseek-ai/libreoffice-kit-')) {
     if (name !== `@deepseek-ai/libreoffice-kit-${officeEngine}`) return 'LibreOffice other platform'
   }

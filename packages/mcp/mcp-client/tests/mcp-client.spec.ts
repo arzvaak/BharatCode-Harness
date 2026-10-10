@@ -10,6 +10,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { PostToolDecision } from '@deepseek-ai/dsh-tools'
+import { Config as McpConfig } from '@deepseek-ai/dsh-mcp-client'
 import { publicToolName, syncTools, type ToolBridgeOptions } from '@deepseek-ai/dsh-mcp-client/src/tools.ts'
 import { createTransport } from '@deepseek-ai/dsh-mcp-client/src/transport.ts'
 import type { Config } from '@deepseek-ai/dsh-mcp-client'
@@ -192,6 +193,21 @@ describe('syncTools', () => {
     // Raw names are NOT registered.
     expect(ctx.tools.get('greet')).toBeUndefined()
     expect(ctx.tools.get('add')).toBeUndefined()
+  })
+
+  it('keeps unqualified tools out of every synchronization generation', async () => {
+    const opts = { ...defaultOpts, allowedTools: ['admin.reset'] }
+    const first = await syncTools(createMockClient([{ name: 'admin.reset', inputSchema: { type: 'object' } }]) as never, ctx, opts, new Map())
+    expect(ctx.tools.get(publicToolName('srv', 'admin.reset'))).toBeDefined()
+    const second = await syncTools(createMockClient([
+      { name: 'admin.reset', inputSchema: { type: 'object' } },
+      { name: 'delete_everything', inputSchema: { type: 'object' } },
+    ]) as never, ctx, opts, first)
+    expect(second.size).toBe(1)
+    expect(ctx.tools.get('mcp__srv__delete_everything')).toBeUndefined()
+    await syncTools(createMockClient([{ name: 'delete_everything', inputSchema: { type: 'object' } }]) as never, ctx, { ...opts, allowedTools: [] }, second)
+    expect(ctx.tools.get(publicToolName('srv', 'admin.reset'))).toBeUndefined()
+    expect(ctx.tools.get('mcp__srv__delete_everything')).toBeUndefined()
   })
 
   it('lets two servers publish the same raw name side by side', async () => {
@@ -1217,4 +1233,11 @@ describe('tool execution — non-object args fallback', () => {
       expect.anything(),
     )
   })
+})
+
+it('preserves omitted versus empty allowlists through native config validation', () => {
+  const base = { transport: 'stdio' as const, serverName: 'srv', command: 'fixture' }
+  expect(McpConfig(base).allowedTools).toBeUndefined()
+  expect(McpConfig({ ...base, allowedTools: [] }).allowedTools).toEqual([])
+  expect(McpConfig({ ...base, allowedTools: ['admin.reset'] }).allowedTools).toEqual(['admin.reset'])
 })

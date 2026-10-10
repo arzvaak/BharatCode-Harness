@@ -2,6 +2,9 @@ import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry from '@deepseek-ai/dsh-agent'
 import type { Agent, AgentHandle, CreateAgentOptions } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-preset-registry'
+import { mkdtemp, rm, stat } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
@@ -65,6 +68,34 @@ describe('Session creation failures', () => {
       undefined,
     )
     await ctx.fiber.dispose()
+  })
+
+  it('gives independent chats separate folders under the general chat directory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'bc-chat-folders-'))
+    const ctx = await baseContext()
+    ctx.provide('workspaceRegistry', { get: () => undefined, list: () => [] } as never)
+    const folders: string[] = []
+    const ensureSession = vi.fn((sessionId: SessionId, cwd: string) => {
+      folders.push(cwd)
+      const session = ctx.sessions.create(sessionId, { meta: { cwd } })
+      return Promise.resolve({ id: sessionId, session } as Agent)
+    })
+    try {
+      const controller = new SessionCommandController(ctx, controllerAgents({ ensureSession }), '/fallback', root)
+      await controller.create({})
+      await controller.create({})
+      expect(folders).toHaveLength(2)
+      expect(folders[0]).not.toBe(folders[1])
+      for (const folder of folders) {
+        expect(folder.startsWith(join(root, 'chat-'))).toBe(true)
+        expect((await stat(folder)).isDirectory()).toBe(true)
+      }
+      await controller.create({ cwd: '/explicit' })
+      expect(folders[2]).toBe('/explicit')
+    } finally {
+      await ctx.fiber.dispose()
+      await rm(root, { recursive: true, force: true })
+    }
   })
 
   it('maps missing Workspaces and attachment failures', async () => {

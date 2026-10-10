@@ -10,9 +10,9 @@ Status: proposed
 
 ### 语义正确性可以在没有现行归属者的情况下通过检查
 
-这些门禁证明结构和生成内容的新鲜度，却不能证明维护中的正文仍指向实际机制。以前的 `dsh-doc-site-sync` 技能曾要求作者复用并不存在的 `en-docs` 侧边栏，还要求把章节加入已经移除的 `sectionOrder`；[website/docs.ts](../../../../website/docs.ts)实际拥有 `en-guide`、`en-develop`、`en-reference` 和 `sections`。已实现的[产品优先 README 决策](../../archived/process/2026-07-22-product-first-root-readme.md)描述了内部测试说明，以及 ACP、Python 与 JSON-RPC 界面章节，但[根 README](../../../../README.zh.md)并无这些内容；与此同时，已实现 Agent Note 必须跟随已交付事实。
+这些门禁证明结构和生成内容的新鲜度，却不能证明维护中的正文仍指向实际机制。以前的 `dsh-doc-site-sync` 技能曾要求作者复用并不存在的 `en-docs` 侧边栏，还要求把章节加入已经移除的 `sectionOrder`；[website/docs.ts](../../../../website/docs.ts)实际拥有 `en-guide`、`en-develop`、`en-reference` 和 `sections`。已实现的[产品优先 README 决策](../../archived/process/2026-07-22-product-first-root-readme.md)描述了内部测试说明，以及 ACP、Python 与 JSON-RPC 界面章节，但[根 README](../../../../README.md)并无这些内容；与此同时，已实现 Agent Note 必须跟随已交付事实。
 
-预算策略也存在相同的分裂。[docs/AGENTS.md](../../../../docs/AGENTS.md#wordcount-budgets)为 `architecture.md` 规定 1,800 词目标和 5% 余量，但[预算 manifest（元数据清单）](../../../../scripts/doc-budgets.manifest.json)允许 2,400 词，而该文件实际包含 1,313 词。预算门禁之所以通过，是因为它只检查 manifest 上限，不检查目标或棘轮规则。因此，高影响正文需要一个具名真源或消费真源的聚焦检查；第二份手写副本不是新鲜度机制。
+预算策略也存在相同的分裂。[docs/AGENTS.md](../../../../docs/DEVELOPER_GUIDE.md#wordcount-budgets)为 `architecture.md` 规定 1,800 词目标和 5% 余量，但[预算 manifest（元数据清单）](../../../../scripts/doc-budgets.manifest.json)允许 2,400 词，而该文件实际包含 1,313 词。预算门禁之所以通过，是因为它只检查 manifest 上限，不检查目标或棘轮规则。因此，高影响正文需要一个具名真源或消费真源的聚焦检查；第二份手写副本不是新鲜度机制。
 
 ### 读者成功与否是隐含判断，而不是可测试结果
 
@@ -28,7 +28,7 @@ Status: proposed
 
 ### 标准没有容纳下一条规则的空间
 
-常驻文档标准有 1,320 词，等于 1,320 词上限，并超过声明的 1,250 词目标。根 `AGENTS.md` 有 1,936 词，目标为 1,600；`packages/AGENTS.md` 有 672 词，目标为 650；`packages/README.md` 有 969 词，目标为 600。冻结的上限能阻止进一步增长，却没有为受众和结果标准创造位置。继续增加常驻正文会加深该标准本应防止的问题。
+常驻文档标准有 1,320 词，等于 1,320 词上限，并超过声明的 1,250 词目标。根 `AGENTS.md` 有 1,936 词，目标为 1,600；`packages/DEVELOPER_GUIDE.md` 有 672 词，目标为 650；`packages/README.md` 有 969 词，目标为 600。冻结的上限能阻止进一步增长，却没有为受众和结果标准创造位置。继续增加常驻正文会加深该标准本应防止的问题。
 
 ### 基线
 
@@ -75,7 +75,7 @@ Status: proposed
 | Agent 指令或 skill（技能） | 在没有陈旧复制值的情况下执行一项工作流 | 范围、权威链接、必需决策、仅在此处归属时写入精确命令 | 元数据或链接检查，以及针对复制机器值的聚焦测试 |
 | 提议或已实现 Agent Note | 理解决策、取舍与状态 | 问题、提案或决策、备选方案、验收或后果 | 既有生命周期、格式、配对和取代检查；语义时效性由评审负责 |
 
-该表应归属一份规范质量参考。`docs/AGENTS.md` 只保留每次编辑文档都需要的简短常驻规则，并链接到该参考。这样可以创造预算余量，而不是把另一份完整标准放进 agent 上下文。
+该表应归属一份规范质量参考。`docs/DEVELOPER_GUIDE.md` 只保留每次编辑文档都需要的简短常驻规则，并链接到该参考。这样可以创造预算余量，而不是把另一份完整标准放进 agent 上下文。
 
 ### 生成参考的入口层与细节层
 
@@ -88,7 +88,7 @@ Status: proposed
 1. 创建并验证 `dsh-doc`，再把一组 package README 对改写为行对齐、带元数据的原型，同时不改变运行时事实。
 2. 用新人、用户、开发者和 agent 任务评审渲染后的原型；先修订 skill，再在其他位置强制执行该格式。
 3. 添加聚焦的元数据、Summary 长度、章节顺序、行对齐、链接解析和配对 fixture。迁移所有违反已接受入口上限的既有包 Summary；在每个合并与恢复消费方都有替代支持前，保留伴随文件。
-4. 把已接受的常驻规则提取到一份规范质量参考，将 `docs/AGENTS.md` 精简到目标以下，并且一次只组织一个内聚的 `docs/` 主题，同时原子地修复链接与导航。
+4. 把已接受的常驻规则提取到一份规范质量参考，将 `docs/DEVELOPER_GUIDE.md` 精简到目标以下，并且一次只组织一个内聚的 `docs/` 主题，同时原子地修复链接与导航。
 5. 在 `config-catalog.md` 和 `docs/subsystems/core.md` 上制作生成参考入口层与细节层分离的原型；只有实测查询成本下降且没有丢失事实或造成路由扰动，才把确认后的模式应用到其他位置。
 
 该顺序使每项变更都能独立评审。前三个切片改进标准与包入口，而不改变更广的信息架构；生成文档原型则在更广的结构变更前提供证据。
@@ -117,7 +117,7 @@ Status: proposed
 - `.agents/skills/dsh-doc` 通过验证，并直接链接其元数据、结构或层级及评审或原型参考，而不在 `SKILL.md` 中复制这些参考的详细规则。
 - `session-persistence-jsonl` README 对展示可搜索 YAML、Summary、Table of Contents、从用户到开发者的渐进结构、Further Exploration、结尾 Dev Note、结构一致性和精确行数相等，同时保留已验证的包约定。
 - 每个英文包 README Summary 都不超过 100 个按 `wc -w` 语义统计的词；聚焦门禁报告实测词数，并引导失败项阅读 `dsh-doc` 与所选 kind 模板。
-- `docs/AGENTS.md` 链接该参考，仍足以充当常驻指令，并低于其目标且至少保留 5% 余量。
+- `docs/DEVELOPER_GUIDE.md` 链接该参考，仍足以充当常驻指令，并低于其目标且至少保留 5% 余量。
 - 根级用户路径、Web 快速开始、第一个插件教程、贡献者设置和架构概览各自给出一个可观察结果与验证归属者，同时不复制实现细节。
 - 预算 manifest 同时记录目标与临时上限，其检查会报告或拒绝违反余量或棘轮规则的状态。
 - 文档站工作流不再包含复制的无效侧边栏名称或章节归属声明，并有聚焦测试防止复发。

@@ -72,6 +72,10 @@ export async function connectDesktopWelcome(
   const settingsAndReference = async () => {
     const settings = await invoke({ namespace: 'settings', method: 'describe', args: {} })
     if (!record(settings) || !Array.isArray(settings.namespaces)) throw new Error('desktop welcome: missing settings namespaces')
+    const multi: unknown = settings.namespaces.find((item: unknown) => record(item) && item.ns === 'llm-pi-ai')
+    if (record(multi) && record(multi.value) && record(multi.value.providers) && record(multi.value.providers.bharatcode) && typeof multi.value.providers.bharatcode.apiKeyEnv === 'string') {
+      return { settings: { namespaces: settings.namespaces }, ref: multi.value.providers.bharatcode.apiKeyEnv }
+    }
     const official: unknown = settings.namespaces.find((item: unknown) => record(item) && item.ns === 'llm-deepseek')
     if (official === undefined) return { settings: { namespaces: settings.namespaces }, ref: undefined }
     if (!record(official) || !record(official.value) || typeof official.value.apiKeyEnv !== 'string') {

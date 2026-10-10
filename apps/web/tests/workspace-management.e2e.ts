@@ -132,7 +132,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
 
   beforeAll(async () => {
     scaffold = await launchWebScaffold({})
-    // Seed one cold session (Ungrouped bucket) for the flat view + hover card.
+    // Seed one cold session (Chats bucket) for the flat view + hover card.
     const sessionCwd = join(scaffold.workspaceCwd, 'workspace')
     await mkdir(sessionCwd, { recursive: true })
     await writeFile(join(sessionCwd, 'a.txt'), 'alpha\n')
@@ -286,7 +286,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     const copy = await dialog.textContent()
     expect(copy).toContain('workspace list')
     expect(copy).toContain('folder and session logs will be kept')
-    expect(copy).toContain('sessions will appear under Ungrouped')
+    expect(copy).toContain('sessions will appear under Chats')
     await dialog.getByRole('button', { name: 'Delete workspace' }).click()
     await expect.poll(() => dialog.count(), { timeout: 10_000 }).toBe(0)
 
@@ -295,7 +295,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
       () => page.getByRole('button', { name: `Workspace actions for ${workspace.title}` }).count(),
       { timeout: 10_000 },
     ).toBe(0)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 })
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1)
     await expect.poll(
       () => page.locator('[role="treeitem"][aria-selected="true"]').count(),
@@ -323,7 +323,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
       { timeout: 10_000 },
     ).not.toEqual([])
     expect(reregistered?.sessionIds).not.toContain(SEED_ID)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 })
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1)
     expect(await readFile(join(scaffold.workspaceCwd, 'workspace', 'a.txt'), 'utf8')).toBe('alpha\n')
     await stat(seededLogPath)
@@ -341,7 +341,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     await page.reload({ waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
     acknowledgeReloadConnectionLoss(tripwire, warningStart)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 15_000 })
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 15_000 })
       .toBeGreaterThanOrEqual(1)
     await expect.poll(
       () => page.locator('[role="treeitem"][aria-selected="true"]').count(),
@@ -412,7 +412,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
   it('switches to the flat "In one list" view and persists the preference', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-ws-flat'))
     // Grouped default: workspace group rows render (the seeded session sits
-    // under Ungrouped; the created workspaces are empty groups).
+    // under Chats; the created workspaces are empty groups).
     await expect.poll(() => page.getByText('Workspaces', { exact: true }).count(), { timeout: 10_000 }).toBe(1)
     // Grouping and ordering moved into the View options menu.
     await page.getByRole('button', { name: 'View options' }).click()
@@ -420,7 +420,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     // Flat mode: the section label flips and the seeded session is a
     // top-level row with no group headers above it.
     await expect.poll(() => page.getByText('Sessions', { exact: true }).count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 5_000 }).toBe(0)
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 5_000 }).toBe(0)
     await expect.poll(() => page.locator('[role="treeitem"]').count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
     expect(await page.evaluate(() => localStorage.getItem('dsh.workspace.view.v5'))).toContain('flat')
     // Persisted across reload; then restore grouped for inter-spec hygiene.
@@ -428,10 +428,10 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     await page.reload({ waitUntil: 'load' })
     await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
     acknowledgeReloadConnectionLoss(tripwire, warningStart)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 15_000 }).toBe(0)
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 15_000 }).toBe(0)
     await page.getByRole('button', { name: 'View options' }).click()
     await page.getByRole('menuitem', { name: 'WorkSpace', exact: true }).click()
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 10_000 }).toBeGreaterThanOrEqual(1)
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
 
@@ -503,18 +503,18 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
   }, 60_000)
 
   /**
-   * Expand Ungrouped and return its only non-blank session row. A selected
+   * Expand Chats and return its only non-blank session row. A selected
    * blank Session from a deleted Workspace may also be visible, without actions.
    * @returns the session row locator, already present.
    */
   async function seededSessionRow() {
-    const ungroupedRow = page.getByText('Ungrouped', { exact: true }).locator('..').locator('..')
+    const ungroupedRow = page.getByText('Chats', { exact: true }).locator('..').locator('..')
     const ungroupedSection = ungroupedRow.locator('..')
     // Initial-current auto-expansion can race this gesture; converge on
     // expanded rather than assuming which update wins first.
     await expect.poll(async () => {
       if (await ungroupedRow.getAttribute('aria-expanded') !== 'true') {
-        await page.getByText('Ungrouped', { exact: true }).click()
+        await page.getByText('Chats', { exact: true }).click()
         await page.waitForTimeout(50)
       }
       return await ungroupedRow.getAttribute('aria-expanded')
@@ -595,7 +595,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     onTestFailed(() => saveFailureShot(page, 'web-e2e-ws-archive'))
     const initialRow = await seededSessionRow()
     // Selecting the seed hides any blank stray left by Workspace deletion,
-    // so archiving this last visible Ungrouped Session must remove the bucket.
+    // so archiving this last visible Chats Session must remove the bucket.
     await initialRow.click()
     const { title } = await scaffold.ctx.sessionController.rename({
       sessionId: SessionId(SEED_ID), title: `Archive target ${SEED_ID}`,
@@ -606,16 +606,16 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
     })
     await expect.poll(() => sessionRow.count(), { timeout: 10_000 }).toBe(1)
     await expect.poll(() => sessionRow.getAttribute('aria-selected'), { timeout: 10_000 }).toBe('true')
-    const ungroupedSection = page.getByText('Ungrouped', { exact: true }).locator('..').locator('..').locator('..')
+    const ungroupedSection = page.getByText('Chats', { exact: true }).locator('..').locator('..').locator('..')
     await expect.poll(() => ungroupedSection.locator('[role="treeitem"]').count(), { timeout: 10_000 }).toBe(2)
     // Row menu: hover reveals the actions button; Archive session commits
     // without a confirmation dialog (non-destructive: log + accounting stay).
     await clickHoverAction(sessionRow, `Session actions for ${title}`)
     await page.getByRole('menuitem', { name: 'Archive session' }).click()
     // The row disappears on the archive-set echo; with no other visible
-    // stray, the whole Ungrouped bucket withdraws.
+    // stray, the whole Chats bucket withdraws.
     await expect.poll(() => sessionRow.count(), { timeout: 10_000 }).toBe(0)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 }).toBe(0)
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 10_000 }).toBe(0)
     // Durable on the host: the registry-global set carries the id while the
     // session log itself stays in persistence untouched.
     expect([...scaffold.ctx.workspaceRegistry.archivedSessionIds]).toEqual([SessionId(SEED_ID)])
@@ -634,7 +634,7 @@ describe('web e2e: workspace management (create / rename / grouping / hover affo
         .evaluate(element => element === document.activeElement),
       { timeout: 15_000 },
     ).toBe(true)
-    // The archived row must not resurface (the Ungrouped bucket itself may
+    // The archived row must not resurface (the Chats bucket itself may
     // reappear if selection restore lands on another stray — not this test's
     // concern).
     expect(await sessionRow.count()).toBe(0)

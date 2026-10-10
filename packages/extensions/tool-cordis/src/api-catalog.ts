@@ -985,6 +985,54 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'documentDraftController',
+    summary: 'Remote operations over durable editing drafts; these operations never publish workspace files.',
+    description: 'Remote operations over durable editing drafts; these operations never publish workspace files.',
+    methods: [
+      {
+        signature: '@Remote readDraft(sessionId: SessionId, path: string): DocumentRecoveryDraft | undefined',
+        description: 'Read the host-private recovery copy for this session and path.',
+        parameters: [{ name: 'sessionId', description: 'Draft owner.' }, { name: 'path', description: 'Workspace path identifying the draft.' }],
+        returns: 'The recovery draft, or undefined when none is saved.',
+      },
+      {
+        signature: '@Remote saveDraft(request: SaveDocumentDraftRequest): Promise<DocumentRecoveryDraft>',
+        description: 'Save the optimistic revision only after durable storage acknowledges it.',
+        parameters: [{ name: 'request', description: 'Draft content and expected recovery revision.' }],
+        returns: 'The durable saved recovery revision.',
+      },
+      {
+        signature: '@Remote clearDraft(sessionId: SessionId, path: string, expectedRevision: string): Promise<void>',
+        description: 'Remove only the expected recovery revision; a newer draft is preserved.',
+        parameters: [{ name: 'sessionId', description: 'Draft owner.' }, { name: 'path', description: 'Workspace path identifying the draft.' }, { name: 'expectedRevision', description: 'Recovery revision authorized for deletion.' }],
+      },
+    ],
+  },
+  {
+    key: 'documentDrafts',
+    summary: 'Durable host-private drafts with optimistic revision checks and serialized writes.',
+    description: 'Durable host-private drafts with optimistic revision checks and serialized writes.',
+    methods: [
+      {
+        signature: 'read(session: SessionId, path: string): DocumentRecoveryDraft | undefined',
+        description: 'Read the recovery revision without modifying project files.',
+        parameters: [{ name: 'session', description: 'Draft owner.' }, { name: 'path', description: 'Draft workspace path.' }],
+        returns: 'An immutable draft copy, or undefined.',
+      },
+      {
+        signature: 'save(input: SaveDocumentDraftRequest): Promise<DocumentRecoveryDraft>',
+        description: 'Persist a draft only when its expected revision matches the current copy.',
+        parameters: [{ name: 'input', description: 'Recovery content and expected revision.' }],
+        returns: 'A durable immutable revision after storage acknowledgement.',
+      },
+      {
+        signature: 'clear(session: SessionId, path: string, expectedRevision: string): Promise<void>',
+        description: 'Remove the expected recovery copy while preserving concurrent changes.',
+        parameters: [{ name: 'session', description: 'Draft owner.' }, { name: 'path', description: 'Draft workspace path.' }, { name: 'expectedRevision', description: 'Exact revision authorized for deletion.' }],
+      },
+    ],
+  },
+  {
     key: 'fileReferences',
     summary: 'Host capability for cancellable file-reference discovery.',
     description: 'Host capability for cancellable file-reference discovery.',
@@ -1783,6 +1831,188 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         signature: 'readonly telemetryDisabledEnv: string | undefined',
         description: 'Launch-time DSH_TELEMETRY_DISABLED value; any non-empty value opts out.',
         parameters: [],
+      },
+    ],
+  },
+  {
+    key: 'projectKnowledge',
+    summary: 'Durable project evidence service independent of optional memory/search integrations.',
+    description: 'Durable project evidence service independent of optional memory/search integrations.',
+    methods: [
+      {
+        signature: 'async register(request: RegisterArtifactRequest): Promise<ArtifactRevision>',
+        description: 'Capture a complete registered UTF-8 file without changing it.',
+        parameters: [{ name: 'request', description: 'Selected project source and evidence classification.' }],
+        returns: 'An immutable revision; repeat registration is idempotent.',
+      },
+      {
+        signature: 'async registerSessionSnapshot(request: RegisterSessionSnapshotRequest): Promise<ArtifactRevision>',
+        description: 'Register a bounded host-projected conversation capture without reading or rewriting a file.',
+        parameters: [{ name: 'request', description: 'Project, projected untrusted text, and immutable snapshot identity.' }],
+        returns: 'The same revision for an identical sequence capture.',
+      },
+      {
+        signature: 'read(id: ArtifactRevisionId): ArtifactRevision',
+        description: 'Read an immutable revision even when its original file changed or disappeared.',
+        parameters: [{ name: 'id', description: 'Previously registered revision identity.' }],
+        returns: 'Complete captured source with its classification and revision.',
+      },
+      {
+        signature: 'search(request: SearchArtifactsRequest): SearchArtifactsResult',
+        description: 'Retrieve only explicitly registered evidence in the selected project.',
+        parameters: [{ name: 'request', description: 'Project and literal text to match; an empty query browses registered sources.' }],
+        returns: 'Newest matching revision per source, bounded by deployment policy.',
+      },
+      {
+        signature: 'async link(request: LinkArtifactsRequest): Promise<ArtifactRelation>',
+        description: 'Link captured revisions explicitly, without changing their classification.',
+        parameters: [{ name: 'request', description: 'Source, target, relationship, and explicit cross-project destination.' }],
+        returns: 'Idempotent immutable revision relationship.',
+      },
+      {
+        signature: 'related(id: ArtifactRevisionId): readonly ArtifactRelation[]',
+        description: 'Inspect outgoing and incoming revision backlinks, including conflicts.',
+        parameters: [{ name: 'id', description: 'Selected captured artifact revision.' }],
+        returns: 'Explicit relationships in creation order.',
+      },
+      {
+        signature: 'capture(request: CaptureArtifactsRequest): CapturedArtifacts',
+        description: 'Select complete revisions for a bounded immutable handoff attachment.',
+        parameters: [{ name: 'request', description: 'Explicit project and ordered evidence selection.' }],
+        returns: 'Captured evidence and omission notices within the complete byte limit.',
+      },
+      {
+        signature: 'async inspect(id: ArtifactRevisionId): Promise<ArtifactInspection>',
+        description: 'Compare a selected capture with its current source without changing context.',
+        parameters: [{ name: 'id', description: 'Captured document revision.' }],
+        returns: 'Current, stale, or missing source status.',
+      },
+      {
+        signature: 'refresh(id: ArtifactRevisionId): Promise<ArtifactRevision>',
+        description: 'Explicitly capture the latest source while retaining the earlier revision.',
+        parameters: [{ name: 'id', description: 'Earlier capture whose source the user chose to refresh.' }],
+        returns: 'A newly captured revision or the existing identical revision.',
+      },
+      {
+        signature: 'prepareHandoff(input: PrepareHandoffRequest): Promise<PreparedHandoff>',
+        description: 'Prepare one immutable task and persist its destination before submission.',
+        parameters: [{ name: 'input', description: 'Objective, selected evidence, explicit project destination, and unresolved questions.' }],
+        returns: 'The same handoff on retry; reusing its identity for different content rejects.',
+      },
+      {
+        signature: 'handoff(id: HandoffId): PreparedHandoff',
+        description: 'Inspect a handoff without refreshing any selected source.',
+        parameters: [{ name: 'id', description: 'Prepared task identity.' }],
+        returns: 'A detached immutable copy of the captured task.',
+      },
+      {
+        signature: 'renderHandoff(id: HandoffId): string',
+        description: 'Render the exact user-authorized objective and captured source data for admission.',
+        parameters: [{ name: 'id', description: 'Prepared task identity.' }],
+        returns: 'Bounded model-facing text, retained by the receiving session\'s user message.',
+      },
+      {
+        signature: 'async acknowledgeHandoff(id: HandoffId): Promise<PreparedHandoff>',
+        description: 'Commit the receipt only after the receiving inbox admits this task.',
+        parameters: [{ name: 'id', description: 'Successfully submitted handoff.' }],
+        returns: 'The submitted record; repeated receipts do not create another task.',
+      },
+    ],
+  },
+  {
+    key: 'projectKnowledgeController',
+    summary: 'Generated `knowledge` Remote owner, independent of optional integrations.',
+    description: 'Generated `knowledge` Remote owner, independent of optional integrations.',
+    methods: [
+      {
+        signature: '@Remote(\'register\') register(request: RegisterArtifactRequest): Promise<ArtifactRevision>',
+        description: 'Register immutable project evidence.',
+        parameters: [{ name: 'request', description: 'Explicit source registration.' }],
+        returns: 'Captured immutable source revision.',
+      },
+      {
+        signature: '@Remote(\'search\') search(request: SearchArtifactsRequest): SearchArtifactsResult',
+        description: 'Search registered project sources without initiating model work.',
+        parameters: [{ name: 'request', description: 'Selected project and literal query.' }],
+        returns: 'Registered source matches.',
+      },
+      {
+        signature: '@Remote(\'captureSession\') async captureSession(request: CaptureSessionArtifactRequest): Promise<ArtifactRevision>',
+        description: 'Capture bounded conversation evidence from the selected project session.',
+        parameters: [{ name: 'request', description: 'Explicit project/session source.' }],
+        returns: 'Immutable bounded conversation evidence with omission facts.',
+      },
+      {
+        signature: '@Remote(\'link\') link(request: LinkArtifactsRequest): Promise<ArtifactRelation>',
+        description: 'Record an explicit relationship between immutable source revisions.',
+        parameters: [{ name: 'request', description: 'Explicit revision relationship.' }],
+        returns: 'Durable implementation or evidence backlink.',
+      },
+      {
+        signature: '@Remote(\'related\') related(id: ArtifactRevisionId): readonly ArtifactRelation[]',
+        description: 'Read source relationships and conflicts.',
+        parameters: [{ name: 'id', description: 'Captured revision.' }],
+        returns: 'Explicit backlinks and conflicts.',
+      },
+      {
+        signature: '@Remote(\'read\') read(id: ArtifactRevisionId): ArtifactRevision',
+        description: 'Read the complete immutable source revision.',
+        parameters: [{ name: 'id', description: 'Captured revision.' }],
+        returns: 'Complete immutable source content.',
+      },
+      {
+        signature: '@Remote(\'inspect\') async inspect(id: ArtifactRevisionId): Promise<ArtifactInspection>',
+        description: 'Compare the source revision with its current origin.',
+        parameters: [{ name: 'id', description: 'Captured revision.' }],
+        returns: 'Current, stale, or missing source status.',
+      },
+      {
+        signature: '@Remote(\'refresh\') refresh(id: ArtifactRevisionId): Promise<ArtifactRevision>',
+        description: 'Capture a fresh revision from the existing source origin.',
+        parameters: [{ name: 'id', description: 'Earlier revision to refresh explicitly.' }],
+        returns: 'Latest source capture.',
+      },
+      {
+        signature: '@Remote(\'capture\') capture(request: CaptureArtifactsRequest): CapturedArtifacts',
+        description: 'Capture the selected workspace outputs.',
+        parameters: [{ name: 'request', description: 'Explicit revision selection.' }],
+        returns: 'Bounded complete evidence and omissions.',
+      },
+      {
+        signature: '@Remote(\'prepareHandoff\') async prepareHandoff(request: PrepareHandoffRequest): Promise<PreparedHandoff>',
+        description: 'Prepare evidence and task identity for an explicit destination.',
+        parameters: [{ name: 'request', description: 'Objective and explicit evidence/destination selection.' }],
+        returns: 'Retry-stable prepared task.',
+      },
+      {
+        signature: '@Remote(\'handoff\') handoff(id: HandoffId): PreparedHandoff',
+        description: 'Read a prepared handoff and its admission receipt.',
+        parameters: [{ name: 'id', description: 'Prepared handoff.' }],
+        returns: 'Immutable task and admission receipt.',
+      },
+      {
+        signature: '@Remote(\'usingContext\') async usingContext(sessionId: SessionId): Promise<readonly PreparedHandoff[]>',
+        description: 'Read handoffs admitted to the receiving session.',
+        parameters: [{ name: 'sessionId', description: 'Receiving session.' }],
+        returns: 'Captured handoffs admitted to that session, in log order.',
+      },
+      {
+        signature: '@Remote(\'workflow\') async workflow(sessionId: SessionId): Promise<WorkflowProfile | undefined>',
+        description: 'Read the latest explicitly selected session workflow.',
+        parameters: [{ name: 'sessionId', description: 'Session to inspect without activating an agent.' }],
+        returns: 'Latest explicit workflow assignment.',
+      },
+      {
+        signature: '@Remote(\'assignWorkflow\') async assignWorkflow(request: AssignWorkflowRequest): Promise<WorkflowProfile>',
+        description: 'Persist the user-selected workflow before acknowledging it.',
+        parameters: [{ name: 'request', description: 'Explicit session profile choice.' }],
+        returns: 'Persisted selected workflow.',
+      },
+      {
+        signature: '@Remote(\'submitHandoff\') submitHandoff(request: SubmitHandoffRequest, signal: AbortSignal): Promise<PreparedHandoff>',
+        description: 'Admit the prepared task through the durable receiving inbox.',
+        parameters: [{ name: 'request', description: 'Prepared task identity and user-selected queue or steering mode.' }, { name: 'signal', description: 'Remote request lifetime; retry uses the same durable task identity.' }],
+        returns: 'Submitted handoff only after the receiving inbox crosses a durability checkpoint.',
       },
     ],
   },
@@ -3648,6 +3878,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Host Remote file reads and workspace directory observations over the composed filesystem.',
     methods: [
       {
+        signature: '@Remote async readEditable(workspaceFileScope: WorkspaceFileScope, path: string, signal: AbortSignal): Promise<EditableWorkspaceDocument>',
+        description: 'Read complete editable content without normalizing or rewriting the source.',
+        parameters: [{ name: 'workspaceFileScope', description: 'Receiving session\'s execution-world project root.' }, { name: 'path', description: 'Explicit file selection.' }, { name: 'signal', description: 'Request cancellation.' }],
+        returns: 'Complete source and its checked provider version.',
+      },
+      {
+        signature: '@Remote async saveEditable( workspaceFileScope: WorkspaceFileScope, path: string, request: SaveWorkspaceDocumentRequest, signal: AbortSignal, ): Promise<SaveWorkspaceDocumentResult>',
+        description: 'Replace an explicitly opened project file through the provider\'s atomic version guard.',
+        parameters: [{ name: 'workspaceFileScope', description: 'Session-derived root; editing never changes agent execution state.' }, { name: 'path', description: 'Existing regular project file.' }, { name: 'request', description: 'Complete draft and expected version.' }, { name: 'signal', description: 'Request cancellation.' }],
+        returns: 'Published content or the concurrent revision for explicit comparison.',
+      },
+      {
         signature: '@Remote async read( workspaceFileScope: WorkspaceFileScope, path: string, range: WorkspaceFileRange, signal: AbortSignal, ): Promise<WorkspaceFileText>',
         description: 'Read one page of lines from a UTF-8 file readable by the filesystem backend.',
         parameters: [{ name: 'workspaceFileScope', description: 'header-derived workspace root for the Session identity on the wire.' }, { name: 'path', description: 'absolute path or path relative to the workspace root; files outside it are allowed.' }, { name: 'range', description: 'the line window; omitted fields take the page defaults.' }, { name: 'signal', description: 'caller cancellation.' }],
@@ -4550,6 +4792,34 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ArchiveSessionOptions {\n    readonly stopActivity?: boolean;\n}',
   },
   {
+    name: 'ArtifactInspection',
+    declaration: 'export interface ArtifactInspection {\n    readonly artifact: ArtifactRevision;\n    readonly status: \'current\' | \'stale\' | \'missing\' | \'captured\';\n}',
+  },
+  {
+    name: 'ArtifactKind',
+    declaration: 'export type ArtifactKind = ArtifactRevision[\'kind\'];',
+  },
+  {
+    name: 'ArtifactRelation',
+    declaration: 'export interface ArtifactRelation extends LinkArtifactsRequest {\n    readonly id: ArtifactRelationId;\n    readonly createdAt: string;\n}',
+  },
+  {
+    name: 'ArtifactRelationId',
+    declaration: 'export type ArtifactRelationId = Branded<\'ArtifactRelationId\'>;',
+  },
+  {
+    name: 'ArtifactRevision',
+    declaration: 'export interface ArtifactRevision {\n    readonly id: ArtifactRevisionId;\n    readonly projectId: WorkspaceId;\n    readonly path: string;\n    readonly title: string;\n    readonly kind: \'source\' | \'note\' | \'hypothesis\' | \'finding\' | \'decision\' | \'requirement\' | \'manuscript\';\n    readonly revision: string;\n    readonly text: string;\n    readonly capturedAt: string;\n    readonly origin?: SessionArtifactOrigin | undefined;\n}',
+  },
+  {
+    name: 'ArtifactRevisionId',
+    declaration: 'export type ArtifactRevisionId = Branded<\'ArtifactRevisionId\'>;',
+  },
+  {
+    name: 'ArtifactSearchHit',
+    declaration: 'export interface ArtifactSearchHit {\n    readonly id: ArtifactRevisionId;\n    readonly projectId: WorkspaceId;\n    readonly path: string;\n    readonly title: string;\n    readonly kind: ArtifactKind;\n    readonly revision: string;\n    readonly capturedAt: string;\n    readonly excerpt: string;\n}',
+  },
+  {
     name: 'AskUserQuestionAnswer',
     declaration: 'export interface AskUserQuestionAnswer {\n    answers: AskUserQuestionAnswerItem[];\n}',
   },
@@ -4588,6 +4858,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AssembledSection',
     declaration: 'export interface AssembledSection {\n    name: string;\n    text: string;\n    interpolate?: boolean;\n}',
+  },
+  {
+    name: 'AssignWorkflowRequest',
+    declaration: 'export interface AssignWorkflowRequest {\n    readonly sessionId: SessionId;\n    readonly workflow: WorkflowProfile;\n}',
   },
   {
     name: 'AssistantMessage',
@@ -4712,6 +4986,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'BundleRowInfo',
     declaration: 'export interface BundleRowInfo {\n    rowId: string;\n    moduleName: string;\n    meta?: PluginLocalizedMeta;\n    entryId?: PluginEntryId;\n}',
+  },
+  {
+    name: 'CaptureArtifactsRequest',
+    declaration: 'export interface CaptureArtifactsRequest {\n    readonly projectId: WorkspaceId;\n    readonly revisionIds: readonly ArtifactRevisionId[];\n}',
+  },
+  {
+    name: 'CapturedArtifacts',
+    declaration: 'export interface CapturedArtifacts {\n    readonly projectId: WorkspaceId;\n    readonly evidence: readonly ArtifactRevision[];\n    readonly omitted: readonly ArtifactRevisionId[];\n}',
+  },
+  {
+    name: 'CaptureSessionArtifactRequest',
+    declaration: 'export interface CaptureSessionArtifactRequest {\n    readonly projectId: WorkspaceId;\n    readonly sessionId: SessionId;\n    readonly title: string;\n}',
   },
   {
     name: 'ChangeResult',
@@ -5070,6 +5356,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface DirectoryRegistrationHandle {\n    (): void;\n    replace(entries: readonly LlmConfigurableProvider[]): void;\n}',
   },
   {
+    name: 'DocumentRecoveryDraft',
+    declaration: 'export interface DocumentRecoveryDraft {\n    readonly sessionId: SessionId;\n    readonly path: string;\n    readonly baseVersion: string;\n    readonly text: string;\n    readonly revision: string;\n    readonly updatedAt: string;\n}',
+  },
+  {
     name: 'Domain',
     declaration: 'export interface Domain<S extends DomainSpec> {\n    readonly name: string;\n    readonly global: DomainGlobalHandleOf<S>;\n    table<N extends keyof S[\'tables\'] & string>(name: N): KvTable<TableKeyOf<S, N>, TableValueOf<S, N>>;\n    close(): Promise<void>;\n}',
   },
@@ -5136,6 +5426,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'DynamicCordisRunRequest',
     declaration: 'export interface DynamicCordisRunRequest {\n    requestId: ApprovalRequestId;\n    agentId: SessionId;\n    pluginId: CordisDynamicPluginId;\n    packageId: CordisDynamicPackageId;\n    mode: CordisDynamicRunMode;\n    name: string;\n    purpose: string;\n    requiresApproval: boolean;\n}',
+  },
+  {
+    name: 'EditableWorkspaceDocument',
+    declaration: 'export interface EditableWorkspaceDocument extends WorkspaceFileStat {\n    readonly text: string;\n}',
   },
   {
     name: 'EditGoalRequest',
@@ -5316,6 +5610,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'GrantRecord',
     declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
+  },
+  {
+    name: 'HandoffId',
+    declaration: 'export type HandoffId = Branded<\'HandoffId\'>;',
   },
   {
     name: 'HostConnectionFetch',
@@ -5574,6 +5872,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface KvUnitDescriptor {\n    readonly name: string;\n    readonly version: number;\n    readonly tables: readonly string[];\n    readonly hasGlobal: boolean;\n    readonly layout?: \'single\' | \'per-record\';\n    readonly compatibleVersions?: readonly number[];\n}',
   },
   {
+    name: 'LinkArtifactsRequest',
+    declaration: 'export interface LinkArtifactsRequest {\n    readonly projectId: WorkspaceId;\n    readonly from: ArtifactRevisionId;\n    readonly to: ArtifactRevisionId;\n    readonly relation: \'cites\' | \'supports\' | \'conflicts\' | \'implements\' | \'supersedes\';\n    readonly destinationProjectId?: WorkspaceId | undefined;\n}',
+  },
+  {
     name: 'LlmAdapter',
     declaration: 'export abstract class LlmAdapter {\n    providerInfo(provider: string): LlmProviderInfo;\n    providerRetryPolicy(_provider: string): ResolvedRetryPolicy | undefined;\n    imageRequestPricing(_provider: string, _model: string): LlmImageRequestPricing | undefined;\n    listModels(_provider: string): Promise<readonly LlmModelInfo[]>;\n    resolveModel(provider: string, model: string, _signal?: AbortSignal): Promise<LlmResolvedModelInfo>;\n    async prepareCall(provider: string, model: string, signal?: AbortSignal): Promise<PreparedAdapterCall>;\n    abstract stream(options: GenerateOptions): AsyncIterable<StreamChunk>;\n}',
   },
@@ -5595,7 +5897,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'LlmDiscoveredModel',
-    declaration: 'export interface LlmDiscoveredModel {\n    id: string;\n    name?: string;\n    contextWindow?: number;\n    maxTokens?: number;\n    inputModalities?: readonly ModelModality[];\n}',
+    declaration: 'export interface LlmDiscoveredModel {\n    id: string;\n    name?: string;\n    contextWindow?: number;\n    maxTokens?: number;\n    inputModalities?: readonly ModelModality[];\n    reasoningEfforts?: false | Readonly<Partial<Record<\'off\' | \'minimal\' | \'low\' | \'medium\' | \'high\' | \'xhigh\' | \'max\', string | null>>>;\n}',
   },
   {
     name: 'LlmFailure',
@@ -5994,12 +6296,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface PreparedDeepSeekLlmApiExtensions {\n    readonly fields: Readonly<Partial<DeepSeekLlmApiExtensionMap>>;\n    accept(): Promise<void>;\n}',
   },
   {
+    name: 'PreparedHandoff',
+    declaration: 'export interface PreparedHandoff {\n    readonly id: HandoffId;\n    readonly fingerprint: string;\n    readonly requestId: string;\n    readonly sourceProjectId: WorkspaceId;\n    readonly destinationProjectId: WorkspaceId;\n    readonly sourceSessionId?: SessionId | undefined;\n    readonly destinationSessionId: SessionId;\n    readonly createsSession: boolean;\n    readonly workflow: WorkflowProfile;\n    readonly objective: string;\n    readonly constraints: readonly string[];\n    readonly questions: readonly string[];\n    readonly context: CapturedArtifacts;\n    readonly status: \'prepared\' | \'submitted\';\n    readonly createdAt: string;\n}',
+  },
+  {
     name: 'PreparedLlmCall',
     declaration: 'export interface PreparedLlmCall {\n    readonly config: LlmCallConfig;\n    readonly retryPolicy: ResolvedRetryPolicy;\n    readonly context?: LlmModelContext;\n    readonly inputModalities?: readonly ModelModality[];\n    readonly systemPromptUpdate?: SystemPromptUpdate;\n    readonly toolUpdate?: ToolUpdate;\n    readonly adapterDefaults: LlmCallConfigAdapterDefaults;\n    stream(options: GenerateOptions): AsyncIterable<StreamChunk>;\n}',
   },
   {
     name: 'PreparedReferencedMessage',
     declaration: 'export interface PreparedReferencedMessage {\n    content: ContentBlock[];\n    additionalContext?: UserMessage;\n}',
+  },
+  {
+    name: 'PrepareHandoffRequest',
+    declaration: 'export interface PrepareHandoffRequest {\n    readonly requestId: string;\n    readonly sourceProjectId: WorkspaceId;\n    readonly destinationProjectId: WorkspaceId;\n    readonly sourceSessionId?: SessionId | undefined;\n    readonly destinationSessionId?: SessionId;\n    readonly workflow: WorkflowProfile;\n    readonly objective: string;\n    readonly revisionIds: readonly ArtifactRevisionId[];\n    readonly constraints: readonly string[];\n    readonly questions: readonly string[];\n}',
   },
   {
     name: 'PrepareSessionOptions',
@@ -6170,6 +6480,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface RedactedSecret {\n    path: string[];\n    set: boolean;\n}',
   },
   {
+    name: 'RegisterArtifactRequest',
+    declaration: 'export interface RegisterArtifactRequest {\n    readonly projectId: WorkspaceId;\n    readonly path: string;\n    readonly kind: ArtifactKind;\n    readonly title?: string;\n}',
+  },
+  {
+    name: 'RegisterSessionSnapshotRequest',
+    declaration: 'export interface RegisterSessionSnapshotRequest {\n    readonly projectId: WorkspaceId;\n    readonly title: string;\n    readonly text: string;\n    readonly origin: SessionArtifactOrigin;\n}',
+  },
+  {
     name: 'Registry',
     declaration: 'export type Registry = string | null;',
   },
@@ -6290,6 +6608,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SandboxPolicyRequest {\n    session?: Session;\n    mode?: SandboxMode;\n}',
   },
   {
+    name: 'SaveDocumentDraftRequest',
+    declaration: 'export interface SaveDocumentDraftRequest {\n    readonly sessionId: SessionId;\n    readonly path: string;\n    readonly baseVersion: string;\n    readonly text: string;\n    readonly expectedDraftRevision: string | null;\n}',
+  },
+  {
     name: 'SaveFileAttachment',
     declaration: 'export interface SaveFileAttachment {\n    data: Uint8Array;\n    name?: string;\n}',
   },
@@ -6304,6 +6626,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SaveTextSpill',
     declaration: 'export interface SaveTextSpill {\n    owner: SpillOwner;\n    source: SpillSource;\n    suggestedName: string;\n    content: string;\n}',
+  },
+  {
+    name: 'SaveWorkspaceDocumentRequest',
+    declaration: 'export interface SaveWorkspaceDocumentRequest {\n    readonly text: string;\n    readonly expectedVersion: string;\n}',
+  },
+  {
+    name: 'SaveWorkspaceDocumentResult',
+    declaration: 'export type SaveWorkspaceDocumentResult = {\n    readonly status: \'saved\';\n    readonly document: EditableWorkspaceDocument;\n} | {\n    readonly status: \'conflict\';\n    readonly current: EditableWorkspaceDocument;\n};',
   },
   {
     name: 'ScheduleCatalogEntry',
@@ -6390,6 +6720,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ScopeKey = object;',
   },
   {
+    name: 'SearchArtifactsRequest',
+    declaration: 'export interface SearchArtifactsRequest {\n    readonly projectId: WorkspaceId;\n    readonly query: string;\n    readonly kinds?: readonly ArtifactKind[];\n}',
+  },
+  {
+    name: 'SearchArtifactsResult',
+    declaration: 'export interface SearchArtifactsResult {\n    readonly hits: readonly ArtifactSearchHit[];\n    readonly hasMore: boolean;\n}',
+  },
+  {
     name: 'SearchFileMatches',
     declaration: 'export interface SearchFileMatches {\n    path: string;\n    matches: SearchLineMatch[];\n}',
   },
@@ -6452,6 +6790,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionAddress',
     declaration: 'export type SessionAddress = {\n    readonly kind: \'session\';\n    readonly sessionId: SessionId;\n} | {\n    readonly kind: \'subagent\';\n    readonly parentSessionId: SessionId;\n    readonly childSessionId: SessionId;\n    readonly mode: \'one-shot\' | \'continuable\' | \'unknown\';\n};',
+  },
+  {
+    name: 'SessionArtifactOrigin',
+    declaration: 'export interface SessionArtifactOrigin {\n    readonly sessionId: SessionId;\n    readonly capturedThroughSeq: number | null;\n    readonly capturedFormatVersion: number;\n    readonly omittedMessages: number;\n    readonly omittedBytes: number;\n}',
   },
   {
     name: 'SessionAssistantStreamAttempt',
@@ -7310,6 +7652,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SubagentStopReasonMap {\n    completed: \'completed\';\n    aborted: \'aborted\';\n    error: \'error\';\n    \'max-tokens\': \'max-tokens\';\n    refusal: \'refusal\';\n}',
   },
   {
+    name: 'SubmitHandoffRequest',
+    declaration: 'export interface SubmitHandoffRequest {\n    readonly id: HandoffId;\n    readonly mode: \'queue\' | \'steer\';\n}',
+  },
+  {
     name: 'SubprocessCollect',
     declaration: 'export interface SubprocessCollect {\n    maxBytes: number;\n    spill?: {\n        maxBytes: number;\n    };\n}',
   },
@@ -7984,6 +8330,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkflowPhase',
     declaration: 'export interface WorkflowPhase {\n    title: string;\n    detail?: string;\n    provider?: string;\n    model?: string;\n}',
+  },
+  {
+    name: 'WorkflowProfile',
+    declaration: 'export type WorkflowProfile = \'writing\' | \'research\' | \'coding\';',
   },
   {
     name: 'WorkflowResult',

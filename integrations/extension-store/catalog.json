@@ -1,0 +1,1351 @@
+{
+  "schemaVersion": 1,
+  "revision": 1,
+  "channel": "preview",
+  "entries": [
+    {
+      "id": "datalayer-jupyter-mcp",
+      "name": "Datalayer Jupyter MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/datalayer/jupyter-mcp-server",
+      "sourceCommit": "08e731c9a062eb692639029e800c00d561ca355b",
+      "license": "BSD-3-Clause",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select for qualification. Prefer this maintained upstream route initially. Requires Jupyter environment and runtime access; qualify kernel lifecycle, cancellation and output handling. BSD-3-Clause upstream."
+      ],
+      "description": "Open/edit/execute notebook cells, inspect outputs, turn data analysis into a reproducible notebook.",
+      "tools": [],
+      "qualification": {},
+      "dependencyIds": [
+        "python",
+        "jupyter"
+      ]
+    },
+    {
+      "id": "native-dsh-jupyter",
+      "name": "BharatCode Notebooks",
+      "kind": "native",
+      "version": "0.1.0",
+      "source": "https://github.com/kikulmj/dsh-jupyter",
+      "sourceCommit": "9349904c9b5dcf82d9e5149a4dc76dbab7791dab",
+      "license": "Apache-2.0",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-adaptation",
+      "requirements": [
+        "Adapt later. Manifest declares Apache-2.0 but older DSH peers. Native panel is useful only after exact-host and licence-file checks. Do not bypass peers."
+      ],
+      "description": "Notebook workbench embedded in the harness.",
+      "tools": [],
+      "qualification": {},
+      "dependencyIds": [
+        "python",
+        "jupyter"
+      ]
+    },
+    {
+      "id": "motherduck-duckdb-mcp",
+      "name": "MotherDuck/DuckDB MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/motherduckdb/mcp-server-motherduck",
+      "sourceCommit": "41acb581d9bc04e427655ba5178b2c5c01f68cd2",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Pinned upstream source is 1.1.0 at 41acb581d9bc04e427655ba5178b2c5c01f68cd2; adapted distributable and Linux/Windows qualification remain unavailable.",
+        "Python >=3.10 and the pinned upstream dependency DuckDB 1.5.6; FastMCP >=4.0.11, Click >=8.5.0 and pytz >=2026.5 need a locked, qualified runtime distribution.",
+        "Local files default to read-only. Select the database path explicitly; in-memory mode requires explicit read-write permission. Set bounded query/output limits before qualification.",
+        "MotherDuck cloud access is a separate optional account route. No cloud token is required for the local DuckDB route."
+      ],
+      "description": "Query local analytical data and DuckDB databases; optional MotherDuck connection.",
+      "tools": [],
+      "qualification": {},
+      "dependencyIds": [
+        "python",
+        "duckdb"
+      ],
+      "dependencyRanges": {
+        "python": ">=3.10.0",
+        "duckdb": "=1.5.6"
+      }
+    },
+    {
+      "id": "microsoft-markitdown",
+      "name": "Microsoft MarkItDown",
+      "kind": "native",
+      "version": "unqualified",
+      "source": "https://github.com/microsoft/markitdown",
+      "sourceCommit": "4cc9fa17653d695d64fb9eee5b33d4de55ff84e8",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select as ingestion component. Real conversion engines and OCR should be identifiable; fallback conversion is not equivalent. MIT Microsoft project. This complements MinerU rather than replacing difficult PDF OCR/layout handling."
+      ],
+      "description": "Convert common document formats into readable Markdown for research and subsequent authoring.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "excel-chat-vera",
+      "name": "Excel Chat / Vera",
+      "kind": "native",
+      "version": "0.40.0",
+      "source": "https://github.com/hccccc01333/dsh-excel-chat",
+      "sourceCommit": "fc15e774dfbbc7f3340a62e9bbd160a6131eec4e",
+      "license": "Unresolved; see upstream terms",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select for qualification. Bundle 0.40.0 declares MIT and broad peers. Core editing does not require Excel; charts/PDF export rely on Windows Excel. Formula verification claims need representative real-workbook proof."
+      ],
+      "description": "Read, edit and clean spreadsheets; inspect formula results and generate reports.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "reference-checker",
+      "name": "Reference Checker",
+      "kind": "native",
+      "version": "1.1.0",
+      "source": "https://github.com/Yu-tao-Li/dsh-reference-checker",
+      "sourceCommit": "b6c1cf95937e4d19837702d1cd14f7679762a61e",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select academic pack. Preserve found/partial/not-found/error states and evidence. A missing match is not proof a citation is fabricated. MIT."
+      ],
+      "description": "Check bibliography entries against scholarly metadata sources.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "zotero-dsh",
+      "name": "BharatCode Zotero",
+      "kind": "native",
+      "version": "0.2.2",
+      "source": "https://github.com/Hongcheng-LI/dsh-zotero",
+      "sourceCommit": "e4042d5139aa81d810b95928d63632f80a32a7ac",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select reading connector. Zotero must run with local communication enabled. Upstream documents local API note writes as unavailable on tested versions; do not promise writable notes.",
+        "This route requires a profile-wide native host adapter; it cannot claim workspace-isolated MCP activation."
+      ],
+      "description": "Search an existing Zotero collection, inspect metadata, read local full text and attachments.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "hugging-face-mcp",
+      "name": "Hugging Face MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://huggingface.co/docs/hub/agents-mcp",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select research/model-discovery connector. Separate Hub discovery from paid inference-endpoint provisioning. Tools exposed by third-party Spaces require individual qualification."
+      ],
+      "description": "Discover models, datasets, research papers and selected Space tools.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "matlab-mcp-mathworks",
+      "name": "MATLAB MCP, MathWorks",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/matlab/matlab-mcp-server",
+      "sourceCommit": "334f1788dafcfde7237486c1b1d528b1d424cd82",
+      "license": "NOASSERTION",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional licensed engineering pack. Requires an installed supported MATLAB and the user's licence. Not a free MATLAB replacement or universal default."
+      ],
+      "description": "Run and inspect MATLAB work in engineering/scientific projects.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "obsidian-acp-bridge",
+      "name": "Obsidian ACP bridge",
+      "kind": "native",
+      "version": "0.3.2",
+      "source": "https://github.com/SilenZerOrz/obsidian-dsh-acp",
+      "sourceCommit": "4fab7d0e2994338540319ad87dd8e4d189d1440a",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional interoperability route. Verify ACP handshake and workspace ownership; do not create another memory store just to connect a vault."
+      ],
+      "description": "Use BC in an existing notes/vault workflow.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "typst-preview",
+      "name": "Typst Preview",
+      "kind": "native",
+      "version": "0.3.8",
+      "source": "https://github.com/Limbo-137/dsh-typst-preview",
+      "sourceCommit": "d5ea7c289b023bf849a57f7b4c3bebdf06e481e1",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select publishing pack. Version 0.3.8 declares MIT and peer range including BC rc.2. Requires tinymist; verify desktop preview and export."
+      ],
+      "description": "Edit technical reports with rendered previews.",
+      "tools": [],
+      "qualification": {},
+      "dependencyIds": [
+        "tinymist"
+      ]
+    },
+    {
+      "id": "oh-story",
+      "name": "Oh Story",
+      "kind": "native",
+      "version": "0.1.14",
+      "source": "https://github.com/zenstory-ai/oh-story-dsh",
+      "sourceCommit": "63e09cc477189ec835a6425ba5a617e962fa956f",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Retain and expand creative pilot. Current 0.1.14 documents BC rc.2 support and native host/model usage. English docs do not prove all UI/prompts are English; inspect them before offering. MIT."
+      ],
+      "description": "Long-form fiction, short drama, interactive stories, video recap workflows.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "dsh-translator",
+      "name": "BharatCode Translator",
+      "kind": "native",
+      "version": "0.2.0",
+      "source": "https://github.com/SiYue-ZO/dsh-translator",
+      "sourceCommit": "7ab238541380bb194478df088607d5dc5c351b77",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-adaptation",
+      "requirements": [
+        "Adapt for translation pack. Version 0.2.0 declares MIT but peers `<0.2.0` exclude current BC. It handles text/plain-text files, not general PDF/DOCX/audio translation."
+      ],
+      "description": "Side-by-side text translation with glossary and persona choices.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "subtitle-studio",
+      "name": "Subtitle Studio",
+      "kind": "native",
+      "version": "0.1.0",
+      "source": "https://github.com/JohnXu22786/subtitle-studio",
+      "sourceCommit": "2fcae116e5d5df1ff2bdd6727b576b89b1986755",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select alongside media tools. Default external DeepSeek route must be replaced/configured to native DSH provider mode and verified with chosen user models. MIT declaration."
+      ],
+      "description": "Parse, translate, merge and export SRT/VTT while retaining alignment and glossaries.",
+      "tools": [],
+      "qualification": {},
+      "dependencyIds": [
+        "ffmpeg"
+      ]
+    },
+    {
+      "id": "dsh-ffmpeg",
+      "name": "BharatCode Media Tools",
+      "kind": "native",
+      "version": "0.4.5",
+      "source": "https://github.com/STARDUSTLC666/dsh-ffmpeg",
+      "sourceCommit": "5523acb1e7b582cd0590971be90014150061fa0b",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select media utility. Version 0.4.5 declares MIT; requires ffmpeg/ffprobe. Verify outputs and dependency discovery on Windows/macOS/Linux."
+      ],
+      "description": "Probe/cut/concatenate/transcode media, extract audio/subtitles/frames and make GIFs.",
+      "tools": [],
+      "qualification": {},
+      "dependencyIds": [
+        "ffmpeg"
+      ]
+    },
+    {
+      "id": "draw-io-official-mcp",
+      "name": "draw.io official MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/jgraph/drawio-mcp/tree/main/mcp-tool-server",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select visual authoring route. Standard tool-server first. Hosted inline editor uses MCP Apps, a separate host capability that BC has not been qualified for. Complements existing visuals when editable diagram files matter."
+      ],
+      "description": "Create editable diagrams from Mermaid, XML or CSV.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "deepblend",
+      "name": "DeepBlend",
+      "kind": "native",
+      "version": "0.3.2",
+      "source": "https://github.com/pearjelly/deep-blend",
+      "sourceCommit": "c9fe1de1262070af0e0197a4bb1728fd3197b82b",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional 3D pack. Requires Blender; documented baseline is DSH 0.1.5-rc.2, so BC rc.2 compatibility needs proof. MIT project declaration."
+      ],
+      "description": "Blender scene authoring, inspectable revisions and renders in a workbench.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "blender-mcp",
+      "name": "Blender MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/ahujasid/mcp-for-blender",
+      "sourceCommit": "7a0373ec9199183cb460068c4f96aed9c579fb4f",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Alternative to DeepBlend. Pick one primary route per pack after testing; inspect addon version, process access and optional telemetry settings."
+      ],
+      "description": "Connect to an existing Blender installation without needing a custom workbench.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "dsh-cad",
+      "name": "BharatCode CAD",
+      "kind": "native",
+      "version": "0.13.2",
+      "source": "https://github.com/LAU-MARS/dsh-cad",
+      "sourceCommit": "09798da470eef64359371efd1f4c0d8f3e991626",
+      "license": "Apache-2.0",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "license-review",
+      "requirements": [
+        "Optional CAD pilot. Actual repository LICENSE is Apache-2.0 despite MIT README badge. Resolve package/documentation discrepancy before redistribution. Qualify real export geometry."
+      ],
+      "description": "Parametric models, constrained sketches, 2D/3D previews and fabrication exports.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "freecad-mcp",
+      "name": "FreeCAD MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/tspspi/mcpFreeCAD",
+      "sourceCommit": "089044c9d0a2d0f9b39e9f1d2f485616a531f994",
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Alternative CAD connector. Requires FreeCAD and bridge setup. Prefer this for existing FreeCAD projects; avoid enabling multiple competing CAD toolsets by default."
+      ],
+      "description": "Operate the user's existing FreeCAD installation.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "qgis-mcp",
+      "name": "QGIS MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/jjsantos01/qgis_mcp",
+      "sourceCommit": "e37bf6f095e1658a8939cb7d8467c1e61d138bd2",
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional desktop GIS route. Requires QGIS and plugin bridge; exact API/environment qualification needed."
+      ],
+      "description": "Geospatial operations inside an existing QGIS environment.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "dsh-webgis",
+      "name": "BharatCode Maps",
+      "kind": "native",
+      "version": "0.2.0",
+      "source": "https://github.com/Mekansm1/DSH-WebGIS",
+      "sourceCommit": "a7962e83b43f771cb0aa26bb043850a947afedd4",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "web-only",
+      "requirements": [
+        "Web-host pilot only. Version 0.2.0 targets rc.2, but upstream explicitly says official desktop transport unsupported. Not a general BC Desktop promise."
+      ],
+      "description": "Interactive maps, vector data and PostGIS workflows.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "tylina",
+      "name": "Tylina",
+      "kind": "native",
+      "version": "0.15.3-alpha.1",
+      "source": "https://github.com/tylina/dsh-tylina",
+      "sourceCommit": "5ea98ee4c6315cbc241395ba18e7f97e11e3a972",
+      "license": "NOASSERTION",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "license-review",
+      "requirements": [
+        "Hold for redistribution review. README explicitly describes proprietary core npm dependencies. Prefer open-source Typst Preview for the initial pack."
+      ],
+      "description": "Typst-based academic/report/slide authoring with packaged engine.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "google-workspace-mcp",
+      "name": "Google Workspace MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/taylorwilsdon/google_workspace_mcp",
+      "sourceCommit": "2e9e9e785d30abaf89cf181c548d172b09ed0150",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Highest-value connected-work pilot. Community project, not Google official. Supports 120+ tools across twelve services and progressive tiers/read-only mode. Requires Google Cloud OAuth client/API setup; BC must make that setup understandable. MIT upstream."
+      ],
+      "description": "Work across Gmail, Drive, Docs, Sheets, Slides, Calendar and other Google applications.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "linear-official-mcp",
+      "name": "Linear official MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://linear.app/docs/mcp",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select team-work connector. Qualify Streamable HTTP/OAuth; read-only endpoint exists for initial onboarding."
+      ],
+      "description": "Turn discussion/research into tracked issues, projects and status updates.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "atlassian-rovo-mcp",
+      "name": "Atlassian Rovo MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://developer.atlassian.com/cloud/rovo-mcp/",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select alongside Linear as account choice. Requires Atlassian account/admin-compatible setup; test available scopes/tools, not assumed parity with all product APIs."
+      ],
+      "description": "Connect Jira/Confluence work and documentation.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "gitlab-official-mcp",
+      "name": "GitLab official MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://docs.gitlab.com/user/model_context_protocol/mcp_server/",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select GitLab alternative to GitHub. Currently beta; server access must be enabled at group/instance level. HTTP and proxy routes supported upstream."
+      ],
+      "description": "GitLab projects, merge requests and workflow context.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "n8n-instance-mcp",
+      "name": "n8n instance MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://docs.n8n.io/connect/connect-to-n8n-mcp-server.md",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional automation pack. Requires configured n8n instance/access and workflows exposed to MCP. Do not imply every workflow or arbitrary graph edit is available."
+      ],
+      "description": "Discover and trigger suitable existing automations.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "wordpress-official-mcp-adapter",
+      "name": "WordPress official MCP adapter",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/WordPress/mcp-adapter",
+      "sourceCommit": "7bdbaa566fac64ac5e33a560f19bb11d33de7202",
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional publishing pack. GPL-2.0-or-later adapter and site setup/authentication required. Available tools depend on registered abilities; no automatic claim of complete publishing coverage."
+      ],
+      "description": "Operate site capabilities registered through WordPress Abilities.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "postiz-agent-integration",
+      "name": "Postiz agent integration",
+      "kind": "native",
+      "version": "2.0.20",
+      "source": "https://github.com/gitroomhq/postiz-agent",
+      "sourceCommit": "7d093c072e645c1bd644a85d88f7e468b6d399a0",
+      "license": "NOASSERTION",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional publishing connector. Auth/account/self-host prerequisites apply. User-visible drafts and explicit publishing intent are needed for real actions.",
+        "This route requires a profile-wide native host adapter; it cannot claim workspace-isolated MCP activation."
+      ],
+      "description": "Prepare, schedule and publish to configured social channels.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "hubspot-mcp",
+      "name": "HubSpot MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://developers.hubspot.com/ai-tools",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional business pack. Distinguish CRM remote MCP from developer app-building tooling; auth app beta and account support need qualification."
+      ],
+      "description": "Read and update supported CRM records.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "stripe-official-mcp",
+      "name": "Stripe official MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://docs.stripe.com/mcp",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional business pack. Qualify exact tool/scoping/account behaviour; do not infer arbitrary money-transfer functionality from MCP availability."
+      ],
+      "description": "Work with supported Stripe account/development operations.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "home-assistant-mcp",
+      "name": "Home Assistant MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://www.home-assistant.io/integrations/mcp_server/",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional personal automation pack. Existing Home Assistant required. Streamable HTTP with OAuth or token; OAuth uses URL client metadata/IndieAuth rather than RFC7591 registration, so a generic DCR-only client fails."
+      ],
+      "description": "Inspect home context and control exposed devices/assist tools.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "figma-official-mcp",
+      "name": "Figma official MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://developers.figma.com/docs/figma-mcp-server/",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "client-restricted",
+      "requirements": [
+        "Hold remote availability promise. Figma documentation limits remote connections to clients in its catalog. Establish BC eligibility first; desktop routes have separate prerequisites."
+      ],
+      "description": "Retrieve design context and supported canvas operations.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "sentry-official-mcp",
+      "name": "Sentry official MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://mcp.sentry.dev/",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select operations connector. OAuth and explicit organisation/project scope; test real trace/error access."
+      ],
+      "description": "Investigate application errors and performance with live project evidence.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "cloudflare-official-mcp-servers",
+      "name": "Cloudflare official MCP servers",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://developers.cloudflare.com/agents/model-context-protocol/cloudflare/servers-for-cloudflare/",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional cloud pack. Choose service-specific capabilities; configured account and write scope required."
+      ],
+      "description": "Inspect or manage supported Workers, account and infrastructure services.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "aws-agent-tooling-mcp",
+      "name": "AWS agent tooling / MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/awslabs/mcp",
+      "sourceCommit": "0ad2921d48b8ff6ac1b490ab08ad7346add5bea2",
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional cloud pack. Upstream now points to Agent Toolkit for AWS as successor; evaluate current recommended path, IAM and service costs. Do not ship every historical AWS MCP server."
+      ],
+      "description": "AWS diagnostics and service operations.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "microsoft-mcp",
+      "name": "Microsoft MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/microsoft/mcp",
+      "sourceCommit": "3baab36f50c2a329a2e760e1335fa54f7e527f74",
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional cloud pack. Service-specific onboarding; this repository is not proof of a complete Microsoft 365 connector."
+      ],
+      "description": "Supported Azure/Microsoft developer services.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "microsoft-playwright-mcp",
+      "name": "Microsoft Playwright MCP",
+      "kind": "mcp",
+      "version": "0.0.83",
+      "source": "https://github.com/microsoft/playwright-mcp",
+      "sourceCommit": "b8b4183e099f136cbec0388a6088d4aa2f6b9685",
+      "license": "Apache-2.0",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select developer QA option. Distinct from casual browsing; integrate with current browser ownership and avoid two uncontrolled browser lifecycles."
+      ],
+      "description": "Reproducible browser interaction and application checks.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "chrome-devtools-mcp",
+      "name": "Chrome DevTools MCP",
+      "kind": "mcp",
+      "version": "1.10.1",
+      "source": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "sourceCommit": "2744afa8922e2f28a3c512a7aaf6f72d88bbd9a0",
+      "license": "Apache-2.0",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select developer debugging option. Useful instrumentation beyond browser clicks; requires Chrome and deliberate session attachment."
+      ],
+      "description": "Debug network/console/performance in Chrome.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "browserstack-mcp",
+      "name": "BrowserStack MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://github.com/browserstack/mcp-server",
+      "sourceCommit": "58c829c6fc3cf7673822d5792529b4ffac66456c",
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional paid/account QA pack. Account/product entitlement required; no universal free device-lab promise."
+      ],
+      "description": "Cross-browser/device testing through existing test infrastructure.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "deque-axe-mcp",
+      "name": "Deque Axe MCP",
+      "kind": "mcp",
+      "version": "unqualified",
+      "source": "https://www.deque.com/axe/mcp-server/",
+      "sourceCommit": null,
+      "license": "Unresolved; see upstream terms",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional accessibility route. Qualify product/account entitlement; automated checks cannot establish full accessibility conformance."
+      ],
+      "description": "Accessibility findings and assisted fixes during frontend work.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "codegraph",
+      "name": "Codegraph",
+      "kind": "native",
+      "version": "0.1.0",
+      "source": "https://github.com/JohnXu22786/codegraph",
+      "sourceCommit": "078be98fd702e21dc598ef11057be46bc1892500",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Pilot beside LSP Actions. Python/SQLite implementation with CLI and MCP-style tool server; validate actual protocol/language resolution, do not treat heuristic call edges as compiler truth."
+      ],
+      "description": "Local symbol search and transitive impact queries across code.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "dsh-devops",
+      "name": "BharatCode DevOps",
+      "kind": "native",
+      "version": "0.3.6",
+      "source": "https://github.com/Jackson-chen97/dsh-devops",
+      "sourceCommit": "a15caaafd955b3a6927572556ffc9ee2746b74a0",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional combined ops UI. Compare with official GitLab and selected Kubernetes tooling before adopting overlapping tools; kube/token dependencies. MIT declaration."
+      ],
+      "description": "GitLab pipelines/MRs plus Kubernetes operations in a workbench.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "dsh-kubectl",
+      "name": "BharatCode Kubernetes",
+      "kind": "native",
+      "version": "0.1.0",
+      "source": "https://github.com/WODE25500/dsh-kubectl",
+      "sourceCommit": "7bb8623b7a55a997c418235b78cfae1443a23a73",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-adaptation",
+      "requirements": [
+        "Hold for focused operations qualification. Wildcard peers prove little; explicit context and apply/delete/exec behaviour need checks."
+      ],
+      "description": "Execute Kubernetes operations through configured local kubectl.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "hyzyn-plugin-kit",
+      "name": "Hyzyn plugin kit",
+      "kind": "native",
+      "version": "0.1.49",
+      "source": "https://github.com/hyzyn/dsh-plugin-kit",
+      "sourceCommit": "685b990c3d30625954559c7111ae8898eca04287",
+      "license": "Apache-2.0",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select modules individually. Current rc.2 declarations are useful; do not install its whole toolkit by default. Apache-2.0 upstream."
+      ],
+      "description": "Selected Docker/RSS/screenshot/task and utility modules.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "cloud-sync",
+      "name": "Cloud Sync",
+      "kind": "native",
+      "version": "0.20.9",
+      "source": "https://github.com/dickpy/dsh-cloud-sync",
+      "sourceCommit": "e985f7b9e9227ce28be62ad8f3aea6adb331955e",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional continuity pack. This is not verified whole-project sync. Gist mode explicitly syncs configuration only; qualify restore, conflicts and sensitive fields before offering. English adaptation required."
+      ],
+      "description": "Backup/restore supported harness configuration and optional plugin sources via selected storage backend.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "session-search-pro",
+      "name": "Session Search Pro",
+      "kind": "native",
+      "version": "0.2.0",
+      "source": "https://github.com/LeslieWylie/dsh-session-search-pro",
+      "sourceCommit": "82787487d75f6af3d0e1b219a19dec49b93213cb",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Adopt capability via native session query, adapt plugin if needed. Older peer ranges; no need for another agent memory engine. MIT."
+      ],
+      "description": "Find useful previous sessions.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "lost-and-found",
+      "name": "Lost and Found",
+      "kind": "native",
+      "version": "0.1.5",
+      "source": "https://github.com/wangzhanchao883/dsh-lost-and-found",
+      "sourceCommit": "9b313c66a2f1e14641cb858d37c8e9a6ef69bec3",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Optional local knowledge pack. rc.2-compatible range declared; verify Windows/Linux/macOS path handling and index freshness. MIT."
+      ],
+      "description": "Find files across user-selected directories using local indexes.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "daruma",
+      "name": "Daruma",
+      "kind": "native",
+      "version": "0.1.0",
+      "source": "https://github.com/SISCHOI/daruma",
+      "sourceCommit": "48914efe14981f3258d442ebf16675c63c0a8a67",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-adaptation",
+      "requirements": [
+        "Hold pending native-retry overlap review. Actual plugin 0.1.8 peers `<0.1.6` exclude current BC. User-selected fallback routes, replay boundaries and credential ownership required; no automatic model/provider substitution."
+      ],
+      "description": "Controlled provider failover after selected request failures.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "dsh-eval",
+      "name": "BharatCode Evaluations",
+      "kind": "native",
+      "version": "unqualified",
+      "source": "https://github.com/hccccc01333/dsh-eval",
+      "sourceCommit": "47f39d7c1453de16b7ed1a3846980d0765eb1f3a",
+      "license": "Unresolved; see upstream terms",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Internal qualification candidate. Older peers; useful for proving packs before public availability, not mandatory for end users."
+      ],
+      "description": "Scripted workflow evaluations, traces and comparisons.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "issue2pr",
+      "name": "Issue2PR",
+      "kind": "native",
+      "version": "0.4.0",
+      "source": "https://github.com/LONGSASASASASA/dsh-issue2pr",
+      "sourceCommit": "71f398373544ced002ff499fec57d28e642917bd",
+      "license": "MIT",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Do not default-install. Reconcile staged approval/planning with BC's native workflow before adding another orchestration layer."
+      ],
+      "description": "Opinionated issue-to-change pipeline.",
+      "tools": [],
+      "qualification": {}
+    },
+    {
+      "id": "data-pack",
+      "name": "Data and Notebooks",
+      "kind": "pack",
+      "version": "1.0.0",
+      "source": "https://github.com/arzvaak/Bharatcode-Harness",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select individual qualified components."
+      ],
+      "components": [
+        "datalayer-jupyter-mcp",
+        "motherduck-duckdb-mcp"
+      ],
+      "tools": []
+    },
+    {
+      "id": "academic-pack",
+      "name": "Academic",
+      "kind": "pack",
+      "version": "1.0.0",
+      "source": "https://github.com/arzvaak/Bharatcode-Harness",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select individual qualified components."
+      ],
+      "components": [
+        "reference-checker",
+        "zotero-dsh"
+      ],
+      "tools": []
+    },
+    {
+      "id": "media-pack",
+      "name": "Media",
+      "kind": "pack",
+      "version": "1.0.0",
+      "source": "https://github.com/arzvaak/Bharatcode-Harness",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select individual qualified components."
+      ],
+      "components": [
+        "subtitle-studio",
+        "dsh-ffmpeg"
+      ],
+      "tools": []
+    },
+    {
+      "id": "publishing-pack",
+      "name": "Technical Publishing",
+      "kind": "pack",
+      "version": "1.0.0",
+      "source": "https://github.com/arzvaak/Bharatcode-Harness",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": "0.2.0-rc.2",
+      "status": "needs-qualification",
+      "requirements": [
+        "Select individual qualified components."
+      ],
+      "components": [
+        "typst-preview",
+        "draw-io-official-mcp",
+        "bc-latex-documents"
+      ],
+      "tools": []
+    },
+    {
+      "id": "bc-ci-pipelines",
+      "name": "BharatCode Pipelines",
+      "description": "Inspect GitHub Actions and GitLab.com pipelines, read job logs, prepare fixes and request authorized reruns.",
+      "kind": "native",
+      "scope": "profile",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "version": "0.1.0-preview.1",
+      "packageName": "@bharatcode/ci-pipelines",
+      "source": "https://github.com/arzvaak/Bharatcode-Harness",
+      "sourceCommit": null,
+      "license": "MIT",
+      "bcVersion": ">=0.2.0-rc.2 <0.3.0",
+      "status": "needs-qualification",
+      "requirements": [
+        "Native Windows packed-install and native approval qualification pending.",
+        "GitHub Actions read permission or GitLab.com project CI access. Real-account workflows pending.",
+        "Reruns are disabled until explicitly configured; native approval required."
+      ],
+      "tools": [
+        "pipeline_list",
+        "pipeline_inspect",
+        "pipeline_jobs",
+        "pipeline_log",
+        "pipeline_rerun"
+      ],
+      "qualification": {}
+    },
+    {
+      "id": "bc-latex-documents",
+      "name": "BharatCode LaTeX Documents",
+      "description": "Use existing TeX Live or MiKTeX for LaTeX templates, equations, bibliographies and PDF output. Inspect and install the BC LaTeX starter skill in Skills Manager.",
+      "kind": "skill",
+      "version": "1.0.0",
+      "source": "https://github.com/arzvaak/Bharatcode-Harness",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": ">=0.2.0-rc.2",
+      "status": "bundled",
+      "requirements": [
+        "The starter skill is bundled with the standard Skills Manager. Install it explicitly in Skills Manager.",
+        "Requires an existing LaTeX engine; latexmk is recommended for repeated passes and bibliography builds. Managed TeX distribution setup is not qualified.",
+        "A version probe does not qualify compilation, project-specific classes, bibliography, fonts or native Windows PDF output."
+      ],
+      "dependencyIds": [
+        "pdflatex",
+        "latexmk"
+      ],
+      "tools": []
+    }
+  ],
+  "managedDependencies": [
+    {
+      "id": "typst-runtime",
+      "version": "0.15.1",
+      "architecture": "x64",
+      "source": "https://github.com/typst/typst",
+      "sourceCommit": "9dfd3a08500b7896045f907433cf7b4b02434fad",
+      "license": "Apache-2.0",
+      "status": "needs-qualification",
+      "provides": {
+        "typst": "0.15.1"
+      },
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "artifacts": {},
+      "commands": {}
+    }
+  ]
+}

@@ -160,6 +160,13 @@ export class ReactLoopAgent implements Agent {
     if (wakeup) this.wakeDriver(wakingAfterAbort)
   }
 
+  /** Resume an idle restored inbox without manufacturing another user message. */
+  resumePendingInput(): boolean {
+    if (this.phase.kind !== 'idle' || !this.inbox.hasPending) return false
+    this.wakeDriver()
+    return true
+  }
+
   followup(input: UserMessage): void {
     this.send(input, 'next-turn', true)
   }

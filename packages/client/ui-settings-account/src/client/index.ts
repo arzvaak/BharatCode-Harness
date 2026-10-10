@@ -46,9 +46,21 @@ export function apply(ctx: Context): void {
   const t = ctx.locale.bind('settings.account')
   const page = globalThis as Partial<Record<typeof CONTACT_CONFIG_GLOBAL, unknown>>
   const config = ContactConfig(page[CONTACT_CONFIG_GLOBAL] ?? {})
-  let snapshot: AccountSnapshot = { view: undefined, details: undefined, failed: false, loginVisible: false }
+  const localProfile = (globalThis as typeof globalThis & { __BC_LOCAL_PROFILE__?: { name?: string } }).__BC_LOCAL_PROFILE__
+  const localName = typeof localProfile?.name === 'string' ? localProfile.name.trim() : ''
+  let snapshot: AccountSnapshot = {
+    ...(localName ? { displayName: localName } : {}), view: undefined, details: undefined, failed: false, loginVisible: false,
+  }
   const listeners = new Set<() => void>()
   const publish = (value: AccountSnapshot) => { snapshot = value; for (const listener of listeners) listener() }
+  const profileForm = ctx.configForms.get<{ displayName?: string }>(DESKTOP_ONBOARDING_NAMESPACE)
+  const syncDisplayName = () => {
+    const savedName = profileForm.getSnapshot().value?.displayName
+    const name = (typeof savedName === 'string' ? savedName.trim() : '') || localName
+    if (name !== snapshot.displayName) publish({ ...snapshot, displayName: name })
+  }
+  ctx.effect(() => profileForm.subscribe(syncDisplayName), 'account: profile display preference')
+  syncDisplayName()
   /** @returns the client identity for one account call, read at call time so it carries the language and zone in effect then. */
   const client = () => accountClientMetadata(ctx.locale.getSnapshot().active, process.env.DSH_CLIENT_VERSION)
   // The browser half of the notice lifecycle: reads when the account becomes
@@ -160,6 +172,12 @@ export function apply(ctx: Context): void {
     subscribeModelSignInRequired: listener => ctx.remote.$on('deepseek-account/model-sign-in-required', listener),
     ...nativePlatform === undefined ? {} : { openPlatformPage: platformPageOpener(refreshAccount) },
     refreshAccount,
+    async saveDisplayName(name) {
+      const value = name.trim()
+      if (!value || value.length > 80) throw new Error('Invalid display name')
+      if (!await profileForm.set('displayName', value)) throw new Error('Display name was not saved')
+      syncDisplayName()
+    },
     contactUs() {
       // Sample the account, build and environment before awaiting native information, so
       // a profile the read outlasts cannot replace the UID this click reported.
@@ -239,6 +257,7 @@ export function apply(ctx: Context): void {
       operations.hooks.account,
       readOnboardingApiKeyPresence,
       ctx.configForms.describe(),
+      true,
     )
     ctx.effect(() => () => { controller.dispose() }, 'account: desktop onboarding lifetime')
     ctx.effect(() => {
@@ -252,6 +271,7 @@ export function apply(ctx: Context): void {
     }, 'account: desktop credential readiness')
     ctx.slots.inject('shell.overlay', () => ctx.slots.register({
       name: 'shell.overlay', id: 'desktop-onboarding', locale: 'settings.account',
+      children: { 'settings.account.provider-setup': { kind: 'single', scope: 'root' } },
       inject: (): DesktopOnboardingInjected => ({
         hooks: { account: operations.hooks.account, onboarding: controller.state },
         // Onboarding's recharge return re-reads profile and balance only.
@@ -291,7 +311,7 @@ export function apply(ctx: Context): void {
     const update = () => {
       if (snapshot.view?.status === 'credential-stored') {
         unregister ??= ctx.slots.register({
-          name: 'settings.section', id: 'account', order: -10, label: () => t('nav'),
+          name: 'settings.section', id: 'deepseek-account', order: 90, label: () => t('deepseekProviderAccount'),
           locale: 'settings.account', inject: () => operations,
         }, AccountSection)
       } else {

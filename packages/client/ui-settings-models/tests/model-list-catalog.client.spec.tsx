@@ -105,3 +105,20 @@ it('restores inherited image input after a failed catalog read is retried manual
   expect(discover).toHaveBeenCalledTimes(2)
   expect(onChange).not.toHaveBeenCalled()
 })
+
+
+it('adopts endpoint reasoning maps together with model capacities', async () => {
+  const onChange = vi.fn()
+  render(<ModelListEditor
+    models={[]} onChange={onChange} probe={{ settingsNs: 'llm-pi-ai', baseURL: 'https://endpoint.example/v1' }}
+    disabled={false} t={key => en[key]} onBusyChange={() => {}}
+    operations={operations(() => Promise.resolve({ kind: 'found', models: [{
+      id: 'thinking', contextWindow: 65536, maxTokens: 4096, reasoningEfforts: { off: null, high: 'high', max: 'ultra' },
+    }] }))}
+  />)
+  fireEvent.click(screen.getByRole('button', { name: en.fetchModels }))
+  const picker = await screen.findByRole('dialog', { name: en.fetchTitle })
+  expect(within(picker).getByRole<HTMLInputElement>('checkbox').checked).toBe(true)
+  fireEvent.click(within(picker).getByRole('button', { name: en.fetchAdopt }))
+  expect(onChange).toHaveBeenCalledWith([{ id: 'thinking', contextWindow: 65536, maxTokens: 4096, reasoningEfforts: { off: null, high: 'high', max: 'ultra' } }])
+})

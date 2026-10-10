@@ -1,7 +1,7 @@
 /** Sidebar account launcher and locally authoritative sign-out action. */
 import { useEffect, useRef, useState } from 'react'
 import {
-  Toast, Menu, IconEllipsisOutlineMedium, IconPaperPlaneOutlineMedium, IconSettingsOutlineMedium, IconUserOutlineMedium,
+  Toast, Menu, Modal, Button, IconEllipsisOutlineMedium, IconSettingsOutlineMedium, IconUserOutlineMedium,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { AccountSectionInjected } from './AccountSection.tsx'
@@ -15,14 +15,14 @@ import css from './AccountMenu.module.css'
 /** Account launcher composed by the settings shell. */
 export type AccountMenuProps = PropsRuntime<'settings.launcher'> & PropsLocale<'settings.account'> & InjectFace<AccountSectionInjected>
 
-/** The signed-in label stays empty while the profile loads.
+/** The launcher keeps a user label while the profile loads.
  * @param props - sidebar geometry, settings navigation and account operations.
  * @returns account menu launcher.
  */
 export function AccountMenu({
   subscribeSessionExpired, subscribeModelSignInRequired, wide, settingsShortcut, openSettings, openOnboarding, settingsOpen,
   useAccount, useTheme, signOut, hasRunningAccountTasks, refreshAccount, bonusNoticeShown, bonusNoticeDismissed,
-  contactUs, showLogin, start, cancel, t,
+  showLogin, start, cancel, saveDisplayName, t,
 }: AccountMenuProps) {
   const anchor = useRef<HTMLDivElement>(null)
   // The launcher outlives the panel, so a false-to-true edge is one Settings entry:
@@ -40,8 +40,10 @@ export function AccountMenu({
   const [expiryNotice, setExpiryNotice] = useState(false)
   useEffect(() => subscribeSessionExpired?.(() => { setExpiryNotice(true) }), [subscribeSessionExpired])
   const profile = account.details?.profile
-  const label = profile === undefined ? null : profile.status === 'ready'
-    ? profile.value.name ?? profile.value.contact ?? t('signedIn') : t('signedIn')
+  const label = account.displayName?.trim() || (signedIn && profile?.status === 'ready'
+    ? profile.value.name?.trim() || profile.value.contact?.trim() : '') || t('signedIn')
+  const [editName, setEditName] = useState<string | undefined>()
+  const [nameError, setNameError] = useState(false)
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLButtonElement>(null)
   const [busy, setBusy] = useState(false)
@@ -66,22 +68,34 @@ export function AccountMenu({
         {signedIn
           ? <span className={css.avatar}><AccountAvatar url={profile?.status === 'ready' ? profile.value.avatarUrl : null} /></span>
           : <IconEllipsisOutlineMedium size={14} />}
-        {wide && <span className={css.label}>{signedIn ? label : t('more')}</span>}
+        {wide && <span className={css.label}>{label}</span>}
       </button>}
       items={[
         { id: 'settings', label: t('settings'), icon: <IconSettingsOutlineMedium size={16} />,
           ...(settingsShortcut === undefined ? {} : { shortcut: settingsShortcut }) },
-        { id: 'contact', label: t('contactUs'), icon: <IconPaperPlaneOutlineMedium size={16} /> },
+        ...(saveDisplayName ? [{ id: 'displayName', label: t('editDisplayName'), icon: <IconUserOutlineMedium size={16} /> }] : []),
         ...(signedIn ? [{ id: 'signout', label: t('signOut'), icon: <LogoutIcon />, disabled: busy }]
           : [{ id: 'signin', label: t('signIn'), icon: <IconUserOutlineMedium size={16} /> }]),
       ]}
       onClose={() => { setOpen(false) }}
       onSelect={(id) => {
         if (id === 'settings') { setOpen(false); trigger.current?.focus(); openSettings() }
-        else if (id === 'contact') { setOpen(false); contactUs() }
+        else if (id === 'displayName') { setOpen(false); setNameError(false); setEditName(account.displayName ?? label) }
         else if (id === 'signin') beginSignIn()
         else void requestSignOut()
       }} />
+    {editName !== undefined && <Modal open title={t('editDisplayName')} closeLabel={t('close')} onClose={() => { if (!busy) setEditName(undefined) }}>
+      <form onSubmit={(event) => {
+        event.preventDefault()
+        setBusy(true); setNameError(false)
+        void saveDisplayName?.(editName).then(() => { setEditName(undefined) })
+          .catch(() => { setNameError(true) }).finally(() => { setBusy(false) })
+      }}>
+        <label>{t('displayName')}<input aria-label={t('displayName')} maxLength={80} value={editName} disabled={busy} onChange={(event) => { setEditName(event.target.value) }} /></label>
+        {nameError && <p role="alert">{t('failed')}</p>}
+        <Button variant="primary" type="submit" disabled={busy || !editName.trim()}>{t('saveDisplayName')}</Button>
+      </form>
+    </Modal>}
     {account.loginVisible && !account.onboarding && <SignInDialog account={account} colorScheme={colorScheme}
       start={start} cancel={cancel} t={t}
       close={() => { showLogin(false) }} useApiKey={() => { showLogin(false); openOnboarding('deepseek-official') }} />}

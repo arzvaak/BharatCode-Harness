@@ -1,8 +1,8 @@
-DeepSeek Harness
-DeepSeek Harness
-添加一个 API Key 开始使用
-配置 DeepSeek 官方模型，即可开始使用
-输入 API 密钥 [password]
+BharatCode
+BharatCode
+连接 BharatCode
+输入 BharatCode 订阅的访问密钥。也可以跳过此步骤，在设置 → Providers 中选择其他提供商。
+输入 BharatCode 访问密钥 [password]
 保存并继续 [disabled]
 稍后配置
-返回登录
+返回

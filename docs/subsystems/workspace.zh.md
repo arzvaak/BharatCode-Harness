@@ -224,6 +224,276 @@ Host service backing the generated `ctx.remote.directoryPicker` namespace. The s
 
 Source: [`packages/api/workspace-controller/src/directory-picker.ts`](../../packages/api/workspace-controller/src/directory-picker.ts)
 
+<a id="ctxdocumentdraftcontroller--documentdraftcontroller"></a>
+
+### `ctx.documentDraftController` — `DocumentDraftController`
+
+Remote operations over durable editing drafts; these operations never publish workspace files.
+
+```ts cordis-catalog
+/** Read the host-private recovery copy for this session and path.
+ * @param sessionId - Draft owner.
+ * @param path - Workspace path identifying the draft.
+ * @returns The recovery draft, or undefined when none is saved.
+ */
+@Remote readDraft(sessionId: SessionId, path: string): DocumentRecoveryDraft | undefined
+
+/** Save the optimistic revision only after durable storage acknowledges it.
+ * @param request - Draft content and expected recovery revision.
+ * @returns The durable saved recovery revision.
+ */
+@Remote saveDraft(request: SaveDocumentDraftRequest): Promise<DocumentRecoveryDraft>
+
+/** Remove only the expected recovery revision; a newer draft is preserved.
+ * @param sessionId - Draft owner.
+ * @param path - Workspace path identifying the draft.
+ * @param expectedRevision - Recovery revision authorized for deletion.
+ */
+@Remote clearDraft(sessionId: SessionId, path: string, expectedRevision: string): Promise<void>
+```
+
+Types: [SessionId](core.zh.md)
+
+Source: [`packages/api/workspace-controller/src/documents.ts`](../../packages/api/workspace-controller/src/documents.ts)
+
+<a id="ctxdocumentdrafts--documentdrafts"></a>
+
+### `ctx.documentDrafts` — `DocumentDrafts`
+
+Durable host-private drafts with optimistic revision checks and serialized writes.
+
+```ts cordis-catalog
+/** Read the recovery revision without modifying project files.
+ * @param session - Draft owner.
+ * @param path - Draft workspace path.
+ * @returns An immutable draft copy, or undefined.
+ */
+read(session: SessionId, path: string): DocumentRecoveryDraft | undefined
+
+/** Persist a draft only when its expected revision matches the current copy.
+ * @param input - Recovery content and expected revision.
+ * @returns A durable immutable revision after storage acknowledgement.
+ */
+save(input: SaveDocumentDraftRequest): Promise<DocumentRecoveryDraft>
+
+/** Remove the expected recovery copy while preserving concurrent changes.
+ * @param session - Draft owner.
+ * @param path - Draft workspace path.
+ * @param expectedRevision - Exact revision authorized for deletion.
+ */
+clear(session: SessionId, path: string, expectedRevision: string): Promise<void>
+```
+
+Types: [SessionId](core.zh.md)
+
+Source: [`packages/workspace/workspace/src/document-drafts.ts`](../../packages/workspace/workspace/src/document-drafts.ts)
+
+<a id="ctxprojectknowledge--projectknowledge"></a>
+
+### `ctx.projectKnowledge` — `ProjectKnowledge`
+
+Durable project evidence service independent of optional memory/search integrations.
+
+```ts cordis-catalog
+/** Capture a complete registered UTF-8 file without changing it.
+ * @param request - Selected project source and evidence classification.
+ * @returns An immutable revision; repeat registration is idempotent.
+ */
+async register(request: RegisterArtifactRequest): Promise<ArtifactRevision>
+
+/** Register a bounded host-projected conversation capture without reading or rewriting a file.
+ * @param request - Project, projected untrusted text, and immutable snapshot identity.
+ * @returns The same revision for an identical sequence capture.
+ */
+async registerSessionSnapshot(request: RegisterSessionSnapshotRequest): Promise<ArtifactRevision>
+
+/** Read an immutable revision even when its original file changed or disappeared.
+ * @param id - Previously registered revision identity.
+ * @returns Complete captured source with its classification and revision.
+ */
+read(id: ArtifactRevisionId): ArtifactRevision
+
+/** Retrieve only explicitly registered evidence in the selected project.
+ * @param request - Project and literal text to match; an empty query browses registered sources.
+ * @returns Newest matching revision per source, bounded by deployment policy.
+ */
+search(request: SearchArtifactsRequest): SearchArtifactsResult
+
+/** Link captured revisions explicitly, without changing their classification.
+ * @param request - Source, target, relationship, and explicit cross-project destination.
+ * @returns Idempotent immutable revision relationship.
+ */
+async link(request: LinkArtifactsRequest): Promise<ArtifactRelation>
+
+/** Inspect outgoing and incoming revision backlinks, including conflicts.
+ * @param id - Selected captured artifact revision.
+ * @returns Explicit relationships in creation order.
+ */
+related(id: ArtifactRevisionId): readonly ArtifactRelation[]
+
+/** Select complete revisions for a bounded immutable handoff attachment.
+ * @param request - Explicit project and ordered evidence selection.
+ * @returns Captured evidence and omission notices within the complete byte limit.
+ */
+capture(request: CaptureArtifactsRequest): CapturedArtifacts
+
+/** Compare a selected capture with its current source without changing context.
+ * @param id - Captured document revision.
+ * @returns Current, stale, or missing source status.
+ */
+async inspect(id: ArtifactRevisionId): Promise<ArtifactInspection>
+
+/** Explicitly capture the latest source while retaining the earlier revision.
+ * @param id - Earlier capture whose source the user chose to refresh.
+ * @returns A newly captured revision or the existing identical revision.
+ */
+refresh(id: ArtifactRevisionId): Promise<ArtifactRevision>
+
+/** Prepare one immutable task and persist its destination before submission.
+ * @param input - Objective, selected evidence, explicit project destination, and unresolved questions.
+ * @returns The same handoff on retry; reusing its identity for different content rejects.
+ */
+prepareHandoff(input: PrepareHandoffRequest): Promise<PreparedHandoff>
+
+/** Inspect a handoff without refreshing any selected source.
+ * @param id - Prepared task identity.
+ * @returns A detached immutable copy of the captured task.
+ */
+handoff(id: HandoffId): PreparedHandoff
+
+/** Render the exact user-authorized objective and captured source data for admission.
+ * @param id - Prepared task identity.
+ * @returns Bounded model-facing text, retained by the receiving session's user message.
+ */
+renderHandoff(id: HandoffId): string
+
+/** Commit the receipt only after the receiving inbox admits this task.
+ * @param id - Successfully submitted handoff.
+ * @returns The submitted record; repeated receipts do not create another task.
+ */
+async acknowledgeHandoff(id: HandoffId): Promise<PreparedHandoff>
+```
+
+Source: [`packages/workspace/workspace/src/project-knowledge.ts`](../../packages/workspace/workspace/src/project-knowledge.ts)
+
+<a id="ctxprojectknowledgecontroller--projectknowledgecontroller"></a>
+
+### `ctx.projectKnowledgeController` — `ProjectKnowledgeController`
+
+Generated `knowledge` Remote owner, independent of optional integrations.
+
+```ts cordis-catalog
+/**
+ * Register immutable project evidence.
+ * @param request - Explicit source registration.
+ * @returns Captured immutable source revision.
+ */
+@Remote('register') register(request: RegisterArtifactRequest): Promise<ArtifactRevision>
+
+/**
+ * Search registered project sources without initiating model work.
+ * @param request - Selected project and literal query.
+ * @returns Registered source matches.
+ */
+@Remote('search') search(request: SearchArtifactsRequest): SearchArtifactsResult
+
+/**
+ * Capture bounded conversation evidence from the selected project session.
+ * @param request - Explicit project/session source.
+ * @returns Immutable bounded conversation evidence with omission facts.
+ */
+@Remote('captureSession') async captureSession(request: CaptureSessionArtifactRequest): Promise<ArtifactRevision>
+
+/**
+ * Record an explicit relationship between immutable source revisions.
+ * @param request - Explicit revision relationship.
+ * @returns Durable implementation or evidence backlink.
+ */
+@Remote('link') link(request: LinkArtifactsRequest): Promise<ArtifactRelation>
+
+/**
+ * Read source relationships and conflicts.
+ * @param id - Captured revision.
+ * @returns Explicit backlinks and conflicts.
+ */
+@Remote('related') related(id: ArtifactRevisionId): readonly ArtifactRelation[]
+
+/**
+ * Read the complete immutable source revision.
+ * @param id - Captured revision.
+ * @returns Complete immutable source content.
+ */
+@Remote('read') read(id: ArtifactRevisionId): ArtifactRevision
+
+/**
+ * Compare the source revision with its current origin.
+ * @param id - Captured revision.
+ * @returns Current, stale, or missing source status.
+ */
+@Remote('inspect') async inspect(id: ArtifactRevisionId): Promise<ArtifactInspection>
+
+/**
+ * Capture a fresh revision from the existing source origin.
+ * @param id - Earlier revision to refresh explicitly.
+ * @returns Latest source capture.
+ */
+@Remote('refresh') refresh(id: ArtifactRevisionId): Promise<ArtifactRevision>
+
+/**
+ * Capture the selected workspace outputs.
+ * @param request - Explicit revision selection.
+ * @returns Bounded complete evidence and omissions.
+ */
+@Remote('capture') capture(request: CaptureArtifactsRequest): CapturedArtifacts
+
+/**
+ * Prepare evidence and task identity for an explicit destination.
+ * @param request - Objective and explicit evidence/destination selection.
+ * @returns Retry-stable prepared task.
+ */
+@Remote('prepareHandoff') async prepareHandoff(request: PrepareHandoffRequest): Promise<PreparedHandoff>
+
+/**
+ * Read a prepared handoff and its admission receipt.
+ * @param id - Prepared handoff.
+ * @returns Immutable task and admission receipt.
+ */
+@Remote('handoff') handoff(id: HandoffId): PreparedHandoff
+
+/**
+ * Read handoffs admitted to the receiving session.
+ * @param sessionId - Receiving session.
+ * @returns Captured handoffs admitted to that session, in log order.
+ */
+@Remote('usingContext') async usingContext(sessionId: SessionId): Promise<readonly PreparedHandoff[]>
+
+/**
+ * Read the latest explicitly selected session workflow.
+ * @param sessionId - Session to inspect without activating an agent.
+ * @returns Latest explicit workflow assignment.
+ */
+@Remote('workflow') async workflow(sessionId: SessionId): Promise<WorkflowProfile | undefined>
+
+/**
+ * Persist the user-selected workflow before acknowledging it.
+ * @param request - Explicit session profile choice.
+ * @returns Persisted selected workflow.
+ */
+@Remote('assignWorkflow') async assignWorkflow(request: AssignWorkflowRequest): Promise<WorkflowProfile>
+
+/**
+ * Admit the prepared task through the durable receiving inbox.
+ * @param request - Prepared task identity and user-selected queue or steering mode.
+ * @param signal - Remote request lifetime; retry uses the same durable task identity.
+ * @returns Submitted handoff only after the receiving inbox crosses a durability checkpoint.
+ */
+@Remote('submitHandoff') submitHandoff(request: SubmitHandoffRequest, signal: AbortSignal): Promise<PreparedHandoff>
+```
+
+Types: [SessionId](core.zh.md)
+
+Source: [`packages/api/workspace-controller/src/knowledge.ts`](../../packages/api/workspace-controller/src/knowledge.ts)
+
 <a id="ctxterminalcontroller--terminalcontroller"></a>
 
 ### `ctx.terminalController` — `TerminalController`
@@ -421,6 +691,25 @@ Source: [`packages/api/workspace-controller/src/index.ts`](../../packages/api/wo
 Host Remote file reads and workspace directory observations over the composed filesystem.
 
 ```ts cordis-catalog
+/**
+ * Read complete editable content without normalizing or rewriting the source.
+ * @param workspaceFileScope - Receiving session's execution-world project root.
+ * @param path - Explicit file selection.
+ * @param signal - Request cancellation.
+ * @returns Complete source and its checked provider version.
+ */
+@Remote async readEditable(workspaceFileScope: WorkspaceFileScope, path: string, signal: AbortSignal): Promise<EditableWorkspaceDocument>
+
+/**
+ * Replace an explicitly opened project file through the provider's atomic version guard.
+ * @param workspaceFileScope - Session-derived root; editing never changes agent execution state.
+ * @param path - Existing regular project file.
+ * @param request - Complete draft and expected version.
+ * @param signal - Request cancellation.
+ * @returns Published content or the concurrent revision for explicit comparison.
+ */
+@Remote async saveEditable( workspaceFileScope: WorkspaceFileScope, path: string, request: SaveWorkspaceDocumentRequest, signal: AbortSignal, ): Promise<SaveWorkspaceDocumentResult>
+
 /**
  * Read one page of lines from a UTF-8 file readable by the filesystem backend.
  * @param workspaceFileScope - header-derived workspace root for the Session identity on the wire.

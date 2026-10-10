@@ -1,5 +1,5 @@
 ---
-description: "Official DeepSeek Harness brand occupants for the sidebar, active only in official builds; for users and maintainers choosing or replacing brand presentation."
+description: "BharatCode brand occupants for sidebar and conversation surfaces; for users and maintainers choosing or replacing brand presentation."
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-This package gives an `official` client build the DeepSeek Harness mark and name in the sidebar. Other build profiles keep the shell's fish mark and local-build label, while the conversation hero always uses the animated fish. Choose it for deployments branded as DeepSeek Harness; deployments with another identity should provide a replacement brand package. It has no runtime state and does not affect model requests.
+This package supplies the canonical orange BharatCode mark and name to the sidebar, collapsed rail, and conversation welcome in every build profile. Its Cordis registrations follow the declaring slots' lifetimes and withdraw on unload. Branding changes no storage directories, credentials, session records, or model requests.
 
 ## Table of Contents
 
@@ -25,15 +25,11 @@ This package gives an `official` client build the DeepSeek Harness mark and name
 <a id="use-this-package"></a>
 ## Use this package
 
-Mount this plugin in the browser roster of a deployment whose identity is DeepSeek's own, then build the client with the `official` profile so the occupants register.
+Mount this plugin in the browser roster. Local and packaged builds share the same product identity.
 
-### Choosing the profile
+### Build profiles
 
-`DSH_CLIENT_BUILD_PROFILE` selects which brand renders. An `official` build shows the official mark and name in the sidebar; any other value leaves the shell fallbacks — the fish mark and the local-build label — in place. The conversation hero shows the animated hero fish from `dsh-client-ui-conversation` regardless of profile, because that fallback is already the official mark. The plugin still loads and validates in both cases; only the registration is profile-gated.
-
-### Replacing the brand
-
-A deployment with its own identity leaves this package out and composes another package that occupies the sidebar slots — and the hero slot, which this package leaves on its fallback. Occupying a slot is the only composition route; there is no brand configuration surface here.
+All build profiles use the same BharatCode identity. A custom distribution can replace the slot occupants by composing its own brand plugin instead of this one.
 
 -----
 
@@ -43,7 +39,7 @@ A deployment with its own identity leaves this package out and composes another 
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-The two occupants install as one declaration-aware registration set: nested `ctx.slots.inject()` calls wait on the sidebar declaration, so the set works whether this row activates before or after the declarer, withdraws both occupants when the declaration collapses, and leaves no partial brand mix during HMR. The browser half is [`src/client/index.ts`](src/client/index.ts); the node half is an empty Loader seat. The browser title is a build-environment concern (`DSH_CLIENT_TITLE`), outside the slot system.
+The sidebar occupants install as one declaration-aware registration set: nested `ctx.slots.inject()` calls wait on the sidebar declaration, so the set works whether this row activates before or after the declarer, withdraws both occupants when the declaration collapses, and leaves no partial brand mix during HMR. The browser half is [`src/client/index.ts`](src/client/index.ts); the node half is an empty Loader seat. The conversation mark registers separately so either surface can mount independently. The browser title defaults to BharatCode and can be set with `DSH_CLIENT_TITLE`.
 
 </details>
 

@@ -1,0 +1,91 @@
+name: Core and packed extensions
+on:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: core-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DSH_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm run build
+      - run: pnpm run typecheck
+      - run: node scripts/extensions/core.mjs build
+      - name: Prepare pinned Electron for native graphics checks
+        run: node -e "require(require.resolve('electron/install.js', {paths:['./apps/desktop']}))"
+      - name: Native Linux graphics export and clipboard (owned display/profile)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2t64
+          # Configure Electron's supported SUID helper on this ephemeral runner.
+          # Keep renderer sandboxing enabled; never add --no-sandbox to qualify.
+          BC_ELECTRON_HELPER="$(node -e "const r=require('node:module').createRequire(process.cwd()+'/apps/desktop/package.json');process.stdout.write(require('node:path').join(require('node:path').dirname(r('electron')),'chrome-sandbox'))")"
+          test -f "$BC_ELECTRON_HELPER"
+          sudo chown root:root "$BC_ELECTRON_HELPER"
+          sudo chmod 4755 "$BC_ELECTRON_HELPER"
+          xvfb-run -a node integrations/visuals/scripts/native-export.mjs
+      - name: Native Windows graphics export and clipboard (owned profile)
+        if: runner.os == 'Windows'
+        run: node integrations/visuals/scripts/native-export.mjs
+      - name: Core package checks (compatibility skips are reported)
+        run: node scripts/extensions/core.mjs test
+      - run: node --test integrations/extension-store/tests/*.test.js integrations/ci-pipelines/tests/*.test.js
+      - name: Qualify pinned managed runtime with native install and document workflow
+        run: node scripts/extensions/qualify-managed.mjs
+      - uses: actions/upload-artifact@v6
+        with:
+          name: managed-runtime-${{ runner.os }}
+          path: dist/managed-dependencies
+          retention-days: 14
+      - run: node scripts/extensions/verify-core.mjs
+      - name: Install archives, boot native core and inspect controlled GitHub Actions evidence
+        env:
+          BC_QUALIFICATION_GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/extensions/packed-core.mjs
+      - uses: actions/upload-artifact@v6
+        with:
+          name: packed-core-${{ runner.os }}
+          path: dist/packed-core
+          retention-days: 14
+      - name: Prepare bubblewrap (sandbox backend)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: bash scripts/prepare-ci-bubblewrap.sh
+      - name: Linux complete unit suite
+        if: runner.os == 'Linux'
+        shell: bash
+        run: pnpm run test
+      - name: Native Windows process and installer checks
+        if: runner.os == 'Windows'
+        run: pnpm exec vitest run apps/desktop/tests/installer-packaging.spec.ts packages/boot/plugin-manager/tests packages/mcp/mcp-client/tests
+  verdict:
+    if: always()
+    needs: native
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every native lane
+        env:
+          RESULT: ${{ needs.native.result }}
+        run: test "$RESULT" = success

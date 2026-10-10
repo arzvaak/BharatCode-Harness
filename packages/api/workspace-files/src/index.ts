@@ -1,5 +1,5 @@
 /**
- * Workspace file service: read-only file previews, workspace directory
+ * Workspace file service: previews, version-checked document saves, directory
  * listings, and the filesystem-observation change feed, exposed as
  * `workspaceFiles`.
  *
@@ -8,7 +8,7 @@
  * relative paths, with the sandbox policy root as its no-cwd fallback, not a
  * read-containment restriction. Directory listings and change observations
  * remain workspace-scoped. File-kind checks and configured read caps apply to
- * every preview; this service exposes no mutations.
+ * every preview. Saves require workspace containment and the expected file version.
  *
  * A page is cut from `streamText`, which decodes and rejects non-UTF-8 as it
  * goes, so the file is read only up to the first character past the page and
@@ -24,6 +24,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-fs'
 import type { FsDirEntry, FsInfo, FsPathInfo, FsTarget } from '@deepseek-ai/dsh-fs'
+import { FsVersion } from '@deepseek-ai/dsh-fs'
 import type {} from '@deepseek-ai/dsh-sandbox-policy'
 import type {} from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-persistence'
@@ -31,6 +32,9 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { Remote, RemoteError, TypertRemoteService, type TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
 import { WorkspaceChangeFeed } from './changes.ts'
 import type {
+  EditableWorkspaceDocument,
+  SaveWorkspaceDocumentRequest,
+  SaveWorkspaceDocumentResult,
   WorkspaceByteRange,
   WorkspaceByteReadOptions,
   WorkspaceDirectoryEntry,
@@ -219,6 +223,60 @@ export class WorkspaceFiles extends TypertRemoteService {
         },
       })
     })
+  }
+
+  /**
+   * Read complete editable content without normalizing or rewriting the source.
+   * @param workspaceFileScope - Receiving session's execution-world project root.
+   * @param path - Explicit file selection.
+   * @param signal - Request cancellation.
+   * @returns Complete source and its checked provider version.
+   */
+  @Remote
+  async readEditable(workspaceFileScope: WorkspaceFileScope, path: string, signal: AbortSignal): Promise<EditableWorkspaceDocument> {
+    const file = await this.readBytes(workspaceFileScope, path, {}, signal)
+    let text: string
+    try { text = new TextDecoder('utf-8', { fatal: true }).decode(file.data) }
+    catch (cause) { throw new RemoteError('workspace-file/not-text', `"${path}" is not UTF-8 text`, { path }, { cause }) }
+    if (text.includes(NUL)) throw new RemoteError('workspace-file/not-text', `"${path}" is binary`, { path })
+    const current = await this.stat(workspaceFileScope, path, signal)
+    if (current.version !== file.version)
+      throw new RemoteError('gateway/bad-request', 'The document changed while it was being read; retry the read.', {})
+    return { ...current, text }
+  }
+
+  /**
+   * Replace an explicitly opened project file through the provider's atomic version guard.
+   * @param workspaceFileScope - Session-derived root; editing never changes agent execution state.
+   * @param path - Existing regular project file.
+   * @param request - Complete draft and expected version.
+   * @param signal - Request cancellation.
+   * @returns Published content or the concurrent revision for explicit comparison.
+   */
+  @Remote
+  async saveEditable(
+    workspaceFileScope: WorkspaceFileScope,
+    path: string,
+    request: SaveWorkspaceDocumentRequest,
+    signal: AbortSignal,
+  ): Promise<SaveWorkspaceDocumentResult> {
+    const { target } = await this.locateFile(workspaceFileScope, path, signal)
+    const root = await this.ctx.fs.resolve(workspaceFileScope.workspaceRoot, { signal })
+    if (!this.ctx.fs.contains(root, target))
+      throw new RemoteError('workspace-file/outside-workspace', `"${path}" is outside the workspace`, { path })
+    if (request.text.includes(NUL)) throw new RemoteError('workspace-file/not-text', 'Binary content cannot be saved as editable text.', { path })
+    if (Buffer.byteLength(request.text, 'utf8') > this.config.maxFileBytes)
+      throw new RemoteError('workspace-file/too-large', 'The draft exceeds the complete-file cap.', { path, limit: this.config.maxFileBytes })
+    try {
+      const outcome = await this.ctx.fs.writeText(target, request.text,
+        { kind: 'replaceIfVersion', version: FsVersion(request.expectedVersion) }, signal,
+        { mode: 'workspace-write', workspaceRoot: workspaceFileScope.workspaceRoot })
+      return { status: 'saved', document: { absolutePath: this.ctx.fs.processPath(target), version: outcome.version, text: request.text, bytes: Buffer.byteLength(request.text, 'utf8') } }
+    } catch (error) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'FS_STALE_VERSION')
+        return { status: 'conflict', current: await this.readEditable(workspaceFileScope, path, signal) }
+      throw error
+    }
   }
 
   /**

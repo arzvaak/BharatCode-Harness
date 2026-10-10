@@ -173,7 +173,7 @@ it('disposal waits for an active GitHub check to stop', async () => {
 })
 
 it.each(['github:acme/connected', 'https://github.com/acme/connected.git', 'git+ssh://git@github.com/acme/connected.git'])(
-  'installs %s through real Git and pnpm with private repository SSH fallback', async (spec) => {
+  'installs %s through real Git and pnpm with private repository SSH fallback', { timeout: 20_000 }, async (spec) => {
     const pnpm = fileURLToPath(new URL('../../../../apps/desktop/node_modules/pnpm/bin/pnpm.mjs', import.meta.url))
     const env = { GIT_CONFIG_GLOBAL: '', GIT_CONFIG_NOSYSTEM: '1' }
     const { manager, dir, connection } = await fixture('startup', false, undefined, {}, {

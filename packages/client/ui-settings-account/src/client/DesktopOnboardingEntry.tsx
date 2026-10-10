@@ -1,6 +1,6 @@
 /** Framework-hook projection into the desktop introduction's pure view. */
 import { useEffect, useLayoutEffect, useState } from 'react'
-import type { HostObservable, InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { HostObservable, InjectFace, PropsLocale, PropsRuntime, PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type { AccountSnapshot } from './AccountSection.tsx'
 import type { DesktopOnboardingProps, DesktopOnboardingState } from './onboarding-contract.ts'
@@ -20,8 +20,8 @@ export interface DesktopOnboardingInjected extends Omit<DesktopOnboardingProps, 
  * @param props - shell overlay bindings and account-owned actions.
  * @returns the unfinished flow, retained briefly after successful completion unless motion is reduced.
  */
-export function DesktopOnboardingEntry({ useOnboarding, useAccount, ...props }:
-  PropsRuntime<'shell.overlay'> & PropsLocale<'settings.account'> & InjectFace<DesktopOnboardingInjected>) {
+export function DesktopOnboardingEntry({ useOnboarding, useAccount, renderSlot, ...props }:
+  PropsRuntime<'shell.overlay'> & PropsRenderSlots<'settings.account.provider-setup'> & PropsLocale<'settings.account'> & InjectFace<DesktopOnboardingInjected>) {
   const locale = props.t('onboardingArtworkLocale')
   const state = useOnboarding(value => value)
   const account = useAccount(value => value)
@@ -56,5 +56,5 @@ export function DesktopOnboardingEntry({ useOnboarding, useAccount, ...props }:
   if (displayed === null) return state.status === 'loading'
     ? <OnboardingSurface><div role="status">{props.t('onboardingLoading')}</div></OnboardingSurface> : null
   return <DesktopOnboarding {...props} locale={locale} state={pendingCompletion ? { ...displayed, status: 'saving' } : displayed}
-    account={account} exiting={exiting} />
+    account={account} exiting={exiting} providerSetup={renderSlot('settings.account.provider-setup', {})} />
 }

@@ -612,7 +612,7 @@ describe('gate graph validation', () => {
         label: 'test',
         needs: ['native-system'],
         streamOutput: true,
-        args: ['/private/pnpm.cjs', 'exec', 'vitest', 'run'],
+        args: ['/private/pnpm.cjs', 'exec', 'node', 'scripts/test-unit.mjs'],
       })
       expect(gates[1]?.env ?? {}).not.toHaveProperty('DSH_COVERAGE_TEST_TIMEOUT_MS')
     }

@@ -243,7 +243,7 @@ const EXACT_EDITS: readonly ExactEdit[] = [
   {
     // The root contract claimed vendored packages keep their upstream names.
     id: 'root-agents-vendored-name-contract',
-    file: 'AGENTS.md',
+    file: 'DEVELOPER_GUIDE.md',
     find: 'vendored packages keep upstream names and are `private: true`. `cordis` is a peerDependency (+ dev) of every harness package.',
     replace: 'vendor is [rescoped](docs/rescope.md) and `private: true`. Harness packages declare `@deepseek-ai/cordis` in `peerDependencies`/`devDependencies`.',
     expect: 1,

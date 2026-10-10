@@ -219,7 +219,7 @@ This Dev Note is working context for maintainers and is explicitly non-authorita
 
 #### Promotion
 
-Promotion to a product-role group requires reviewing the public contract, limitations, test evidence, release payload, runtime dependents, and a named stable owner, per the [experimental subtree rules](../AGENTS.md).
+Promotion to a product-role group requires reviewing the public contract, limitations, test evidence, release payload, runtime dependents, and a named stable owner, per the [experimental subtree rules](../DEVELOPER_GUIDE.md).
 
 #### Future directions
 

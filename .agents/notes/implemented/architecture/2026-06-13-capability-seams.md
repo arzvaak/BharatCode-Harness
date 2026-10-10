@@ -35,4 +35,4 @@ A **seam** is the whole capability — the three roles together: a **Service Def
 
 ## Consequences
 
-Separating roles adds packages and boilerplate (`package.json`, `tsconfig`, README, and injection wiring). In return, Service Providers and Consumers ship and version independently, and a new backend never risks the model-facing contract. [AGENTS.md](../../../../AGENTS.md) and [architecture.md](../../../../docs/architecture.md) carry the rule; the bash trio is the reference template. This Agent Note records why independently changing roles normally split while genuinely shared concerns may remain folded.
+Separating roles adds packages and boilerplate (`package.json`, `tsconfig`, README, and injection wiring). In return, Service Providers and Consumers ship and version independently, and a new backend never risks the model-facing contract. [AGENTS.md](../../../../DEVELOPER_GUIDE.md) and [architecture.md](../../../../docs/architecture.md) carry the rule; the bash trio is the reference template. This Agent Note records why independently changing roles normally split while genuinely shared concerns may remain folded.

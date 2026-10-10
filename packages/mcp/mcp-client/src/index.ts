@@ -23,7 +23,7 @@ import { registerServerContext } from './server-context.ts'
 // Side-effect type import: declaration-merges `ctx.tools` onto Context.
 import type {} from '@deepseek-ai/dsh-tools'
 
-export { createMcpToolDefinition } from './tools.ts'
+export { createMcpToolDefinition, publicToolName } from './tools.ts'
 export type { McpResult, McpToolDefinitionOptions } from './tools.ts'
 export type { ReconnectConfig, ResolvedReconnectPolicy } from './connection.ts'
 
@@ -72,6 +72,8 @@ export interface StdioConfig {
   failOnStartupError: boolean
   /** Maximum UTF-8 bytes of attributed server instructions (default 32768). */
   maxInstructionBytes?: number
+  /** Restrict discovery to these exact upstream tool names across reconnects and notifications. */
+  allowedTools?: string[]
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
 }
@@ -96,6 +98,8 @@ export interface StreamableHttpConfig {
   failOnStartupError: boolean
   /** Maximum UTF-8 bytes of attributed server instructions (default 32768). */
   maxInstructionBytes?: number
+  /** Restrict discovery to these exact upstream tool names across reconnects and notifications. */
+  allowedTools?: string[]
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
 }
@@ -128,6 +132,7 @@ export const Config = z.union([
     failOnStartupError: z.boolean().default(false),
     maxInstructionBytes: z.number().step(1).min(1).default(DEFAULT_MAX_INSTRUCTION_BYTES),
     reconnect: Reconnect,
+    allowedTools: z.union([z.array(String)]),
   }),
   z.object({
     transport: z.const('streamable-http'),
@@ -138,6 +143,7 @@ export const Config = z.union([
     failOnStartupError: z.boolean().default(false),
     maxInstructionBytes: z.number().step(1).min(1).default(DEFAULT_MAX_INSTRUCTION_BYTES),
     reconnect: Reconnect,
+    allowedTools: z.union([z.array(String)]),
   }),
 ]) as z<ConfigInput, Config>
 

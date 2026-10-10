@@ -55,7 +55,7 @@ kind: "package-group"
 - [计算机操作](../../docs/subsystems/computer-use.zh.md)——桌面提供方选择。
 - [浏览器操作](../../docs/subsystems/browser-use.zh.md)——浏览器提供方选择与 Session 所有权。
 - [Agent Teams 子系统](../../docs/subsystems/agent-team.zh.md)——持久 Team 类型与 `ctx.agentTeams` 服务 API。
-- [实验子树规则](AGENTS.md)——实验状态放宽了什么、不放宽什么。
+- [实验子树规则](DEVELOPER_GUIDE.md)——实验状态放宽了什么、不放宽什么。
 
 -----
 

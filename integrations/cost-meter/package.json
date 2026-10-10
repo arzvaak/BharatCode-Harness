@@ -1,0 +1,145 @@
+{
+  "name": "@arzvaak/bharatcode-cost-meter",
+  "version": "1.8.12-bharatcode.1",
+  "description": "BharatCode cost and usage meter with English UI, exact provider route pricing, and separate subscription quotas.",
+  "type": "module",
+  "main": "lib/index.js",
+  "bin": {
+    "dsh-cost-meter-repair-sessions": "./lib/repair-sessions-cli.js"
+  },
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./typert": {
+      "default": "./lib/typert.host.js"
+    },
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    },
+    "compatibility": {
+      "dsh": ">=0.1.0-rc.5",
+      "dshReleases": {
+        "0.1.2-alpha.3": "compatible",
+        "0.1.2-alpha.4": "compatible",
+        "0.1.2-alpha.5": "compatible",
+        "0.1.2-rc.1": "compatible",
+        "0.1.3-alpha.1": "unknown",
+        "0.1.3-alpha.2": "compatible",
+        "0.1.5-alpha.1": "compatible",
+        "0.2.0-rc.1": "compatible",
+        "0.2.0-rc.2": "compatible"
+      }
+    }
+  },
+  "dshhub": {
+    "schemaVersion": 1,
+    "displayName": "dsh-cost-meter",
+    "summary": "BharatCode cost and usage meter with English UI, exact provider route pricing, and separate subscription quotas.",
+    "categories": [
+      "Costs",
+      "Web UI",
+      "Observability"
+    ],
+    "surfaces": [
+      "host",
+      "web"
+    ],
+    "capabilities": {
+      "provides": [
+        "service:cost-meter"
+      ]
+    },
+    "compatibility": {
+      "dsh": ">=0.1.0-rc.5",
+      "node": ">=20"
+    },
+    "permissions": {
+      "network": [
+        "https://api.deepseek.com",
+        "https://api-docs.deepseek.com",
+        "https://open.volcengineapi.com",
+        "https://ark.cn-beijing.volces.com",
+        "https://opencode.ai",
+        "https://api.anthropic.com",
+        "https://api.z.ai",
+        "https://open.bigmodel.cn",
+        "https://www.minimaxi.com",
+        "https://www.minimax.cn",
+        "https://www.minimax.io",
+        "https://api.kimi.com",
+        "https://api.moonshot.cn",
+        "https://openrouter.ai",
+        "https://api.siliconflow.cn",
+        "https://api.commandcode.ai",
+        "https://ax.ac.sugon.com",
+        "https://platform.qianwenai.com",
+        "https://platform-home.qianwenai.com",
+        "https://business.aliyuncs.com",
+        "https://platform.xiaomimimo.com"
+      ]
+    }
+  },
+  "files": [
+    "locale",
+    "lib",
+    "cordis.patch.yml",
+    "docs/provider-pricing.json",
+    "docs/bharatcode-pricing.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-credentials": "^0.1.0-rc.6 || ^0.1.1-0 || ^0.1.2-0 || ^0.1.3-0 || ^0.1.5-0 || >=0.2.0-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-home-paths": "^0.1.0-rc.6 || ^0.1.1-0 || ^0.1.2-0 || ^0.1.3-0 || ^0.1.5-0 || >=0.2.0-rc.1 <0.3.0-0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arzvaak/dsh-cost-meter.git"
+  },
+  "homepage": "https://github.com/Han-1413141/dsh-cost-meter#readme",
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "client-plugin",
+    "cost",
+    "usage",
+    "billing",
+    "budget",
+    "i18n",
+    "en"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/bharatcode*.test.mjs && node test/verify.mjs"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-credentials": "workspace:*",
+    "@deepseek-ai/dsh-home-paths": "workspace:*",
+    "esbuild": "^0.28.2"
+  }
+}

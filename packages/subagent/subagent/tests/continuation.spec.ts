@@ -3154,7 +3154,7 @@ describe('continuable settlement delivery', () => {
     expect(parent.session.snapshotEvents().some(event => event.type === 'turn/start')).toBe(false)
   })
 
-  it('records but cannot deliver a teardown notice once the parent is disposed too', async () => {
+  it('preserves an unread teardown notice across parent disposal and resume', async () => {
     const hold = Promise.withResolvers<undefined>()
     const adapter = new GatedAdapter([{ chunks: textResponse('interrupted'), gate: hold.promise }])
     const { ctx } = await setupWith(adapter)
@@ -3169,24 +3169,23 @@ describe('continuable settlement delivery', () => {
     const drained = ctx.subagents.drainContinuableDescendants([host.agent])
     hold.resolve(undefined)
     await drained
-    expect(settlementNotices(host.agent)).toHaveLength(1)
+    const notices = settlementNotices(host.agent)
+    expect(notices).toHaveLength(1)
 
-    // Disposal is a `keepInbox: false` cancel, so it durably cancels the notice
-    // it never claimed. Teardown delivery therefore reaches a parent that is
-    // still resident — a resumed one reads the log, not a pending message — and
-    // no wording anywhere may promise otherwise.
+    // Native handle disposal preserves queued inbox work; explicit cancellation
+    // still owns discarding unread messages. Resume must recover the exact notice.
     await host.dispose()
     const resumed = await ctx.agents.resume({
       resumeSessionId: parentId,
       agentOptions: { provider: 'mock', model: 'mock' },
     })
-    expect(settlementNotices(resumed.agent)).toEqual([])
+    expect(settlementNotices(resumed.agent)).toEqual(notices)
     await resumed.dispose()
-    // The account is still in the durable log: delivered, then cancelled unread.
+    // Disposal does not append a cancellation splice for preserved unread work.
     const persisted = await loadStoredSession(ctx.sessionPersistence, parentId)
     expect(persisted.events.flatMap(event => event.type === 'agent/inbox/spliced'
       ? [{ inserted: event.data.inserted.length, removed: event.data.removedCount ?? 0 }]
-      : [])).toEqual([{ inserted: 1, removed: 0 }, { inserted: 0, removed: 1 }])
+      : [])).toEqual([{ inserted: 1, removed: 0 }])
   })
 
   it('drops the notice without disturbing teardown when the parent is gone', async () => {

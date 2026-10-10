@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
   padding: 6px var(--dsh-sidebar-inline-padding);
   box-sizing: border-box;
   background: var(--dsw-specific-sidebar-fill);
@@ -121,9 +122,8 @@
 /* Scrollbars in the column are a pointer affordance: the shell adds this
    class whenever the pointer is not inside (SidebarRoot.tsx owns the linger),
    and rebinding ui-theme's indirection pair to `transparent` takes the thumb
-   out of every scroll region nested under it — the workspace browser's
-   session list. `transparent` rather than `display: none` on the bar:
-   the reservation (`scrollbar-gutter: stable` on the list) stays in force, so
+   out of every scroll region nested under it — the shared navigation and workspace scroll area. `transparent` rather than `display: none` on the bar:
+   the reservation (`scrollbar-gutter: stable` on the scroll area) stays in force, so
    revealing the thumb never reflows a row. Rebinding contract and the two
    rendering paths it reaches: ui-theme's README. */
 .root.quietBars {
@@ -550,18 +550,17 @@
   color: var(--dsw-alias-label-primary);
 }
 
-/* Region seat: always mounted so the foot never moves. Its trailing margin
-   cancels the wide shell inset so the nested scrollbar can sit at the sidebar
-   edge; the browser restores that inset inside its own rows. */
+/* Workspace rows expand inside the shared navigation scroll area. The
+   account footer remains a separate flex seat below that area. */
 .regionArea {
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
+  min-height: 240px;
   display: flex;
   flex-direction: column;
   margin-left: -4px;
   margin-right: calc(-1 * var(--dsh-sidebar-inline-padding));
   padding-left: 4px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .collapsed .regionArea {
@@ -612,3 +611,18 @@
     animation: none;
   }
 }
+
+.root > * { flex-shrink: 0; }
+.collapsed .regionArea { min-height: 120px; }
+
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
+}
+
+.scrollArea > * { flex-shrink: 0; }

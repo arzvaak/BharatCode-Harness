@@ -12,7 +12,7 @@
  * carries per-request state the process-wide dispatcher cannot, as `web-fetch-http`'s address
  * pinning does — says so with the marker below.
  *
- * Discovery is syntax-aware, as `scripts/AGENTS.md` requires: a line-wise regex misses the
+ * Discovery is syntax-aware, as `scripts/DEVELOPER_GUIDE.md` requires: a line-wise regex misses the
  * `{ dispatcher }` shorthand and a `new Alias(...)` whose import renamed `Agent`, and both bypass the
  * proxy exactly as the spelled-out forms do. Bindings from a dynamic `await import('undici')` count
  * the same as static ones — that is how this repository loads undici wherever the transport must

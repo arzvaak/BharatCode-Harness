@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for 2026-10-10-pwsh-startup-prompt-delivery.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-10-10-pwsh-startup-prompt-delivery.md
+/agent-note-wait-for-powershell-startup-prompt-delivery:
+  en: f0b54bf92c4a41f2
+  zh: d1c35a204bfe8e30
+/agent-note-wait-for-powershell-startup-prompt-delivery/problem:
+  en: 106d9f448dbf2f73
+  zh: 835d859d4f100f96
+/agent-note-wait-for-powershell-startup-prompt-delivery/decision:
+  en: 4f5b240313e99ee9
+  zh: 1c47d930e6169817
+/agent-note-wait-for-powershell-startup-prompt-delivery/consequences:
+  en: a49d9e1de72199cc
+  zh: 2003e601acfd1d27
+/agent-note-wait-for-powershell-startup-prompt-delivery/verification:
+  en: ee2f07479d5aac04
+  zh: 5d86b8a8288eb743
+/agent-note-wait-for-powershell-startup-prompt-delivery/alternatives-considered:
+  en: d49390a9e69b785d
+  zh: 073c05a696618c3d

@@ -597,7 +597,7 @@ function main(): void {
     console.log('verify-export-jsdoc: every exported name in each package API is documented.')
     return
   }
-  console.error(`verify-export-jsdoc: ${violations.length} JSDoc completeness violation(s) (see AGENTS.md):`)
+  console.error(`verify-export-jsdoc: ${violations.length} JSDoc completeness violation(s) (see DEVELOPER_GUIDE.md):`)
   for (const v of violations) console.error(`  ${v}`)
   process.exit(1)
 }

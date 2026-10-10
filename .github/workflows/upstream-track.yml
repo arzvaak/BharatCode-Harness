@@ -6,8 +6,6 @@ name: Upstream track
 # conflict-risk set), and keep one tracker issue updated with the delta.
 
 on:
-  schedule:
-    - cron: '23 6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -34,7 +32,7 @@ jobs:
           BASE=$(git merge-base HEAD upstream/master)
           NEW=$(git rev-list --count "$BASE"..upstream/master)
           FILES=$(git diff --name-only "$BASE"..upstream/master | sort -u)
-          OURS=$(git diff --name-only base/upstream-639ed01..HEAD | sort -u)
+          OURS=$(git diff --name-only "$BASE"..HEAD | sort -u)
           OVERLAP=$(comm -12 <(echo "$FILES") <(echo "$OURS") || true)
           {
             echo "new=$NEW"

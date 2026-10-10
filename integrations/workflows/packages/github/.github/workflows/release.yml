@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Gate
+        run: |
+          pnpm typecheck
+          pnpm test
+          pnpm run lint
+          pnpm build
+          pnpm run verify:self-contained
+          pnpm run verify:artifacts
+          pnpm run check:readmes
+
+      - name: Verify the changelog names this version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -q "## \[${VERSION}\]" CHANGELOG.md || { echo "CHANGELOG.md has no '## [${VERSION}]' section"; exit 1; }
+
+      - name: Publish to npm
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if npm view "@perrylink/dsh-github@${version}" version >/dev/null 2>&1; then
+            echo "@perrylink/dsh-github@${version} is already published; skipping npm publish"
+          else
+            # See the guard above: npm's read side can lag a successful publish, so a re-pushed
+            # tag can miss it and hit E409 ("Cannot publish over previously staged version"). That
+            # means the version already exists, so report it as done instead of failing the job.
+            set +e
+            out="$(npm publish --access public --provenance 2>&1)"
+            status=$?
+            set -e
+            printf '%s\n' "$out"
+            if [ "$status" -ne 0 ]; then
+              if printf '%s' "$out" | grep -q 'E409'; then
+                echo "already on the registry (E409); treating the publish as done"
+              else
+                exit "$status"
+              fi
+            fi
+          fi
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            echo "release ${{ github.ref_name }} already exists; skipping"
+            exit 0
+          fi
+          gh release create "${{ github.ref_name }}" --generate-notes

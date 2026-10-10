@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for 2026-10-10-independent-chat-folders.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-10-independent-chat-folders.md
+/agent-note-independent-chat-folders:
+  en: f48d986f286253a2
+  zh: ae2b17011b83ced2
+/agent-note-independent-chat-folders/problem:
+  en: ab7da9ea37f8089a
+  zh: 53f2dede96387001
+/agent-note-independent-chat-folders/decision:
+  en: 7c24f92c4a285160
+  zh: 6aac5458c8f5698e
+/agent-note-independent-chat-folders/consequences:
+  en: 2de9565fc4a8e7f7
+  zh: f70eeeb8d5071c84
+/agent-note-independent-chat-folders/verification:
+  en: 868fe39ccf9a044d
+  zh: b074d8b54e99e0e6
+/agent-note-independent-chat-folders/alternatives-considered:
+  en: 721842293ce87454
+  zh: 9cd508834b988144

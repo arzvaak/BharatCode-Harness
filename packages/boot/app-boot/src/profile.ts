@@ -181,7 +181,8 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
     bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-acp-app'],
   },
   web: {
-    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@local/max-tokens-continue'],
+    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@local/max-tokens-continue',
+      '@arzvaak/dsh-zero', '@local/dsh-visuals', 'dsh-tool-call-guard', '@michengai/dsh-skills-manager', '@arzvaak/dsh-provider-hub', '@arzvaak/bharatcode-subscriptions', '@arzvaak/bharatcode-cost-meter', 'dsh-context', '@linxin666/dsh-client-ui-task-board', 'dsh-library', 'dsh-lsp-actions', '@bharatcode/dsh-novel-continuity', 'dsh-deepread', '@bharatcode/extension-store'],
   },
   headless: {
     bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'],

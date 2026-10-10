@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "defaultOn": [
+    "@arzvaak/dsh-zero",
+    "@local/dsh-visuals",
+    "dsh-tool-call-guard",
+    "@michengai/dsh-skills-manager",
+    "@arzvaak/dsh-provider-hub",
+    "@arzvaak/bharatcode-subscriptions",
+    "@arzvaak/bharatcode-cost-meter",
+    "dsh-context",
+    "@linxin666/dsh-client-ui-task-board",
+    "dsh-library",
+    "dsh-lsp-actions",
+    "@bharatcode/dsh-novel-continuity",
+    "dsh-deepread",
+    "@bharatcode/extension-store"
+  ],
+  "packages": [
+    {
+      "id": "zero",
+      "directory": "integrations/zero",
+      "enabled": true,
+      "packageName": "@arzvaak/dsh-zero"
+    },
+    {
+      "id": "visuals",
+      "directory": "integrations/visuals",
+      "enabled": true,
+      "packageName": "@local/dsh-visuals"
+    },
+    {
+      "id": "tool-call-guard",
+      "directory": "integrations/tool-call-guard",
+      "enabled": true,
+      "packageName": "dsh-tool-call-guard"
+    },
+    {
+      "id": "skills-manager",
+      "directory": "integrations/skills-manager",
+      "enabled": true,
+      "packageName": "@michengai/dsh-skills-manager"
+    },
+    {
+      "id": "provider-hub",
+      "directory": "integrations/provider-hub",
+      "enabled": true,
+      "packageName": "@arzvaak/dsh-provider-hub"
+    },
+    {
+      "id": "subscriptions",
+      "directory": "integrations/subscriptions",
+      "enabled": true,
+      "packageName": "@arzvaak/bharatcode-subscriptions"
+    },
+    {
+      "id": "cost-meter",
+      "directory": "integrations/cost-meter",
+      "enabled": true,
+      "packageName": "@arzvaak/bharatcode-cost-meter"
+    },
+    {
+      "id": "context",
+      "directory": "integrations/context",
+      "enabled": true,
+      "packageName": "dsh-context"
+    },
+    {
+      "id": "task-board",
+      "directory": "integrations/workflows/packages/task-board",
+      "enabled": true,
+      "upstream": {
+        "url": "https://github.com/zhu1090093659/dsh-web.git",
+        "sha": "4c9d58741eedced1265e26bfb04105c0ca343ba4"
+      },
+      "limitations": "",
+      "packageName": "@linxin666/dsh-client-ui-task-board"
+    },
+    {
+      "id": "library",
+      "directory": "integrations/workflows/packages/library",
+      "enabled": true,
+      "upstream": {
+        "url": "git+https://github.com/PerryLink/dsh-library.git",
+        "sha": "cfec631aec779956fbcc2c66decb434826c93bac"
+      },
+      "limitations": "",
+      "packageName": "dsh-library"
+    },
+    {
+      "id": "lsp-actions",
+      "directory": "integrations/workflows/packages/lsp-actions",
+      "enabled": true,
+      "upstream": {
+        "url": "https://github.com/PerryLink/dsh-lsp-actions",
+        "sha": "50468c8e1f9996078298e246615516b6574fabe4"
+      },
+      "limitations": "Configure language servers or the official LSP seam. The default empty server map reports LSP_ACTION_UNAVAILABLE; server installation is outside this package.",
+      "packageName": "dsh-lsp-actions"
+    },
+    {
+      "id": "novel-continuity",
+      "directory": "integrations/workflows/packages/novel-continuity",
+      "enabled": true,
+      "upstream": {
+        "url": "https://github.com/akira399/dsh-novel-writer.git",
+        "sha": "b9e49227aa70f7e42d8a348fc104180d2fe497e7"
+      },
+      "limitations": "Scoped fork of the upstream core and canonical tools. The original writing workbench, presets, persona packs, and duplicate UI are omitted. Chapter targets retain upstream character-count semantics. Configure dataDir for isolated projects.",
+      "packageName": "@bharatcode/dsh-novel-continuity"
+    },
+    {
+      "id": "deepread",
+      "directory": "integrations/workflows/packages/deepread",
+      "enabled": true,
+      "upstream": {
+        "url": "git+https://github.com/xiehuan123/dsh-deepread.git",
+        "sha": "9462f1e546b94a7f27e77abaf3d9ee3fedf7f746"
+      },
+      "limitations": "Scoped fork of the original source/PDF extraction, model JSON retry, chunk synthesis, budget, calibration and URL cache engine. Modes quick/deep/book and English only. The duplicate shell, batch, maps, Feynman, background jobs, packaged skill and automatic disk exports are omitted. Reports require a configured model; estimate does not call a model.",
+      "packageName": "dsh-deepread"
+    },
+    {
+      "id": "extension-store",
+      "directory": "integrations/extension-store",
+      "enabled": true,
+      "packageName": "@bharatcode/extension-store"
+    }
+  ],
+  "optional": [
+    "engram",
+    "zotero",
+    "github",
+    "browser-playwright"
+  ],
+  "defaults": {
+    "zero": "safe",
+    "semanticMemory": false,
+    "searxng": false
+  }
+}

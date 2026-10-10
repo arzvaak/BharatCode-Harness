@@ -10,6 +10,8 @@ Installing WASM beside a usable native engine adds a second LibreOffice payload 
 
 ## Decision
 
+This record preserves the upstream DeepSeek Harness decision rationale. Pinned CI-file and workflow-test links below refer to the upstream `dsh-v0.2.0-rc.2` release tag; runner, trigger, and publication descriptions apply to that upstream implementation. The current BharatCode validation workflows are owned by [fork CI](../../../../.github/workflows/ci.yml) and the [development guide](../../../../docs/development.md).
+
 Harness selects one engine from the installed kit API’s `optionalDependencies`. A declared `@deepseek-ai/libreoffice-kit-${platform}-${arch}` requires that native package; other targets require the shared WASM package. The supported native target set belongs to the kit release, not an operating-system branch in Harness. A missing declared native package is an incomplete installation and never selects WASM. The provider has no direct WASM dependency.
 
 Python sidecar assembly copies only the selected engine and its dependency closure. Wheel packaging and runtime lookup select from the same kit manifest; the relocated conversion smoke checks the selected backend. Desktop filters its npm installation to that engine before signing and integrity sealing. Engine compilation, resolver compatibility, npm platform metadata, qualification, and publication remain in the kit repository.
@@ -28,4 +30,4 @@ Distributions with a declared native target omit WASM assets. Other targets reta
 
 A new engine package identity also requires updates to `LIBREOFFICE_PACKAGES` in `scripts/gen-third-party-notices.ts`, any applicable `minimumReleaseAgeExclude` entry in `pnpm-workspace.yaml`, and the package list in the [kit ownership note](2026-09-14-independent-libreoffice-kit.md). The license allowlist remains explicit.
 
-The [public Python release workflow](../../../../.github/workflows/python-release.yml) rejects any wheel at or above 100,000,000 bytes. Selecting one engine reduces payload size but does not establish that a runtime wheel meets this limit; npm engine publication and local conversion are separate from wheel upload eligibility.
+The [public Python release workflow](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/python-release.yml) rejects any wheel at or above 100,000,000 bytes. Selecting one engine reduces payload size but does not establish that a runtime wheel meets this limit; npm engine publication and local conversion are separate from wheel upload eligibility.

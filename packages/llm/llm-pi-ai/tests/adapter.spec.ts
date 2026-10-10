@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { load } from 'js-yaml'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Context, Service } from '@deepseek-ai/cordis'
 import { AttachmentId, AttachmentStore, ImageVariantId } from '@deepseek-ai/dsh-attachment'
@@ -636,6 +638,35 @@ describe('provider profile lifecycle', () => {
       failure: { code: 'UNSUPPORTED_REASONING_EFFORT' },
     })
     expect(server.requests).toHaveLength(1)
+  })
+
+  it('exposes and dispatches thinking controls from the shipped BharatCode models', async () => {
+    const patch = load(readFileSync('integrations/provider-hub/cordis.patch.yml', 'utf8')) as Array<{ id?: string; config?: { providers?: Record<string, LlmPiAi.PiAiProviderProfile> } }>
+    const profile = patch.find(row => row.id === 'llm-pi-ai')?.config?.providers?.bharatcode
+    expect(profile).toBeDefined()
+    vi.stubEnv('BHARATCODE_API_KEY', 'test-key')
+    const server = await mockServer(Array.from({ length: 7 }, () => ({ events: textEvents })))
+    const ctx = new Context()
+    try {
+      await ctx.plugin(LlmRuntime)
+      await ctx.plugin(LlmPiAi, { providers: { bharatcode: { ...profile, baseURL: `${server.url}/v1` } } })
+      for (const model of ['qwen-3.8-27b', 'deepseek-v4.1-flash']) {
+        const info = await ctx.llm.resolveModelInfo('bharatcode', model)
+        expect(info?.reasoning?.efforts.map(effort => effort.id)).toEqual(model.startsWith('deepseek') ? ['off', 'low', 'medium', 'high', 'max'] : ['off', 'high'])
+        for (const effort of model.startsWith('deepseek') ? ['low', 'medium', 'high', 'max', 'off'] : ['high', 'off']) {
+          await assemble(ctx, { provider: 'bharatcode', model, reasoningEffort: ReasoningEffortId(effort), messages: [] })
+        }
+      }
+      expect(server.requests[0]).toHaveProperty('chat_template_kwargs', { enable_thinking: true })
+      expect(server.requests[1]).toHaveProperty('chat_template_kwargs', { enable_thinking: false })
+      for (const [index, effort] of ['low', 'medium', 'high', 'max'].entries()) {
+        expect(server.requests[index + 2]).toMatchObject({ thinking: { type: 'enabled' }, reasoning_effort: effort })
+      }
+      expect(server.requests[6]).toMatchObject({ thinking: { type: 'disabled' } })
+      expect(server.requests[6]).not.toHaveProperty('reasoning_effort')
+    } finally {
+      await ctx.fiber.dispose()
+    }
   })
 
   it('dispatches the compat-switched dialect on a declared route', async () => {

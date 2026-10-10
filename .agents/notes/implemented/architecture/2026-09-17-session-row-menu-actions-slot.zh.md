@@ -20,7 +20,7 @@ action 发起的浮层必须活得比行菜单久，所以它们是本包注册�
 
 ## 考虑过的替代方案
 
-**在 `Menu` 与行组件之间放一个 React context。** 否决：业务组件不接触任何 React context（[client 规则](../../../../packages/client/AGENTS.md)）；Menu 与行是经 slot 系统建立的父子关系，控制权就该走 slot 的通道。
+**在 `Menu` 与行组件之间放一个 React context。** 否决：业务组件不接触任何 React context（[client 规则](../../../../packages/client/DEVELOPER_GUIDE.md)）；Menu 与行是经 slot 系统建立的父子关系，控制权就该走 slot 的通道。
 
 **由 owner 提供行能力。** 把 `pinned`/`archived` 和 `pin`/`archive`/`rename`/`fork` 回调经 owner props 或 slot 级 hook 交给条目，会让 browser 继续拥有每个动作，内置 action 沦为薄封装。否决：这些不是菜单的能力，每个 action 的行为属于它自己，需要的 Host 状态条目可以直接读。
 

@@ -188,6 +188,7 @@ export default defineConfig({
           include: testIncludes,
           exclude: [
             ...platformUnsupportedTests,
+            ...process.env.DSH_UNIT_SOURCE_SCANNERS === '1' ? ['scripts/oxlint-contract.spec.ts'] : [],
             ...processBoundTests,
             ...coverageExemptExcludes,
           ],

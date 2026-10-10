@@ -1,0 +1,4 @@
+# Mount the scoped English DeepRead report engine.
+- insert:
+    - id: deepread
+      name: dsh-deepread

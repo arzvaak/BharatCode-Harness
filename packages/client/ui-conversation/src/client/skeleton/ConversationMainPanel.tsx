@@ -45,13 +45,13 @@ export function ConversationMainPanel(props: ConversationSlotProps) {
   return (
     <div className={css.root} data-phase={phase}>
       {renderSlot('conversation.header', {})}
-      {renderFactorySlot('conversation.content', {
+      {renderSlot('conversation.workspace', { phase, hero }, { fallback: renderFactorySlot('conversation.content', {
         variant: 'main',
         phase,
         hero,
       }, {
         slots: CONTENT_SLOTS,
-      })}
+      }) })}
     </div>
   )
 }

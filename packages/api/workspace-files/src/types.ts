@@ -34,6 +34,20 @@ export interface WorkspaceFileStat {
   readonly bytes?: number
 }
 
+/** Complete UTF-8 source content; line endings and unsupported Markdown remain unchanged. */
+export interface EditableWorkspaceDocument extends WorkspaceFileStat {
+  readonly text: string
+}
+/** Explicit replacement guarded by the revision the editor opened. */
+export interface SaveWorkspaceDocumentRequest {
+  readonly text: string
+  readonly expectedVersion: string
+}
+/** A conflict never overwrites another writer's content. */
+export type SaveWorkspaceDocumentResult =
+  | { readonly status: 'saved'; readonly document: EditableWorkspaceDocument }
+  | { readonly status: 'conflict'; readonly current: EditableWorkspaceDocument }
+
 /**
  * The line window one `read` returns. Lines are 1-based and end at `\n`; a
  * final `\n` terminates the last line rather than starting an empty one.

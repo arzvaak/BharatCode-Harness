@@ -426,11 +426,12 @@ describe('BashTerminalBackend startup rollback', () => {
     let sent: TerminalSendRequest | undefined
     const session = {
       motd: '',
+      initialize: async () => {},
       startSend: (request: TerminalSendRequest) => {
         sent = request
         return {
           done: Promise.resolve({
-            viewport: 'setup-echo dsh> ', waitReason: 'stdin_read' as const,
+            viewport: `DSH_READY_${request.text.match(/'([0-9a-f-]{36})'/)?.[1]}\ndsh> `, waitReason: 'stdin_read' as const,
             sessionStatus: { kind: 'running' as const }, truncated: false,
           }),
           readOutput: () => ({ delta: '', truncated: false }),
@@ -446,8 +447,9 @@ describe('BashTerminalBackend startup rollback', () => {
       () => session,
     )
     expect(await backend.spawn(spec(agent(ctx)))).toBe(session)
-    expect(sent).toMatchObject({ text: ENCODING_PREAMBLE + PWSH_PROMPT_SETUP, submit: true })
-    expect(session.motd).toBe('setup-echo dsh> ')
+    expect(sent?.text.startsWith(ENCODING_PREAMBLE + PWSH_PROMPT_SETUP)).toBe(true)
+    expect(sent?.submit).toBe(true)
+    expect(session.motd).toMatch(/^DSH_READY_[0-9a-f-]+\ndsh> $/)
     expect(spawned?.env).toMatchObject({
       TERM: 'dumb', NO_COLOR: '1', DSH_SHELL: '1', DSH_SESSION_ID: 'agent', DSH_PTY_SESSION_ID: 'pty-1',
     })
@@ -455,7 +457,7 @@ describe('BashTerminalBackend startup rollback', () => {
     expect(spawned?.env?.PROMPT_COMMAND).toBeUndefined()
   })
 
-  it('keeps waiting for stdin_read when the first settled output only echoes the prompt literal', async () => {
+  it.each(['echo', 'acknowledgement'] as const)('waits for the controlled prompt after an early %s settlement', async (firstOutput) => {
     const ctx = new Context()
     await ctx.plugin(EmptySandbox)
     await ctx.plugin(SessionProjectionRegistry)
@@ -463,13 +465,14 @@ describe('BashTerminalBackend startup rollback', () => {
     const sends: TerminalSendRequest[] = []
     const session = {
       motd: '',
+      initialize: async () => {},
       startSend: (request: TerminalSendRequest) => {
         sends.push(request)
         const second = sends.length > 1
         return {
           done: Promise.resolve({
-            viewport: second ? 'dsh> ' : "function prompt { 'dsh> ' }\n",
-            waitReason: second ? 'stdin_read' as const : 'inferred_idle' as const,
+            viewport: second ? `DSH_READY_${sends[0]?.text.match(/'([0-9a-f-]{36})'/)?.[1]}\ndsh> ` : firstOutput === 'echo' ? "function prompt { 'dsh> ' }\n" : `DSH_READY_${sends[0]?.text.match(/'([0-9a-f-]{36})'/)?.[1]}\n`,
+            waitReason: 'stdin_read' as const,
             sessionStatus: { kind: 'running' as const }, truncated: false,
           }),
           readOutput: () => ({ delta: '', truncated: false }),
@@ -487,7 +490,7 @@ describe('BashTerminalBackend startup rollback', () => {
     await backend.spawn(spec(agent(ctx)))
     expect(sends).toHaveLength(2)
     expect(sends[1]).toMatchObject({ text: '', submit: false })
-    expect(session.motd).toBe('dsh> ')
+    expect(session.motd).toContain('DSH_READY_')
   })
 
   it('rejects a pwsh bootstrap whose shell exits or times out', async () => {
@@ -496,6 +499,7 @@ describe('BashTerminalBackend startup rollback', () => {
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(SandboxPolicyService, { mode: 'danger-full-access', workspaceRoot: '/workspace' })
     const sessionFor = (waitReason: TerminalWaitReason): LocalPtySession => ({
+      initialize: async () => {},
       startSend: () => ({
         done: Promise.resolve({
           viewport: 'no-prompt', waitReason,
@@ -531,6 +535,7 @@ describe('BashTerminalBackend startup rollback', () => {
       let closes = 0
       const session = {
         motd: '',
+        initialize: async () => {},
         startSend: () => {
           sends += 1
           return {
@@ -576,11 +581,12 @@ describe('BashTerminalBackend startup rollback', () => {
     const sends: TerminalSendRequest[] = []
     const session = {
       motd: '',
+      initialize: async () => {},
       startSend: (request: TerminalSendRequest) => {
         sends.push(request)
         return {
           done: Promise.resolve({
-            viewport: 'dsh> ', waitReason: 'stdin_read' as const,
+            viewport: `DSH_READY_${request.text.match(/'([0-9a-f-]{36})'/)?.[1]}\ndsh> `, waitReason: 'stdin_read' as const,
             sessionStatus: { kind: 'running' as const }, truncated: false,
           }),
           readOutput: () => ({ delta: '', truncated: false }),
@@ -597,7 +603,7 @@ describe('BashTerminalBackend startup rollback', () => {
     )
     const signal = new AbortController().signal
     const spawned = await backend.spawn({ ...spec(agent(ctx)), signal })
-    expect(spawned.motd).toBe('dsh> ')
+    expect(spawned.motd).toContain('DSH_READY_')
     expect(sends).toHaveLength(1)
     expect(sends[0]?.signal).toBe(signal)
   })

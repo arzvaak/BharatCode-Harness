@@ -44,6 +44,22 @@ function repository(test: TestContext) {
 }
 
 describe('maintained repository reference policy', () => {
+  it('accepts decimal SVG coordinates and compact path commands without accepting standalone commit references', () => {
+    const decimal = ['643', '5463'].join('')
+    const arc = ['1123', 'a12'].join('')
+    const commits = new Set([decimal, arc])
+    const path = `M33.78,7.${decimal} L4.${arc}.1233`
+    expect(findRepositoryReferences('client.js', `<path d="${path}"/>`, commits)).toEqual([])
+    expect(findRepositoryReferences('client.js.map', JSON.stringify({ sourcesContent: [`path:"${path}"`] }), commits)).toEqual([])
+    expect(findRepositoryReferences('source.md', `commit ${decimal}\nhttps://github.com/example/project/blob/${arc}/file`, commits)).toEqual([
+      { file: 'source.md', line: 1, kind: 'commit-hash' },
+      { file: 'source.md', line: 2, kind: 'commit-hash' },
+    ])
+    expect(findRepositoryReferences('source.md', `\`${decimal}\`\n\`${arc}\`\nv1.${arc}`, commits)).toHaveLength(3)
+    expect(findRepositoryReferences('source.md', `<path d="${path}"/> commit ${decimal}`, commits)).toHaveLength(1)
+    expect(findRepositoryReferences('source.md', `path:"https://github.com/example/project/blob/${arc}/file"`, commits)).toHaveLength(1)
+  })
+
   it('permits only the independent kit repository and its source URLs', () => {
     for (const suffix of ['', '.git', '/tree/main/packages/entry']) {
       expect(findRepositoryReferences('package.json', `${organizationUrl}/libreoffice-kit${suffix}`, new Set())).toEqual([])

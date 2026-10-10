@@ -1,0 +1,167 @@
+{
+  "language": "en",
+  "deferred": [
+    "searxng"
+  ],
+  "plugins": [
+    {
+      "id": "zero",
+      "directory": "integrations/zero",
+      "enabled": true,
+      "artifact": "integrations/artifacts/arzvaak-dsh-zero-0.1.0.tgz",
+      "sha256": "cfd515457ed06914ce46c6643ed2b1fa5d5aed8a240f6636d0b5811399d09fab"
+    },
+    {
+      "id": "visuals",
+      "directory": "integrations/visuals",
+      "enabled": true,
+      "artifact": "integrations/artifacts/local-dsh-visuals-0.1.0.tgz",
+      "sha256": "10815868bd6e4d443ee9438d896b6a9d20f289336a8d4834c05b040aebe6d5f8"
+    },
+    {
+      "id": "tool-call-guard",
+      "directory": "integrations/tool-call-guard",
+      "enabled": true,
+      "artifact": "integrations/artifacts/dsh-tool-call-guard-0.1.1.tgz",
+      "sha256": "930c23f657168ddad9518727784107005c973ecebaeb999f10b4473afedebd1f"
+    },
+    {
+      "id": "skills-manager",
+      "directory": "integrations/skills-manager",
+      "enabled": true,
+      "artifact": "integrations/artifacts/michengai-dsh-skills-manager-1.1.10.tgz",
+      "sha256": "03e88e62426c0e9a7ea072c6f8d5db39a1a649e3dd92a9682fdb016f140e8e55"
+    },
+    {
+      "id": "provider-hub",
+      "directory": "integrations/provider-hub",
+      "enabled": true,
+      "artifact": "integrations/provider-hub/artifacts/arzvaak-dsh-provider-hub-0.1.1-bharatcode.1.tgz",
+      "sha256": "8d6997dc390c0f51d729d6b8050813a057336972685204e5f721079a6990d4bc"
+    },
+    {
+      "id": "subscriptions",
+      "directory": "integrations/subscriptions",
+      "enabled": true,
+      "artifact": "integrations/subscriptions/artifacts/arzvaak-bharatcode-subscriptions-0.9.7-bharatcode.1.tgz",
+      "sha256": "c6456f999663d1c5876fac6fc36c23377d960e141b5c7288e865ca8d704325b6"
+    },
+    {
+      "id": "cost-meter",
+      "directory": "integrations/cost-meter",
+      "enabled": true,
+      "artifact": "integrations/cost-meter/artifacts/arzvaak-bharatcode-cost-meter-1.8.12-bharatcode.1.tgz",
+      "sha256": "dbbd8503eb1d3bee17c176d908cfff746fb4936df58d495f45f8a7b2bb4cb927"
+    },
+    {
+      "id": "engram",
+      "directory": "integrations/engram",
+      "enabled": true,
+      "artifact": "integrations/engram/kenz1117-dsh-engram-0.7.15.tgz",
+      "sha256": "a734ad404e800400b528c2c931e222220e2c0d6f86d4c1fab9ae45a32888c1f0"
+    },
+    {
+      "id": "context",
+      "directory": "integrations/context",
+      "enabled": true,
+      "artifact": "integrations/context/dsh-context-0.64.0.tgz",
+      "sha256": "98537089d3629baf735d6c7c252a19dc934e475f06a2ee6e5cea2ee5351d7edf"
+    },
+    {
+      "id": "zotero",
+      "directory": "integrations/workflows/packages/zotero",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/dsh-zotero-plugin-0.1.0-bharatcode.1.tgz",
+      "upstream": {
+        "url": "https://github.com/evanliu3594/dsh-zotero-plugin",
+        "sha": "25016b08c83d4600044da5548167a95461412423"
+      },
+      "limitations": "Requires a running Zotero desktop local API or a configured Zotero Web API library. No personal reference library was accessed.",
+      "sha256": "73f71aba5939ffc97ba62a5a229ccd7a82ad3a3de890cc82242c571b5bf9b78b"
+    },
+    {
+      "id": "github",
+      "directory": "integrations/workflows/packages/github",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/perrylink-dsh-github-0.7.19-bharatcode.1.tgz",
+      "upstream": {
+        "url": "https://github.com/PerryLink/dsh-github",
+        "sha": "5bd360b3615c02f45c79c0a9709cd413930d1031"
+      },
+      "limitations": "",
+      "sha256": "3717dd1a0b3242ba5369dfae12f13bb89399c4f38ec680493a00d03494a8642e"
+    },
+    {
+      "id": "task-board",
+      "directory": "integrations/workflows/packages/task-board",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/linxin666-dsh-client-ui-task-board-0.4.5-bharatcode.1.tgz",
+      "upstream": {
+        "url": "https://github.com/zhu1090093659/dsh-web.git",
+        "sha": "4c9d58741eedced1265e26bfb04105c0ca343ba4"
+      },
+      "limitations": "",
+      "sha256": "1d0d4c382c0ae9524f502042449a721e403e3043798a54765c00e6c4ec6b3757"
+    },
+    {
+      "id": "library",
+      "directory": "integrations/workflows/packages/library",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/dsh-library-0.2.19-bharatcode.1.tgz",
+      "upstream": {
+        "url": "git+https://github.com/PerryLink/dsh-library.git",
+        "sha": "cfec631aec779956fbcc2c66decb434826c93bac"
+      },
+      "limitations": "",
+      "sha256": "ddbb16c6f3c87cf640d73a792c3476ac032cfad972e251fea0761e217ebfccf7"
+    },
+    {
+      "id": "lsp-actions",
+      "directory": "integrations/workflows/packages/lsp-actions",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/dsh-lsp-actions-0.5.11-bharatcode.1.tgz",
+      "upstream": {
+        "url": "https://github.com/PerryLink/dsh-lsp-actions",
+        "sha": "50468c8e1f9996078298e246615516b6574fabe4"
+      },
+      "limitations": "Configure language servers or the official LSP seam. The default empty server map reports LSP_ACTION_UNAVAILABLE; server installation is outside this package.",
+      "sha256": "cfee3770e365b42a0305a724cd22f04bb88085f41d1c782c2a0dc2b12499d0ee"
+    },
+    {
+      "id": "browser-playwright",
+      "directory": "integrations/workflows/packages/browser-playwright",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/dsh-browser-playwright-0.1.1-bharatcode.1.tgz",
+      "upstream": {
+        "url": "https://github.com/ChenyuHeee/dsh-browser-playwright",
+        "sha": "57ebe45fb906b6977312a0c7562d407faee4b449"
+      },
+      "limitations": "Configure channel chromium for the installed Playwright browser. Model extraction needs a configured model. No external site navigation was used in verification.",
+      "sha256": "f28ee38e09c661a1b5aa787054acfe0e79d6864b10479a176c7b7043501aa0a4"
+    },
+    {
+      "id": "novel-continuity",
+      "directory": "integrations/workflows/packages/novel-continuity",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/bharatcode-dsh-novel-continuity-0.2.0-bharatcode.1.tgz",
+      "upstream": {
+        "url": "https://github.com/akira399/dsh-novel-writer.git",
+        "sha": "b9e49227aa70f7e42d8a348fc104180d2fe497e7"
+      },
+      "limitations": "Scoped fork of the upstream core and canonical tools. The original writing workbench, presets, persona packs, and duplicate UI are omitted. Chapter targets retain upstream character-count semantics. Configure dataDir for isolated projects.",
+      "sha256": "6c2ebd57bb4ba13e2af83c54a7c21ede7c39d85c827dc7f84912be9a8ec3e05c"
+    },
+    {
+      "id": "deepread",
+      "directory": "integrations/workflows/packages/deepread",
+      "enabled": true,
+      "artifact": "integrations/workflows/artifacts/dsh-deepread-1.0.1-bharatcode.1.tgz",
+      "upstream": {
+        "url": "git+https://github.com/xiehuan123/dsh-deepread.git",
+        "sha": "9462f1e546b94a7f27e77abaf3d9ee3fedf7f746"
+      },
+      "limitations": "Scoped fork of the original source/PDF extraction, model JSON retry, chunk synthesis, budget, calibration and URL cache engine. Modes quick/deep/book and English only. The duplicate shell, batch, maps, Feynman, background jobs, packaged skill and automatic disk exports are omitted. Reports require a configured model; estimate does not call a model.",
+      "sha256": "6d80d676c5faf598c13b99c1176532247398dca5b5f7c7bed0ee2822b4c19ddc"
+    }
+  ]
+}

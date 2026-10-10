@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-08-workflow-navigation-and-context-disclosure.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-10-08-workflow-navigation-and-context-disclosure.md
+/agent-note-workflow-navigation-and-dismissible-context-disclosure:
+  en: f52aab1227050c03
+  zh: 9c1203ddb2f66440
+/agent-note-workflow-navigation-and-dismissible-context-disclosure/problem:
+  en: 7a29a63fa2b57772
+  zh: 1a6d040594f3dae0
+/agent-note-workflow-navigation-and-dismissible-context-disclosure/decision:
+  en: 678acb7f9c28bbd3
+  zh: bb1cd21b8aa61be8
+/agent-note-workflow-navigation-and-dismissible-context-disclosure/alternatives-considered:
+  en: c7a1043eda5737ab
+  zh: 383cbd5af600389b
+/agent-note-workflow-navigation-and-dismissible-context-disclosure/consequences:
+  en: 8a55a7b99a790a60
+  zh: 622696b26e0de968

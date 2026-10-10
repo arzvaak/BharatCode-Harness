@@ -37,13 +37,15 @@ beforeEach(() => { localStorage.clear() })
 /** Runtime with the locale face installed (the browser entry declares `locale:` — zh default backs the t seat). */
 async function createRuntime(): Promise<SlotTestRuntime> {
   const runtime = await SlotTestRuntime.create()
+  runtime.ctx.provide('sidebarRight', { openResource: vi.fn(), openTab: vi.fn() })
+  runtime.ctx.provide('jobs', { state: createSnapshotStore({ rows: {}, observed: {} }), watchRows: () => () => {}, observe: () => () => {} })
   runtime.ctx.provide('shortcuts', { register: () => () => {}, catalog: createSnapshotStore([]) })
   runtime.ctx.provide('layout', { selectPanel: vi.fn(), beginNavigation: () => new AbortController().signal })
   runtime.releaseWorkspaceSource()
   // The rename flow never picks a directory; the namespace only has to be there
   // for ui-workspace's inject to settle.
   const directoryPicker = {}
-  runtime.remote.provideNamespaces({ directoryPicker })
+  runtime.remote.provideNamespaces({ directoryPicker, knowledge: {}, workspaceFiles: {}, documents: {} })
   const locale = new LocaleRuntime(runtime.ctx)
   runtime.ctx.provide('locale', locale)
   runtime.slots.installLocale(locale)
@@ -66,6 +68,8 @@ async function declareFrame(runtime: SlotTestRuntime): Promise<void> {
   await runtime.root.declare(
     {
       'sidebar.workspaces': { kind: 'single', scope: 'root' },
+      'sidebar.workflows': { kind: 'single', scope: 'root' },
+      'conversation.workspace': { kind: 'single', scope: 'session-maybe' },
       'shell.overlay': { kind: 'list', scope: 'root' },
     } as never,
     SidebarFrame as never,
@@ -95,6 +99,7 @@ describe('session rename through the assembled browser', () => {
     await seedWorkspace(runtime)
     await declareFrame(runtime)
     await runtime.mount({ inject: [...inject], apply })
+    expect(runtime.slots.entriesOfSlot('conversation.workspace')).toHaveLength(1)
     const registerAction = (id: string, order: number, priority: number, label: string) => {
       runtime.slots.register(
         { name: 'sidebar.workspaces.session.menu.item', id, order, priority },
@@ -123,7 +128,7 @@ describe('session rename through the assembled browser', () => {
     const trigger = within(row as HTMLElement).getByLabelText('会话“Persisted title”的操作')
     fireEvent.click(trigger)
     expect(view.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      '置顶会话', '重命名', '分叉会话', '归档会话', 'Export action', 'Last action',
+      '置顶会话', '重命名', 'Send to session…', '分叉会话', '归档会话', 'Export action', 'Last action',
     ])
     expect(view.getAllByRole('separator')).toHaveLength(1)
     const last = view.getByRole('menuitem', { name: 'Last action' })

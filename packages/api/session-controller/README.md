@@ -97,7 +97,10 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 -----
 
+Fresh Sessions created without a Workspace or explicit cwd use a dedicated subfolder under `$DSH_HOME/chats`. These folders are not registered Workspaces. Explicit Workspace creation uses its registered directory; reopening an explicit Session id without a cwd preserves its stored cwd.
+
 <a id="model-experience"></a>
+
 ## Model Experience
 
 None, as invoked Agent commands own any model-visible effect.

@@ -27,7 +27,8 @@
  * signal, actions — is read through the slot-owned useTabInfo hook. The Tab
  * domain follows each session's store commits, including sessions off screen.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CSSProperties, ReactNode, RefObject } from 'react'
 import type { ShortcutCatalogEntry } from '@deepseek-ai/dsh-client-shortcuts/client'
 import { IconPanelLeftOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -37,7 +38,7 @@ import type {
 import type {} from '../contract/slots.ts'
 import type { DockIntents, DockMode, FloatRect, TabId, TabRecord, TabRenderer } from '@deepseek-ai/dsh-client-ui-dockkit'
 import { canSplit, dockPaneIds, DockLayout, findPaneContentTab } from '@deepseek-ai/dsh-client-ui-dockkit'
-import type { HalvesFit, LayoutState, PaneId } from '@deepseek-ai/dsh-client-ui-dockkit'
+import type { HalvesFit, LayoutNode, LayoutState, PaneId } from '@deepseek-ai/dsh-client-ui-dockkit'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { GUIDE_KIND, pageAddress } from '../contract/seed.ts'
 import { dockLabels } from '../labels.ts'
@@ -49,6 +50,32 @@ import type { TabOccurrence } from '../tab-domain.ts'
 import type { SidebarRightTabNavigation } from '../contract/slots.ts'
 import type { TabHookContext } from '../tab-info.ts'
 import css from './SidebarRight.module.css'
+
+/** Project terminal records into their own bottom dock without moving the file surface. */
+export function terminalLayout(layout: LayoutState): LayoutState | undefined {
+  const tabs = Object.values(layout.tabs).filter(tab => tab.kind === 'terminal')
+  if (tabs.length === 0) return undefined
+  const pane = Object.values(layout.nodes).find(node => node.kind === 'pane' && node.tabs.some(id => tabs.some(tab => tab.id === id)))
+  if (pane === undefined || pane.kind !== 'pane') return undefined
+  const activeTabId = tabs.some(tab => tab.id === pane.activeTabId) ? pane.activeTabId : tabs[tabs.length - 1]?.id
+  return { ...layout, rootId: pane.id, activePaneId: pane.id, floats: [], mode: 'push', expanded: true,
+    nodes: { [pane.id]: { ...pane, host: 'dock', rect: undefined, tabs: tabs.map(tab => tab.id), activeTabId } },
+    tabs: Object.fromEntries(tabs.map(tab => [tab.id, tab])),
+  }
+}
+
+/** Keep source/resource panes and their original identities in the side dock. */
+export function resourceLayout(layout: LayoutState): LayoutState {
+  return { ...layout,
+    tabs: Object.fromEntries(Object.entries(layout.tabs).filter(([, tab]) => tab.kind !== 'terminal')),
+    nodes: Object.fromEntries<LayoutNode>(Object.entries(layout.nodes).map(([id, node]) => {
+      if (node.kind !== 'pane') return [id, node]
+      const tabs = node.tabs.filter(id => layout.tabs[id]?.kind !== 'terminal')
+      const activeTabId = node.activeTabId !== undefined && tabs.includes(node.activeTabId) ? node.activeTabId : tabs[tabs.length - 1]
+      return [id, { ...node, tabs, activeTabId }]
+    })),
+  }
+}
 
 /** The store share the seat receives. */
 type Store = PropsStore<ReturnType<typeof createSidebarRightStore>>
@@ -309,6 +336,7 @@ function SidebarPanel(panel: PanelProps & { width: number; panelRef: RefObject<H
       className={css.panel}
       style={{ width: fullscreen ? '100vw' : width,
         '--dsh-sidebar-width': fullscreen ? '100vw' : `${width}px` } as CSSProperties}
+      data-sidebar-right-placement="right"
       data-sidebar-right-session={sessionId}
       data-sidebar-right-panel={fullscreen ? 'fullscreen' : 'push'}
       data-sidebar-right-open={expanded || undefined}
@@ -320,7 +348,8 @@ function SidebarPanel(panel: PanelProps & { width: number; panelRef: RefObject<H
       <div className={css.panelBody}>
         <DockLayout
           state={surface.layout}
-          canSplit={canSplit(surface.layout) && dockPaneIds(surface.layout).length < 2}
+          canSplit={Object.keys(surface.layout.tabs).length > 0 && canSplit(surface.layout) && dockPaneIds(surface.layout).length < 2}
+          hideSplitWhenBlocked={Object.keys(surface.layout.tabs).length === 0}
           dropZones="horizontal"
           minPaneFraction={0.2}
           canAddTab={paneId => guideIn(surface.layout, paneId) === undefined}
@@ -359,6 +388,9 @@ export function RightbarSeat({
   const shortcuts = useShortcuts(entries => entries)
   const surface = useStore(state => state.bySession[sessionId])
   const shown = active && surface !== undefined && surface.layout.expanded
+  const [terminalSeat, setTerminalSeat] = useState<Element | null>(null)
+  useLayoutEffect(() => { setTerminalSeat(document.querySelector('[data-shell-terminal]')) }, [])
+
   const autoFullscreen = viewportWidth < 768
   const fullscreen = autoFullscreen || surface?.layout.mode === 'fullscreen'
   const panelRef = useRef<HTMLDivElement | null>(null)
@@ -421,5 +453,19 @@ export function RightbarSeat({
     sessionId, actions, t, renderSlot, surface, openTab, closeTab, useTabTypes, useTabNavigation, useStore, occurrence,
     fullscreen, autoFullscreen, reportRoom, active, retainTab, shortcuts, splitPane, toggleFullscreen,
   }
-  return <SidebarPanel {...panel} width={width} panelRef={panelRef} />
+  const terminals = terminalLayout(surface.layout)
+  const resources = resourceLayout(surface.layout)
+  return <>
+    <SidebarPanel {...panel} surface={{ ...surface, layout: resources }} width={width} panelRef={panelRef} />
+    {active && surface.terminalVisible !== undefined && terminals !== undefined && terminalSeat !== null && createPortal(
+      <div className={css.terminalPanel} data-terminal-dock="bottom" hidden={!surface.terminalVisible}>
+        <DockLayout state={terminals} canSplit={false} hideSplitWhenBlocked canAddTab={() => false}
+          canCloseTab={tabId => canCloseTab(surface, tabId)}
+          intents={intentsFor(sessionId, actions, openTab, closeTab, splitPane)}
+          labels={dockLabels(t)} renderTab={bodiesFor({ ...panel, fullscreen: false, active: surface.terminalVisible })}
+          renderTabTitle={titlesFor(panel)} active={surface.terminalVisible}
+          keepMounted={tab => tab.kind === 'terminal'} />
+      </div>, terminalSeat,
+    )}
+  </>
 }

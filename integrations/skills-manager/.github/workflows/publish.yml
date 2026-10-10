@@ -1,0 +1,53 @@
+name: Publish npm package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify.yml
+    with:
+      full: true
+
+  publish:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile --config.minimumReleaseAge=0 --config.auto-install-peers=true --config.strictDepBuilds=false
+      - run: npm run verify
+      - name: Validate release tag
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          $OutputEncoding = [System.Text.Encoding]::UTF8
+          $version = (Get-Content package.json -Raw -Encoding UTF8 | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_TYPE -ne 'tag' -or $env:GITHUB_REF_NAME -ne "v$version") { throw 'The release tag must be v followed by the package version.' }
+      - name: Validate bilingual release notes before publishing
+        run: node scripts/extract-release-notes.mjs "$GITHUB_REF_NAME" "$RUNNER_TEMP/release-notes.md"
+
+      - run: npm publish
+
+  release-notes:
+    needs: publish
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml

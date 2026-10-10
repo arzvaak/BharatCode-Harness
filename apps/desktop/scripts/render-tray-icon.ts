@@ -1,5 +1,5 @@
 /**
- * Render the Windows tray icon with an enlarged whale from `resources/icon-windows.svg`.
+ * Render the Windows tray icon from the BharatCode vector mark from `resources/icon-windows.svg`.
  *
  * The tray shows the icon at 16 logical pixels, so Windows picks one of the
  * bundled bitmaps by display scale. Each size is rasterized from the vector
@@ -93,16 +93,19 @@ export function unpackIco(ico: Buffer): IcoEntry[] {
 
 /**
  * Rasterize the vector source at each tray size.
- * @param svg - SVG document with a 1024-unit square viewBox and a `tray-glyph` group.
+ * @param svg - SVG document containing the application mark.
  * @param sizes - Bitmap edges to render.
  * @returns PNG entries in the given order.
  */
 export async function renderTrayIconEntries(svg: Buffer, sizes: readonly number[] = TRAY_ICON_SIZES): Promise<IcoEntry[]> {
   const source = svg.toString('utf8')
   const glyph = '<g id="tray-glyph"'
-  if (!source.includes(glyph)) throw new Error('tray icon: SVG requires a tray-glyph group')
+  if (!source.includes(glyph) && !source.includes('aria-label="BharatCode mark"'))
+    throw new Error('tray icon: SVG requires a recognized application mark')
   // Scale around the application tile center, retaining its background and the whale's aspect ratio.
-  const tray = Buffer.from(source.replace(glyph, `${glyph} transform="translate(552 544) scale(1.2) translate(-552 -544)"`))
+  const tray = source.includes(glyph)
+    ? Buffer.from(source.replace(glyph, `${glyph} transform="translate(552 544) scale(1.2) translate(-552 -544)"`))
+    : svg
   return Promise.all(sizes.map(async size => ({
     size,
     png: await sharp(tray, { density: SOURCE_DENSITY * size / SOURCE_EDGE }).resize(size, size).png().toBuffer(),

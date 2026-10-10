@@ -1066,6 +1066,8 @@ describe('PythonPtcRuntime — programs and bindings', () => {
         'import os',
         'return {',
         '    "tmpdir": os.environ.get("TMPDIR"),',
+        '    "locale": os.environ.get("LC_ALL"),',
+        '    "encoding": __import__("sys").getfilesystemencoding(),',
         '    "path": os.environ.get("PATH"),',
         '    "home": os.environ.get("HOME"),',
         '    "token": os.environ.get("DEEPSEEK_API_KEY"),',
@@ -1074,7 +1076,7 @@ describe('PythonPtcRuntime — programs and bindings', () => {
       bindings: [],
     }))
     expect(result.error).toBeUndefined()
-    expect(result.value).toEqual({ tmpdir: tmpdir(), path: null, home: null, token: null })
+    expect(result.value).toEqual({ tmpdir: tmpdir(), locale: 'C', encoding: 'utf-8', path: null, home: null, token: null })
     expect(result.logs).toEqual([])
   })
 

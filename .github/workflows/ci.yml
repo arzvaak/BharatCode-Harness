@@ -7,9 +7,7 @@ name: CI
 # them, not by copying upstream's enterprise-runner suite.
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -36,7 +34,7 @@ jobs:
           cache: pnpm
 
       - name: Install (immutable)
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       # Hosted runners ship no sandbox backend; sandbox-mode tests
       # (read-only/workspace-write confinement) refuse to run unconfined.

@@ -23,6 +23,7 @@ function accountState(status?: 'credential-stored' | 'signed-out'): AccountSnaps
 
 async function harness(options: {
   status?: 'credential-stored' | 'signed-out'
+  providerSetup?: boolean
   progress?: Partial<OnboardingProgress>
   keys?: () => Promise<boolean>
   omitNulls?: boolean
@@ -76,7 +77,7 @@ async function harness(options: {
   cleanup.push(() => developerScope.dispose())
   const account = createSnapshotStore(accountState(options.status))
   const readKeys = vi.fn(options.keys ?? (async () => false))
-  const controller = new DesktopOnboardingController(progress, chat, setDeveloperTools, account, readKeys, mirror)
+  const controller = new DesktopOnboardingController(progress, chat, setDeveloperTools, account, readKeys, mirror, options.providerSetup)
   cleanup.push(() => progress.dispose(), () => chat.dispose(), () => { controller.dispose() })
   const loaded = mirror.load()
   if (options.waitSettings === undefined) await loaded
@@ -549,4 +550,40 @@ it.each(['current', 'invalidated', 'disposed'] as const)('contains a rejected %s
   await Promise.resolve()
   expect(h.mutate).not.toHaveBeenCalled()
   expect(h.controller.state.getSnapshot().progress.step).toBe('welcome')
+})
+
+it('lets signed-out users finish setup later without a credit balance', async () => {
+  const h = await harness({ status: 'signed-out', providerSetup: true })
+  expect(h.controller.state.getSnapshot().visible).toBe(true)
+  expect(await h.controller.update({ step: 'credit' })).toBe(true)
+  expect(await h.controller.complete('skipped')).toBe(true)
+  expect(h.controller.state.getSnapshot().progress.step).toBe('done')
+})
+
+it('keeps provider onboarding usable while the optional account snapshot is unresolved', async () => {
+  const h = await harness({ providerSetup: true })
+  expect(h.controller.state.getSnapshot()).toMatchObject({ visible: true, status: 'ready' })
+  expect(h.readKeys).not.toHaveBeenCalled()
+  expect(await h.controller.update({ step: 'credit' })).toBe(true)
+  expect(await h.controller.complete('skipped')).toBe(true)
+  expect(h.controller.state.getSnapshot()).toMatchObject({ visible: false, status: 'ready', progress: { step: 'done' } })
+})
+
+it('does not block provider onboarding on optional account-stream failure', async () => {
+  const h = await harness({ providerSetup: true })
+  h.account.set({ ...h.account.getSnapshot(), failed: true })
+  expect(h.controller.state.getSnapshot()).toMatchObject({ visible: true, status: 'ready', error: null })
+})
+
+it('finishes provider setup when an optional account snapshot arrives during preference writes', async () => {
+  const h = await harness({ providerSetup: true, progress: { step: 'credit' } })
+  const write = Promise.withResolvers<undefined>()
+  h.wait(write.promise, 'ui-chat')
+  const completed = h.controller.complete('skipped')
+  try {
+    await vi.waitFor(() => { expect(h.mutate.mock.calls.some(([namespace]) => namespace === 'ui-chat')).toBe(true) })
+    h.account.set(accountState('signed-out'))
+  } finally { write.resolve(undefined) }
+  expect(await completed).toBe(true)
+  expect(h.controller.state.getSnapshot()).toMatchObject({ visible: false, status: 'ready', progress: { step: 'done' } })
 })

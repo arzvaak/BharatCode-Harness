@@ -1,0 +1,49 @@
+{
+  "name": "@bharatcode/dsh-novel-continuity",
+  "version": "0.2.0-bharatcode.1",
+  "description": "English project, chapter, lorebook, and writing continuity tools based on dsh-novel-writer.",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md",
+    "cordis.patch.yml"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test test/runtime.test.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.4",
+    "@deepseek-ai/schemastery": "^3.18.4",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": ">=0.2.0-rc.2 <0.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akira399/dsh-novel-writer.git"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-llm": "workspace:*",
+    "@deepseek-ai/dsh-util-values": "workspace:*"
+  }
+}

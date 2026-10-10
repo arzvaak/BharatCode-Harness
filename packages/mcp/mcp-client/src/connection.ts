@@ -130,6 +130,7 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
   const opts: ToolBridgeOptions = {
     registrationFailure: 'contain',
     serverName: config.serverName,
+    ...(config.allowedTools === undefined ? {} : { allowedTools: config.allowedTools }),
     toolCallTimeoutMs: config.toolCallTimeoutMs,
   }
   // The initial sync uses 'throw' when failOnStartupError is configured, so

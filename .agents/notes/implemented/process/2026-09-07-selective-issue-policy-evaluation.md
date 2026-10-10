@@ -12,13 +12,15 @@ Lifecycle events have a separate cost: an approval, comment, push, label change,
 
 ## Decision
 
-[Issue policy](../../../../.github/workflows/issue-policy.yml) keeps its required job and trusted default-branch implementation. Enforcement eligibility precedes reference reads and Project App token creation: draft PRs, Bot/App authors, and human PRs with neither review requests nor submitted reviews do not require policy validation.
+This record preserves the upstream DeepSeek Harness decision rationale. Pinned CI-file and workflow-test links below refer to the upstream `dsh-v0.2.0-rc.2` release tag; runner, trigger, and publication descriptions apply to that upstream implementation. The current BharatCode validation workflows are owned by [fork CI](../../../../.github/workflows/ci.yml) and the [development guide](../../../../docs/development.md).
+
+[Issue policy](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/issue-policy.yml) keeps its required job and trusted default-branch implementation. Enforcement eligibility precedes reference reads and Project App token creation: draft PRs, Bot/App authors, and human PRs with neither review requests nor submitted reviews do not require policy validation.
 
 The workflow checks the trusted checkout for a selective-preflight capability marker before invoking the command. A checkout without the marker uses full legacy validation for human PRs and preserves the legacy Bot/App exemption. This supports PR workflow YAML running against default-branch code that lacks preflight; execution errors never select the fallback.
 
 Eligible PRs resolve references through repository REST reads. Informational references prove Issue identity without Project access. Only actual Issues named by resolving references require Project Priority reads; a PR number cannot satisfy the Issue requirement or cause a Project query. [The owner reference](../../../../.github/issue-management/README.md) defines metadata validation and failure behavior.
 
-[Issue lifecycle](../../../../.github/workflows/issue-lifecycle.yml) subscribes to status-relevant PR events and filters title-only edits. It does not subscribe to PR pushes or label changes, or Issue assignment changes. Its job condition rejects approved/commented reviews before runner allocation. Changes-requested reviews retain their status command.
+[Issue lifecycle](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/issue-lifecycle.yml) subscribes to status-relevant PR events and filters title-only edits. It does not subscribe to PR pushes or label changes, or Issue assignment changes. Its job condition rejects approved/commented reviews before runner allocation. Changes-requested reviews retain their status command.
 
 This scheduling decision partially supersedes the no-op-job scheduling in [event-directed review status](2026-08-10-event-directed-pr-review-status.md), not its handoff semantics or human-ownership protection. [Project-local planning fields](2026-09-02-project-local-issue-planning-fields.md) still own opened-only, empty-only Start Date initialization for every referenced Issue, including informational references. The validation read exemption does not exempt that lifecycle mutation.
 
@@ -40,4 +42,4 @@ Omitted lifecycle events cannot repair stale Project state. Event replay and con
 
 ## Verification
 
-[Policy tests](../../../../.github/issue-management/policy.test.mjs) verify early exemptions, REST-only informational references, actual-Issue filtering, resolving Priority reads and failures, and the lifecycle command selection. [Workflow tests](../../../../scripts/ci-workflow.spec.ts) verify Project-token conditions, the retained required job, pruned subscriptions, and runner-level lifecycle filtering. Local fixtures do not establish live webhook delivery or billing outcomes.
+[Policy tests](../../../../.github/issue-management/policy.test.mjs) verify early exemptions, REST-only informational references, actual-Issue filtering, resolving Priority reads and failures, and the lifecycle command selection. [Workflow tests](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/ci-workflow.spec.ts) verify Project-token conditions, the retained required job, pruned subscriptions, and runner-level lifecycle filtering. Local fixtures do not establish live webhook delivery or billing outcomes.

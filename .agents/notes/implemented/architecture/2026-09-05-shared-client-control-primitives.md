@@ -22,7 +22,7 @@ Neither half of the fix was available to an author. No checklist told them to lo
 
 **The component catalog in the `ui-primitives` README is what makes the rule usable.** It lists every exported component with its purpose and the case it is wrong for, and it names the three pairs that are easy to confuse: `Tag` against `Pill`, `DisclosureRow` against card-shaped disclosure, and the package-internal `FoldToggle` against the exported surface. `Pill` is the selectable capsule button — it takes `active` and `onClick` and drives view switchers and filters; `Tag` is the read-only badge and takes neither. The component comments use the same distinction.
 
-The rule is stated in [packages/client/AGENTS.md](../../../../packages/client/AGENTS.md) as the first step of the new-component checklist, and [docs/web-styling.md](../../../../docs/web-styling.md) points at the catalog so an author arriving from the styling side reaches it too.
+The rule is stated in [packages/client/AGENTS.md](../../../../packages/client/DEVELOPER_GUIDE.md) as the first step of the new-component checklist, and [docs/web-styling.md](../../../../docs/web-styling.md) points at the catalog so an author arriving from the styling side reaches it too.
 
 ## Finding the duplicates
 

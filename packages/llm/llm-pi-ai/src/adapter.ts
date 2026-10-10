@@ -398,7 +398,20 @@ export class PiAiAdapter extends LlmAdapter {
             exhausted = true
             return
           }
-          yield result.value
+          const chunk = result.value
+          // BharatCode DeepSeek can report temporary unavailability inside a
+          // successful SSE response, without an HTTP status. Let the existing
+          // bounded retry executor reconstruct the full current request. Keep
+          // other models/providers and explicit permanent failures unchanged.
+          if (/^https:\/\/bharatcode\.ai\/api\/model\/v1\/?$/i.test(model.baseUrl)
+            && model.id.startsWith('deepseek-')
+            && chunk.type === 'finish' && chunk.reason.kind === 'error'
+            && chunk.reason.failure.code === 'PI_AI_ERROR'
+            && /\b(?:model|service)[_ -]unavailable\b/i.test(chunk.reason.failure.message)) {
+            yield { ...chunk, reason: { ...chunk.reason, failure: { ...chunk.reason.failure, code: 'SERVER' } } }
+          } else {
+            yield chunk
+          }
         }
       } finally {
         if (!exhausted) {

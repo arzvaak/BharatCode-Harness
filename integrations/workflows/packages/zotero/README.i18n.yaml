@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/workflows/packages/zotero/README.md
+/dsh-zotero-plugin:
+  en: f9155d2eb652bd1c
+  zh: d0f1e921d0cbf8c8

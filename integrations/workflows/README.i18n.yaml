@@ -1,0 +1,7 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/workflows/README.md
+/bharatcode-english-workflow-integrations:
+  en: d517b2ed49633986
+  zh: 93d225291ee5940d

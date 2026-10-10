@@ -10,6 +10,7 @@
  * it draws (`FilesBody.tsx`, `FilesTitle.tsx`), what it says (`locales.ts`),
  * and this module, which only wires them together.
  */
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ShortcutCommandId } from '@deepseek-ai/dsh-client-shortcuts/client'
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
@@ -39,6 +40,19 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
         readonly absolutePath: string
       }
     }
+  }
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Events {
+    /** Claim a file-tree activation for a separate workspace source editor. */
+    /**
+     * Offer a workspace source file to the editor owner.
+     * @mode bail
+     * @param sessionId - Session owning the workspace.
+     * @param path - Workspace file to open.
+     */
+    'workspace/file/open': (sessionId: SessionId, path: string) => boolean | undefined
   }
 }
 
@@ -82,7 +96,11 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-sidebar-files: dictionaries')
 
   const store = createFilesStore()
-  const inject = filesFace(createList(ctx.remote), createWatch(ctx.remote))
+  const face = filesFace(createList(ctx.remote), createWatch(ctx.remote))
+  const inject: ReturnType<typeof filesFace> = (sessionId, actions) => ({
+    ...face(sessionId, actions),
+    openFile: path => ctx.bail(ctx, 'workspace/file/open', sessionId, path) === true,
+  })
   ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register(
     {
       name: 'sidebar.right.pane.tab', key: FILES_ID, locale: NS, store, inject,

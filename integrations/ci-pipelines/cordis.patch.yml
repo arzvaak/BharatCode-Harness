@@ -1,0 +1,3 @@
+- insert:
+    - id: bc-ci-pipelines
+      name: '@bharatcode/ci-pipelines'

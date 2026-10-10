@@ -1,0 +1,9 @@
+{
+ "name":"@bharatcode/ci-pipelines","version":"0.1.0-preview.1","type":"module","license":"MIT",
+ "description":"GitHub Actions and GitLab pipeline evidence with native credential and rerun approval handling.",
+ "exports":{".":"./src/host.js","./package.json":"./package.json"},
+ "files":["src","cordis.patch.yml","README.md","LICENSE"],
+ "dsh":{"engines":{"dsh":">=0.2.0-rc.2 <0.3.0"},"bundle":{"patch":"./cordis.patch.yml"}},
+ "dependencies":{"@deepseek-ai/schemastery":"workspace:*","@deepseek-ai/dsh-credentials":"workspace:*"},
+ "scripts":{"test":"node --test tests/*.test.js"}
+}

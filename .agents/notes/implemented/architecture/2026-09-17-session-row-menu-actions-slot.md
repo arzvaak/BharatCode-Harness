@@ -20,7 +20,7 @@ The shipped menu entries render `MenuItemButton`, the `ui-primitives` row compon
 
 ## Alternatives considered
 
-**A React context between `Menu` and the row component.** Rejected: business components see zero React contexts ([client rules](../../../../packages/client/AGENTS.md)); the Menu-to-row relationship is parent-to-child through the slot system, so its control travels through the slot channels.
+**A React context between `Menu` and the row component.** Rejected: business components see zero React contexts ([client rules](../../../../packages/client/DEVELOPER_GUIDE.md)); the Menu-to-row relationship is parent-to-child through the slot system, so its control travels through the slot channels.
 
 **Owner-supplied row capabilities.** Passing `pinned`/`archived` and `pin`/`archive`/`rename`/`fork` callbacks to entries, through owner props or a slot-level hook, keeps the browser the owner of every verb and makes the shipped actions thin wrappers over it. Rejected: these are not capabilities of a menu; each action's behavior is that action's own, and an entry can read the Host state it needs directly.
 

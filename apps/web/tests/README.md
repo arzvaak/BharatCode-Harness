@@ -12,7 +12,7 @@ pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install --with-deps 
 
 On Linux, `--with-deps` installs dependencies through the system package manager. The persistent CI VM must provide these dependencies through image maintenance; CI installs only the browser binaries, as required by the [failover runbook](../../../.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.md).
 
-Ordinary scenarios begin with no registered Workspace or Session and a durable marker recording a removed default Workspace, so explicit folder-selection scenarios retain control of their cwd. `launchWebScaffold({ firstUse: true })` leaves initialization eligible for startup scenarios.
+Ordinary scenarios begin with no registered Workspace or stored Session and a durable marker recording a removed default Workspace. Client startup creates an independent chat in its own general-chat folder. Project fixtures explicitly connect a Workspace and wait for the selected Session to change before typing. `launchWebScaffold({ firstUse: true })` omits the legacy initialization marker for first-use coverage.
 
 ## Completion observations
 

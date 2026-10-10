@@ -1,0 +1,64 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/engram/README.md
+/:
+  en: f783038c7258d592
+  zh: f783038c7258d592
+/dsh-engram-memory-palace:
+  en: 035fdc2dfebbcc97
+  zh: 18c9f3e3238cbec4
+/dsh-engram-memory-palace/quick-start:
+  en: a0e753e42224eaf0
+  zh: c970d4c08af738ea
+/dsh-engram-memory-palace/palace-structure-the-directory-is-the-room-the-path-is-the-route:
+  en: 802faddbd7207661
+  zh: b37f021af4a9e313
+/dsh-engram-memory-palace/features:
+  en: a19a66b163e42ab6
+  zh: 85233b8652d8aea4
+/dsh-engram-memory-palace/tools-21-narrow-parameters:
+  en: 0d8cc745e3e23363
+  zh: 792b39133f2561ca
+/dsh-engram-memory-palace/configuration:
+  en: 2d6a2c8767aca6b7
+  zh: 9b69b3b32913ec7a
+/dsh-engram-memory-palace/how-it-works:
+  en: 164d50b1ba6cbc0b
+  zh: 3429a82089a2ee3c
+/dsh-engram-memory-palace/web-management-panel-settings-memory-library-tab:
+  en: 52009f085f7d61b7
+  zh: 2b077cdbc0721c40
+/dsh-engram-memory-palace/development:
+  en: 08b48c3d0b1898f2
+  zh: 6aa206f09591de9b
+/dsh-engram-memory-palace/model-experience:
+  en: 215e7ba838619b7b
+  zh: a311da3843709f90
+/dsh-engram-memory-palace/model-experience/request-context-and-condition:
+  en: cd8530c72534ee6b
+  zh: 16dbf6046e7e51fd
+/dsh-engram-memory-palace/model-experience/request-context-and-condition/what-the-model-sees:
+  en: a6f027ede5948794
+  zh: e149be6e7ad27b4d
+/dsh-engram-memory-palace/model-experience/request-context-and-condition/token-effect:
+  en: 5274bfb3e8060cb0
+  zh: 0760f97ca884cc4e
+/dsh-engram-memory-palace/model-experience/request-context-and-condition/kv-cache-effect:
+  en: 6e5f1ec9b45fef23
+  zh: 00df996f41ab2778
+/dsh-engram-memory-palace/known-limitations-and-deferred-work:
+  en: f3155ca7de8ec0e1
+  zh: 81e6f6d7ec8ed5f4
+/dsh-engram-memory-palace/roadmap:
+  en: c0ac9928e4069a8b
+  zh: 6e458d6b3c5d681d
+/dsh-engram-memory-palace/acknowledgements:
+  en: e952865040c1867a
+  zh: 77e7430f30c68cb6
+/dsh-engram-memory-palace/license:
+  en: 8bce1d28b5337fda
+  zh: 4ce490f91fd8180b
+/dsh-engram-memory-palace/license/legacy-project-database-migration:
+  en: 069c857d34e50da7
+  zh: d7465569a9acb76b

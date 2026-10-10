@@ -1,0 +1,231 @@
+{
+  "formatVersion": 2,
+  "roots": [
+    {
+      "key": "event:project/handoff",
+      "kind": "event",
+      "event": "project/handoff",
+      "surface": false,
+      "digest": "79c08cc644d861871207b8438ea73f077e7bc1a648bcc010afe17ba93666c171",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 11,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 12,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 13,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "id",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "mode",
+                "type": 3,
+                "optional": false
+              },
+              {
+                "name": "omitted",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "revisionIds",
+                "type": 6,
+                "optional": false
+              },
+              {
+                "name": "sourceProjectId",
+                "type": 2,
+                "optional": false
+              },
+              {
+                "name": "sourceSessionId",
+                "type": 2,
+                "optional": true
+              },
+              {
+                "name": "workflow",
+                "type": 7,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "primitive",
+            "type": "string"
+          },
+          {
+            "kind": "union",
+            "types": [
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "queue"
+          },
+          {
+            "kind": "literal",
+            "value": "steer"
+          },
+          {
+            "kind": "array",
+            "element": 2
+          },
+          {
+            "kind": "union",
+            "types": [
+              8,
+              9,
+              10
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "coding"
+          },
+          {
+            "kind": "literal",
+            "value": "writing"
+          },
+          {
+            "kind": "literal",
+            "value": "research"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "project/handoff"
+          }
+        ]
+      }
+    },
+    {
+      "key": "event:workflow/assignment",
+      "kind": "event",
+      "event": "workflow/assignment",
+      "surface": false,
+      "digest": "a106efd80dac6f3d3a3e1466dcd83c7554260a85baf8334a36f751768d3520f5",
+      "schema": {
+        "root": 0,
+        "nodes": [
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "data",
+                "type": 1,
+                "optional": false
+              },
+              {
+                "name": "ignorable",
+                "type": 6,
+                "optional": true
+              },
+              {
+                "name": "seq",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "time",
+                "type": 7,
+                "optional": false
+              },
+              {
+                "name": "type",
+                "type": 8,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "object",
+            "properties": [
+              {
+                "name": "workflow",
+                "type": 2,
+                "optional": false
+              }
+            ],
+            "indices": []
+          },
+          {
+            "kind": "union",
+            "types": [
+              3,
+              4,
+              5
+            ]
+          },
+          {
+            "kind": "literal",
+            "value": "coding"
+          },
+          {
+            "kind": "literal",
+            "value": "research"
+          },
+          {
+            "kind": "literal",
+            "value": "writing"
+          },
+          {
+            "kind": "literal",
+            "value": true
+          },
+          {
+            "kind": "primitive",
+            "type": "number"
+          },
+          {
+            "kind": "literal",
+            "value": "workflow/assignment"
+          }
+        ]
+      }
+    }
+  ],
+  "types": []
+}

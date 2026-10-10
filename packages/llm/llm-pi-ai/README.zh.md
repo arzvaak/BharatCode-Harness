@@ -74,6 +74,7 @@ kind: "package-reference"
 
 | 字段 | 默认值 | 含义 |
 |---|---|---|
+| `autoImport` | 无 | 启动、端点变化和凭据更新时从认证端点刷新目录；失败时保留已配置模型 |
 | `apiKeyEnv` | 无 | 按请求解析的凭据引用；省略时交由 pi-ai 环境发现 |
 | `displayName` | 提供方名 | 选择器界面显示的标签 |
 | `api` | 目录协议 | 协议格式；仅目录不提供的路由需要 |
@@ -110,7 +111,7 @@ profile 的 `models` 列表会替换而非扩展路由的已安装目录；每�
 
 ### 从端点发现模型
 
-插件会回答「该提供方可以提供哪些模型？」，供配置界面正在编辑或起草的路由使用。已安装目录提供的路由直接由目录回答，不发网络请求，并将其 `input` 数组保留为发现结果的 `inputModalities`；只有目录未描述的路由才会经网络询问。`openai-completions` 与 `openai-responses` 使用带 bearer 鉴权的 `GET {baseURL}/models`，`anthropic-messages` 则以 `x-api-key` 和 `anthropic-version` 使用原生 `GET /v1/models?limit=1000` 语义；其列表 URL 接受带或不带末尾 `/v1` 的 API 根地址，因为网关文档两种写法都会发布，且只有该列表 URL 会归一化这一段，模型请求收到的仍是配置原样的 `baseURL`。已配置且具名的路由会在 Host 内部提供已存凭据与 profile `headers`，因此通过 `cordis.patch.yml` 或 Cordis 配置设置的部署标头可以到达模型发现请求，但不会成为发现请求或 Models 页面的字段；表单中新键入的密钥仍优先于已存凭据。解析器接受标准 `data` 数组或富信息 `models` 对象，并归一化每个候选的 id、显示名、上下文窗口与最大输出 token 数；Anthropic 的 `max_input_tokens` 与 `max_tokens` 会进入相同容量字段，即使对象条目点名了另一个规范 id，对象键仍是请求 id，原始类型的对象属性会被忽略，缺失的显示名则回退到该请求 id。回答是界面可以提供给用户采纳的候选元数据——不存储任何内容，`cordis.patch.yml` 仍然是决定路由服务内容的唯一事实。
+插件会回答「该提供方可以提供哪些模型？」，供配置界面正在编辑或起草的路由使用。请求未提供 base URL 时直接继承已安装目录，不发网络请求。显式提供 base URL 时查询该端点，包括以已安装提供方命名的路由。输入类型、显式推理映射和 `supported_reasoning_levels` 均予以保留。仅有推理布尔值不会产生猜测的等级；显式 false 会禁用推理。`openai-completions` 与 `openai-responses` 使用带 bearer 鉴权的 `GET {baseURL}/models`，`anthropic-messages` 则以 `x-api-key` 和 `anthropic-version` 使用原生 `GET /v1/models?limit=1000` 语义；其列表 URL 接受带或不带末尾 `/v1` 的 API 根地址，因为网关文档两种写法都会发布，且只有该列表 URL 会归一化这一段，模型请求收到的仍是配置原样的 `baseURL`。已配置且具名的路由会在 Host 内部提供已存凭据与 profile `headers`，因此通过 `cordis.patch.yml` 或 Cordis 配置设置的部署标头可以到达模型发现请求，但不会成为发现请求或 Models 页面的字段；表单中新键入的密钥仍优先于已存凭据。解析器接受标准 `data` 数组或富信息 `models` 对象，并归一化每个候选的 id、显示名、上下文窗口与最大输出 token 数；Anthropic 的 `max_input_tokens` 与 `max_tokens` 会进入相同容量字段，即使对象条目点名了另一个规范 id，对象键仍是请求 id，原始类型的对象属性会被忽略，缺失的显示名则回退到该请求 id。手动查询返回供用户采纳的候选元数据。启用 `autoImport: true` 的路由还会在启动和凭据变化时刷新，将端点提供的模型成员及能力存入配置，同时保留每个模型的兼容选项和未披露设置。凭据缺失、空回复、请求失败或过时响应均保留已配置目录。BharatCode 启用此选项，并在目录未披露具体等级时回退到已验证的 DeepSeek Off、Low、Medium、High 和 Max 等级。
 
 ### 失败与恢复
 
@@ -220,7 +221,7 @@ pi-ai 事件变成 harness 的推理、文本、工具调用、用量与 finish 
 - **重置恢复继承配置**——重置下层 profile 提供的路由会恢复该路由。
 - **完整替换 Config 可以移除继承的字典条目**——字段重置则恢复其继承值。
 - **`headers` 可以携带 redactor 永远看不到的凭据**——profile 解析会拒绝 Fetch 无法表示的名称与值，但该字典仍是纯字符串；以 `apiKeyEnv` 引用存储凭据。
-- **发现操作不更改已配置模型**——需显式将发现结果采纳到路由配置中。
+- **手动发现操作不更改已配置模型**——需显式采纳结果，或启用 `autoImport` 从端点自动刷新。
 - **Anthropic 模型发现最多读取 1,000 个模型**——请求使用 API 的最大页大小，但不会遍历 `has_more`；第一页之外的条目需要手工添加。
 - **每条路由一种协议格式**——混合协议目录路由无法承载另一协议格式的模型；把提供方拆到两个路由键是变通办法。
 - **模态声明不受校验**——声明 `image` 而其网关不支持的模型会在提示词准入后被提供方拒绝。持久图片仍留在历史中，同一误声明模型可能再次失败；切换到纯文本模型仍然可行，因为共享 LLM 运行时会针对该请求把图片引用投影为稳定文本。

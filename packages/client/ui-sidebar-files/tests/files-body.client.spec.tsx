@@ -145,6 +145,17 @@ describe('FilesBody', () => {
     expect(names(view.container)).not.toContain(`${ROOT}/src/a.ts`)
   })
 
+  it('lets a workspace editor claim a text file while keeping its explorer pane open', async () => {
+    const openFile = vi.fn(() => true)
+    const { view, script, tabActions } = mountBody(ROOT, undefined, openFile)
+    await act(() => script.watches.ready(ROOT))
+    await act(() => script.settle({ ok: true, value: ROOT_LEVEL }))
+    fireEvent.click(view.getByRole('button', { name: 'README.md' }))
+    expect(openFile).toHaveBeenCalledWith(`${ROOT}/README.md`)
+    expect(tabActions.openResource).not.toHaveBeenCalled()
+    expect(view.getByRole('button', { name: 'README.md' }).getAttribute('aria-current')).toBe('true')
+  })
+
   it('a file click opens its session-scoped file: address through the owner; an other entry offers no button', async () => {
     const { view, script, tabActions } = mountBody()
     await act(() => script.watches.ready(ROOT))

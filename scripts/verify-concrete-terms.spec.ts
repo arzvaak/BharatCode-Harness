@@ -45,6 +45,25 @@ describe('concrete terminology policy', () => {
     }
   })
 
+  it('preserves fixed npm attestation options only in the imported publication workflows', () => {
+    const files = [
+      'integrations/workflows/packages/github/.github/workflows/release.yml',
+      'integrations/workflows/packages/library/.github/workflows/release.yml',
+      'integrations/workflows/packages/lsp-actions/.github/workflows/publish.yml',
+    ]
+    for (const file of files) {
+      expect(findConcreteTermViolations(file, `npm publish --access public --${blockedTerm}`)).toEqual([])
+      expect(findConcreteTermViolations(file, `# npm publish --access public --${blockedTerm}`)).toEqual([{ file, line: 1 }])
+      expect(findConcreteTermViolations(file, `echo 'npm publish --access public --${blockedTerm}'`)).toEqual([{ file, line: 1 }])
+      expect(findConcreteTermViolations(file, `# ${blockedTerm}`)).toEqual([{ file, line: 1 }])
+      expect(findConcreteTermViolations(file, `npm publish --access public --${blockedTerm} # ${blockedTerm}`)).toEqual([{ file, line: 1 }])
+    }
+    const file = 'integrations/tool-call-guard/.github/workflows/publish.yml'
+    expect(findConcreteTermViolations(file, `          NPM_CONFIG_${blockedTerm.toUpperCase()}: true`)).toEqual([])
+    expect(findConcreteTermViolations(file, `# NPM_CONFIG_${blockedTerm.toUpperCase()}: true`)).toEqual([{ file, line: 1 }])
+    expect(findConcreteTermViolations('scripts/other.ts', `npm publish --access public --${blockedTerm}`)).toEqual([{ file: 'scripts/other.ts', line: 1 }])
+  })
+
   it('accepts exact replacement terms', () => {
     expect(findConcreteTermViolations(
       'packages/example/src/origin.ts',

@@ -1,23 +1,17 @@
-# Contributing
+# Contributing to BharatCode Harness
 
 English | [中文](CONTRIBUTING.zh.md)
 
-Thank you for your interest in contributing to DeepSeek Harness!
+Report reproducible bugs and discuss changes in [BharatCode issues](https://github.com/arzvaak/BharatCode-Harness/issues). Include the app version, operating system, expected result and steps to reproduce. Remove credentials and personal information from logs before posting.
 
-We deeply believe in the power of open source communities, and that belief has shaped this project from the very beginning.
+## Preparing a change
 
-DeepSeek Harness is still at an early stage and under active development. We are sorry that we cannot accept external pull requests at the moment. However, contributing code to this repository is far from the only way to help. There are many other ways to get involved:
+Use the [development guide](docs/development.md) to set up the checkout. Keep changes focused, preserve existing user data, and update the relevant English and Chinese documentation together. The [developer guide](DEVELOPER_GUIDE.md) describes repository conventions; [architecture](docs/architecture.md) explains the implementation.
 
-- Identify and report issues or bugs in GitHub Discussions:
-  - Upvote discussions that you would like to bring to the team's attention. We are a very small team and may not be able to reply to every post, but we monitor them and consider them when allocating resources.
-- Contribute to the ecosystem:
-  - Create a plugin that excites you and share it with others:
-    - Associate your GitHub project with the `dsh-plugin` topic to help others discover your plugin.
-  - Write blog posts and how-to guides about DeepSeek Harness.
-  - Answer questions and help other members of the community.
+## Checking your work
 
-DeepSeek Harness is designed to be deeply customizable. We do not believe that packages in the official repository are inherently more important than packages created by the community. You may consider this repository an idea, an official showcase, and a source of inspiration, but not a mandate from us.
+Run the checks that cover the change locally. Documentation uses `pnpm run doc-sync`; code changes may require build, typecheck, lint and targeted tests. Linux publication requires the complete local release checks and matching artifact hashes. Do not enable app build/test Actions; the public Pages workflow only deploys locally prepared content.
 
-We have already seen exciting projects emerge from the community, and we hope to see the ecosystem continue to grow in its own directions.
+## Licence
 
-Into the unknown.
+Contributions are distributed under the project's [MIT licence](LICENSE). Keep upstream attribution and third-party licence notices with adapted code.

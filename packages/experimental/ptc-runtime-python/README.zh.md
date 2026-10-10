@@ -31,7 +31,7 @@ kind: "package-reference"
 
 ### 你得到什么
 
-包的默认导出是 `PythonPtcRuntime` 插件。其公开面还重新导出宿主侧协议词汇：`validateChildFrame`（重建每条入站帧）、无损 JSON codec 与计量器（`encodeJsonPlain`、`checkDoneValue`、`hasUnsafeIntegerToken`、`hasNonLosslessNumber`）、`logTruncationMarker`（共享截断标记文本），以及 `resolvePythonBin`（对照当前 `PATH` 的解释器查找）、`readProcessStart`（供测试用的进程启动统计）、`detachResidual`（已结算运行的资源清理测试 seam）与 `hostFrameParseCeiling`（给定堆上限可容纳的堆推导帧解析上限）。每个上限都是带默认值并经校验的 `Config` 字段：`cpuSeconds`（60）、`maxWallMs`（600000）、`addressSpaceMb`（512，Darwin 上不生效）、`maxLogBytes`（65536）、`maxValueBytes`（32768）、`graceMs`（3000）与 `pythonBin`（`python3`，在加载期解析、检查可执行性，在五秒强制终止期限内探测版本并固定）。每个子进程只接收 `TMPDIR`；环境中的凭证、`PATH`、`HOME` 与其他宿主状态均不可见。
+包的默认导出是 `PythonPtcRuntime` 插件。其公开面还重新导出宿主侧协议词汇：`validateChildFrame`（重建每条入站帧）、无损 JSON codec 与计量器（`encodeJsonPlain`、`checkDoneValue`、`hasUnsafeIntegerToken`、`hasNonLosslessNumber`）、`logTruncationMarker`（共享截断标记文本），以及 `resolvePythonBin`（对照当前 `PATH` 的解释器查找）、`readProcessStart`（供测试用的进程启动统计）、`detachResidual`（已结算运行的资源清理测试 seam）与 `hostFrameParseCeiling`（给定堆上限可容纳的堆推导帧解析上限）。每个上限都是带默认值并经校验的 `Config` 字段：`cpuSeconds`（60）、`maxWallMs`（600000）、`addressSpaceMb`（512，Darwin 上不生效）、`maxLogBytes`（65536）、`maxValueBytes`（32768）、`graceMs`（3000）与 `pythonBin`（`python3`，在加载期解析、检查可执行性，在五秒强制终止期限内探测版本并固定）。每个子进程接收 `TMPDIR` 和固定的 `LC_ALL=C`，并显式启用 UTF-8 模式，防止宿主区域设置归档占用地址空间预算；环境中的凭证、`PATH`、`HOME` 与其他宿主状态均不可见。
 
 ### wire
 

@@ -692,6 +692,51 @@ describe('provider-routed retry policy', () => {
     ])
   })
 
+  it('resends complete current context after unavailability without repeating completed tools', async () => {
+    vi.useFakeTimers()
+    const id = ToolCallId('completed-before-unavailable')
+    const adapter = new ScriptedAdapter([
+      textResponse('previous conversation retained'),
+      [
+        { type: 'block-start', index: 0, blockType: 'tool-call' },
+        { type: 'tool-call-delta', index: 0, id, name: 'once', argumentsDelta: '{}' },
+        { type: 'block-end', index: 0, block: { type: 'tool-call', id, name: 'once', arguments: '{}' } },
+        { type: 'finish', reason: { kind: 'tool-calls' } },
+      ],
+      [{ type: 'finish', reason: { kind: 'error', failure: { code: 'SERVER', message: 'Model unavailable' } } }],
+      textResponse('recovered'),
+    ])
+    ;({ ctx: context } = await harness(adapter))
+    let executions = 0
+    context.tools.register(defineContentToolFixture({
+      name: 'once', description: 'complete one action', parameters: {},
+      async execute() {
+        executions += 1
+        return [{ type: 'text', text: 'completed action result retained' }]
+      },
+    }))
+    const agent = await context.agentLoop.create(SessionId('retry-complete-context'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'earlier user context retained' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+    const scheduled = waitForRetry(context, agent, 1)
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'current user context retained' }], source: { kind: 'user' } }))
+    await scheduled
+    const idle = agent.whenIdle()
+    await vi.advanceTimersByTimeAsync(500)
+    await idle
+    expect(adapter.requests).toHaveLength(4)
+    expect(executions).toBe(1)
+    expect(adapter.requests[3]?.messages).toEqual(adapter.requests[2]?.messages)
+    expect(adapter.requests[3]?.system).toEqual(adapter.requests[2]?.system)
+    expect(adapter.requests[3]?.tools).toEqual(adapter.requests[2]?.tools)
+    const resent = JSON.stringify(adapter.requests[3]?.messages)
+    for (const text of ['earlier user context retained', 'previous conversation retained', 'current user context retained', 'completed action result retained']) {
+      expect(resent).toContain(text)
+    }
+    expect(resent).not.toContain('Model unavailable')
+    expect(agent.session.deriveMessages().at(-1)).toMatchObject({ content: [{ type: 'text', text: 'recovered' }] })
+  })
+
   it('keeps failed error text and partial output out of every retried model context', async () => {
     vi.useFakeTimers()
     const diagnostic = 'private provider diagnostic must not enter context'

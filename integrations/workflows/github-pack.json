@@ -1,0 +1,416 @@
+[
+  {
+    "id": "@perrylink/dsh-github@0.7.19-bharatcode.1",
+    "name": "@perrylink/dsh-github",
+    "version": "0.7.19-bharatcode.1",
+    "size": 114971,
+    "unpackedSize": 549115,
+    "shasum": "9162d0fbdcd7b174775d4852594c8ff1999fb717",
+    "integrity": "sha512-cUp9jhT5yzL0Ga7Xgov1zRn1M5PydM9oMUg0actmHCCCpIC/0CcZEzT2dcGoCz14oVWNMcXlwAnpYNP1XbugFw==",
+    "filename": "perrylink-dsh-github-0.7.19-bharatcode.1.tgz",
+    "files": [
+      {
+        "path": "LICENSE",
+        "size": 11357,
+        "mode": 493
+      },
+      {
+        "path": "README.md",
+        "size": 814,
+        "mode": 493
+      },
+      {
+        "path": "cordis.patch.yml",
+        "size": 359,
+        "mode": 493
+      },
+      {
+        "path": "lib/approval-gate.d.ts",
+        "size": 1616,
+        "mode": 493
+      },
+      {
+        "path": "lib/approval-gate.d.ts.map",
+        "size": 337,
+        "mode": 493
+      },
+      {
+        "path": "lib/approval-gate.js",
+        "size": 6094,
+        "mode": 493
+      },
+      {
+        "path": "lib/approval-gate.js.map",
+        "size": 5643,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/bot.d.ts",
+        "size": 2153,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/bot.d.ts.map",
+        "size": 851,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/bot.js",
+        "size": 10475,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/bot.js.map",
+        "size": 8682,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/pipeline.d.ts",
+        "size": 3287,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/pipeline.d.ts.map",
+        "size": 2169,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/pipeline.js",
+        "size": 18549,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/pipeline.js.map",
+        "size": 16778,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/review-rules.d.ts",
+        "size": 1982,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/review-rules.d.ts.map",
+        "size": 872,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/review-rules.js",
+        "size": 4393,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/review-rules.js.map",
+        "size": 3488,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/tool.d.ts",
+        "size": 260,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/tool.d.ts.map",
+        "size": 213,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/tool.js",
+        "size": 8970,
+        "mode": 493
+      },
+      {
+        "path": "lib/ci/tool.js.map",
+        "size": 6530,
+        "mode": 493
+      },
+      {
+        "path": "lib/client.d.ts",
+        "size": 11676,
+        "mode": 493
+      },
+      {
+        "path": "lib/client.d.ts.map",
+        "size": 4574,
+        "mode": 493
+      },
+      {
+        "path": "lib/client.js",
+        "size": 12270,
+        "mode": 493
+      },
+      {
+        "path": "lib/client.js.map",
+        "size": 23501,
+        "mode": 493
+      },
+      {
+        "path": "lib/commands.d.ts",
+        "size": 857,
+        "mode": 493
+      },
+      {
+        "path": "lib/commands.d.ts.map",
+        "size": 675,
+        "mode": 493
+      },
+      {
+        "path": "lib/commands.js",
+        "size": 12031,
+        "mode": 493
+      },
+      {
+        "path": "lib/commands.js.map",
+        "size": 9466,
+        "mode": 493
+      },
+      {
+        "path": "lib/config.d.ts",
+        "size": 6256,
+        "mode": 493
+      },
+      {
+        "path": "lib/config.d.ts.map",
+        "size": 2340,
+        "mode": 493
+      },
+      {
+        "path": "lib/config.js",
+        "size": 7970,
+        "mode": 493
+      },
+      {
+        "path": "lib/config.js.map",
+        "size": 6001,
+        "mode": 493
+      },
+      {
+        "path": "lib/credential.d.ts",
+        "size": 1717,
+        "mode": 493
+      },
+      {
+        "path": "lib/credential.d.ts.map",
+        "size": 1053,
+        "mode": 493
+      },
+      {
+        "path": "lib/credential.js",
+        "size": 3467,
+        "mode": 493
+      },
+      {
+        "path": "lib/credential.js.map",
+        "size": 2224,
+        "mode": 493
+      },
+      {
+        "path": "lib/git.d.ts",
+        "size": 2344,
+        "mode": 493
+      },
+      {
+        "path": "lib/git.d.ts.map",
+        "size": 1079,
+        "mode": 493
+      },
+      {
+        "path": "lib/git.js",
+        "size": 4479,
+        "mode": 493
+      },
+      {
+        "path": "lib/git.js.map",
+        "size": 3625,
+        "mode": 493
+      },
+      {
+        "path": "lib/github.d.ts",
+        "size": 4914,
+        "mode": 493
+      },
+      {
+        "path": "lib/github.d.ts.map",
+        "size": 2314,
+        "mode": 493
+      },
+      {
+        "path": "lib/github.js",
+        "size": 11269,
+        "mode": 493
+      },
+      {
+        "path": "lib/github.js.map",
+        "size": 8841,
+        "mode": 493
+      },
+      {
+        "path": "lib/index.d.ts",
+        "size": 3959,
+        "mode": 493
+      },
+      {
+        "path": "lib/index.d.ts.map",
+        "size": 866,
+        "mode": 493
+      },
+      {
+        "path": "lib/index.js",
+        "size": 4189,
+        "mode": 493
+      },
+      {
+        "path": "lib/index.js.map",
+        "size": 2772,
+        "mode": 493
+      },
+      {
+        "path": "lib/jobs.d.ts",
+        "size": 1678,
+        "mode": 493
+      },
+      {
+        "path": "lib/jobs.d.ts.map",
+        "size": 685,
+        "mode": 493
+      },
+      {
+        "path": "lib/jobs.js",
+        "size": 11737,
+        "mode": 493
+      },
+      {
+        "path": "lib/jobs.js.map",
+        "size": 9324,
+        "mode": 493
+      },
+      {
+        "path": "lib/message-source.d.ts",
+        "size": 312,
+        "mode": 493
+      },
+      {
+        "path": "lib/message-source.d.ts.map",
+        "size": 271,
+        "mode": 493
+      },
+      {
+        "path": "lib/message-source.js",
+        "size": 53,
+        "mode": 493
+      },
+      {
+        "path": "lib/message-source.js.map",
+        "size": 120,
+        "mode": 493
+      },
+      {
+        "path": "lib/present.d.ts",
+        "size": 12680,
+        "mode": 493
+      },
+      {
+        "path": "lib/present.d.ts.map",
+        "size": 10292,
+        "mode": 493
+      },
+      {
+        "path": "lib/present.js",
+        "size": 13357,
+        "mode": 493
+      },
+      {
+        "path": "lib/present.js.map",
+        "size": 14988,
+        "mode": 493
+      },
+      {
+        "path": "lib/review.d.ts",
+        "size": 2841,
+        "mode": 493
+      },
+      {
+        "path": "lib/review.d.ts.map",
+        "size": 1317,
+        "mode": 493
+      },
+      {
+        "path": "lib/review.js",
+        "size": 8209,
+        "mode": 493
+      },
+      {
+        "path": "lib/review.js.map",
+        "size": 7070,
+        "mode": 493
+      },
+      {
+        "path": "lib/state.d.ts",
+        "size": 4672,
+        "mode": 493
+      },
+      {
+        "path": "lib/state.d.ts.map",
+        "size": 2581,
+        "mode": 493
+      },
+      {
+        "path": "lib/state.js",
+        "size": 4719,
+        "mode": 493
+      },
+      {
+        "path": "lib/state.js.map",
+        "size": 3987,
+        "mode": 493
+      },
+      {
+        "path": "lib/tools.d.ts",
+        "size": 4785,
+        "mode": 493
+      },
+      {
+        "path": "lib/tools.d.ts.map",
+        "size": 1295,
+        "mode": 493
+      },
+      {
+        "path": "lib/tools.js",
+        "size": 81898,
+        "mode": 493
+      },
+      {
+        "path": "lib/tools.js.map",
+        "size": 65642,
+        "mode": 493
+      },
+      {
+        "path": "lib/types.d.ts",
+        "size": 4285,
+        "mode": 493
+      },
+      {
+        "path": "lib/types.d.ts.map",
+        "size": 2123,
+        "mode": 493
+      },
+      {
+        "path": "lib/types.js",
+        "size": 44,
+        "mode": 493
+      },
+      {
+        "path": "lib/types.js.map",
+        "size": 102,
+        "mode": 493
+      },
+      {
+        "path": "package.json",
+        "size": 5447,
+        "mode": 493
+      }
+    ],
+    "entryCount": 80,
+    "bundled": []
+  }
+]

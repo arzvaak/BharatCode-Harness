@@ -179,25 +179,19 @@ export function probeFreePort(): Promise<number> {
 }
 
 /**
- * Drive the hero's workspace picker through the composed directory dialog
- * until the live composer unlocks. A fresh world has no Workspace, so the boot
- * lands in the Workspace-trigger view state (startup auto-selection has nothing to
- * select); every scenario that types into the composer must connect one
- * first. With nothing to list, activating the composer surface raises the dialog directly —
- * adding a workspace is the picker's only entry. The directory is staged here
- * and adopted through the path editor, which is idempotent across the repeated
- * connects a scenario may make; creating a folder from inside the dialog (the
- * product's other half of the same route) is covered by
- * workspace-management.e2e.ts. The default name 'workspace' keeps the session
- * header cwd at <root>/workspace, the materialization proof several scenarios
- * assert.
+ * Connect an explicit project through the hero workspace picker. Fresh startup
+ * first selects an independent chat; wait for that selection before opening the
+ * picker so the startup transition cannot dismiss the directory dialog.
+ * The default folder name keeps fixture files under `<root>/workspace`.
  * @param page - the page under test.
  * @param root - host directory the workspace folder is staged in (the scaffold's `workspaceCwd`).
  * @param name - folder name staged and adopted as the workspace.
  */
 export async function connectFreshWorkspace(page: Page, root: string, name = 'workspace'): Promise<void> {
   mkdirSync(join(root, name), { recursive: true })
-  await page.getByRole('textbox', { name: 'Choose workspace' }).click()
+  await page.locator('[data-conversation-session]').waitFor()
+  const previousSession = await page.locator('[data-conversation-session]').getAttribute('data-conversation-session')
+  await page.getByRole('button', { name: 'Choose workspace', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Select Workspace Directory' })
   await dialog.waitFor({ timeout: 10_000 })
   await dialog.getByRole('button', { name: 'Edit path' }).click()
@@ -205,6 +199,7 @@ export async function connectFreshWorkspace(page: Page, root: string, name = 'wo
   await pathInput.fill(join(root, name))
   await pathInput.press('Enter')
   await dialog.getByRole('button', { name: 'Open', exact: true }).click()
+  await page.locator(`[data-conversation-session]:not([data-conversation-session="${previousSession}"])`).waitFor({ timeout: 15_000 })
   // The pick connected the workspace: the blank session's live composer
   // replaces the locked placeholder and enables.
   await page.locator('[data-composer-input][contenteditable="true"][data-placeholder="Describe what you want to build, / commands, @ files or sessions"]')
@@ -223,7 +218,9 @@ export async function connectFreshWorkspace(page: Page, root: string, name = 'wo
  */
 export async function connectFreshWorkspaceZh(page: Page, root: string, name = 'workspace', modelAvailable = true): Promise<void> {
   mkdirSync(join(root, name), { recursive: true })
-  await page.getByRole('textbox', { name: '选择工作区' }).click()
+  await page.locator('[data-conversation-session]').waitFor()
+  const previousSession = await page.locator('[data-conversation-session]').getAttribute('data-conversation-session')
+  await page.getByRole('button', { name: '选择工作区', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '选择工作区目录' })
   await dialog.waitFor({ timeout: 10_000 })
   await dialog.getByRole('button', { name: '编辑路径' }).click()
@@ -231,6 +228,7 @@ export async function connectFreshWorkspaceZh(page: Page, root: string, name = '
   await pathInput.fill(join(root, name))
   await pathInput.press('Enter')
   await dialog.getByRole('button', { name: '打开', exact: true }).click()
+  await page.locator(`[data-conversation-session]:not([data-conversation-session="${previousSession}"])`).waitFor({ timeout: 15_000 })
   const editable = modelAvailable ? '[contenteditable="true"]' : ''
   await page.locator(`[data-composer-input]${editable}[data-placeholder="描述你想要构建的内容, / 调用指令, @ 文件或对话"]`)
     .waitFor({ timeout: 15_000 })

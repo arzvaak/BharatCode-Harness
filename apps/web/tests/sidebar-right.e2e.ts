@@ -146,7 +146,9 @@ async function resetSidebar(page: Page): Promise<Locator> {
   await ensureExpanded(page, column)
   await column.locator('[data-sidebar-right-guide-entry="files"]').click()
   await expect.poll(async () => await tabTitles(column)).toEqual(['Files'])
-  await width(column)
+  const viewport = page.viewportSize()
+  if (viewport === null) throw new Error('gesture fixture viewport missing')
+  await setPanelWidth(page, Math.round(viewport.width * 0.45))
   return column
 }
 
@@ -274,17 +276,17 @@ describe('web e2e: shipped right Sidebar', () => {
     await scaffold?.close()
   })
 
-  it('shows nothing on the right while no session keys a surface', async () => {
+  it('starts an independent chat with the right surface collapsed', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-sidebar-right-hero'))
     const frame = page.locator('[class*="frame"]').first()
     const column = page.locator('[data-rightbar-col]')
     await column.waitFor({ state: 'attached', timeout: 15_000 })
 
-    // With no session there is no surface: no panel in the column, no expand
-    // button in the header, and no track — the conversation reaches the frame's edge.
+    // Startup selects an independent chat, with its right surface collapsed.
     expect(await frame.getAttribute('data-rightbar-collapsed')).toBe('true')
-    expect(await column.locator('[data-sidebar-right-panel]').count()).toBe(0)
-    expect(await expandOf(page).count()).toBe(0)
+    await expandOf(page).waitFor()
+    expect(await column.locator('[data-sidebar-right-panel]').count()).toBe(1)
+    expect(await expandOf(page).count()).toBe(1)
     expect(await width(column)).toBe(0)
     await shot(page, '01-hero-no-sidebar')
 
@@ -297,7 +299,7 @@ describe('web e2e: shipped right Sidebar', () => {
       await connectFreshWorkspace(page, scaffold.workspaceCwd)
       // A settled session is what keys the surface; seed one turn through the
       // real append path so the Chat surface is live before the Sidebar is driven.
-      const agent = scaffold.ctx.agents.list()[0]
+      const agent = scaffold.ctx.agents.list().find(candidate => candidate.session.header.cwd === join(scaffold.workspaceCwd, 'workspace'))
       if (agent === undefined) throw new Error('connected workspace did not create an Agent')
       // The wire parameter is `agentId`; the client passes a session id. If the
       // scaffold's Agent and Session carry different ids, that mismatch is the
@@ -746,7 +748,7 @@ describe('web e2e: shipped right Sidebar', () => {
         } | undefined
       }).get('workspaceFiles')
       if (files === undefined) throw new Error('host endpoint is not provided')
-      const agent = scaffold.ctx.agents.list()[0]
+      const agent = scaffold.ctx.agents.list().find(candidate => candidate.session.header.cwd === join(scaffold.workspaceCwd, 'workspace'))
       if (agent === undefined) throw new Error('no Agent to read for')
       const scope = {
         sessionId: agent.session.id,
@@ -880,6 +882,7 @@ describe('web e2e: shipped right Sidebar', () => {
       onTestFailed(() => saveFailureShot(fx, 'web-e2e-sidebar-right-sessions'))
       try {
         await fx.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+        await fx.getByRole('button', { name: 'All chats', exact: true }).click()
         const settled = fx.getByRole('treeitem', { name: /Show the right sidebar\./u }).first()
         await settled.click()
         await expect.poll(async () => await settled.getAttribute('aria-selected')).toBe('true')
@@ -1102,11 +1105,10 @@ describe('web e2e: shipped right Sidebar', () => {
 
     it('opens a context menu on right-click that the strip cannot clip', async () => {
       onTestFailed(() => saveFailureShot(page, 'web-e2e-sidebar-right-menu'))
-      const column = page.locator('[data-rightbar-col]')
+      const column = await resetSidebar(page)
 
       await ensureExpanded(page, column)
       await expect.poll(async () => await column.locator('[data-dockkit-tab]').count()).toBeGreaterThan(0)
-      await column.locator('[data-sidebar-right-guide-entry="files"]').click()
       await column.locator('[data-dockkit-add-tab]').click()
       await expect.poll(async () => await tabTitles(column)).toEqual(['Files', 'Start'])
       // No "more" control on the chip: the chip carries its close, and the menu
@@ -1148,9 +1150,8 @@ describe('web e2e: shipped right Sidebar', () => {
       try {
         await zhPage.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
         await zhPage.waitForSelector('[class*="frame"]', { timeout: 30_000 })
-        // A fresh page opens the workspace on a blank session's hero, which has
-        // no session header and so no expand button. The settled session is the
-        // second row of the tree; pick it the way a user would.
+        // Browse all chats to select the settled workspace Session explicitly.
+        await zhPage.getByRole('button', { name: '全部聊天', exact: true }).click()
         await zhPage.getByRole('treeitem', { name: /Show the right sidebar\./u }).first().click()
         const column = zhPage.locator('[data-rightbar-col]')
         await expandOf(zhPage).waitFor({ timeout: 20_000 })

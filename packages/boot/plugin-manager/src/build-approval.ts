@@ -48,3 +48,35 @@ export async function approveBuilds(dir: string, names: readonly string[]): Prom
   for (const name of names) document.setIn(['allowBuilds', name], true)
   await writeFileAtomic(join(dir, 'pnpm-workspace.yaml'), String(document), { mode: 0o600 })
 }
+
+/**
+ * Record pnpm's undecided selectors when a non-interactive install cannot write them.
+ * @param dir - Profile containing the package manager's modules metadata.
+ * @returns Pending exact selectors; no script is approved or executed.
+ */
+export async function recordPendingBuilds(dir: string): Promise<string[]> {
+  const { document, pending } = await readPolicy(dir)
+  let text: string
+  try { text = await readFile(join(dir, 'node_modules', '.modules.yaml'), 'utf8') }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return pending
+    throw error
+  }
+  if (text.length > 1024 * 1024) throw new Error('pnpm modules metadata exceeds limit')
+  const metadata = parseDocument(text)
+  if (metadata.errors[0] !== undefined) throw metadata.errors[0]
+  const data: unknown = metadata.toJS()
+  if (data === null || typeof data !== 'object' || Array.isArray(data))
+    throw new Error('pnpm modules metadata must be a YAML mapping')
+  const ignored = 'ignoredBuilds' in data ? data.ignoredBuilds : undefined
+  if (ignored === undefined) return pending
+  if (!Array.isArray(ignored) || ignored.length > 1000 || ignored.some(name =>
+    typeof name !== 'string' || name.length === 0 || name.length > 4096 || /[\n\r\x00*?]/.test(name)))
+    throw new Error('Invalid undecided build selectors')
+  for (const name of ignored as string[]) {
+    if (document.getIn(['allowBuilds', name]) === undefined)
+      document.setIn(['allowBuilds', name], 'set this to true or false')
+  }
+  await writeFileAtomic(join(dir, 'pnpm-workspace.yaml'), String(document), { mode: 0o600 })
+  return (await readPolicy(dir)).pending
+}

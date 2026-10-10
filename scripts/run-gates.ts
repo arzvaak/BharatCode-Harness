@@ -722,7 +722,7 @@ function coverageGates(): Gate[] {
 function ciUnitGates(): Gate[] {
   return [
     pnpmScript('native-system', 'build:native-system'),
-    pnpmExec('unit', ['vitest', 'run'], {
+    pnpmExec('unit', ['node', 'scripts/test-unit.mjs'], {
       label: 'test',
       needs: ['native-system'],
       streamOutput: true,

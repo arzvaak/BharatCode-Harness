@@ -33,23 +33,33 @@ function runCommands(job: Record<string, unknown>): unknown[] {
     .filter(command => command !== undefined)
 }
 
-describe('fork CI gate (.github/workflows/ci.yml)', () => {
-  it('triggers on trunk pushes and on pull requests', () => {
+describe('fork CI workflows (.github/workflows)', () => {
+  it('runs only when explicitly dispatched', () => {
     const workflow = loadWorkflow('ci.yml')
-    expect(workflow.on).toHaveProperty('push')
-    expect(workflow.on).toHaveProperty('pull_request')
+    expect(workflow.on).toEqual({ workflow_dispatch: null })
   })
 
   it('runs install, sandbox backend, build, profile composition, tests — in that order', () => {
     const workflow = loadWorkflow('ci.yml')
     expect(checksJob(workflow)['runs-on']).toBe('ubuntu-latest')
     expect(runCommands(checksJob(workflow))).toEqual([
-      'pnpm install --frozen-lockfile',
+      'pnpm install --frozen-lockfile --ignore-scripts',
       'bash scripts/prepare-ci-bubblewrap.sh',
       'pnpm run build',
       'bash scripts/gates/verify-config.sh',
       'pnpm run test',
     ])
+  })
+
+  it('prepares bubblewrap in a completed step before the Linux unit suite', () => {
+    const workflow = loadWorkflow('core-qualification.yml')
+    const jobs = workflow.jobs as Record<string, unknown>
+    const commands = runCommands(jobs.native as Record<string, unknown>)
+    const prepareIndex = commands.indexOf('bash scripts/prepare-ci-bubblewrap.sh')
+    const testIndex = commands.indexOf('pnpm run test')
+
+    expect(prepareIndex).toBeGreaterThanOrEqual(0)
+    expect(testIndex).toBeGreaterThan(prepareIndex)
   })
 
   it('cancels superseded runs on the same ref', () => {

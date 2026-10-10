@@ -1,0 +1,10 @@
+node_modules/
+*.log
+*.tgz
+coverage/
+.tmp/
+artifacts/*.sqlite
+workflows/upstream/
+workflows/build-tools/
+!**/lib/
+!**/lib/**

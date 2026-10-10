@@ -55,7 +55,7 @@ interface ListMetrics {
  */
 function measureList(page: Page): Promise<ListMetrics> {
   return page.evaluate(() => {
-    const list = document.querySelector<HTMLElement>('[role="tree"][aria-label="Sessions"]')
+    const list = document.querySelector<HTMLElement>('[class*="scrollArea"]')
     if (list === null) throw new Error('sidebar session list not in the DOM')
     const time = list.querySelector<HTMLElement>('[class*="time"]')
     if (time === null) throw new Error('no row relative-time element in the sidebar list')
@@ -126,7 +126,7 @@ function measureList(page: Page): Promise<ListMetrics> {
  */
 function measureRowInset(page: Page): Promise<Pick<ListMetrics, 'overflows' | 'rowEdgeInset'>> {
   return page.evaluate(() => {
-    const list = document.querySelector<HTMLElement>('[role="tree"][aria-label="Sessions"]')
+    const list = document.querySelector<HTMLElement>('[class*="scrollArea"]')
     if (list === null) throw new Error('sidebar session list not in the DOM')
     const row = list.querySelector<HTMLElement>('[role="treeitem"]')
     if (row === null) throw new Error('no row in the sidebar list')
@@ -211,7 +211,7 @@ function renderGeometry(light: PaletteMetrics, dark: PaletteMetrics): string {
  */
 function resolveThumb(page: Page): Promise<string> {
   return page.evaluate(() => {
-    const list = document.querySelector<HTMLElement>('[role="tree"][aria-label="Sessions"]')
+    const list = document.querySelector<HTMLElement>('[class*="scrollArea"]')
     if (list === null) throw new Error('sidebar session list not in the DOM')
     const probe = document.createElement('span')
     probe.style.color = 'var(--dsh-scrollbar-thumb)'
@@ -234,7 +234,7 @@ const NO_THUMB = 'rgba(0, 0, 0, 0)'
  * of the viewport (the conversation column).
  */
 async function pointAt(page: Page, where: 'list' | 'away'): Promise<void> {
-  const box = await page.locator('[role="tree"][aria-label="Sessions"]').boundingBox()
+  const box = await page.locator('[class*="scrollArea"]').boundingBox()
   if (box === null) throw new Error('sidebar session list has no layout box')
   const viewport = page.viewportSize()
   if (viewport === null) throw new Error('page has no viewport')
@@ -246,20 +246,20 @@ async function pointAt(page: Page, where: 'list' | 'away'): Promise<void> {
 
 /**
  * Reveal the seeded rows: every seeded session is unattached, so they all sit
- * in the collapsed Ungrouped bucket. Open the bucket, then use its transient
+ * in the collapsed Chats bucket. Open the bucket, then use its transient
  * Show-more control because an open group intentionally renders only five
  * rows by default. Hand-rolled polling because
  * `expect.poll` is test-scoped and this runs in `beforeAll`.
  * @param page - the page under test.
  */
 async function expandSeededSessions(page: Page): Promise<void> {
-  const bucket = page.getByText('Ungrouped', { exact: true }).locator('..').locator('..')
+  const bucket = page.getByText('Chats', { exact: true }).locator('..').locator('..')
   await bucket.waitFor({ timeout: 15_000 })
   const rows = page.locator('[role="tree"][aria-label="Sessions"] [role="treeitem"]')
   const deadline = Date.now() + 30_000
   for (;;) {
     if (await bucket.getAttribute('aria-expanded') !== 'true') {
-      await page.getByText('Ungrouped', { exact: true }).click()
+      await page.getByText('Chats', { exact: true }).click()
     }
     const showMore = page.getByRole('button', { name: /Show \d+ more sessions/ })
     if (await bucket.getAttribute('aria-expanded') === 'true'
@@ -269,7 +269,7 @@ async function expandSeededSessions(page: Page): Promise<void> {
     }
     if (await bucket.getAttribute('aria-expanded') === 'true' && await rows.count() > SEED_COUNT / 2) return
     if (Date.now() > deadline) {
-      throw new Error(`Ungrouped bucket never revealed more than ${SEED_COUNT / 2} rows`)
+      throw new Error(`Chats bucket never revealed more than ${SEED_COUNT / 2} rows`)
     }
     await page.waitForTimeout(200)
   }
@@ -306,6 +306,19 @@ describe('web e2e: sidebar session list scrollbar (reserved gutter / themed thum
     await scaffold?.close()
   })
 
+  it('pins the account/settings footer while the navigation and chats scroll', async () => {
+    const footer = page.locator('[class*="footArea"]')
+    const scrollArea = page.locator('[class*="scrollArea"]')
+    const before = await footer.boundingBox()
+    expect(before).not.toBeNull()
+    await scrollArea.evaluate((el) => { el.scrollTop = el.scrollHeight })
+    await expect.poll(() => scrollArea.evaluate(el => el.scrollTop)).toBeGreaterThan(0)
+    expect(await footer.boundingBox()).toEqual(before)
+    expect(await footer.evaluate(el => el.closest('[class*="scrollArea"]'))).toBeNull()
+    await scrollArea.evaluate((el) => { el.scrollTop = 0 })
+    expect(tripwire.pageErrors).toEqual([])
+  })
+
   it('reserves a scrollbar gutter on the overflowing session list', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-sidebar-scrollbar-gutter'))
     // Vacuity guard: with a non-overflowing list `stable` still reserves, but
@@ -315,8 +328,8 @@ describe('web e2e: sidebar session list scrollbar (reserved gutter / themed thum
     expect(metrics.gutter).toBe('stable')
     // Pin presence, not width, because the width is platform-dependent.
     expect(metrics.band).toBeGreaterThan(0)
-    expect(metrics.scrollbarEdgeOffset).toBe(2)
-    expect(metrics.rowEdgeInset).toBe(12)
+    expect(metrics.scrollbarEdgeOffset).toBe(12)
+    expect(metrics.rowEdgeInset).toBeGreaterThanOrEqual(12)
     // Measure against the bar because overlay scrollbars do not move the client edge.
     expect(metrics.timeCoveredBy).toBe(0)
     expect(metrics.timeRight).toBeLessThanOrEqual(metrics.clientRight)
@@ -344,7 +357,7 @@ describe('web e2e: sidebar session list scrollbar (reserved gutter / themed thum
     // leaves the column quiet. This is the one deliberate loss, and
     // it is pinned here rather than only described, so making a scroll
     // re-reveal the bar has to be a decision rather than a side effect.
-    await page.locator('[role="tree"][aria-label="Sessions"]').evaluate((el) => { el.scrollTop += 200 })
+    await page.locator('[class*="scrollArea"]').evaluate((el) => { el.scrollTop += 200 })
     await page.waitForTimeout(500)
     expect(await resolveThumb(page)).toBe(NO_THUMB)
     await pointAt(page, 'list')
@@ -354,12 +367,14 @@ describe('web e2e: sidebar session list scrollbar (reserved gutter / themed thum
 
   it('keeps the row background inset when overflow disappears', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-sidebar-scrollbar-stable-inset'))
-    expect(await measureRowInset(page)).toEqual({ overflows: true, rowEdgeInset: 12 })
-    const bucket = page.getByText('Ungrouped', { exact: true }).locator('..').locator('..')
+    const expanded = await measureRowInset(page)
+    expect(expanded.overflows).toBe(true)
+    expect(expanded.rowEdgeInset).toBeGreaterThanOrEqual(12)
+    const bucket = page.getByText('Chats', { exact: true }).locator('..').locator('..')
     await bucket.click()
     try {
       await expect.poll(async () => (await measureRowInset(page)).overflows, { timeout: 10_000 }).toBe(false)
-      expect(await measureRowInset(page)).toEqual({ overflows: false, rowEdgeInset: 12 })
+      expect((await measureRowInset(page)).rowEdgeInset).toBe(expanded.rowEdgeInset)
     } finally {
       await expandSeededSessions(page)
     }

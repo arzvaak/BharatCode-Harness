@@ -82,6 +82,34 @@ function registerEcho(ctx: Context) {
 }
 
 describe('request stability across the loop', () => {
+  it('completes tool use and a follow-up with the bundled guard on immutable requests', async () => {
+    const adapter = new MockAdapter([
+      toolCallResponse('guard-call', 'echo', { text: 'hello' }),
+      textResponse('first reply'),
+      textResponse('second reply'),
+    ])
+    const ctx = await harness(adapter)
+    try {
+      const guard = await import(new URL('../../../../integrations/tool-call-guard/src/tool-call-guard.js', import.meta.url).href) as { apply(ctx: Context): void; inject: string[] }
+      await ctx.plugin(guard)
+      registerEcho(ctx)
+      const agent = await ctx.agentLoop.create(SessionId('guard-chat'), { provider: 'mock', model: 'mock' })
+      send(agent, 'hello')
+      await waitForIdle(ctx, agent)
+      send(agent, 'and again')
+      await waitForIdle(ctx, agent)
+      expect(adapter.requests).toHaveLength(3)
+      for (const request of adapter.requests) {
+        expect(Object.isFrozen(request)).toBe(true)
+        expect(Object.isFrozen(request.messages)).toBe(true)
+      }
+      expectPrefixExtension(adapter.requests[0]!, adapter.requests[1]!)
+      expectPrefixExtension(adapter.requests[1]!, adapter.requests[2]!)
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
   it('each step request within a turn append-extends the previous, frozen end to end', async () => {
     const adapter = new MockAdapter([
       toolCallResponse('c1', 'echo', { text: 'one' }, 'first'),

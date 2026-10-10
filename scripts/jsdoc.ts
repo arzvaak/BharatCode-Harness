@@ -195,7 +195,7 @@ export function checkReturns(
 export function reportViolations(gate: string, violations: string[]): void {
   if (violations.length === 0) return
   throw new Error(
-    `${gate}: ${violations.length} JSDoc completeness violation(s) (see AGENTS.md):\n`
+    `${gate}: ${violations.length} JSDoc completeness violation(s) (see DEVELOPER_GUIDE.md):\n`
     + violations.map(v => `  ${v}`).join('\n'),
   )
 }
