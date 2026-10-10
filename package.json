@@ -261,7 +261,7 @@
     "vitest": "^4.1.8",
     "@deepseek-ai/dsh-skill-office": "workspace:*",
     "@deepseek-ai/dsh-tool-workspace-dependencies": "workspace:*",
-    "vite": "8.0.16",
+    "vite": "8.3.0",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   }
