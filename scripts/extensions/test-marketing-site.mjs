@@ -25,7 +25,7 @@ const server = createServer(async (request, response) => {
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const browser = await chromium.launch();
 try {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1050 }, permissions: ['clipboard-read', 'clipboard-write'] });
+  const context = await browser.newContext({ colorScheme: 'light', viewport: { width: 1440, height: 1050 }, permissions: ['clipboard-read', 'clipboard-write'] });
   const page = await context.newPage();
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
@@ -45,12 +45,36 @@ try {
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), `sudo dnf install ./${packages.rpm.name}`);
   const evidence = join(root, 'dist/marketing-qualification'); await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: join(evidence, 'desktop.png'), fullPage: true });
+  assert.equal(await page.getByRole('link', { name: 'View on GitHub', exact: true }).getAttribute('href'), 'https://github.com/arzvaak/BharatCode-Extensions');
+  await page.getByRole('button', { name: 'Use dark mode', exact: true }).click();
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
+  assert.equal(await page.getByRole('button', { name: 'Use light mode', exact: true }).getAttribute('aria-pressed'), 'true');
+  await page.screenshot({ path: join(evidence, 'desktop-dark.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 }); await page.goto(`http://127.0.0.1:${server.address().port}/`);
   await page.getByText(`Preview ${version}`, { exact: true }).waitFor();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'Mobile content overflows');
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark', 'Theme choice should survive navigation');
+  await page.screenshot({ path: join(evidence, 'mobile-dark.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Use light mode', exact: true }).click();
+  await page.reload();
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
   await page.getByRole('tab').filter({ hasText: 'Research' }).click();
   await page.screenshot({ path: join(evidence, 'mobile.png'), fullPage: true });
   assert.deepEqual(errors, []);
+  const automatic = await browser.newContext({ colorScheme: 'dark' });
+  const automaticPage = await automatic.newPage();
+  await automaticPage.goto(`http://127.0.0.1:${server.address().port}/`);
+  assert.equal(await automaticPage.evaluate(() => document.documentElement.dataset.theme), 'dark');
+  await automaticPage.emulateMedia({ colorScheme: 'light' });
+  await automaticPage.getByRole('button', { name: 'Use dark mode', exact: true }).waitFor();
+  await automatic.close();
+  const restricted = await browser.newContext({ colorScheme: 'dark' });
+  await restricted.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw Error('Storage unavailable'); } }); });
+  const restrictedPage = await restricted.newPage();
+  await restrictedPage.goto(`http://127.0.0.1:${server.address().port}/`);
+  await restrictedPage.getByRole('button', { name: 'Use light mode', exact: true }).click();
+  assert.equal(await restrictedPage.evaluate(() => document.documentElement.dataset.theme), 'light');
+  await restricted.close();
   for (const invalid of [{ version, url: 'https://malicious.invalid/', packages },
     { version, url: `https://github.com/arzvaak/BharatCode-Extensions/releases/tag/${tag}`, packages: { ...packages, AppImage: { ...packages.AppImage, url: 'https://malicious.invalid/download' } } }]) {
     await page.unroute('**/release.json');

@@ -1,4 +1,23 @@
 /** Interactive product illustration and source-bound Linux download links. */
+const themeToggle = document.querySelector('.theme-toggle');
+const systemTheme = matchMedia('(prefers-color-scheme: dark)');
+let themeChoice;
+try { themeChoice = localStorage.getItem('bharatcode-theme'); } catch { /* Theme selection still works when storage is unavailable. */ }
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+  themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Use light mode' : 'Use dark mode');
+  document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#151b23' : '#f7f9fc';
+}
+applyTheme(document.documentElement.dataset.theme);
+themeToggle.addEventListener('click', () => {
+  themeChoice = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(themeChoice);
+  try { localStorage.setItem('bharatcode-theme', themeChoice); } catch { /* Keep the current choice for this page. */ }
+});
+systemTheme.addEventListener('change', event => {
+  if (themeChoice !== 'light' && themeChoice !== 'dark') applyTheme(event.matches ? 'dark' : 'light');
+});
 const modes = {
   chat: { label: 'Independent chat', heading: 'Follow a thought.', prompt: 'Help me turn a rough idea into a clear plan.', body: '<p>Start with a question, a sketch, or something you want to understand. Keep the conversation going at your own pace.</p><div class="demo-file"><header>My next idea</header><article><h4>A little clarity goes a long way.</h4><p>Explore the possibilities. Ask a follow-up. Save the files you create along the way.</p></article></div>', placeholder: 'Ask a question. Follow a thought.' },
   coding: { label: 'Coding workspace', heading: 'Make something you can run.', prompt: 'Build a small reading tracker for this project.', body: '<p>Work alongside your files. Ask for a change, inspect the result, and keep the next step in the same conversation.</p><div class="demo-file"><header>reading-tracker / src / app.ts</header><pre>const books = await library.list();\n\nfunction readingProgress(book) {\n  return book.pagesRead / book.totalPages;\n}\n\nrender(books.map(readingProgress));</pre></div>', placeholder: 'Describe what you want to build.' },
