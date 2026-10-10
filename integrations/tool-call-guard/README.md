@@ -88,3 +88,5 @@ MIT
 ## BharatCode integration
 
 The listener is global across sibling LLM plugin scopes. It changes only the outbound projection and preserves canonical messages, valid calls, and mixed result blocks. Unloading removes the interceptor. The native Loader/LLM fixture checks those properties. This plugin repairs historical malformed JSON; it does not grant tool permissions.
+
+Agent-loop requests are frozen reconstructions of the session log and pass through unchanged. The stream listener only repairs caller-owned requests whose `messages` property is writable. Repairing malformed history in an immutable agent request requires an adapter serialization policy; this listener does not bypass request immutability.

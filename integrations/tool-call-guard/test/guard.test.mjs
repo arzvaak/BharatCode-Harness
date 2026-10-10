@@ -6,6 +6,7 @@
  */
 
 import assert from 'node:assert/strict'
+import { apply } from '../src/tool-call-guard.js'
 import {
   invalidToolCallIds,
   invalidToolCallNames,
@@ -157,6 +158,38 @@ test('guard state resets between requests', () => {
     flattenText,
   )
   assert.equal(wire.role, 'tool')
+})
+
+function listener() {
+  let intercept
+  apply({ on(event, callback) { assert.equal(event, 'llm/stream'); intercept = callback } })
+  return intercept
+}
+
+test('frozen agent requests pass through without rewriting malformed canonical history', () => {
+  const messages = Object.freeze([{ role: 'assistant', content: [{ type: 'tool-call', id: 'bad', name: 'search', arguments: POISON }] }])
+  const options = Object.freeze({ messages })
+  const marker = {}
+  assert.equal(listener()(options, () => marker), marker)
+  assert.equal(options.messages, messages)
+  assert.equal(messages[0].content[0].arguments, POISON)
+})
+
+test('writable requests still repair malformed calls without changing source messages', () => {
+  const messages = [{ role: 'assistant', content: [{ type: 'tool-call', id: 'bad', name: 'search', arguments: POISON }] }]
+  const options = { messages }
+  listener()(options, () => {})
+  assert.notEqual(options.messages, messages)
+  assert.equal(options.messages[0].content[0].type, 'text')
+  assert.equal(messages[0].content[0].arguments, POISON)
+})
+
+test('clean readonly message properties pass through without assignment', () => {
+  const messages = [{ role: 'user', content: [{ type: 'text', text: 'yo' }] }]
+  const options = Object.defineProperty({}, 'messages', { value: messages })
+  const marker = {}
+  assert.equal(listener()(options, () => marker), marker)
+  assert.equal(options.messages, messages)
 })
 
 console.log(`\n${passed} tests passed`)

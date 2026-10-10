@@ -1,10 +1,12 @@
 /** Exercise a real sandboxed AppImage with an owned fresh profile and restart. */
 import { createRequire } from 'node:module';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
+import { createServer } from 'node:http';
+import assert from 'node:assert/strict';
 
 const root = resolve(import.meta.dirname, '../..');
 const require = createRequire(join(root, 'apps/web/package.json'));
@@ -12,11 +14,20 @@ const { chromium } = require('playwright');
 const version = JSON.parse(readFileSync(join(root, 'apps/desktop/.desktop-build/targets/linux-x64/artifacts/linux-preview-build.json'))).version;
 const executable = join(root, `apps/desktop/.desktop-build/targets/linux-x64/artifacts/bharatcode-${version}-linux-x86_64.AppImage`);
 const home = await mkdtemp(join(tmpdir(), 'bc-local-appimage-'));
-async function launch() {
+const requests = [];
+const modelServer = createServer(async (request, response) => {
+  let text = ''; for await (const chunk of request) text += chunk;
+  const body = JSON.parse(text); requests.push(body);
+  const reply = JSON.stringify(body.messages).includes('follow-up marker') ? 'GUARD_FOLLOWUP_OK' : 'GUARD_CHAT_OK';
+  response.setHeader('Content-Type', 'text/event-stream');
+  response.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: reply }, finish_reason: null }] })}\n\ndata: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], usage: { prompt_tokens: 2, completion_tokens: 3 } })}\n\ndata: [DONE]\n\n`);
+});
+await new Promise(resolve => modelServer.listen(0, '127.0.0.1', resolve));
+async function launch(configured = false) {
   console.log('AppImage smoke: launch');
   const child = spawn(executable, ['--ozone-platform=x11', '--remote-debugging-port=0', `--user-data-dir=${join(home, 'electron')}`],
     { cwd: home, detached: true, stdio: 'ignore', env: { ...process.env, WAYLAND_DISPLAY: '',
-      DSH_HOME: join(home, 'home'), DSH_LOCALE: 'en', DSH_DESKTOP_WEB_PORT: '0' } });
+      ...(configured ? { BHARATCODE_API_KEY: 'owned-chat-fixture-key' } : {}), DSH_HOME: join(home, 'home'), DSH_LOCALE: 'en', DSH_DESKTOP_WEB_PORT: '0' } });
   let launchError;
   child.once('error', error => { launchError = error; });
   const closed = new Promise(resolve => child.once('close', resolve));
@@ -119,7 +130,13 @@ try {
   } finally { await first.stop(); }
   console.log('AppImage smoke: first instance stopped');
   await rm(join(home, 'electron/DevToolsActivePort'), { force: true });
-  const second = await launch();
+  const profile = join(home, 'home/profiles/desktop');
+  const yaml = require('js-yaml');
+  const provider = yaml.load(readFileSync(join(root, 'integrations/provider-hub/cordis.patch.yml'), 'utf8')).find(row => row.id === 'llm-pi-ai').config.providers.bharatcode;
+  const patches = yaml.load(await readFile(join(profile, 'cordis.patch.yml'), 'utf8'));
+  patches.push({ id: 'llm-pi-ai', config: { providers: { bharatcode: { ...provider, baseURL: `http://127.0.0.1:${modelServer.address().port}/v1` } } } });
+  await writeFile(join(profile, 'cordis.patch.yml'), yaml.dump(patches));
+  const second = await launch(true);
   try {
     let page;
     const deadline = Date.now() + 60000;
@@ -130,6 +147,23 @@ try {
     if (!page) throw Error('Restarted workspace missing');
     await page.getByRole('button', { name: 'Account menu', exact: true }).waitFor({ timeout: 60000 });
     if (await page.locator('[data-desktop-onboarding]').count()) throw Error('Completed onboarding reappeared');
+    await page.getByRole('button', { name: /^Chat/ }).click();
+    await page.locator('[data-conversation-session]').waitFor();
+    const composer = page.locator('[data-composer-input][contenteditable="true"]').last();
+    await composer.fill('Reply with the initial marker. Do not use tools.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await page.getByText('GUARD_CHAT_OK', { exact: true }).last().waitFor({ timeout: 30000 });
+    await page.getByRole('button', { name: 'Send message', exact: true }).waitFor();
+    await composer.fill('Now reply with the follow-up marker. Do not use tools.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await page.getByText('GUARD_FOLLOWUP_OK', { exact: true }).last().waitFor({ timeout: 30000 });
+    const chats = requests.filter(request => JSON.stringify(request.messages).includes('initial marker'));
+    assert.ok(chats.length >= 2, 'Chat and follow-up must reach the model through all bundled plugins');
+    assert.equal(chats[0].chat_template_kwargs.enable_thinking, true);
+    assert.ok(chats[0].tools.length > 0, 'Full chat tool configuration must reach the adapter');
+    console.log('AppImage smoke: full chat and follow-up completed through bundled plugins');
+
+
   } finally { await second.stop(); }
   console.log('Sandboxed AppImage: welcome, provider deferral, fixed footer, scrolling, Skills and restart passed.');
-} finally { await rm(home, { recursive: true, force: true }); }
+} finally { await new Promise(resolve => modelServer.close(resolve)); await rm(home, { recursive: true, force: true }); }

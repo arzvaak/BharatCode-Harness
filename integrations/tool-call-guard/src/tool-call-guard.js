@@ -47,7 +47,14 @@ export function projectMessages(messages) {
 /** Intercept the shared LLM service across sibling plugin scopes; unload removes the listener. */
 export function apply(ctx) {
   ctx.on('llm/stream', (options, next) => {
-    if (Array.isArray(options.messages)) options.messages = projectMessages(options.messages);
+    // Agent-loop requests are immutable reconstructions of the session log.
+    // The stream waterfall is observational for those calls; it cannot replace
+    // request content. Keep legacy projection only for caller-owned writable input.
+    const descriptor = Object.getOwnPropertyDescriptor(options, 'messages');
+    if (descriptor?.writable && Array.isArray(options.messages)) {
+      const projected = projectMessages(options.messages);
+      if (projected !== options.messages) options.messages = projected;
+    }
     return next();
   }, { global: true, prepend: true });
 }
