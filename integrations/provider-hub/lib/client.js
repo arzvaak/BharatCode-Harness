@@ -52,7 +52,7 @@ function bharatCodeDraft() {
     baseURL: "https://bharatcode.ai/api/model/v1",
     api: "openai-completions",
     apiKeyEnv: "BHARATCODE_API_KEY",
-    models: [{ id: "qwen-3.8-27b", name: "Qwen 3.8 27B", contextWindow: 262144, maxTokens: 32e3 }, { id: "deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash", contextWindow: 1e6, maxTokens: 32e3 }]
+    models: [{ id: "qwen-3.8-27b", name: "Qwen 3.8 27B", contextWindow: 262144, maxTokens: 32e3, reasoningEfforts: { off: null, high: "high" }, compat: { thinkingFormat: "qwen-chat-template", supportsDeveloperRole: false } }, { id: "deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash", contextWindow: 1e6, maxTokens: 32e3, reasoningEfforts: { off: null, high: "high" }, compat: { thinkingFormat: "deepseek", supportsDeveloperRole: false, supportsReasoningEffort: true } }]
   };
 }
 function customDraft() {

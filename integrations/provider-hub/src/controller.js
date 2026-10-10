@@ -6,7 +6,7 @@ export function unwrap(result) {
 }
 export function bharatCodeDraft() {
   return { route: 'bharatcode', displayName: 'BharatCode', baseURL: 'https://bharatcode.ai/api/model/v1', api: 'openai-completions', apiKeyEnv: 'BHARATCODE_API_KEY',
-    models: [{id:'qwen-3.8-27b', name:'Qwen 3.8 27B', contextWindow:262144, maxTokens:32000}, {id:'deepseek-v4.1-flash', name:'DeepSeek V4.1 Flash', contextWindow:1000000, maxTokens:32000}] };
+    models: [{id:'qwen-3.8-27b', name:'Qwen 3.8 27B', contextWindow:262144, maxTokens:32000, reasoningEfforts:{off:null,high:'high'}, compat:{thinkingFormat:'qwen-chat-template',supportsDeveloperRole:false}}, {id:'deepseek-v4.1-flash', name:'DeepSeek V4.1 Flash', contextWindow:1000000, maxTokens:32000, reasoningEfforts:{off:null,high:'high'}, compat:{thinkingFormat:'deepseek',supportsDeveloperRole:false,supportsReasoningEffort:true}}] };
 }
 export function customDraft() {
   return {route:'custom',displayName:'Custom provider',baseURL:'',api:'openai-completions',apiKeyEnv:'CUSTOM_API_KEY',models:[]};
