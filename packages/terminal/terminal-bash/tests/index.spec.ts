@@ -457,7 +457,7 @@ describe('BashTerminalBackend startup rollback', () => {
     expect(spawned?.env?.PROMPT_COMMAND).toBeUndefined()
   })
 
-  it('keeps waiting for stdin_read when the first settled output only echoes the prompt literal', async () => {
+  it.each(['echo', 'acknowledgement'] as const)('waits for the controlled prompt after an early %s settlement', async (firstOutput) => {
     const ctx = new Context()
     await ctx.plugin(EmptySandbox)
     await ctx.plugin(SessionProjectionRegistry)
@@ -471,7 +471,7 @@ describe('BashTerminalBackend startup rollback', () => {
         const second = sends.length > 1
         return {
           done: Promise.resolve({
-            viewport: second ? `DSH_READY_${sends[0]?.text.match(/'([0-9a-f-]{36})'/)?.[1]}\ndsh> ` : "function prompt { 'dsh> ' }\n",
+            viewport: second ? `DSH_READY_${sends[0]?.text.match(/'([0-9a-f-]{36})'/)?.[1]}\ndsh> ` : firstOutput === 'echo' ? "function prompt { 'dsh> ' }\n" : `DSH_READY_${sends[0]?.text.match(/'([0-9a-f-]{36})'/)?.[1]}\n`,
             waitReason: 'stdin_read' as const,
             sessionStatus: { kind: 'running' as const }, truncated: false,
           }),

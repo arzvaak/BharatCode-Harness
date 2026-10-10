@@ -127,7 +127,7 @@ async function startupSession(
     await session.initialize(signal)
     // pwsh cannot install its prompt from the environment. Write the prompt
     // function through the session, pin UTF-8 output before user input, and
-    // wait for its per-session acknowledgement and backend stdin_read evidence.
+    // wait for its per-session acknowledgement, delivered controlled prompt and backend stdin_read evidence.
     // Echoed setup source and the initial line editor are not readiness. Follow-up sends bridge silence
     // settlements during startup, while one absolute deadline bounds them.
     const nonce = randomUUID()
@@ -146,7 +146,8 @@ async function startupSession(
       if (result.waitReason === 'timeout') throw new Error('PTY shell did not reach readiness before startup timeout')
       first = false
       viewport += result.viewport
-      if (result.waitReason === 'stdin_read' && viewport.split(/\r?\n/).some(line => line.trim() === ready)) break
+      if (result.waitReason === 'stdin_read' && viewport.endsWith(CONTROLLED_PROMPT)
+        && viewport.split(/\r?\n/).some(line => line.trim() === ready)) break
     }
     session.motd = viewport
   }
