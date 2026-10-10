@@ -16,6 +16,11 @@ const executable = join(root, `apps/desktop/.desktop-build/targets/linux-x64/art
 const home = await mkdtemp(join(tmpdir(), 'bc-local-appimage-'));
 const requests = [];
 const modelServer = createServer(async (request, response) => {
+  if (request.method === 'GET' && request.url === '/v1/models') {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ data: [{ id: 'qwen-3.8-27b', name: 'Qwen 3.8 27B' }, { id: 'deepseek-v4.1-flash', name: 'DeepSeek V4.1 Flash' }] }));
+    return;
+  }
   let text = ''; for await (const chunk of request) text += chunk;
   const body = JSON.parse(text); requests.push(body);
   const reply = JSON.stringify(body.messages).includes('follow-up marker') ? 'GUARD_FOLLOWUP_OK' : 'GUARD_CHAT_OK';

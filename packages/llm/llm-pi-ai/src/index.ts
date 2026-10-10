@@ -68,7 +68,7 @@ import { PiAiAdapter } from './adapter.ts'
 import { authContextFrom, credentialStoreFrom } from './auth.ts'
 import { catalogProviderIds } from './catalog.ts'
 import { assertServiceable, Config, resolveProfiles } from './config.ts'
-import type { ResolvedPiAiProviderProfile } from './config.ts'
+import type { PiAiModelProfile, ResolvedPiAiProviderProfile } from './config.ts'
 import { discoverModels } from './discovery.ts'
 import type { StoredModelDiscoveryProfile } from './discovery.ts'
 import { registerPiAiFlows } from './login.ts'
@@ -314,4 +314,88 @@ export function apply(ctx: Context, config: Config): void {
       ctx.logger.error(error)
     }
   })
+
+  // Opt-in routes refresh once per endpoint at startup and when their credential changes.
+  // Discovery failures leave the current catalog serviceable. In-flight replies cannot
+  // overwrite edits, rotated credentials, or a disposed plugin's configuration.
+  let settingsService: { update(ns: string, patch: object): Promise<void> } | undefined
+  const controller = new AbortController()
+  const isStopped = (): boolean => controller.signal.aborted
+  ctx.effect(() => () => { controller.abort() })
+  const attempted = new Map<string, string>()
+  const importing = new Set<string>()
+  const revisions = new Map<string, number>()
+  const pending = new Set<string>()
+  const configuredModels = (route: string): readonly PiAiModelProfile[] => {
+    const raw = config.providers.get() as unknown as Record<string, { models?: readonly PiAiModelProfile[] }>
+    return raw[route]?.models ?? []
+  }
+  /** Refresh one configured route, preserving fields the endpoint does not disclose. */
+  async function refreshModels(route: string): Promise<void> {
+    const profile = profiles().get(route)
+    if (isStopped() || settingsService === undefined || profile?.autoImport !== true || !profile.baseURL) return
+    if (importing.has(route)) { pending.add(route); return }
+    importing.add(route)
+    const revision = revisions.get(route)
+    const snapshot = config.providers.get()
+    const previous = new Map(configuredModels(route).map(model => [model.id, model]))
+    try {
+      const discovered = await discoverModels({
+        provider: route, baseURL: profile.baseURL,
+        ...profile.api === undefined ? {} : { api: profile.api },
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]),
+      }, () => ({ headers: profile.headers, resolveApiKey: () => resolveApiKey(route, profile) }))
+      if (isStopped() || revisions.get(route) !== revision || config.providers.get() !== snapshot) return
+      if (discovered.length === 0) return
+      const models: PiAiModelProfile[] = discovered.map((model) => {
+        const declared = previous.get(model.id)
+        return {
+          ...declared,
+          id: model.id,
+          ...model.name === undefined ? {} : { name: model.name },
+          ...model.contextWindow === undefined ? {} : { contextWindow: model.contextWindow },
+          ...model.maxTokens === undefined ? {} : { maxTokens: model.maxTokens },
+          ...model.inputModalities === undefined ? {} : { input: [...model.inputModalities] },
+          ...model.reasoningEfforts === undefined || model.reasoningEfforts === false
+            ? {} : { reasoningEfforts: { ...model.reasoningEfforts } },
+          ...model.reasoningEfforts === false ? { reasoningEfforts: false } : {},
+        }
+      })
+      if (!deepEqualJson(models, configuredModels(route))) {
+        await settingsService.update(settingsNs, { providers: { [route]: { models } } })
+        ctx.logger.info(`llm-pi-ai: refreshed ${String(models.length)} models for route "${route}"`)
+      }
+    } catch (error) {
+      if (isStopped() || (error instanceof LlmError && error.code === 'MISSING_CREDENTIAL')) return
+      ctx.logger.warn(`llm-pi-ai: could not refresh models for route "${route}"; keeping its configured catalog`)
+    } finally {
+      importing.delete(route)
+      if (pending.delete(route) && !isStopped()) void refreshModels(route)
+    }
+  }
+  /** Probe only opted-in endpoints, avoiding network on unrelated settings writes. */
+  function pumpCatalogs(): void {
+    if (settingsService === undefined || isStopped()) return
+    for (const [route, profile] of profiles()) {
+      if (profile.autoImport !== true || !profile.baseURL) continue
+      const signature = JSON.stringify([profile.baseURL, profile.api, profile.apiKeyEnv])
+      if (attempted.get(route) === signature) continue
+      attempted.set(route, signature)
+      void refreshModels(route)
+    }
+  }
+  ctx.inject(['settings'], (child) => {
+    settingsService = child.settings
+    pumpCatalogs()
+    child.effect(() => () => { settingsService = undefined })
+  })
+  ctx.on('loader/volatile-update', pumpCatalogs)
+  ctx.on('credentials/reference-updated', (ref) => {
+    for (const [route, profile] of profiles()) {
+      if (profile.autoImport !== true || profile.apiKeyEnv !== ref) continue
+      revisions.set(route, (revisions.get(route) ?? 0) + 1)
+      void refreshModels(route)
+    }
+  })
+
 }

@@ -13,9 +13,10 @@ function bharatCodeDraft() {
     route: "bharatcode",
     displayName: "BharatCode",
     baseURL: "https://bharatcode.ai/api/model/v1",
+    autoImport: true,
     api: "openai-completions",
     apiKeyEnv: "BHARATCODE_API_KEY",
-    models: [{ id: "qwen-3.8-27b", name: "Qwen 3.8 27B", contextWindow: 262144, maxTokens: 32e3, reasoningEfforts: { off: null, high: "high" }, compat: { thinkingFormat: "chat-template", chatTemplateKwargs: { enable_thinking: { $var: "thinking.enabled" } }, supportsDeveloperRole: false } }, { id: "deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash", contextWindow: 1e6, maxTokens: 32e3, reasoningEfforts: { off: null, high: "high" }, compat: { thinkingFormat: "deepseek", supportsDeveloperRole: false, supportsReasoningEffort: true } }]
+    models: [{ id: "qwen-3.8-27b", name: "Qwen 3.8 27B", contextWindow: 262144, maxTokens: 32e3, reasoningEfforts: { off: null, high: "high" }, compat: { thinkingFormat: "chat-template", chatTemplateKwargs: { enable_thinking: { $var: "thinking.enabled" } }, supportsDeveloperRole: false } }, { id: "deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash", contextWindow: 1e6, maxTokens: 32e3, reasoningEfforts: { off: null, low: "low", medium: "medium", high: "high", max: "max" }, compat: { thinkingFormat: "deepseek", supportsDeveloperRole: false, supportsReasoningEffort: true } }]
   };
 }
 function customDraft() {
@@ -47,7 +48,7 @@ function validateDraft(draft, { requireModels = true } = {}) {
     if (![contextWindow, maxTokens].every((n) => Number.isSafeInteger(n) && n > 0) || maxTokens > contextWindow) throw new Error("Model capacities must be positive integers, with output no larger than context.");
     return { ...model, id, name: model.name || id, contextWindow, maxTokens };
   });
-  return { route, displayName: String(draft.displayName || route).trim(), baseURL: url.href.replace(/\/+$/, ""), api: draft.api, apiKeyEnv, models: normalized };
+  return { route, displayName: String(draft.displayName || route).trim(), baseURL: url.href.replace(/\/+$/, ""), api: draft.api, apiKeyEnv, ...draft.autoImport === true ? { autoImport: true } : {}, models: normalized };
 }
 var ProviderController = class {
   constructor(remote) {
@@ -375,7 +376,7 @@ function ProviderHub({ controller, slots }) {
             /* @__PURE__ */ jsx2("button", { type: "button", onClick: () => run(async () => {
               const found = await controller.discover({ ...draft, apiKey: key });
               if (!found.length) throw new Error("The endpoint returned no models. Enter a model ID manually.");
-              change("models", found.map((m) => ({ ...draft.models.find((old) => old.id === m.id), id: m.id, name: m.name || m.id, contextWindow: m.contextWindow || 32768, maxTokens: m.maxTokens || 4096, ...m.inputModalities ? { input: m.inputModalities } : {} })));
+              change("models", found.map((m) => ({ ...draft.models.find((old) => old.id === m.id), id: m.id, name: m.name || m.id, contextWindow: m.contextWindow || 32768, maxTokens: m.maxTokens || 4096, ...m.inputModalities ? { input: m.inputModalities } : {}, ...m.reasoningEfforts === void 0 ? {} : { reasoningEfforts: m.reasoningEfforts } })));
               setNotice("Model list discovered. Review capacities and remove any models you do not want before saving. Missing capacities use 32,768 context and 4,096 output as editable estimates.");
             }), children: "Discover models" })
           ] }),

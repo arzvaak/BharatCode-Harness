@@ -13,6 +13,7 @@
         apiKeyEnv: BHARATCODE_API_KEY
         api: openai-completions
         baseURL: https://bharatcode.ai/api/model/v1
+        autoImport: true
         models:
           - id: qwen-3.8-27b
             name: Qwen 3.8 27B
@@ -33,7 +34,10 @@
             maxTokens: 32000
             reasoningEfforts:
               off: null
+              low: low
+              medium: medium
               high: high
+              max: max
             compat:
               thinkingFormat: deepseek
               supportsDeveloperRole: false

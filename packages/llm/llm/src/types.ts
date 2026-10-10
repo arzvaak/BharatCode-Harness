@@ -324,6 +324,8 @@ export interface LlmDiscoveredModel {
   maxTokens?: number
   /** Accepted input types when disclosed by the catalog or endpoint; absent means unknown. */
   inputModalities?: readonly ModelModality[]
+  /** Explicit selectable levels and their wire spellings; false explicitly disables reasoning. */
+  reasoningEfforts?: false | Readonly<Partial<Record<'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max', string | null>>>
 }
 
 /** One adapter-discovered model; catalog membership is advisory, not request validation. */

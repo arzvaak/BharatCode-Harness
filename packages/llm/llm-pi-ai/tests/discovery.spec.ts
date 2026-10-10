@@ -82,18 +82,27 @@ describe('catalog-route model discovery', () => {
     expect(models.find(model => model.id === 'gpt-6-astra')).toMatchObject({ inputModalities: installed?.input })
   })
 
-  it('answers from the installed registry, with capacities and no network call', async () => {
+  it('uses the explicit endpoint even for an installed provider', async () => {
     const server = await listingServer({ body: JSON.stringify({ data: [{ id: 'from-the-endpoint' }] }) })
     const ctx = await harness()
-
     const models = await ctx.llm.discoverModels('llm-pi-ai', { provider: 'deepseek', baseURL: server.url })
+    expect(models).toEqual([{ id: 'from-the-endpoint', name: 'from-the-endpoint' }])
+    expect(server.paths).toEqual(['/models'])
+  })
 
-    // pi-ai's own registry is the authority for its own providers, and it
-    // carries what a listing endpoint would not disclose.
-    expect(models.map(model => model.id).sort())
-      .toEqual(getBuiltinModels('deepseek').map(model => model.id).sort())
-    expect(models.every(model => (model.contextWindow ?? 0) > 0 && (model.maxTokens ?? 0) > 0)).toBe(true)
-    expect(server.paths).toEqual([])
+  it('preserves advertised levels, mappings, negative capability and modalities', async () => {
+    const server = await listingServer({ body: JSON.stringify({ data: [
+      { id: 'tiers', supported_reasoning_levels: [{ effort: 'low' }, { effort: 'max' }, { effort: 'unknown' }], metadata: { input: ['text', 'image'] } },
+      { id: 'mapped', reasoningEfforts: { off: null, high: 'heavy', max: 'ultra', low: null } },
+      { id: 'disabled', metadata: { reasoning: false } },
+      { id: 'boolean', metadata: { reasoning: true } },
+    ] }) })
+    expect(await discoverModels({ baseURL: server.url })).toEqual([
+      { id: 'tiers', name: 'tiers', reasoningEfforts: { low: 'low', max: 'max' }, inputModalities: ['text', 'image'] },
+      { id: 'mapped', name: 'mapped', reasoningEfforts: { off: null, high: 'heavy', max: 'ultra' } },
+      { id: 'disabled', name: 'disabled', reasoningEfforts: false },
+      { id: 'boolean', name: 'boolean' },
+    ])
   })
 
   it('needs no endpoint for a route the catalog describes', async () => {

@@ -82,7 +82,7 @@ export function ProviderHub({controller,slots}) {
           <div className="ph-model-heading"><h4>Models</h4><button type="button" onClick={() => run(async () => {
             const found = await controller.discover({...draft,apiKey:key});
             if (!found.length) throw new Error('The endpoint returned no models. Enter a model ID manually.');
-            change('models',found.map(m => ({...draft.models.find(old => old.id === m.id),id:m.id,name:m.name || m.id,contextWindow:m.contextWindow || 32768,maxTokens:m.maxTokens || 4096,...m.inputModalities ? {input:m.inputModalities} : {}})));
+            change('models',found.map(m => ({...draft.models.find(old => old.id === m.id),id:m.id,name:m.name || m.id,contextWindow:m.contextWindow || 32768,maxTokens:m.maxTokens || 4096,...m.inputModalities ? {input:m.inputModalities} : {},...m.reasoningEfforts === undefined ? {} : {reasoningEfforts:m.reasoningEfforts}})));
             setNotice('Model list discovered. Review capacities and remove any models you do not want before saving. Missing capacities use 32,768 context and 4,096 output as editable estimates.');
           })}>Discover models</button></div>
           <div className="ph-models">{draft.models.map((model,index) => <div className="ph-model" key={index}>

@@ -5,8 +5,8 @@ export function unwrap(result) {
   return result.value;
 }
 export function bharatCodeDraft() {
-  return { route: 'bharatcode', displayName: 'BharatCode', baseURL: 'https://bharatcode.ai/api/model/v1', api: 'openai-completions', apiKeyEnv: 'BHARATCODE_API_KEY',
-    models: [{id:'qwen-3.8-27b', name:'Qwen 3.8 27B', contextWindow:262144, maxTokens:32000, reasoningEfforts:{off:null,high:'high'}, compat:{thinkingFormat:'chat-template',chatTemplateKwargs:{enable_thinking:{$var:'thinking.enabled'}},supportsDeveloperRole:false}}, {id:'deepseek-v4.1-flash', name:'DeepSeek V4.1 Flash', contextWindow:1000000, maxTokens:32000, reasoningEfforts:{off:null,high:'high'}, compat:{thinkingFormat:'deepseek',supportsDeveloperRole:false,supportsReasoningEffort:true}}] };
+  return { route: 'bharatcode', displayName: 'BharatCode', baseURL: 'https://bharatcode.ai/api/model/v1', autoImport: true, api: 'openai-completions', apiKeyEnv: 'BHARATCODE_API_KEY',
+    models: [{id:'qwen-3.8-27b', name:'Qwen 3.8 27B', contextWindow:262144, maxTokens:32000, reasoningEfforts:{off:null,high:'high'}, compat:{thinkingFormat:'chat-template',chatTemplateKwargs:{enable_thinking:{$var:'thinking.enabled'}},supportsDeveloperRole:false}}, {id:'deepseek-v4.1-flash', name:'DeepSeek V4.1 Flash', contextWindow:1000000, maxTokens:32000, reasoningEfforts:{off:null,low:'low',medium:'medium',high:'high',max:'max'}, compat:{thinkingFormat:'deepseek',supportsDeveloperRole:false,supportsReasoningEffort:true}}] };
 }
 export function customDraft() {
   return {route:'custom',displayName:'Custom provider',baseURL:'',api:'openai-completions',apiKeyEnv:'CUSTOM_API_KEY',models:[]};
@@ -32,7 +32,7 @@ export function validateDraft(draft, { requireModels = true } = {}) {
     if (![contextWindow,maxTokens].every(n => Number.isSafeInteger(n) && n > 0) || maxTokens > contextWindow) throw new Error('Model capacities must be positive integers, with output no larger than context.');
     return {...model, id, name: model.name || id, contextWindow, maxTokens};
   });
-  return {route, displayName: String(draft.displayName || route).trim(), baseURL: url.href.replace(/\/+$/, ''), api:draft.api, apiKeyEnv, models:normalized};
+  return {route, displayName: String(draft.displayName || route).trim(), baseURL: url.href.replace(/\/+$/, ''), api:draft.api, apiKeyEnv, ...draft.autoImport === true ? {autoImport:true} : {}, models:normalized};
 }
 export class ProviderController {
   constructor(remote) { this.remote = remote; }

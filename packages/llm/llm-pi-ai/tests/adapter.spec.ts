@@ -645,23 +645,25 @@ describe('provider profile lifecycle', () => {
     const profile = patch.find(row => row.id === 'llm-pi-ai')?.config?.providers?.bharatcode
     expect(profile).toBeDefined()
     vi.stubEnv('BHARATCODE_API_KEY', 'test-key')
-    const server = await mockServer(Array.from({ length: 4 }, () => ({ events: textEvents })))
+    const server = await mockServer(Array.from({ length: 7 }, () => ({ events: textEvents })))
     const ctx = new Context()
     try {
       await ctx.plugin(LlmRuntime)
       await ctx.plugin(LlmPiAi, { providers: { bharatcode: { ...profile, baseURL: `${server.url}/v1` } } })
       for (const model of ['qwen-3.8-27b', 'deepseek-v4.1-flash']) {
         const info = await ctx.llm.resolveModelInfo('bharatcode', model)
-        expect(info?.reasoning?.efforts.map(effort => effort.id)).toEqual(['off', 'high'])
-        for (const effort of ['high', 'off']) {
+        expect(info?.reasoning?.efforts.map(effort => effort.id)).toEqual(model.startsWith('deepseek') ? ['off', 'low', 'medium', 'high', 'max'] : ['off', 'high'])
+        for (const effort of model.startsWith('deepseek') ? ['low', 'medium', 'high', 'max', 'off'] : ['high', 'off']) {
           await assemble(ctx, { provider: 'bharatcode', model, reasoningEffort: ReasoningEffortId(effort), messages: [] })
         }
       }
       expect(server.requests[0]).toHaveProperty('chat_template_kwargs', { enable_thinking: true })
       expect(server.requests[1]).toHaveProperty('chat_template_kwargs', { enable_thinking: false })
-      expect(server.requests[2]).toMatchObject({ thinking: { type: 'enabled' }, reasoning_effort: 'high' })
-      expect(server.requests[3]).toMatchObject({ thinking: { type: 'disabled' } })
-      expect(server.requests[3]).not.toHaveProperty('reasoning_effort')
+      for (const [index, effort] of ['low', 'medium', 'high', 'max'].entries()) {
+        expect(server.requests[index + 2]).toMatchObject({ thinking: { type: 'enabled' }, reasoning_effort: effort })
+      }
+      expect(server.requests[6]).toMatchObject({ thinking: { type: 'disabled' } })
+      expect(server.requests[6]).not.toHaveProperty('reasoning_effort')
     } finally {
       await ctx.fiber.dispose()
     }
