@@ -35,4 +35,4 @@ Service Provider 与 Consumer 由此独立演进：沙箱化执行器替换 `dsh
 
 ## 后果
 
-分离角色会增加包和样板代码（`package.json`、`tsconfig`、README 和注入接线）。换来的是：Service Provider 与 Consumer 独立发布和版本管理，新后端永远不会波及面向模型的约定。[AGENTS.md](../../../../AGENTS.md) 和 [architecture.md](../../../../docs/architecture.zh.md) 载有这项规则；bash 三件套是参考模板。本 Agent Note 记录为什么独立变化的角色通常需要拆分，而确实共享的关注点可以保持合并。
+分离角色会增加包和样板代码（`package.json`、`tsconfig`、README 和注入接线）。换来的是：Service Provider 与 Consumer 独立发布和版本管理，新后端永远不会波及面向模型的约定。[AGENTS.md](../../../../DEVELOPER_GUIDE.md) 和 [architecture.md](../../../../docs/architecture.zh.md) 载有这项规则；bash 三件套是参考模板。本 Agent Note 记录为什么独立变化的角色通常需要拆分，而确实共享的关注点可以保持合并。

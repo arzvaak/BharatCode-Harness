@@ -36,7 +36,7 @@ interface GenericResultView { card: 'generic'; title?: string; content?: Content
 interface TerminalResultView { card: 'terminal'; title?: string; output?: string; exitCode?: number; signal?: string }
 ```
 
-`card` is **required** on every variant — a real discriminant, not an optional default. The bridge does `switch (view.card) { case 'generic': … case 'terminal': … case 'diff': … default: assertNever(view) }`. The union is **closed** (per the [switch-exhaustiveness convention](../../../../AGENTS.md)): a fourth render intent (a table, a chart) needs new bridge code to render it anyway, so a plugin-added variant that the bridge silently drops would be worse than a compile error. Adding a variant breaks compilation at the bridge switch — exactly the signal we want.
+`card` is **required** on every variant — a real discriminant, not an optional default. The bridge does `switch (view.card) { case 'generic': … case 'terminal': … case 'diff': … default: assertNever(view) }`. The union is **closed** (per the [switch-exhaustiveness convention](../../../../DEVELOPER_GUIDE.md)): a fourth render intent (a table, a chart) needs new bridge code to render it anyway, so a plugin-added variant that the bridge silently drops would be worse than a compile error. Adding a variant breaks compilation at the bridge switch — exactly the signal we want.
 
 ### Why a tagged union beats the field-bag
 

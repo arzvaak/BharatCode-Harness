@@ -54,7 +54,7 @@ URL 层策略未受影响：仅 `http(s)`、禁止内嵌凭据、长度上限与
 
 **每个出网点都配有出网测试。** 各所属包中的 `egress.spec.ts` 通过假代理驱动实际传输，并检查观察到的路由。这些测试覆盖搜索后端、pi-ai 发现、走 HTTP 的 MCP、子 Node 进程、worker 线程和遥测的直连例外。它们可发现静态调用点检查无法观察到的依赖传输变化。
 
-**用门禁防止该缺陷复现。** `verify-no-bare-dispatcher` 解析 TypeScript AST——`scripts/AGENTS.md` 要求 source-ownership 门禁使用语法感知发现，而逐行正则漏掉了本仓库已在使用的 `{ dispatcher }` 简写，以及重命名导入后的 `new Alias(...)`。它在所属包之外拒绝 undici agent 构造与显式 `dispatcher` 选项。`proxyRouteFor(url)` 是受支持的替代；唯一一处确实自有传输的调用点——`web-fetch-http`，它把请求钉在已校验的地址上——用 `proxy-exempt:` 注释说明。这条规则之所以存在，是因为 `web-fetch-http` 里原本那行 `new Agent` 在写下时完全合理——那时根本还没有代理这回事，也没有任何机制会拦下它。
+**用门禁防止该缺陷复现。** `verify-no-bare-dispatcher` 解析 TypeScript AST——`scripts/DEVELOPER_GUIDE.md` 要求 source-ownership 门禁使用语法感知发现，而逐行正则漏掉了本仓库已在使用的 `{ dispatcher }` 简写，以及重命名导入后的 `new Alias(...)`。它在所属包之外拒绝 undici agent 构造与显式 `dispatcher` 选项。`proxyRouteFor(url)` 是受支持的替代；唯一一处确实自有传输的调用点——`web-fetch-http`，它把请求钉在已校验的地址上——用 `proxy-exempt:` 注释说明。这条规则之所以存在，是因为 `web-fetch-http` 里原本那行 `new Agent` 在写下时完全合理——那时根本还没有代理这回事，也没有任何机制会拦下它。
 
 ## Alternatives considered
 

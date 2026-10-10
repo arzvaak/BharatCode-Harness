@@ -4,7 +4,7 @@
 
 保存带版本的写作项目、章节上下文、设定集、变量和连贯性审查。
 
-面向 BharatCode 和 DeepSeek Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
+面向 BharatCode 和 BharatCode Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
 
 这是上游核心及规范工具的限定范围 fork。省略了原有写作工作台、预设、角色包和重复 UI。章节目标保留上游的字符计数语义。通过配置 dataDir 隔离项目。
 

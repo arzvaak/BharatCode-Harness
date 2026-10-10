@@ -22,7 +22,7 @@ Status: implemented
 
 **`ui-primitives` README 里的组件目录，是这条规则得以可用的前提。** 它列出每个导出组件的用途，以及它不适用的场合，并点名三组容易混淆的配对：`Tag` 与 `Pill`、`DisclosureRow` 与卡片式折叠、包内的 `FoldToggle` 与对外导出面。`Pill` 是可选中的胶囊按钮——它接受 `active` 与 `onClick`，用于视图切换与筛选器；`Tag` 是只读徽章，两者都不接受。组件注释使用同一套区分。
 
-规则写在 [packages/client/AGENTS.md](../../../../packages/client/AGENTS.md) 新组件清单的第一步，[docs/web-styling.md](../../../../docs/web-styling.zh.md) 指向该目录，让从样式一侧进来的作者也能到达。
+规则写在 [packages/client/AGENTS.md](../../../../packages/client/DEVELOPER_GUIDE.md) 新组件清单的第一步，[docs/web-styling.md](../../../../docs/web-styling.zh.md) 指向该目录，让从样式一侧进来的作者也能到达。
 
 ## 如何找出重复
 

@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/github/README.md
 /perrylink-dsh-github:
-  en: ac7735d02eb2080a
-  zh: b7f6ac81ce6b525c
+  en: 70d6b1bd471befc2
+  zh: 0b8c84ebd3dea4ac

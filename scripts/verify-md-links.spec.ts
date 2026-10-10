@@ -47,7 +47,7 @@ describe('Markdown source discovery', () => {
 
   it('checks package instructions and nested docs while excluding frozen notes', () => {
     const root = layout({
-      'packages/AGENTS.md': '[missing](missing.md)\n',
+      'packages/DEVELOPER_GUIDE.md': '[missing](missing.md)\n',
       'packages/core/README.md': '[missing](missing.md)\n',
       'packages/core/probe/README.md': '[missing](missing.md)\n',
       '.agents/notes/archived/process/frozen.md': '[historical](missing.md)\n',
@@ -55,7 +55,7 @@ describe('Markdown source discovery', () => {
     const sources = markdownLinkSourcePaths(root)
     const violations = sources.flatMap(file => findViolations(join(root, file), anchorCache(), root))
     expect(violations.map(({ file }) => file).sort()).toEqual([
-      join('packages', 'AGENTS.md'),
+      join('packages', 'DEVELOPER_GUIDE.md'),
       join('packages', 'core', 'README.md'),
       join('packages', 'core', 'probe', 'README.md'),
     ])

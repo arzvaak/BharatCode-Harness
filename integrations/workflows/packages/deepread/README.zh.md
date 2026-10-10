@@ -4,7 +4,7 @@
 
 提取本地或粘贴的资料，生成英文证据报告、书籍综合分析以及无需模型的预算估算。
 
-面向 BharatCode 和 DeepSeek Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
+面向 BharatCode 和 BharatCode Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
 
 这是原有资料/PDF 提取、模型 JSON 重试、分片综合分析、预算、校准和 URL 缓存引擎的限定范围 fork。支持 quick/deep/book 模式，且仅使用英文。省略了重复 shell、批处理、图谱、Feynman、后台任务、随包 skill（技能）和自动磁盘导出。报告需要已配置的模型；估算不调用模型。
 

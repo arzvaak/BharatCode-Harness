@@ -4,7 +4,7 @@
 
 搜索 Zotero 参考资料、查看笔记和附件并导出 BibTeX。
 
-面向 BharatCode 和 DeepSeek Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
+面向 BharatCode 和 BharatCode Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
 
 需要运行中的 Zotero 桌面本地 API 或已配置的 Zotero Web API 文献库。未访问个人文献库。
 

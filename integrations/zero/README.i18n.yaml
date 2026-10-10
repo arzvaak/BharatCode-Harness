@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/zero/README.md
 /dsh-zero:
-  en: 670bd5a708a27d3b
-  zh: 6579d70ebe35d7a8
+  en: 5d2b687627e1c785
+  zh: 48f4fb2812093c56
 /dsh-zero/modes:
   en: 8f3a98193baaae24
   zh: b3c0b145e0f9c4a9
 /dsh-zero/install-the-packaged-plugin:
-  en: a0614d7aab87c75b
-  zh: 16d3a8e09d1bf701
+  en: ed2cfa3a1ad11064
+  zh: 91a8900143b5d242
 /dsh-zero/recovery-and-measurements:
   en: 6b3def7d82d3cb68
   zh: d4b17dadfe91e719

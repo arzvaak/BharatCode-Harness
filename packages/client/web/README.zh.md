@@ -41,7 +41,7 @@ kind: "package-library"
 
 ### 共享模块表
 
-`PLATFORM_MODULES`（位于 `src/platform.ts`）列出外壳预置的共享模块——React、Cordis 与静态 UI 库——并与 `PRELOADED_CLIENT_EXTERNALS`（parser 预载的运行时行）一起定义每个动态 bundle 解析所依据的隐式 external 基座。`dsh.client.external` 只添加基座之外的精确请求；参见[共享模块与模块图](../AGENTS.md#shared-modules-and-the-module-graph)。
+`PLATFORM_MODULES`（位于 `src/platform.ts`）列出外壳预置的共享模块——React、Cordis 与静态 UI 库——并与 `PRELOADED_CLIENT_EXTERNALS`（parser 预载的运行时行）一起定义每个动态 bundle 解析所依据的隐式 external 基座。`dsh.client.external` 只添加基座之外的精确请求；参见[共享模块与模块图](../DEVELOPER_GUIDE.md#shared-modules-and-the-module-graph)。
 
 ### 配置
 
@@ -99,7 +99,7 @@ kind: "package-library"
 - [客户端模块系统](../modules/README.zh.md)——本内核消费的惰性模块表与启动图。
 - [UI 渲染器](../ui-renderer/README.zh.md)——接收挂载点并把 slot 数据绑定到 React。
 - [客户端模块子系统](../../../docs/subsystems/client-modules.zh.md)——web 插件表、启动图协议与 bundle 路由。
-- [客户端编写规则](../AGENTS.md#shared-modules-and-the-module-graph)——共享模块基座与 `dsh.client.external` 语义。
+- [客户端编写规则](../DEVELOPER_GUIDE.md#shared-modules-and-the-module-graph)——共享模块基座与 `dsh.client.external` 语义。
 - [客户端组地图](../README.zh.md)——本包所属的浏览器半侧。
 
 -----

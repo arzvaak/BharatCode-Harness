@@ -1,4 +1,4 @@
-# AGENTS.md — Schedule packages
+# DEVELOPER_GUIDE.md — Schedule packages
 
 These rules supplement the repository and package instructions for `packages/schedule/*`.
 

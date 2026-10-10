@@ -647,7 +647,7 @@ function readPersistenceEntries(root: string, allowIncompleteId?: string): Persi
   const directory = join(root, HISTORY_DIRECTORY)
   if (!existsSync(directory)) throw new Error('persistence history is missing; use pnpm run persistence-changes --baseline ID for explicit initialization')
   const files = readdirSync(directory).sort()
-  const documents = files.filter(file => file.endsWith('.md') && !file.endsWith('.zh.md') && file !== 'README.md' && file !== 'AGENTS.md')
+  const documents = files.filter(file => file.endsWith('.md') && !file.endsWith('.zh.md') && file !== 'README.md' && file !== 'DEVELOPER_GUIDE.md')
   const snapshots = new Set(files.filter(file => file.endsWith('.schema.json')))
   const entries = documents.map((filename) => {
     const source = readFileSync(join(directory, filename), 'utf8').replaceAll('\r\n', '\n')

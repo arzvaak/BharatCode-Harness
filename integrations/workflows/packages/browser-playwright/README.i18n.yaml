@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/browser-playwright/README.md
 /dsh-browser-playwright:
-  en: 01b030b72954f4ca
-  zh: 92aba6f47891e046
+  en: 36832e77a1a340bf
+  zh: a08f84a9e570b1b3

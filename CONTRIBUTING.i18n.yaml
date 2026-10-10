@@ -2,6 +2,15 @@
 # section, a hash of its English and Chinese blocks outside code blocks and generated regions.
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write CONTRIBUTING.md
-/contributing:
-  en: 08d2f421ff3617f4
-  zh: 9d060d70ad186dc5
+/contributing-to-bharatcode-harness:
+  en: 54c36f96fba45a5e
+  zh: 74d2a09cd0edfc77
+/contributing-to-bharatcode-harness/preparing-a-change:
+  en: 70c4084e0cda8ea3
+  zh: 2a6cb10cd256ea64
+/contributing-to-bharatcode-harness/checking-your-work:
+  en: 720de470fdc465cd
+  zh: 4230f2e280302057
+/contributing-to-bharatcode-harness/licence:
+  en: d550362dcea2770d
+  zh: c87981503ef7f599

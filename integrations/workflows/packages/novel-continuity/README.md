@@ -4,7 +4,7 @@ English | [中文](README.zh.md)
 
 Keep versioned writing projects, chapter context, lorebook, variables, and continuity audits.
 
-English local fork for BharatCode and DeepSeek Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
+English local fork for BharatCode and BharatCode Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
 
 Scoped fork of the upstream core and canonical tools. The original writing workbench, presets, persona packs, and duplicate UI are omitted. Chapter targets retain upstream character-count semantics. Configure dataDir for isolated projects.
 

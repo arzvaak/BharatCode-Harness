@@ -6,11 +6,11 @@
 
 [![npm version](https://img.shields.io/npm/v/dsh-context)](https://www.npmjs.com/package/dsh-context) [![GitHub stars](https://img.shields.io/github/stars/bowenliang123/dsh-context?style=social)](https://github.com/bowenliang123/dsh-context) [![dshfind](https://dshfind.com/api/badge/bowenliang123/dsh-context)](https://dshfind.com/en/plugins/bowenliang123/dsh-context?ref=badge)
 
-**为 agent（智能体）提供上下文洞察与管理的最佳 [DeepSeek Harness 插件](https://www.deepseek.com/harness/)。**
+**为 agent（智能体）提供上下文洞察与管理的最佳 [BharatCode Harness 插件](https://www.deepseek.com/harness/)。**
 
 [`dsh-context`](https://www.npmjs.com/package/dsh-context) 提供完整的上下文生命周期管理功能。
 - **Context Insights 页面**：作为一级侧栏面板（与 Plugins 和 Automation tasks 并列）提供跨会话概览：KPI 栏包含 7 天 token/成本用量图、活动热图、汇总组成环，以及可筛选并直达任意会话的会话卡片。
-- **Context 标签页**：DeepSeek Harness 上下文统计、组成、趋势、事件和消息的 UI 仪表板。
+- **Context 标签页**：BharatCode Harness 上下文统计、组成、趋势、事件和消息的 UI 仪表板。
 - **Context 面板**：将同一个仪表板呈现为右侧栏标签页（dsh 0.1.5-rc.1+）；在侧栏引导页选择 **Context**，面板便在聊天旁打开。
 - **`/context` 命令**：斜杠命令展示当前上下文组成和近期上下文演变的上下文模型。
 
@@ -24,7 +24,7 @@
 
 ### 使用 `dsh` CLI 安装
 
-安装 [`dsh-context`](https://www.npmjs.com/package/dsh-context) 插件，使用 [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh)：
+安装 [`dsh-context`](https://www.npmjs.com/package/dsh-context) 插件，使用 [BharatCode Harness](https://www.npmjs.com/package/@deepseek-ai/dsh)：
 
 ```sh
 dsh plugin --profile web add dsh-context

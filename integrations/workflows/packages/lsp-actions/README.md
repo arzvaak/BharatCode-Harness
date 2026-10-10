@@ -4,7 +4,7 @@ English | [中文](README.zh.md)
 
 Use diagnostics, formatting, symbols, completion, signature help, inlay hints, and rename.
 
-English local fork for BharatCode and DeepSeek Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
+English local fork for BharatCode and BharatCode Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
 
 Configure language servers or the official LSP seam. The default empty server map reports LSP_ACTION_UNAVAILABLE; server installation is outside this package.
 

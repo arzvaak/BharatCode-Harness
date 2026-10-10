@@ -24,15 +24,15 @@
 
 ## 1.1.6 - 2026-09-30
 
-This release supports DeepSeek Harness `0.2.0-rc.2`. Previously supported versions remain available.
+This release supports BharatCode Harness `0.2.0-rc.2`. Previously supported versions remain available.
 
 ## 1.1.5 - 2026-09-28
 
-This release supports DeepSeek Harness `0.2.0-rc.1`. Previously supported versions remain available.
+This release supports BharatCode Harness `0.2.0-rc.1`. Previously supported versions remain available.
 
 ## 1.1.4 - 2026-09-25
 
-This release supports DeepSeek Harness `0.1.7-rc.2`. Previously supported versions remain available.
+This release supports BharatCode Harness `0.1.7-rc.2`. Previously supported versions remain available.
 
 ## 1.1.3 - 2026-09-24
 
@@ -50,14 +50,14 @@ This release publishes the `0.1.7-rc.1` support from 1.1.1. That tag was not pub
 
 ## 1.1.1 - 2026-09-24
 
-This release supports DeepSeek Harness `0.1.7-rc.1` and no longer accepts alpha host versions.
+This release supports BharatCode Harness `0.1.7-rc.1` and no longer accepts alpha host versions.
 
 - Supported hosts are `0.1.0-rc.8`, `0.1.1-rc.2`, `0.1.2-rc.1`, `0.1.5-rc.1`, `0.1.5-rc.2`, and `0.1.7-rc.1`.
 - `0.1.6-alpha.1`, `0.1.6-alpha.2`, and `0.1.7-alpha.1` are no longer in the compatibility range.
 
 ## 1.1.0 - 2026-09-23
 
-This release rebuilds the **Settings → Skills** page and supports DeepSeek Harness `0.1.7-alpha.1`, while retaining support for the seven preceding versions.
+This release rebuilds the **Settings → Skills** page and supports BharatCode Harness `0.1.7-alpha.1`, while retaining support for the seven preceding versions.
 
 - The page follows the host's light or dark theme, with familiar blue controls.
 - Refresh, create, and import actions now use round buttons. GitHub, feedback, and check-for-updates actions remain compact and retain their icons.
@@ -157,18 +157,18 @@ The following capabilities were introduced in 0.x and remain supported; they wer
 
 ## 0.1.53 - 2026-09-18
 
-- Fix the empty Project tab on official DeepSeek Harness `0.1.6-alpha.2`: the session list no longer provides the current-session field, so the Project tab now follows the session being viewed in the main interface. Older hosts continue using the previous current-session behavior.
-- Add compatibility with DeepSeek Harness `0.1.6-alpha.2`, retaining support for the six earlier versions.
+- Fix the empty Project tab on official BharatCode Harness `0.1.6-alpha.2`: the session list no longer provides the current-session field, so the Project tab now follows the session being viewed in the main interface. Older hosts continue using the previous current-session behavior.
+- Add compatibility with BharatCode Harness `0.1.6-alpha.2`, retaining support for the six earlier versions.
 - Make the `package.json` description bilingual to match the GitHub repository description.
 
 ## 0.1.52 - 2026-09-16
 
-- Add compatibility with DeepSeek Harness `0.1.6-alpha.1`, retaining support for the five earlier versions. Skill discovery, enable/disable, and management remain unchanged.
+- Add compatibility with BharatCode Harness `0.1.6-alpha.1`, retaining support for the five earlier versions. Skill discovery, enable/disable, and management remain unchanged.
 - Normalize isolated host sandbox paths to prevent Windows 8.3 temporary paths from causing CI project-skill path comparisons to fail.
 
 ## 0.1.51 - 2026-09-16
 
-- Add compatibility with DeepSeek Harness `0.1.6-alpha.1`, retaining support for the five earlier versions. Skill discovery, enable/disable, and management remain unchanged.
+- Add compatibility with BharatCode Harness `0.1.6-alpha.1`, retaining support for the five earlier versions. Skill discovery, enable/disable, and management remain unchanged.
 
 ## 0.1.50 - 2026-09-12
 

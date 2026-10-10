@@ -1,4 +1,4 @@
-# AGENTS.md — dsh-task-board
+# DEVELOPER_GUIDE.md — dsh-task-board
 
 The Host-authoritative, multi-column task board for the dsh Web GUI. Tasks run in real DSH sessions; the browser only displays state asynchronously and submits actions.
 

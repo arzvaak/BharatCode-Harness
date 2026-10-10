@@ -1,14 +1,14 @@
 # dsh-context
 
-A DeepSeek Harness plugin for context insight, actions, and management.
+A BharatCode Harness plugin for context insight, actions, and management.
 
 ## Background
 
-- DeepSeek Harness (dsh):
+- BharatCode Harness (dsh):
   - an open-source agent harness developed by DeepSeek AI.
   - Github: https://github.com/deepseek-ai/deepseek-harness
   - NPM: @deepseek-ai/dsh
-  - MUST ensure the full clone of the DeepSeek Harness repository is available locally, before any work.
+  - MUST ensure the full clone of the BharatCode Harness repository is available locally, before any work.
   - MUST always dive deep into the details of dsh source code and dependencies, for its mechanisms, lifecycles, and modules. Ensure every decision is based on the full and actual truth of the dsh source code.
   - Local git clone of [dsh](https://github.com/deepseek-ai/deepseek-harness):
     - may be found in the `~/dev/deepseek-harness` directory
@@ -16,7 +16,7 @@ A DeepSeek Harness plugin for context insight, actions, and management.
     - commits and version tags are available for reference and diff
     - run `pnpm install` to update dependencies after a `git pull` or switching commit/tag
 
-- DeepSeek Harness Plugin:
+- BharatCode Harness Plugin:
   - docs:
     - Reference: https://deepseek-harness.github.io/deepseek-harness/en/reference/
   - Example plugins:
@@ -24,7 +24,7 @@ A DeepSeek Harness plugin for context insight, actions, and management.
 
 ## Coding
 - Always consider the minimal change and the most performance efficient implementation.
-- Try best to use the existing classes, utilities, styles, style tokens, events, presets and lifecycles provided by DeepSeek Harness.ess.
+- Try best to use the existing classes, utilities, styles, style tokens, events, presets and lifecycles provided by BharatCode Harness.ess.
 - Use English in code comments, documentation, Pull Request description, and commit messages.
 - Smaller, less-coupling and modulized code and tests are preferred for better maintainability and testability.
 - Avoid adding unnecessary code comments (unless for the pinned major decision or for those provide significant value) and code duplication.

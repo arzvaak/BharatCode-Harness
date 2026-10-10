@@ -19,7 +19,7 @@ English | [中文](README.zh.md)
   [![DSH supported through 0.2.0-rc.2](https://img.shields.io/badge/DSH-up%20to%200.2.0--rc.2-2563eb.svg)](#installation)
 </div>
 
-> DSH Skills Manager is a community-maintained DeepSeek Harness (DSH) plugin, not an official DeepSeek AI product.
+> DSH Skills Manager is a community-maintained BharatCode Harness (DSH) plugin, not an official DeepSeek AI product.
 
 This README describes **1.1.10**. See the [changelog](CHANGELOG.md) and [release notes](https://github.com/MichengAI/dsh-skills-manager/releases/latest).
 
@@ -51,7 +51,7 @@ Skill repositories:
 
 ## Installation
 
-Requires a working DeepSeek Harness installation. The commands below use the `web` profile; replace it with yours if needed.
+Requires a working BharatCode Harness installation. The commands below use the `web` profile; replace it with yours if needed.
 
 Supported plugin installation sources are the npm registry, a locally built `.tgz` package, and GitHub. GitHub and npm both include a ready-to-run `lib`. After changing source, run the build before committing.
 
@@ -73,7 +73,7 @@ dsh plugin --profile web add @michengai/dsh-skills-manager@latest --registry=htt
 
 Restart DSH, refresh the page, and open **Settings → Skills**. To update, select **Check for updates** or run the installation command again.
 
-- Plugin `1.1.10` is tested with DeepSeek Harness `0.1.2-rc.1`, `0.1.5-rc.1`, `0.1.5-rc.2`, `0.1.5-rc.3`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`, `0.2.0-rc.2`.
+- Plugin `1.1.10` is tested with BharatCode Harness `0.1.2-rc.1`, `0.1.5-rc.1`, `0.1.5-rc.2`, `0.1.5-rc.3`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`, `0.2.0-rc.2`.
 
 ## Usage
 
@@ -132,7 +132,7 @@ The generic `<project>/skills` directory is labeled **Project Skills** and also 
 
 ## DSH product ecosystem
 
-For a desktop workbench, download [DSH Codex Desktop](https://github.com/MichengAI/dsh-codex-desktop/releases). Existing [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) installations can add plugins as needed by following each project's README. Below are 11 first-party plugins; consult the corresponding desktop release notes and bundled catalog for what that version includes.
+For a desktop workbench, download [DSH Codex Desktop](https://github.com/MichengAI/dsh-codex-desktop/releases). Existing [BharatCode Harness](https://github.com/deepseek-ai/deepseek-harness) installations can add plugins as needed by following each project's README. Below are 11 first-party plugins; consult the corresponding desktop release notes and bundled catalog for what that version includes.
 
 | Plugin | What you can do |
 | --- | --- |

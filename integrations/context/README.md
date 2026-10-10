@@ -6,11 +6,11 @@ English | [中文](README.zh.md)
 
 [![npm version](https://img.shields.io/npm/v/dsh-context)](https://www.npmjs.com/package/dsh-context) [![GitHub stars](https://img.shields.io/github/stars/bowenliang123/dsh-context?style=social)](https://github.com/bowenliang123/dsh-context) [![dshfind](https://dshfind.com/api/badge/bowenliang123/dsh-context)](https://dshfind.com/en/plugins/bowenliang123/dsh-context?ref=badge)
 
-**The best [DeepSeek Harness plugin](https://www.deepseek.com/harness/) for Agent's context insights and management.**
+**The best [BharatCode Harness plugin](https://www.deepseek.com/harness/) for Agent's context insights and management.**
 
 [`dsh-context`](https://www.npmjs.com/package/dsh-context) provides full context lifecycle management features.
 - **Context Insights page** — the cross-session overview as a first-level sidebar panel (beside Plugins and Automation tasks): KPI band with a 7-day token/cost usage chart, activity heatmap, aggregate composition ring, and filterable session cards that jump straight into any session.
-- **Context tab** — an UI context dashboard for DeepSeek Harness's context stats, composition, trend, events, and messages.
+- **Context tab** — an UI context dashboard for BharatCode Harness's context stats, composition, trend, events, and messages.
 - **Context panel** — the same dashboard as a right-sidebar tab (dsh 0.1.5-rc.1+): pick **Context** on the sidebar's guide page and the panel opens beside the chat.
 - **`/context` command** — the slash command shows the context model for current context composition and recent context evolution.
 
@@ -24,7 +24,7 @@ Fill `dsh-context` in the **Add plugin** wizard's search box, and click **Instal
 
 ### Install with `dsh` cli
 
-Install [`dsh-context`](https://www.npmjs.com/package/dsh-context) plugin from [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh):
+Install [`dsh-context`](https://www.npmjs.com/package/dsh-context) plugin from [BharatCode Harness](https://www.npmjs.com/package/@deepseek-ai/dsh):
 
 ```sh
 dsh plugin --profile web add dsh-context

@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/zotero/README.md
 /dsh-zotero-plugin:
-  en: 371d79f9f099f4e5
-  zh: 89ee8d6db2d7d7e3
+  en: f9155d2eb652bd1c
+  zh: d0f1e921d0cbf8c8

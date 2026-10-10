@@ -32,7 +32,7 @@ Please include:
 ## Scope
 
 This policy covers the `dsh-github` repository and the npm package `@perrylink/dsh-github`.
-Issues in DeepSeek Harness itself should be reported to
+Issues in BharatCode Harness itself should be reported to
 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) instead.
 
 ## Supported versions

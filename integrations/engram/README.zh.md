@@ -4,7 +4,7 @@
 
 [English](README.md) | 中文
 
-<p align="center">为 DeepSeek Harness 提供跨会话长期记忆：将记忆宫殿的 <b>信息架构</b>（而非神经科学隐喻）引入 agent（智能体）：<b>以位置为索引</b>（每条记忆固定在一个 <code>room#slot</code> 坐标）、<b>以固定路线为顺序</b>（游览路线仅追加）、<b>长期复用骨架</b>（同一主题始终进入同一房间和索引），以及 <b>每个标记都唯一</b>（铭牌规则：唯一 · 鲜明 · 带日期）。配合间隔重复的检索练习（只给线索，绝不给正文）与知识飞轮（捕获 → 强化 → 提炼 → 衰减）。纯 TypeScript：没有外部进程，也不依赖 Python。</p>
+<p align="center">为 BharatCode Harness 提供跨会话长期记忆：将记忆宫殿的 <b>信息架构</b>（而非神经科学隐喻）引入 agent（智能体）：<b>以位置为索引</b>（每条记忆固定在一个 <code>room#slot</code> 坐标）、<b>以固定路线为顺序</b>（游览路线仅追加）、<b>长期复用骨架</b>（同一主题始终进入同一房间和索引），以及 <b>每个标记都唯一</b>（铭牌规则：唯一 · 鲜明 · 带日期）。配合间隔重复的检索练习（只给线索，绝不给正文）与知识飞轮（捕获 → 强化 → 提炼 → 衰减）。纯 TypeScript：没有外部进程，也不依赖 Python。</p>
 
 <p align="center">
   <a href="https://github.com/kenz1117/dsh-engram/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/kenz1117/dsh-engram"></a>

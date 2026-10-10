@@ -31,7 +31,7 @@
     },
     {
       "id": "native-dsh-jupyter",
-      "name": "Native DSH Jupyter",
+      "name": "BharatCode Notebooks",
       "kind": "native",
       "version": "0.1.0",
       "source": "https://github.com/kikulmj/dsh-jupyter",
@@ -156,7 +156,7 @@
     },
     {
       "id": "zotero-dsh",
-      "name": "Zotero DSH",
+      "name": "BharatCode Zotero",
       "kind": "native",
       "version": "0.2.2",
       "source": "https://github.com/Hongcheng-LI/dsh-zotero",
@@ -292,7 +292,7 @@
     },
     {
       "id": "dsh-translator",
-      "name": "DSH Translator",
+      "name": "BharatCode Translator",
       "kind": "native",
       "version": "0.2.0",
       "source": "https://github.com/SiYue-ZO/dsh-translator",
@@ -339,7 +339,7 @@
     },
     {
       "id": "dsh-ffmpeg",
-      "name": "DSH FFmpeg",
+      "name": "BharatCode Media Tools",
       "kind": "native",
       "version": "0.4.5",
       "source": "https://github.com/STARDUSTLC666/dsh-ffmpeg",
@@ -430,7 +430,7 @@
     },
     {
       "id": "dsh-cad",
-      "name": "DSH CAD",
+      "name": "BharatCode CAD",
       "kind": "native",
       "version": "0.13.2",
       "source": "https://github.com/LAU-MARS/dsh-cad",
@@ -496,7 +496,7 @@
     },
     {
       "id": "dsh-webgis",
-      "name": "DSH WebGIS",
+      "name": "BharatCode Maps",
       "kind": "native",
       "version": "0.2.0",
       "source": "https://github.com/Mekansm1/DSH-WebGIS",
@@ -981,7 +981,7 @@
     },
     {
       "id": "dsh-devops",
-      "name": "DSH DevOps",
+      "name": "BharatCode DevOps",
       "kind": "native",
       "version": "0.3.6",
       "source": "https://github.com/Jackson-chen97/dsh-devops",
@@ -1003,7 +1003,7 @@
     },
     {
       "id": "dsh-kubectl",
-      "name": "DSH Kubectl",
+      "name": "BharatCode Kubernetes",
       "kind": "native",
       "version": "0.1.0",
       "source": "https://github.com/WODE25500/dsh-kubectl",
@@ -1135,7 +1135,7 @@
     },
     {
       "id": "dsh-eval",
-      "name": "DSH Eval",
+      "name": "BharatCode Evaluations",
       "kind": "native",
       "version": "unqualified",
       "source": "https://github.com/hccccc01333/dsh-eval",
@@ -1272,7 +1272,7 @@
     },
     {
       "id": "bc-ci-pipelines",
-      "name": "BC CI pipelines",
+      "name": "BharatCode Pipelines",
       "description": "Inspect GitHub Actions and GitLab.com pipelines, read job logs, prepare fixes and request authorized reruns.",
       "kind": "native",
       "scope": "profile",
@@ -1303,7 +1303,7 @@
     },
     {
       "id": "bc-latex-documents",
-      "name": "LaTeX Papers and Reports",
+      "name": "BharatCode LaTeX Documents",
       "description": "Use existing TeX Live or MiKTeX for LaTeX templates, equations, bibliographies and PDF output. Inspect and install the BC LaTeX starter skill in Skills Manager.",
       "kind": "skill",
       "version": "1.0.0",

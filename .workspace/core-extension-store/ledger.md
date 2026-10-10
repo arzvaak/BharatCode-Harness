@@ -70,7 +70,7 @@ Review found native-authentication and asynchronous-runtime-teardown defects. Bo
 
 | ID | State | Evidence and remaining acceptance |
 |---|---|---|
-| E1 | Reconciled | `.github/AGENTS.md` describes actual Linux/Windows workflows and scoped release permissions. Prior fork CI retained. |
+| E1 | Reconciled | `.github/DEVELOPER_GUIDE.md` describes actual Linux/Windows workflows and scoped release permissions. Prior fork CI retained. |
 | E2 | Implemented workflow; execution pending | Source builds/types/core package tests, native owned-profile boot, packed-install and full Linux tests; Windows native process/installer fixtures; aggregate fails unless both lanes pass. Changed-package optimization not implemented. |
 | E3 | Implemented workflow; Windows pending | Independent consumer installs 302 source/SDK/core/optional-CI distributable archives with lifecycle scripts disabled and platform prebuilts retained. Linux result retained. Optional read-only GitHub account check explicitly supplies a repository-scoped runner credential only to its dedicated child; local packed account route passes, hosted lanes pending. |
 | E4 | Partial | Catalog signing, checksums, dependency/licence inventory and immutable version checks implemented. Preview publishing can include managed runtime archives only when a matching signed catalog entry, source commit, licence, platform and byte inventory are supplied. No managed runtime build/inventory or qualified optional release currently exists; full dependency SBOM and release generation remain pending. |

@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/visuals/README.md
 /dsh-visuals:
-  en: d68351901c620715
-  zh: 6b923d625f89d5b0
+  en: dff9fdd7d85abe6a
+  zh: 83b2600853ae7436
 /dsh-visuals/included:
   en: db98b4a6c669fba8
   zh: c6949595f71cade5

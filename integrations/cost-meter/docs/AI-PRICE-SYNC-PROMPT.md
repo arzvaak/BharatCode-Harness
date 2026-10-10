@@ -1,6 +1,6 @@
 # AI 价格同步提示词(AI Price Sync Prompt)
 
-把下面的提示词交给任意带联网/工具能力的 AI(如 DeepSeek Harness 会话、Claude、GPT 等),
+把下面的提示词交给任意带联网/工具能力的 AI(如 BharatCode Harness 会话、Claude、GPT 等),
 即可让它自主**读取官方定价、同步不同模型不同时间的价格**,并写出可被 dsh-cost-meter
 直接使用的价格数据。你也可以在它输出后自行核对再应用。
 
@@ -9,7 +9,7 @@
 ## 可直接复制给 AI 的提示词
 
 ```text
-你是 DeepSeek Harness 的 dsh-cost-meter 插件的价格同步助手。请完成以下任务:
+你是 BharatCode Harness 的 dsh-cost-meter 插件的价格同步助手。请完成以下任务:
 
 1. 打开 DeepSeek 官方定价页:https://api-docs.deepseek.com/quick_start/pricing
    (若页面失效,尝试 https://api-docs.deepseek.com/zh-cn/quick_start/pricing 或官方公告页)。

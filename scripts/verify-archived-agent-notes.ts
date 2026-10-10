@@ -25,10 +25,10 @@ const manifestPath = resolve(archiveRoot, 'manifest.json')
 const repoRoot = resolve(agentNoteRoot, '../..')
 const manifestRepoPath = '.agents/notes/archived/manifest.json'
 const errors: string[] = []
-const allowedRootFiles = new Set(['AGENTS.md', 'manifest.json'])
+const allowedRootFiles = new Set(['DEVELOPER_GUIDE.md', 'manifest.json'])
 const kinds = new Set<string>()
 
-if (!existsSync(resolve(archiveRoot, 'AGENTS.md'))) errors.push('archived/AGENTS.md is required')
+if (!existsSync(resolve(archiveRoot, 'DEVELOPER_GUIDE.md'))) errors.push('archived/DEVELOPER_GUIDE.md is required')
 const artifacts = new Map<string, Buffer>()
 for (const entry of readdirSync(archiveRoot, { withFileTypes: true })) {
   if (entry.isFile()) {

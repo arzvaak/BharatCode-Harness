@@ -1,10 +1,9 @@
 {
   "excluded": [
-    ".agents/notes/AGENTS.md",
-    ".agents/notes/implemented/AGENTS.md",
-    ".agents/notes/implemented/CLAUDE.md",
+    ".agents/notes/DEVELOPER_GUIDE.md",
+    ".agents/notes/implemented/DEVELOPER_GUIDE.md",
     ".github/review-ownership/README.md",
-    "docs/AGENTS.md",
+    "docs/DEVELOPER_GUIDE.md",
     "docs/cordis-api/inherited.md",
     "docs/i18n/style-samples.md",
     "docs/i18n/terminology.md",

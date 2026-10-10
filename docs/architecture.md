@@ -1,4 +1,4 @@
-# DeepSeek Harness Architecture
+# BharatCode Harness Architecture
 
 English | [中文](architecture.zh.md)
 

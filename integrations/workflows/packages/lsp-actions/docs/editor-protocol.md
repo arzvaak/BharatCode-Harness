@@ -2,7 +2,7 @@
 
 English | [简体中文](editor-protocol.zh-CN.md)
 
-The **editor action protocol** is the stable, editor-facing surface of `dsh-lsp-actions`: any editor (VS Code first) consumes the plugin's LSP capabilities over **newline-delimited JSON-RPC 2.0** without driving an agent and without implementing LSP itself. The wire framing is identical to the official DeepSeek Harness SDK/ACP transports (one JSON object per line); only the method vocabulary differs.
+The **editor action protocol** is the stable, editor-facing surface of `dsh-lsp-actions`: any editor (VS Code first) consumes the plugin's LSP capabilities over **newline-delimited JSON-RPC 2.0** without driving an agent and without implementing LSP itself. The wire framing is identical to the official BharatCode Harness SDK/ACP transports (one JSON object per line); only the method vocabulary differs.
 
 | Method | Direction | Purpose |
 | --- | --- | --- |

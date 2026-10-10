@@ -32,7 +32,7 @@ Each disabled row carries its restore recipe in a local comment. An overlay row 
 
 **Demote the goal tools alongside `ralph`.** Both surfaces defer independent evaluation, so the bar reads the same. Goal tools are the supported long-running path — the `ralph` description points ordinary long-running work at them — and they carry a product surface, so demoting both would leave no supported way to run long work.
 
-**Keep `workflow-ptc` enabled in `ptc`.** A user who removes `disabled` from `tool-ralph` in a duplicated `ptc` preset would then need one edit instead of two. It retains a provider with no consumer in the shipped composition, which `packages/AGENTS.md` rejects; the restated comment names the dependency instead.
+**Keep `workflow-ptc` enabled in `ptc`.** A user who removes `disabled` from `tool-ralph` in a duplicated `ptc` preset would then need one edit instead of two. It retains a provider with no consumer in the shipped composition, which `packages/DEVELOPER_GUIDE.md` rejects; the restated comment names the dependency instead.
 
 **Document the opt-in recipe in `docs/`.** A guide page would reach users who never open a composition file. The recipes differ by plane and are three lines each, so the row comments carry them at the point of use.
 

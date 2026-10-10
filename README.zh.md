@@ -2,97 +2,58 @@
 
 [English](README.md) | 中文
 
-BharatCode Harness（`dsh`）是面向聊天、编程、研究和写作的桌面应用，基于开源 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。
+![BharatCode Harness — 集聊天、编程、研究和写作于一体的桌面应用](integrations/extension-store/site/assets/readme-cover.svg)
 
-[网站与 Linux 下载](https://arzvaak.github.io/BharatCode-Harness/) | [发布版本](https://github.com/arzvaak/BharatCode-Harness/releases) | [扩展](https://github.com/arzvaak/BharatCode-Extensions)
+BharatCode Harness 将对话、项目文件和实用工具整合到一个桌面应用中。你可以开始独立聊天、进入编程工作区、收集研究资料或完善草稿。准备好后再选择提供方；首次设置可以跳过。
 
-它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512)。
+[了解 BharatCode](https://arzvaak.github.io/BharatCode-Harness/) · [下载 Linux 版本](https://github.com/arzvaak/BharatCode-Harness/releases) · [报告问题](https://github.com/arzvaak/BharatCode-Harness/issues)
 
-文档：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+## 可以做什么
 
-## 开发者预览
+- **无需工作区即可聊天。** 每个独立聊天都有自己的文件夹，位于通用聊天目录下。在工作区内打开聊天，则将文件与对话归入该工作区。
+- **编程、研究与写作。** 切换工作流、查看项目文件、预览文档，让对话与工作并排显示。
+- **选择自己的提供方。** 使用 BharatCode、受支持的订阅连接或 API 提供方。可以跳过设置，之后在设置页面完成。
+- **扩展工作区。** 从侧栏发现扩展与技能。安装前会显示要求和可用状态；可选集成可能需要独立账户或本地软件。
+- **自行决定更新时机。** 在应用内检查 GitHub 发布版本、下载更新，再确认何时重启。
 
-DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
+## 在 Linux 上安装
 
-运行本项目前，请阅读[安全说明](SAFETY.zh.md)。
+当前预览版支持 Linux x64。从[发布页面](https://github.com/arzvaak/BharatCode-Harness/releases)选择安装包。
 
-<a id="run"></a>
+| 下载格式 | 适用平台 | 安装方式 |
+| --- | --- | --- |
+| `.rpm` | Fedora 及兼容 RPM 的桌面系统 | 使用 `sudo dnf install ./<filename>.rpm` 安装下载的文件。 |
+| `.deb` | Debian、Ubuntu 及兼容桌面系统 | 使用 `sudo apt install ./<filename>.deb` 安装下载的文件。 |
+| `.AppImage` | 支持 FUSE 的 Linux 桌面 | 运行 `chmod +x ./<filename>.AppImage`，然后打开该文件。 |
 
-## 运行
+将 `<filename>` 替换为下载的安装包名称。发布版本包含校验和与本机验证记录。原生安装包更新可能请求系统授权。仅支持手动下载的旧版本需要先安装一次当前安装包，之后才能使用应用内更新。
 
-### 通过 `npm` 运行
+这是预览版：当前 Linux 发布的验证范围不包含 Windows 或 ARM64，也不包含依赖真实账户的提供方认证及推理。在运行不可信工作负载前，请阅读 [SAFETY.zh.md](SAFETY.zh.md)。
 
-安装 `Node.js`，然后运行：
+<a id="build-from-source"></a>
+
+## 从源码构建
+
+安装 Node.js 22.19+（22 系列）或 24 及更新版本及 pnpm，然后运行：
 
 ```sh
-npx @deepseek-ai/dsh web
-```
-
-该命令默认会在 `http://127.0.0.1:3080` 启动 Web UI，本机启动时还会用默认浏览器打开页面。通过 SSH 启动时只打印宿主机 URL，因为本地转发地址由 SSH 客户端或编辑器持有。传入 `--no-open` 可仅运行服务器而不打开浏览器。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
-
-<a id="run-from-source"></a>
-
-### 从源码运行
-
-如需从仓库源码运行：
-
-```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
-pnpm install
+git clone https://github.com/arzvaak/BharatCode-Harness.git
+cd BharatCode-Harness
+pnpm install --frozen-lockfile
 pnpm run build
 pnpm dsh web
 ```
 
-`pnpm run build` 会准备仓库产物。`pnpm dsh web` 会直接使用这些已构建产物，不会重新构建。
+最后一条命令在 `http://127.0.0.1:3080` 打开 Web 界面。桌面开发与 Linux 打包请参阅[桌面指南](apps/desktop/README.zh.md)。内部 `dsh` 命令及包标识符为兼容性而保留。
 
-## 社区与支持
+## 文档与贡献
 
-- 通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
-- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
-- 欢迎加入 DeepSeek Harness 企微群！扫描下方二维码填写入群问卷，小助手会定期发送入群邀请。
-
-<table>
-  <thead>
-    <tr>
-      <th align="center">入群问卷</th>
-      <th align="center">微信公众号</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
-    </tr>
-  </tbody>
-</table>
-
-## 参与贡献
-
-参见 [CONTRIBUTING.md](CONTRIBUTING.zh.md)。
-
-## 开发
-
-请先阅读[开发指南](docs/development.zh.md)与[架构文档](docs/architecture.zh.md)。
-
-`pnpm run dev:web` 会在一个终端里完成构建、启动，并在源码修改时重建 client bundle；`make help` 列出 Web 与 Desktop 对应的 Make target。完整表格见开发指南的「应用命令」一节。
-
-面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
-
-## 引用
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
+从[用户指南](docs/user/guide/index.zh.md)、[开发指南](docs/development.zh.md)或[架构文档](docs/architecture.zh.md)开始。报告问题及准备修改请参阅 [CONTRIBUTING.zh.md](CONTRIBUTING.zh.md)。应用构建和测试检查在本机运行；公开 Pages 工作流仅部署预构建的网站内容。
 
 ## 许可证
 
-[MIT](LICENSE)
+BharatCode Harness 采用 [MIT 许可证](LICENSE)。依赖的许可信息请参阅[第三方声明](THIRD_PARTY_NOTICES.md)。
 
-第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+## 项目来源
+
+本项目改编并 fork 自 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)，原项目由 DeepSeek AI 开发。其插件架构使用 [Cordis](https://github.com/cordiverse/cordis)。上游版权及许可声明予以保留。

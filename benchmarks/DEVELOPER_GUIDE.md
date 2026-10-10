@@ -1,4 +1,4 @@
-# AGENTS.md — Performance Benchmarks
+# DEVELOPER_GUIDE.md — Performance Benchmarks
 
 This tree owns required, repository-level performance gates whose measured user path crosses package ownership. Package-local diagnostics remain beside their owners and use the `.perf.ts` suffix instead of joining `test:bench`.
 

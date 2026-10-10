@@ -4,7 +4,7 @@ English | [中文](README.zh.md)
 
 Extract local or pasted sources and generate English evidence reports, book synthesis, and model-free budget estimates.
 
-English local fork for BharatCode and DeepSeek Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
+English local fork for BharatCode and BharatCode Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
 
 Scoped fork of the original source/PDF extraction, model JSON retry, chunk synthesis, budget, calibration and URL cache engine. Modes quick/deep/book and English only. The duplicate shell, batch, maps, Feynman, background jobs, packaged skill and automatic disk exports are omitted. Reports require a configured model; estimate does not call a model.
 

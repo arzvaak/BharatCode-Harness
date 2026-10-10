@@ -219,7 +219,7 @@ Peer 消息追加在 target 可复用历史前缀之后。冷恢复会先复用�
 
 #### Promotion
 
-promotion 到产品角色组需要按[实验子树规则](../AGENTS.md)审查公共约定、限制、测试证据、发布载荷、运行时依赖与具名稳定 owner。
+promotion 到产品角色组需要按[实验子树规则](../DEVELOPER_GUIDE.md)审查公共约定、限制、测试证据、发布载荷、运行时依赖与具名稳定 owner。
 
 #### 未来方向
 

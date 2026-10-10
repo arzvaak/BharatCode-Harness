@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-与模型无关的 DeepSeek Harness 插件，通过编码连续重复的工具输出来节省上下文。它保留独有诊断，并在更改面向模型的投影前通过 DSH 的 spill 存储保存完整原文。
+与模型无关的 BharatCode Harness 插件，通过编码连续重复的工具输出来节省上下文。它保留独有诊断，并在更改面向模型的投影前通过 DSH 的 spill 存储保存完整原文。
 
 插件使用 DSH 中已选择的模型和提供方。不添加推理端点、凭据、工具执行器或权限系统。
 
@@ -16,7 +16,7 @@
 
 ## 安装打包插件
 
-需要 Node 24 和已针对 `0.2.0-rc.2`、发布标签 `dsh-v0.2.0-rc.2` 验证的 DeepSeek Harness 接口。原生 Cordis、Schemastery 和 Typert 协议对等依赖由运行中的 Harness 提供。其他版本未经验证。
+需要 Node 24 和已针对 `0.2.0-rc.2`、发布标签 `dsh-v0.2.0-rc.2` 验证的 BharatCode Harness 接口。原生 Cordis、Schemastery 和 Typert 协议对等依赖由运行中的 Harness 提供。其他版本未经验证。
 
 构建和打包后，安装到目标 profile：
 

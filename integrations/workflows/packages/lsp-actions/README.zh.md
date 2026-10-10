@@ -4,7 +4,7 @@
 
 使用诊断、格式化、符号、补全、签名帮助、内嵌提示和重命名功能。
 
-面向 BharatCode 和 DeepSeek Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
+面向 BharatCode 和 BharatCode Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
 
 配置语言服务器或官方 LSP seam。默认的空服务器映射会报告 LSP_ACTION_UNAVAILABLE；服务器安装不属于本包范围。
 

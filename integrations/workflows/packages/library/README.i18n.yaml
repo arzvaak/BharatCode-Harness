@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/library/README.md
 /dsh-library:
-  en: 6b0835d84ae3159c
-  zh: 7216b785573bc043
+  en: 05bcb0c2a92e0daf
+  zh: a93c9dad5c4bb74e

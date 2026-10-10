@@ -1,4 +1,4 @@
-# AGENTS.md — Archived Agent Notes
+# DEVELOPER_GUIDE.md — Archived Agent Notes
 
 Archived Agent Note triplets under the kind directories are frozen historical snapshots, not current authority. Never edit, reformat, translate, repair, delete, or move a sealed artifact; use an active Agent Note or current documentation for new decisions and facts.
 

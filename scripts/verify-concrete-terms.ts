@@ -70,7 +70,7 @@ function trackedFiles(repoRoot: string): string[] {
   const files = execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' })
     .split('\0')
     .filter(file => file !== '')
-  if (!files.includes('AGENTS.md')
+  if (!files.includes('DEVELOPER_GUIDE.md')
     || !files.some(file => file.startsWith('packages/'))
     || !files.some(file => file.startsWith('docs/'))
     || !files.some(file => file.startsWith('vendor/'))

@@ -1,4 +1,4 @@
-# AGENTS.md
+# DEVELOPER_GUIDE.md
 
 This workspace owns `@deepseek-ai/node-addon-system`: the Linux `landlock-run` confinement executable and the POSIX `system.node` binding. It shares the root pnpm workspace and lockfile; native packages have one independent version and release workflow.
 

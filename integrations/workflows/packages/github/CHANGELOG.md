@@ -113,7 +113,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 
 ### Changed
 
-- Align the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` and pin the dev/test dependencies to the published `0.1.5-alpha.1` line: adaptation to DeepSeek Harness `dsh-v0.1.5-alpha.1` (session format V3, `ctx.agent` removal, `Inbox` type-only interface); runtime behavior is unchanged for every supported host line.
+- Align the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` and pin the dev/test dependencies to the published `0.1.5-alpha.1` line: adaptation to BharatCode Harness `dsh-v0.1.5-alpha.1` (session format V3, `ctx.agent` removal, `Inbox` type-only interface); runtime behavior is unchanged for every supported host line.
 - Record `0.1.5-alpha.1` in `dshWorkshop.compatibility.dshVersions`.
 
 ### Docs
@@ -203,7 +203,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 ### Changed
 
 - DSH dev dependencies pinned to `0.1.1-rc.2` (`@deepseek-ai/dsh-credentials`, `@deepseek-ai/dsh-llm`, `@deepseek-ai/dsh-session`, `@deepseek-ai/dsh-settings`, `@deepseek-ai/dsh-tools`); the peer ranges stay `>=0.1.0-rc.8 <0.2.0` because no rc.2-only API is required.
-- Compat declaration updated to DeepSeek Harness `0.1.1-rc.2` (READMEs, `dshWorkshop.compatibility`, and the compat workflow).
+- Compat declaration updated to BharatCode Harness `0.1.1-rc.2` (READMEs, `dshWorkshop.compatibility`, and the compat workflow).
 
 ### Fixed
 
@@ -214,7 +214,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 ### Changed
 
 - DSH dev/peer dependencies pinned to `0.1.0-rc.8` (`@deepseek-ai/dsh-credentials`, `@deepseek-ai/dsh-llm`, `@deepseek-ai/dsh-session`, `@deepseek-ai/dsh-tools`); the peer ranges are widened to `>=0.1.0-rc.8 <0.2.0`.
-- Compat declaration updated to DeepSeek Harness `0.1.0-rc.8` (READMEs, `dshWorkshop.compatibility`, and the compat workflow).
+- Compat declaration updated to BharatCode Harness `0.1.0-rc.8` (READMEs, `dshWorkshop.compatibility`, and the compat workflow).
 
 ## [0.6.2] - 2026-08-17
 

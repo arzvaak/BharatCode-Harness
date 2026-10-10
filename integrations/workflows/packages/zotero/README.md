@@ -4,7 +4,7 @@ English | [中文](README.zh.md)
 
 Search Zotero references, inspect notes and attachments, and export BibTeX.
 
-English local fork for BharatCode and DeepSeek Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
+English local fork for BharatCode and BharatCode Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.
 
 Requires a running Zotero desktop local API or a configured Zotero Web API library. No personal reference library was accessed.
 

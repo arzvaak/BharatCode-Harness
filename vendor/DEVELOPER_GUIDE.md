@@ -1,4 +1,4 @@
-# AGENTS.md — Vendored Packages
+# DEVELOPER_GUIDE.md — Vendored Packages
 
 This directory contains source-vendored copies of the Cordis framework and its foundation libraries. See `vendor/README.md` for the manifest, local-modification log, and the upstream sync procedure.
 

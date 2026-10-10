@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/deepread/README.md
 /dsh-deepread:
-  en: 735281ddee4dde25
-  zh: 7a482ab99df2fdc1
+  en: 932121035fd4e299
+  zh: 17deb8bb9b46ebce

@@ -18,7 +18,7 @@ Minimal proof-of-concept material is welcome; never send real secrets.
 
 ## What to include
 
-- Affected version(s) of dsh-lsp-actions and the DeepSeek Harness runtime.
+- Affected version(s) of dsh-lsp-actions and the BharatCode Harness runtime.
 - A short description of the vulnerability and its impact.
 - Steps to reproduce (sanitized) or a minimal proof of concept.
 - Whether you plan to disclose publicly, and your preferred embargo timeline.

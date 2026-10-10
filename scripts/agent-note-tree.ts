@@ -22,7 +22,7 @@ export const AGENT_NOTE_CLASSES = ['feature', 'bug-fix', 'simplification', 'arch
 const AGENT_NOTE_ARCHIVE = 'archived'
 
 /** Non-Agent Note Markdown allowed to sit directly at a lifecycle root. */
-const ROOT_ALLOWLIST = new Set(['AGENTS.md', 'CLAUDE.md'])
+const ROOT_ALLOWLIST = new Set(['DEVELOPER_GUIDE.md'])
 
 /** One Agent Note file, as discovered by the walker. */
 export interface AgentNote {
@@ -57,7 +57,7 @@ export function walkAgentNoteTree(): { notes: AgentNote[]; errors: string[] } {
   for (const lifecycle of AGENT_NOTE_LIFECYCLES) {
     for (const match of globSync(`${lifecycle}/**/*.md`, { cwd: agentNoteRoot }).map(path => path.split(sep).join('/')).sort()) {
       const segs = match.split('/')
-      // Allowlisted file directly at the lifecycle root (e.g. implemented/AGENTS.md).
+      // Allowlisted file directly at the lifecycle root (e.g. implemented/DEVELOPER_GUIDE.md).
       if (segs.length === 2 && ROOT_ALLOWLIST.has(segs[1] ?? '')) continue
       // A Chinese counterpart (foo.zh.md, docs/i18n/README.md) is the SAME Agent Note,
       // indexed via its English filename; the pairing gate owns its consistency.

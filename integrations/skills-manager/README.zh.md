@@ -19,7 +19,7 @@
   [![DSH supported through 0.2.0-rc.2](https://img.shields.io/badge/DSH-up%20to%200.2.0--rc.2-2563eb.svg)](#installation)
 </div>
 
-> DSH Skills Manager 是社区维护的 DeepSeek Harness（DSH）插件，不是 DeepSeek AI 官方产品。
+> DSH Skills Manager 是社区维护的 BharatCode Harness（DSH）插件，不是 DeepSeek AI 官方产品。
 
 本 README 描述 **1.1.10**。参见[更新日志](CHANGELOG.md)和[发布说明](https://github.com/MichengAI/dsh-skills-manager/releases/latest)。
 
@@ -52,7 +52,7 @@ Skill 仓库：
 <a id="installation"></a>
 ## 安装
 
-需要可正常运行的 DeepSeek Harness 安装。以下命令使用 `web` profile；必要时替换为你的 profile。
+需要可正常运行的 BharatCode Harness 安装。以下命令使用 `web` profile；必要时替换为你的 profile。
 
 支持的插件安装来源包括 npm 注册表、本地构建的 `.tgz` 包和 GitHub。GitHub 和 npm 均包含可直接运行的 `lib`。更改源代码后，提交前运行构建。
 
@@ -74,7 +74,7 @@ dsh plugin --profile web add @michengai/dsh-skills-manager@latest --registry=htt
 
 重启 DSH、刷新页面并打开 **Settings → Skills**。更新时选择 **Check for updates** 或重新运行安装命令。
 
-- 插件 `1.1.10` 已使用以下 DeepSeek Harness 版本测试： `0.1.2-rc.1`, `0.1.5-rc.1`, `0.1.5-rc.2`, `0.1.5-rc.3`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`, `0.2.0-rc.2`.
+- 插件 `1.1.10` 已使用以下 BharatCode Harness 版本测试： `0.1.2-rc.1`, `0.1.5-rc.1`, `0.1.5-rc.2`, `0.1.5-rc.3`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`, `0.2.0-rc.2`.
 
 ## 使用
 
@@ -133,7 +133,7 @@ dsh plugin --profile web add @michengai/dsh-skills-manager@latest --registry=htt
 
 ## DSH 产品生态
 
-需要桌面工作台时，下载 [DSH Codex Desktop](https://github.com/MichengAI/dsh-codex-desktop/releases)。现有 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 安装可按各项目 README 按需添加插件。以下为 11 个第一方插件；各版本包含的内容以相应桌面发布说明及随附目录为准。
+需要桌面工作台时，下载 [DSH Codex Desktop](https://github.com/MichengAI/dsh-codex-desktop/releases)。现有 [BharatCode Harness](https://github.com/deepseek-ai/deepseek-harness) 安装可按各项目 README 按需添加插件。以下为 11 个第一方插件；各版本包含的内容以相应桌面发布说明及随附目录为准。
 
 | 插件 | 功能 |
 | --- | --- |

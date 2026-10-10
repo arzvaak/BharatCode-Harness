@@ -1,4 +1,4 @@
-# AGENTS.md — 给 AI 助手的仓库须知
+# DEVELOPER_GUIDE.md — 给 AI 助手的仓库须知
 
 ## npm 发布令牌的位置
 

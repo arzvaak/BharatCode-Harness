@@ -1,6 +1,6 @@
 ## Install / Update
 
-Install the `dsh-context` plugin on [DeepSeek Harness](https://www.deepseek.com/harness/) with released [NPM package](https://www.npmjs.com/package/dsh-context):
+Install the `dsh-context` plugin on [BharatCode Harness](https://www.deepseek.com/harness/) with released [NPM package](https://www.npmjs.com/package/dsh-context):
 
 ```sh
 dsh plugin --profile web add dsh-context@latest

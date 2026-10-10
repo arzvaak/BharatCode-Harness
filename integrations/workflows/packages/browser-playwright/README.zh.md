@@ -4,7 +4,7 @@
 
 通过限定作用域的标签页、快照、截图和交互浏览并提取研究资料。
 
-面向 BharatCode 和 DeepSeek Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
+面向 BharatCode 和 BharatCode Harness 0.2.0-rc.2 的本地英文 fork。通过宿主插件清单安装生成的 tarball；组合包 patch 会注册插件。客户端包复用现有宿主 UI 和 ModuleLoader。
 
 为已安装的 Playwright 浏览器配置 chromium 通道。模型提取需要已配置的模型。验证未访问外部网站。
 

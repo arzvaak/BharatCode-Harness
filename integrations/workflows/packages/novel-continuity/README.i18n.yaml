@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/novel-continuity/README.md
 /bharatcode-dsh-novel-continuity:
-  en: 2abb425b7d584f08
-  zh: 2b4915aac2093b52
+  en: 4e7aa0dd896b8b50
+  zh: 15866be505102837

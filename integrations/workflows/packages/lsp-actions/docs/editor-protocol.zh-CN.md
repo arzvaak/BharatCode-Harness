@@ -2,7 +2,7 @@
 
 [English](editor-protocol.md) | 简体中文
 
-**编辑器 action 协议**是 `dsh-lsp-actions` 面向编辑器的稳定接口：任何编辑器（先行 VS Code）通过**换行分帧的 JSON-RPC 2.0** 消费插件的 LSP 能力——无需驱动 agent，也无需自己实现 LSP。线上帧格式与官方 DeepSeek Harness SDK/ACP 传输完全一致（每行一个 JSON 对象）；区别仅在方法词汇。
+**编辑器 action 协议**是 `dsh-lsp-actions` 面向编辑器的稳定接口：任何编辑器（先行 VS Code）通过**换行分帧的 JSON-RPC 2.0** 消费插件的 LSP 能力——无需驱动 agent，也无需自己实现 LSP。线上帧格式与官方 BharatCode Harness SDK/ACP 传输完全一致（每行一个 JSON 对象）；区别仅在方法词汇。
 
 | 方法 | 方向 | 用途 |
 | --- | --- | --- |

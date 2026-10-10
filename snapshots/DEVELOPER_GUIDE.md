@@ -1,4 +1,4 @@
-# AGENTS.md — Recorded-session snapshots
+# DEVELOPER_GUIDE.md — Recorded-session snapshots
 
 This tree contains only tests whose committed session JSONL is replay input and expected persisted output. Keep non-session ARIA, geometry, generator, CLI, and unit expected output with its owning app, script, or package; use `test:expected`, `test:web`, or `test` for its owning tier.
 

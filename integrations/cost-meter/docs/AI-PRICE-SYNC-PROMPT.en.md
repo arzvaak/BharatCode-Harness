@@ -1,6 +1,6 @@
 # AI Price Sync Prompt
 
-Hand the prompt below to any AI with web/tool capability (e.g. a DeepSeek Harness session, Claude, GPT, etc.),
+Hand the prompt below to any AI with web/tool capability (e.g. a BharatCode Harness session, Claude, GPT, etc.),
 and it will autonomously **read the official pricing and sync per-model, time-of-day prices**,
 producing price data that dsh-cost-meter can consume directly. You can review its output before applying.
 
@@ -9,7 +9,7 @@ producing price data that dsh-cost-meter can consume directly. You can review it
 ## Prompt you can copy straight into an AI
 
 ```text
-You are the price-sync assistant for the dsh-cost-meter plugin of DeepSeek Harness. Complete the following task:
+You are the price-sync assistant for the dsh-cost-meter plugin of BharatCode Harness. Complete the following task:
 
 1. Open the official DeepSeek pricing page: https://api-docs.deepseek.com/quick_start/pricing
    (if the page is unavailable, try https://api-docs.deepseek.com/zh-cn/quick_start/pricing or the official announcements page).

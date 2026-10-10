@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-Polished inline charts and diagrams for DeepSeek Harness. Graphics appear beside the part of an answer they explain, with readable typography, restrained colour, light/dark themes, exact data tables and editable source. All rendering happens locally.
+Polished inline charts and diagrams for BharatCode Harness. Graphics appear beside the part of an answer they explain, with readable typography, restrained colour, light/dark themes, exact data tables and editable source. All rendering happens locally.
 
 ## Included
 

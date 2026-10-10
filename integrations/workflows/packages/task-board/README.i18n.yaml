@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/task-board/README.md
 /linxin666-dsh-client-ui-task-board:
-  en: 2b62604e85af1fb5
-  zh: c6f137be07417b13
+  en: b7e89aee94a758e0
+  zh: 05695468467259de

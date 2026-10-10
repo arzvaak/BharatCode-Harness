@@ -1,6 +1,6 @@
-# AGENTS.md
+# DEVELOPER_GUIDE.md
 
-Standalone DeepSeek Harness plugin repository (`dsh-library`). Development follows the dsh-plugin-guide skill and the official plugin contract; this file records repo-local decisions.
+Standalone BharatCode Harness plugin repository (`dsh-library`). Development follows the dsh-plugin-guide skill and the official plugin contract; this file records repo-local decisions.
 
 ## Layout
 

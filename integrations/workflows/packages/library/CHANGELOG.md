@@ -96,7 +96,7 @@ undefined
 
 ### Changed
 
-- Align the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` and pin the dev/test dependencies to the published `0.1.5-alpha.1` line: adaptation to DeepSeek Harness `dsh-v0.1.5-alpha.1` (session format V3, `ctx.agent` removal, `Inbox` type-only interface); runtime behavior is unchanged for every supported host line.
+- Align the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` and pin the dev/test dependencies to the published `0.1.5-alpha.1` line: adaptation to BharatCode Harness `dsh-v0.1.5-alpha.1` (session format V3, `ctx.agent` removal, `Inbox` type-only interface); runtime behavior is unchanged for every supported host line.
 - Record `0.1.5-alpha.1` in `dshWorkshop.compatibility.dshVersions`.
 
 ### Docs
@@ -178,13 +178,13 @@ undefined
 
 ### Changed
 
-- Upgraded every `@deepseek-ai/dsh-*` dependency to `0.1.1-rc.2` (devDependencies exact, peerDependencies `>=0.1.0-rc.8 <0.2.0`) and re-declared compatibility for DeepSeek Harness `0.1.1-rc.2`.
+- Upgraded every `@deepseek-ai/dsh-*` dependency to `0.1.1-rc.2` (devDependencies exact, peerDependencies `>=0.1.0-rc.8 <0.2.0`) and re-declared compatibility for BharatCode Harness `0.1.1-rc.2`.
 
 ## [0.1.2] - 2026-08-21
 
 ### Changed
 
-- Upgraded every `@deepseek-ai/dsh-*` dependency to `0.1.0-rc.8` (devDependencies exact, peerDependencies `>=0.1.0-rc.8 <0.2.0`) and re-declared compatibility for DeepSeek Harness `0.1.0-rc.8`.
+- Upgraded every `@deepseek-ai/dsh-*` dependency to `0.1.0-rc.8` (devDependencies exact, peerDependencies `>=0.1.0-rc.8 <0.2.0`) and re-declared compatibility for BharatCode Harness `0.1.0-rc.8`.
 
 ## [0.1.1] - 2026-08-17
 
@@ -198,7 +198,7 @@ undefined
 
 ### Added
 
-- Local-first knowledge base for DeepSeek Harness: `library_add` / `library_remove` / `library_list` / `library_search` / `library_cite_check` / `library_diagnose` plus the `/library` command.
+- Local-first knowledge base for BharatCode Harness: `library_add` / `library_remove` / `library_list` / `library_search` / `library_cite_check` / `library_diagnose` plus the `/library` command.
 - Hybrid semantic + keyword retrieval pipeline: deterministic hash embedding (zero downloads, optional external embedder command over `ctx.subprocess`), maximal-marginal-relevance diversity re-rank, relevance filtering, and lost-in-the-middle avoidance.
 - Citation checking (`[n]` markers): fuzzy token-match plus semantic similarity against the search result page.
 - Purge verification after `library_remove` (RAG-Purge-Verify port): token n-gram signature probes over the remaining index.

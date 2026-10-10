@@ -2,7 +2,7 @@
 
 ## Desktop 安装与更新
 
-1. 首次启动 DeepSeek Harness Desktop，让应用初始化 `desktop` Profile。在应用中安装 `dsh` 命令，重新打开终端；若同时安装过 npm 版 CLI，用 `Get-Command dsh` 确认命令指向 Desktop 安装目录的 `resources/runtime/cli/bin/dsh.cmd`。也可直接使用该完整路径。
+1. 首次启动 BharatCode Harness Desktop，让应用初始化 `desktop` Profile。在应用中安装 `dsh` 命令，重新打开终端；若同时安装过 npm 版 CLI，用 `Get-Command dsh` 确认命令指向 Desktop 安装目录的 `resources/runtime/cli/bin/dsh.cmd`。也可直接使用该完整路径。
 2. 完全退出 Desktop 后执行以下命令。Desktop 自带 pnpm，无需额外安装全局 pnpm。不要用 npm 版 CLI 管理 Desktop 的保留 Profile。
 
    ```powershell

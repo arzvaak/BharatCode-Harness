@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/workflows/packages/lsp-actions/README.md
 /dsh-lsp-actions:
-  en: c0ff649466d7ad8a
-  zh: 60e7375856073986
+  en: df9b490362120391
+  zh: 94c5f7aa7eb572c0

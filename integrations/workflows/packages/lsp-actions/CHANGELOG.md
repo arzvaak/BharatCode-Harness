@@ -117,7 +117,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 
 ### Changed
 
-- Adapt to DeepSeek Harness `dsh-v0.1.5-alpha.1`: widen the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` (prerelease-tuple resolution makes the plain band reject `0.1.5-alpha.1`), pin the devDependencies to `0.1.5-alpha.1`, append the new version to `dshWorkshop.compatibility.dshVersions`, repoint the compat workflow (CLI/base/headless) and the editor backend example dependencies to `0.1.5-alpha.1`; no behavior change.
+- Adapt to BharatCode Harness `dsh-v0.1.5-alpha.1`: widen the `@deepseek-ai/dsh-*` peer ranges to `>=0.1.2-rc.1 <0.2.0 || >=0.1.5-alpha.1 <0.2.0` (prerelease-tuple resolution makes the plain band reject `0.1.5-alpha.1`), pin the devDependencies to `0.1.5-alpha.1`, append the new version to `dshWorkshop.compatibility.dshVersions`, repoint the compat workflow (CLI/base/headless) and the editor backend example dependencies to `0.1.5-alpha.1`; no behavior change.
 
 ### Docs
 
@@ -163,7 +163,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 
 ### Fixed
 
-- Stop importing the `CallId` runtime value from `@deepseek-ai/dsh-llm` (removed in DeepSeek Harness `0.1.2-alpha.1`; renamed `ToolCallId`): the editor escalation-approval context now builds its call id through a local identity helper typed from the `@deepseek-ai/dsh-tools` execution contract, so approvals no longer crash on hosts without the old export.
+- Stop importing the `CallId` runtime value from `@deepseek-ai/dsh-llm` (removed in BharatCode Harness `0.1.2-alpha.1`; renamed `ToolCallId`): the editor escalation-approval context now builds its call id through a local identity helper typed from the `@deepseek-ai/dsh-tools` execution contract, so approvals no longer crash on hosts without the old export.
 
 ## 0.4.0 — 2026-08-26
 
@@ -186,7 +186,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 - **rc.2 compatibility release.** All `@deepseek-ai/dsh-*` dev dependencies are pinned to
   `0.1.1-rc.2`, the harness peer-dependency ranges stay `>=0.1.0-rc.8 <0.2.0`,
   `dshWorkshop.compatibility.dshVersions` now declares `0.1.1-rc.2`, the CI compat pins and the
-  VS Code backend example track the same release line, and the READMEs declare DeepSeek Harness
+  VS Code backend example track the same release line, and the READMEs declare BharatCode Harness
   `0.1.1-rc.2` compatibility. No behavior changes — the full suite (including the real
   typescript-language-server e2e) passes against the rc.2 runtime.
 
@@ -196,7 +196,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 
 - **rc.8 compatibility release.** All `@deepseek-ai/dsh-*` dev dependencies are pinned to
   `0.1.0-rc.8` and the harness peer dependencies are widened to `>=0.1.0-rc.8 <0.2.0`; the VS Code
-  backend example tracks the same release line, and the READMEs declare DeepSeek Harness
+  backend example tracks the same release line, and the READMEs declare BharatCode Harness
   `0.1.0-rc.8` compatibility. No behavior changes — the full suite (including the real
   typescript-language-server e2e) passes against the rc.8 runtime.
 
