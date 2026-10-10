@@ -38,9 +38,9 @@ describe('WorkspaceBrowser.module.css list', () => {
   const listArea = declarations('.listArea')
   const list = declarations('.list')
 
-  it('is the scrolling region', () => {
+  it('lets the whole sidebar scroll its rows', () => {
     expect(list).toBeDefined()
-    expect(list!.get('overflow-y')).toBe('auto')
+    expect(list!.get('overflow-y')).toBe('visible')
   })
 
   it('counts the themed scrollbar inside the shell trailing inset', () => {

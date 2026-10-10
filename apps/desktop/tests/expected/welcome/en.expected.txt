@@ -2,5 +2,6 @@ BharatCode
 BharatCode
 Welcome to BharatCode
 Build potential. Explore intelligence.
-Sign in
-Add API Key
+Set up later
+DeepSeek account (optional)
+BharatCode access key

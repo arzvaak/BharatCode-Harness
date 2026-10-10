@@ -1,4 +1,4 @@
-const REPOSITORY = "arzvaak/Bharatcode-Harness";
+const REPOSITORY = "arzvaak/BharatCode-Extensions";
 const ASSET_HOSTS = new Set([
   "release-assets.githubusercontent.com",
   "objects.githubusercontent.com",
@@ -43,13 +43,11 @@ export class GithubTransport {
     )
       throw Error("Invalid GitHub path");
     const token = await this.resolveToken();
-    if (!token)
-      throw Error("Connect GitHub with access to the private BC repository");
     const timeout = AbortSignal.timeout(60000);
     const cancel = signal ? AbortSignal.any([signal, timeout]) : timeout;
     let url = `https://api.github.com/repos/${REPOSITORY}${path}`;
     let headers = {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       Accept: accept,
       "X-GitHub-Api-Version": "2022-11-28",
     };
@@ -85,7 +83,7 @@ export class GithubTransport {
         await response.body?.cancel();
         if ([401, 403, 404].includes(response.status))
           throw Error(
-            "Private repository access denied or release unavailable",
+            "Extension download access denied or release unavailable",
           );
         throw Error(`GitHub request failed (${response.status})`);
       }

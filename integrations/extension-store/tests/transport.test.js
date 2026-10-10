@@ -35,11 +35,13 @@ test("refuses off-domain and credential-bearing redirect destinations", async ()
     await assert.rejects(client.asset(1), /redirect/i);
   }
 });
-test("requires credential and refuses unauthorized or oversized responses", async () => {
-  await assert.rejects(
-    new GithubTransport(async () => undefined).asset(1),
-    /Connect GitHub/,
-  );
+test("allows public downloads and refuses unauthorized or oversized responses", async () => {
+  const publicClient = new GithubTransport(async () => undefined, async (url, options) => {
+    assert.ok(url.startsWith('https://api.github.com/repos/arzvaak/BharatCode-Extensions/'));
+    assert.equal(options.headers.Authorization, undefined);
+    return new Response('public archive');
+  });
+  assert.equal((await publicClient.asset(1)).toString(), 'public archive');
   await assert.rejects(
     new GithubTransport(
       async () => "x",

@@ -9,3 +9,7 @@ The BharatCode endpoint preset and custom OpenAI-compatible routes use the host'
 Build with `npm run build`. Run `npm test`, then `DSH_SOURCE=<built-host> npm run test:composition` for a local HTTP fixture through the real Loader, profile patch, credential store, discovery and streamed inference. Run `DSH_SOURCE=<built-host> SUBSCRIPTIONS_SOURCE=<subscriptions-fork> npm run test:compatibility` for all five providers' simulated login, connected status, quota refresh and error handling. These tests never sign in to real accounts.
 
 Original MIT license retained in LICENSE.
+
+Provider setup is optional during onboarding. BharatCode is the default endpoint/model preset; Codex and Google subscription buttons open their native subscription adapters, while OpenCode and Mistral use their own API-key presets. Users can continue without configuring a provider and return through Settings → Providers.
+
+Muse subscription sessions use the official `@muse-code/sdk` MSP connection to an installed `muse serve` CLI. The host launches the CLI only after an explicit user action, restricts the workspace to a registered directory, and supports streamed items, approval decisions, user questions, follow-ups and cancellation. Muse manages its own subscription login; BharatCode does not import its credentials. This session currently runs in the Muse setup panel rather than the standard chat model picker. A real installed CLI has been checked with its offline echo provider; subscription inference still requires a user account.

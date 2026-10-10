@@ -2,5 +2,5 @@ BharatCode
 BharatCode
 Sign in timed out
 Sign in again
-Add API Key
+BharatCode access key
 Sign in again to continue

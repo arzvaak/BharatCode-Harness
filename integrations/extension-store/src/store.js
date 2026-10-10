@@ -260,7 +260,7 @@ export class ExtensionStore {
           this.catalog = value;
           this.releaseAssets = releaseAssets;
           this.verifiedHash = createHash("sha256").update(bytes).digest("hex");
-          this.diagnostic = "Verified private preview catalog";
+          this.diagnostic = "Verified public preview catalog";
           await this.dependencies.load(value);
           return this.view();
         } catch (e) {

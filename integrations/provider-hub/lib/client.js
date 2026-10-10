@@ -36,7 +36,7 @@ __export(client_exports, {
   inject: () => inject
 });
 module.exports = __toCommonJS(client_exports);
-var import_react = __toESM(require("react"), 1);
+var import_react2 = __toESM(require("react"), 1);
 
 // src/controller.js
 var RESERVED = /* @__PURE__ */ new Set(["__proto__", "prototype", "constructor", "codex", "copilot", "claude", "grok", "antigravity"]);
@@ -138,9 +138,16 @@ var ProviderController = class {
     return this.load();
   }
 };
+function providerDraft(id) {
+  if (id === "bharatcode") return bharatCodeDraft();
+  const preset = { mistral: ["Mistral", "https://api.mistral.ai/v1", "MISTRAL_API_KEY"], opencode: ["OpenCode", "https://opencode.ai/zen/v1", "OPENCODE_API_KEY"] }[id];
+  return preset ? { ...customDraft(), route: id, displayName: preset[0], baseURL: preset[1], apiKeyEnv: preset[2] } : customDraft();
+}
 
 // src/style.js
 var style_default = `
+.ph-muse pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:320px;overflow:auto}.ph-muse article{padding:12px;border-bottom:1px solid var(--dsw-alias-border-primary)}.ph-muse textarea{min-height:90px;font:inherit;}
+
 .ph-root{color:var(--dsw-alias-text-primary,currentColor);font:inherit;max-width:780px;padding:4px 0 24px}
 .ph-root h2{font-size:22px;margin:0 0 6px}.ph-root h3{font-size:17px;margin:0 0 8px}.ph-root h4{font-size:15px;margin:0}
 .ph-root p{font-size:13px;line-height:1.6;margin:6px 0 14px;max-width:70ch}.ph-root>section{border-top:1px solid var(--dsw-alias-border-primary,#8885);padding:22px 0;margin-top:20px}
@@ -152,8 +159,104 @@ var style_default = `
 @media(max-width:600px){.ph-grid{grid-template-columns:1fr}.ph-model{grid-template-columns:1fr 1fr}.ph-model .ph-field:first-child{grid-column:1/-1}.ph-root h2{font-size:20px}.ph-model-heading{align-items:flex-start;flex-wrap:wrap}}
 `;
 
-// src/client.jsx
+// src/MusePanel.jsx
+var import_react = __toESM(require("react"), 1);
 var import_jsx_runtime = require("react/jsx-runtime");
+async function call(action, data = {}) {
+  const response = await fetch("/api/bc-muse", { credentials: "same-origin", ...action ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, ...data }) } : {} });
+  const value = await response.json();
+  if (!response.ok) throw Error(value.error || "Muse request failed");
+  return value;
+}
+function Questions({ prompt, onAnswer, busy }) {
+  const [answers, setAnswers] = (0, import_react.useState)({});
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: (event) => {
+    event.preventDefault();
+    onAnswer(prompt.userInputId, prompt.questions.map((question) => ({ questionId: question.id, ...answers[question.id] })));
+  }, children: [
+    prompt.questions.map((question) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("fieldset", { disabled: busy, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("legend", { children: question.question }),
+      question.options?.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { "aria-label": question.header || question.question, multiple: question.selection?.mode === "multiple", value: answers[question.id]?.selectedLabels || answers[question.id]?.selectedLabel || "", onChange: (event) => setAnswers({ ...answers, [question.id]: question.selection?.mode === "multiple" ? { selectedLabels: [...event.target.selectedOptions].map((option) => option.value) } : { selectedLabel: event.target.value } }), children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "Choose an answer" }),
+        question.options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: option.label, children: option.label }, option.label))
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
+        "Your answer",
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { maxLength: 500, value: answers[question.id]?.freeText || "", onChange: (event) => setAnswers({ ...answers, [question.id]: { freeText: event.target.value } }) })
+      ] })
+    ] }, question.id)),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || prompt.questions.some((question) => !answers[question.id]), type: "submit", children: "Send answers" })
+  ] });
+}
+function MusePanel() {
+  const [view, setView] = (0, import_react.useState)(null), [cwd, setCwd] = (0, import_react.useState)(""), [text, setText] = (0, import_react.useState)(""), [error, setError] = (0, import_react.useState)(""), [busy, setBusy] = (0, import_react.useState)(false);
+  (0, import_react.useEffect)(() => {
+    let active = true;
+    const refresh = () => call().then((next) => {
+      if (active) setView(next);
+    }).catch((error2) => {
+      if (active) setError(error2.message);
+    });
+    void refresh();
+    const timer = setInterval(refresh, 1e3);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
+  const run = async (action, data) => {
+    setBusy(true);
+    setError("");
+    try {
+      setView(await call(action, data));
+      if (action === "send") setText("");
+    } catch (error2) {
+      setError(error2.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "ph-muse", "aria-label": "Muse subscription", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Muse subscription" }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Uses the installed Muse Code CLI and its own signed-in subscription. Sign in once, select a workspace, then connect. Muse keeps its tools and permission prompts." }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || view?.login?.running, onClick: () => run("login"), children: "Sign in with Muse" }),
+    view?.login?.output && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { className: "ph-cli-output", children: view.login.output }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
+      "Workspace",
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { disabled: busy || view?.sessionId, value: cwd, onChange: (event) => setCwd(event.target.value), children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "Select a workspace" }),
+        view?.workspaces?.map((workspace) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: workspace.path, children: workspace.title }, workspace.path))
+      ] })
+    ] }),
+    !view?.sessionId ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || !cwd, onClick: () => run("connect", { cwd }), children: "Connect Muse CLI" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run("close"), children: "Disconnect" }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: view?.status || "Loading\u2026" }),
+    view?.items?.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: item.kind === "userMessage" ? "You" : item.kind === "agentMessage" ? "Muse" : item.toolName || item.kind }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { children: String(item.text || item.output || item.fallbackText || item.status || "") })
+    ] }, item.itemId)),
+    view?.approvals?.map((prompt) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { "aria-label": "Muse permission request", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: prompt.subject?.summary || prompt.toolName || "Muse requests permission" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { children: prompt.rawArgs }),
+      prompt.availableChoices?.map((choice) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, onClick: () => run("decide", { approvalId: prompt.approvalId, choiceId: choice.choiceId }), children: choice.label }, choice.choiceId))
+    ] }, prompt.approvalId)),
+    view?.questions?.map((prompt) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Questions, { prompt, busy, onAnswer: (userInputId, answers) => run("answer", { userInputId, answers }) }, prompt.userInputId)),
+    view?.sessionId && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: (event) => {
+      event.preventDefault();
+      void run("send", { text });
+    }, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
+        "Message Muse",
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { maxLength: 32768, value: text, onChange: (event) => setText(event.target.value) })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || !text.trim(), type: "submit", children: "Send" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || !view.turnId, type: "button", onClick: () => run("cancel"), children: "Stop" })
+    ] }),
+    (error || view?.error) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "alert", children: error || view.error })
+  ] });
+}
+
+// src/client.jsx
+var import_jsx_runtime2 = require("react/jsx-runtime");
 var inject = ["slots", "remote", "remote.settings", "remote.credentials", "remote.llm"];
 function apply(ctx) {
   const controller = new ProviderController(ctx.remote);
@@ -171,26 +274,30 @@ function apply(ctx) {
     label: "Providers",
     inject: () => ({ controller, slots: ctx.slots })
   }, ProviderHub));
+  ctx.slots.inject("settings.account.provider-setup", () => ctx.slots.register({
+    name: "settings.account.provider-setup",
+    inject: () => ({ controller, slots: ctx.slots })
+  }, ProviderHub));
 }
-function SubscriptionPanel({ slots }) {
-  (0, import_react.useSyncExternalStore)((callback) => slots.subscribe("settings.section", callback), () => slots.getVersion("settings.section"));
+function SubscriptionPanel({ slots, initiallyExpanded = false }) {
+  (0, import_react2.useSyncExternalStore)((callback) => slots.subscribe("settings.section", callback), () => slots.getVersion("settings.section"));
   const entry = slots.entries("settings.section").find((row) => row.options.id === "subscriptions");
-  const [expanded, setExpanded] = (0, import_react.useState)(false);
-  if (!entry) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ph-note", children: [
+  const [expanded, setExpanded] = (0, import_react2.useState)(initiallyExpanded);
+  if (!entry) return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "ph-note", children: [
     "Install ",
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", { children: "@arzvaak/bharatcode-subscriptions" }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("code", { children: "@arzvaak/bharatcode-subscriptions" }),
     " in this profile to enable ChatGPT (Codex), GitHub Copilot, Claude, Grok and Antigravity sign-in. Restart DSH after installation."
   ] });
   const Component = entry.component;
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ph-subscriptions", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ph-secondary", "aria-expanded": expanded, onClick: () => setExpanded(!expanded), children: expanded ? "Hide subscription sign-in" : "Manage subscription sign-in" }),
-    expanded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ph-subscription-body", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Component, { ...entry.inject?.() }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "ph-subscriptions", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { type: "button", className: "ph-secondary", "aria-expanded": expanded, onClick: () => setExpanded(!expanded), children: expanded ? "Hide subscription sign-in" : "Manage subscription sign-in" }),
+    expanded && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "ph-subscription-body", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Component, { ...entry.inject?.() }) })
   ] });
 }
 function ProviderHub({ controller, slots }) {
-  const [view, setView] = (0, import_react.useState)(null), [draft, setDraft] = (0, import_react.useState)(bharatCodeDraft), [key, setKey] = (0, import_react.useState)("");
-  const [busy, setBusy] = (0, import_react.useState)(false), [error, setError] = (0, import_react.useState)(""), [notice, setNotice] = (0, import_react.useState)("");
-  (0, import_react.useEffect)(() => {
+  const [view, setView] = (0, import_react2.useState)(null), [draft, setDraft] = (0, import_react2.useState)(bharatCodeDraft), [key, setKey] = (0, import_react2.useState)("");
+  const [busy, setBusy] = (0, import_react2.useState)(false), [error, setError] = (0, import_react2.useState)(""), [notice, setNotice] = (0, import_react2.useState)(""), [selected, setSelected] = (0, import_react2.useState)("bharatcode");
+  (0, import_react2.useEffect)(() => {
     let active = true;
     controller.load().then((v) => {
       if (active) {
@@ -218,110 +325,121 @@ function ProviderHub({ controller, slots }) {
       setBusy(false);
     }
   };
-  const choose = (selected) => {
+  const choose = (selected2) => {
+    setSelected(selected2);
     setKey("");
     setNotice("");
     setError("");
-    const preset = selected === "bharatcode" ? bharatCodeDraft() : customDraft();
-    const existing = view?.profiles?.[selected];
-    setDraft(existing ? { ...preset, ...existing, route: selected, models: existing.models || preset.models } : preset);
+    if (["muse", "codex", "google"].includes(selected2)) return;
+    const preset = providerDraft(selected2);
+    const existing = view?.profiles?.[selected2];
+    setDraft(existing ? { ...preset, ...existing, route: selected2, models: existing.models || preset.models } : preset);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "ph-root", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Providers" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Bring your subscriptions and model endpoints into DSH." })
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { className: "ph-root", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("header", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h2", { children: "Providers" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: "Use your BharatCode subscription, connect another subscription, or add an API key." })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { "aria-labelledby": "ph-sub-title", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { id: "ph-sub-title", children: "Subscriptions" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "ChatGPT uses your Codex subscription. GitHub uses GitHub Copilot. Sign in with the installed subscription plugin." }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SubscriptionPanel, { slots })
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { "aria-labelledby": "ph-sub-title", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { id: "ph-sub-title", children: "Subscriptions" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: "ChatGPT uses your Codex subscription. Google uses the Antigravity sign-in flow. GitHub uses GitHub Copilot. Sign in with the installed subscription plugin." }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(SubscriptionPanel, { slots })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { "aria-labelledby": "ph-endpoint-title", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { id: "ph-endpoint-title", children: "Model endpoints" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ph-presets", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("bharatcode"), children: "BharatCode" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("custom"), children: "Add OpenAI-compatible" })
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { "aria-labelledby": "ph-endpoint-title", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { id: "ph-endpoint-title", children: "Model endpoints" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "ph-presets", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("codex"), children: "Codex subscription" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("google"), children: "Google subscription" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("bharatcode"), children: "BharatCode" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("opencode"), children: "OpenCode" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("mistral"), children: "Mistral API key" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("muse"), children: "Muse subscription (CLI)" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, type: "button", onClick: () => choose("custom"), children: "Other provider" })
       ] }),
-      view && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-        "Edit configured endpoint",
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { disabled: busy, value: "", onChange: (e) => choose(e.target.value), children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "Select a provider\u2026" }),
-          Object.entries(view.profiles).filter(([, p]) => ["openai-completions", "openai-responses"].includes(p.api)).map(([route, p]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: route, children: p.displayName || route }, route))
-        ] })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("form", { onSubmit: (e) => {
-        e.preventDefault();
-        run(async () => {
-          const next = await controller.save({ ...draft, apiKey: key });
-          setView(next);
-          setKey("");
-          setNotice("Provider saved. Open the model picker to select one of its models.");
-        });
-      }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("fieldset", { disabled: busy || !view || !view.writable, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ph-grid", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-            "Provider name",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: draft.displayName, onChange: (e) => change("displayName", e.target.value), required: true })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-            "Route ID",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: draft.route, onChange: (e) => change("route", e.target.value), required: true, placeholder: "my-provider" })
+      selected === "muse" && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(MusePanel, {}),
+      ["codex", "google"].includes(selected) && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(SubscriptionPanel, { slots, initiallyExpanded: true }),
+      !["muse", "codex", "google"].includes(selected) && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(import_jsx_runtime2.Fragment, { children: [
+        view && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+          "Edit configured endpoint",
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("select", { disabled: busy, value: "", onChange: (e) => choose(e.target.value), children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "", children: "Select a provider\u2026" }),
+            Object.entries(view.profiles).filter(([, p]) => ["openai-completions", "openai-responses"].includes(p.api)).map(([route, p]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: route, children: p.displayName || route }, route))
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-          "API base URL",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "url", value: draft.baseURL, onChange: (e) => change("baseURL", e.target.value), required: true, placeholder: "https://your-provider.example/v1" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-          "API format",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: draft.api, onChange: (e) => change("api", e.target.value), children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "openai-completions", children: "Chat Completions" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "openai-responses", children: "Responses" })
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ph-grid", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-            "Key reference",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: draft.apiKeyEnv, onChange: (e) => change("apiKeyEnv", e.target.value), required: true })
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("form", { onSubmit: (e) => {
+          e.preventDefault();
+          run(async () => {
+            const next = await controller.save({ ...draft, apiKey: key });
+            setView(next);
+            setKey("");
+            setNotice("Provider saved. Open the model picker to select one of its models.");
+          });
+        }, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("fieldset", { disabled: busy || !view || !view.writable, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "ph-grid", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+              "Provider name",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { value: draft.displayName, onChange: (e) => change("displayName", e.target.value), required: true })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+              "Route ID",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { value: draft.route, onChange: (e) => change("route", e.target.value), required: true, placeholder: "my-provider" })
+            ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-            "API key",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", autoComplete: "new-password", value: key, onChange: (e) => setKey(e.target.value), placeholder: "Leave blank to keep the stored key" })
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "ph-help", children: "Keys are stored by DSH. You can also export the named key reference before launching DSH. For a local server that accepts any key, enter a placeholder key." }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ph-model-heading", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Models" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => run(async () => {
-            const found = await controller.discover({ ...draft, apiKey: key });
-            if (!found.length) throw new Error("The endpoint returned no models. Enter a model ID manually.");
-            change("models", found.map((m) => ({ ...draft.models.find((old) => old.id === m.id), id: m.id, name: m.name || m.id, contextWindow: m.contextWindow || 32768, maxTokens: m.maxTokens || 4096, ...m.inputModalities ? { input: m.inputModalities } : {} })));
-            setNotice("Model list discovered. Review capacities and remove any models you do not want before saving. Missing capacities use 32,768 context and 4,096 output as editable estimates.");
-          }), children: "Discover models" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ph-models", children: draft.models.map((model, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ph-model", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-            "Model ID",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: model.id, onChange: (e) => updateModel(index, "id", e.target.value), required: true })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+            "API base URL",
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { type: "url", value: draft.baseURL, onChange: (e) => change("baseURL", e.target.value), required: true, placeholder: "https://your-provider.example/v1" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-            "Context tokens",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", value: model.contextWindow ?? 32768, onChange: (e) => updateModel(index, "contextWindow", Number(e.target.value)), required: true })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+            "API format",
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("select", { value: draft.api, onChange: (e) => change("api", e.target.value), children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "openai-completions", children: "Chat Completions" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "openai-responses", children: "Responses" })
+            ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ph-field", children: [
-            "Max output tokens",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "number", min: "1", value: model.maxTokens ?? 4096, onChange: (e) => updateModel(index, "maxTokens", Number(e.target.value)), required: true })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "ph-grid", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+              "Key reference",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { value: draft.apiKeyEnv, onChange: (e) => change("apiKeyEnv", e.target.value), required: true })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+              "API key",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { type: "password", autoComplete: "new-password", value: key, onChange: (e) => setKey(e.target.value), placeholder: "Leave blank to keep the stored key" })
+            ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", "aria-label": `Remove model ${model.id || index + 1}`, onClick: () => change("models", draft.models.filter((_, i) => i !== index)), children: "Remove" })
-        ] }, index)) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ph-secondary", onClick: () => change("models", [...draft.models, { id: "", contextWindow: 32768, maxTokens: 4096 }]), children: "Add model manually" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "ph-help", children: "The BharatCode preset includes Qwen and DeepSeek. Discover models to check the current account catalog. Catalog visibility does not guarantee successful inference." }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ph-save", type: "submit", children: busy ? "Working\u2026" : "Save provider" })
-      ] }) })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "ph-help", children: "Keys are stored by DSH. You can also export the named key reference before launching DSH. For a local server that accepts any key, enter a placeholder key." }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "ph-model-heading", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h4", { children: "Models" }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { type: "button", onClick: () => run(async () => {
+              const found = await controller.discover({ ...draft, apiKey: key });
+              if (!found.length) throw new Error("The endpoint returned no models. Enter a model ID manually.");
+              change("models", found.map((m) => ({ ...draft.models.find((old) => old.id === m.id), id: m.id, name: m.name || m.id, contextWindow: m.contextWindow || 32768, maxTokens: m.maxTokens || 4096, ...m.inputModalities ? { input: m.inputModalities } : {} })));
+              setNotice("Model list discovered. Review capacities and remove any models you do not want before saving. Missing capacities use 32,768 context and 4,096 output as editable estimates.");
+            }), children: "Discover models" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "ph-models", children: draft.models.map((model, index) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "ph-model", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+              "Model ID",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { value: model.id, onChange: (e) => updateModel(index, "id", e.target.value), required: true })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+              "Context tokens",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { type: "number", min: "1", value: model.contextWindow ?? 32768, onChange: (e) => updateModel(index, "contextWindow", Number(e.target.value)), required: true })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "ph-field", children: [
+              "Max output tokens",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { type: "number", min: "1", value: model.maxTokens ?? 4096, onChange: (e) => updateModel(index, "maxTokens", Number(e.target.value)), required: true })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { type: "button", "aria-label": `Remove model ${model.id || index + 1}`, onClick: () => change("models", draft.models.filter((_, i) => i !== index)), children: "Remove" })
+          ] }, index)) }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { type: "button", className: "ph-secondary", onClick: () => change("models", [...draft.models, { id: "", contextWindow: 32768, maxTokens: 4096 }]), children: "Add model manually" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "ph-help", children: "The BharatCode preset includes Qwen and DeepSeek. Discover models to check the current account catalog. Catalog visibility does not guarantee successful inference." }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "ph-save", type: "submit", children: busy ? "Working\u2026" : "Save provider" })
+        ] }) })
+      ] })
     ] }),
-    error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "ph-error", role: "alert", children: error }),
-    notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "ph-notice", role: "status", children: notice }),
-    view && !view.writable && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: "This host has read-only settings." })
+    error && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "ph-error", role: "alert", children: error }),
+    notice && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "ph-notice", role: "status", children: notice }),
+    view && !view.writable && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { role: "status", children: "This host has read-only settings." })
   ] });
 }
 return module.exports;}});

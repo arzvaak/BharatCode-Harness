@@ -1,4 +1,4 @@
-/** Non-secret, signed extension release metadata. Artifact IDs refer to the fixed private repository. */
+/** Non-secret, signed extension release metadata. Artifact IDs refer to the fixed public extension repository. */
 export interface ExtensionDescriptor {
   id: string;
   name: string;

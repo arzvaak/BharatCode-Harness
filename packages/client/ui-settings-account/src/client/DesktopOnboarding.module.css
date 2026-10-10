@@ -326,3 +326,5 @@
   background: var(--dsw-alias-brand-primary);
 }
 .cardCheckbox input:checked + .indicator svg { visibility: visible; }
+
+.providerSetup { top: 64px; bottom: 76px; transform: translateX(-50%); overflow-y: auto; max-width: 880px; }

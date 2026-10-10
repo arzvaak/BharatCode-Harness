@@ -1,6 +1,7 @@
 import React, {useEffect, useState, useSyncExternalStore} from 'react';
-import {ProviderController, bharatCodeDraft, customDraft} from './controller.js';
+import {ProviderController, bharatCodeDraft, providerDraft, customDraft} from './controller.js';
 import css from './style.js';
+import {MusePanel} from './MusePanel.jsx';
 
 export const inject = ['slots','remote','remote.settings','remote.credentials','remote.llm'];
 export function apply(ctx) {
@@ -14,11 +15,14 @@ export function apply(ctx) {
     name:'settings.section', id:'provider-hub', order:85, label:'Providers',
     inject: () => ({controller, slots:ctx.slots}),
   }, ProviderHub));
+  ctx.slots.inject('settings.account.provider-setup', () => ctx.slots.register({
+    name:'settings.account.provider-setup', inject: () => ({controller, slots:ctx.slots}),
+  }, ProviderHub));
 }
-function SubscriptionPanel({slots}) {
+function SubscriptionPanel({slots,initiallyExpanded=false}) {
   useSyncExternalStore(callback => slots.subscribe('settings.section',callback), () => slots.getVersion('settings.section'));
   const entry = slots.entries('settings.section').find(row => row.options.id === 'subscriptions');
-  const [expanded,setExpanded] = useState(false);
+  const [expanded,setExpanded] = useState(initiallyExpanded);
   if (!entry) return <div className="ph-note">Install <code>@arzvaak/bharatcode-subscriptions</code> in this profile to enable ChatGPT (Codex), GitHub Copilot, Claude, Grok and Antigravity sign-in. Restart DSH after installation.</div>;
   // Reuse the installed plugin's own UI, locale binding and OAuth lifecycle.
   // No copy of its source or credentials is required.
@@ -30,28 +34,37 @@ function SubscriptionPanel({slots}) {
 }
 export function ProviderHub({controller,slots}) {
   const [view,setView] = useState(null), [draft,setDraft] = useState(bharatCodeDraft), [key,setKey] = useState('');
-  const [busy,setBusy] = useState(false), [error,setError] = useState(''), [notice,setNotice] = useState('');
+  const [busy,setBusy] = useState(false), [error,setError] = useState(''), [notice,setNotice] = useState(''), [selected,setSelected] = useState('bharatcode');
   useEffect(() => {let active=true; controller.load().then(v => {if(active){setView(v);if(v.profiles.bharatcode)setDraft({...bharatCodeDraft(),...v.profiles.bharatcode,route:'bharatcode'});}}).catch(e => {if(active)setError(e.message);}); return () => {active=false;};},[controller]);
   const change = (field,value) => setDraft(old => ({...old,[field]:value}));
   const updateModel = (index,field,value) => setDraft(old => ({...old,models:old.models.map((model,i) => i === index ? {...model,[field]:value} : model)}));
   const run = async action => {setBusy(true);setError('');setNotice('');try {await action();} catch(e) {setError(e.message);} finally {setBusy(false);}};
   const choose = selected => {
-    setKey(''); setNotice(''); setError('');
-    const preset = selected === 'bharatcode' ? bharatCodeDraft() : customDraft();
+    setSelected(selected);setKey(''); setNotice(''); setError('');
+    if (['muse','codex','google'].includes(selected)) return;
+    const preset = providerDraft(selected);
     const existing = view?.profiles?.[selected];
     setDraft(existing ? {...preset,...existing,route:selected,models:existing.models || preset.models} : preset);
   };
   return <section className="ph-root">
-    <header><h2>Providers</h2><p>Bring your subscriptions and model endpoints into DSH.</p></header>
+    <header><h2>Providers</h2><p>Use your BharatCode subscription, connect another subscription, or add an API key.</p></header>
     <section aria-labelledby="ph-sub-title"><h3 id="ph-sub-title">Subscriptions</h3>
-      <p>ChatGPT uses your Codex subscription. GitHub uses GitHub Copilot. Sign in with the installed subscription plugin.</p>
+      <p>ChatGPT uses your Codex subscription. Google uses the Antigravity sign-in flow. GitHub uses GitHub Copilot. Sign in with the installed subscription plugin.</p>
       <SubscriptionPanel slots={slots}/>
     </section>
     <section aria-labelledby="ph-endpoint-title"><h3 id="ph-endpoint-title">Model endpoints</h3>
       <div className="ph-presets">
+        <button disabled={busy} type="button" onClick={() => choose('codex')}>Codex subscription</button>
+        <button disabled={busy} type="button" onClick={() => choose('google')}>Google subscription</button>
         <button disabled={busy} type="button" onClick={() => choose('bharatcode')}>BharatCode</button>
-        <button disabled={busy} type="button" onClick={() => choose('custom')}>Add OpenAI-compatible</button>
+        <button disabled={busy} type="button" onClick={() => choose('opencode')}>OpenCode</button>
+        <button disabled={busy} type="button" onClick={() => choose('mistral')}>Mistral API key</button>
+        <button disabled={busy} type="button" onClick={() => choose('muse')}>Muse subscription (CLI)</button>
+        <button disabled={busy} type="button" onClick={() => choose('custom')}>Other provider</button>
       </div>
+      {selected === 'muse' && <MusePanel/>}
+      {['codex','google'].includes(selected) && <SubscriptionPanel slots={slots} initiallyExpanded/>}
+      {!['muse','codex','google'].includes(selected) && <>
       {view && <label className="ph-field">Edit configured endpoint<select disabled={busy} value="" onChange={e => choose(e.target.value)}><option value="">Select a provider…</option>{Object.entries(view.profiles).filter(([,p]) => ['openai-completions','openai-responses'].includes(p.api)).map(([route,p]) => <option key={route} value={route}>{p.displayName || route}</option>)}</select></label>}
       <form onSubmit={e => {e.preventDefault();run(async () => {const next=await controller.save({...draft,apiKey:key});setView(next);setKey('');setNotice('Provider saved. Open the model picker to select one of its models.');});}}>
         <fieldset disabled={busy || !view || !view.writable}>
@@ -83,6 +96,7 @@ export function ProviderHub({controller,slots}) {
           <button className="ph-save" type="submit">{busy ? 'Working…' : 'Save provider'}</button>
         </fieldset>
       </form>
+      </>}
     </section>
     {error && <p className="ph-error" role="alert">{error}</p>}
     {notice && <p className="ph-notice" role="status">{notice}</p>}

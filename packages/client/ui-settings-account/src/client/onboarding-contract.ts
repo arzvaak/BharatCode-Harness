@@ -1,4 +1,5 @@
 /** Pure view inputs for the desktop onboarding flow. */
+import type { ReactNode } from 'react'
 import type { TrackProductEvent } from '@deepseek-ai/dsh-client-product-analytics/client'
 import type { OnboardingProgress } from '../onboarding-settings.ts'
 import type { AccountSnapshot } from './AccountSection.tsx'
@@ -24,6 +25,8 @@ export interface DesktopOnboardingProps {
   exiting?: boolean
   /** Desktop collection callback; absent when analytics is disabled. */
   track?: TrackProductEvent
+  /** Provider-owned setup content supplied by the parent slot. */
+  providerSetup?: ReactNode
   state: DesktopOnboardingState
   account: AccountSnapshot
   /** Desktop-only: show the shared native recharge page; absent in ordinary browsers. */

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ProviderController, validateDraft, bharatCodeDraft } from '../src/controller.js';
+import { ProviderController, validateDraft, providerDraft, bharatCodeDraft } from '../src/controller.js';
 const ok = value => ({ ok: true, value });
 function fixture() {
   const calls = [];
@@ -57,4 +57,11 @@ test('discovery refuses to forward a stored key to a changed draft URL', async (
  const {controller,calls}=fixture();await controller.load();
  await assert.rejects(controller.discover({...bharatCodeDraft(),baseURL:'https://another.example/v1'}), /changed endpoint/);
  assert.equal(calls.length,0);
+});
+
+test("named setup presets keep keys separate and CLI subscriptions are not API presets", () => {
+  assert.equal(providerDraft("mistral").apiKeyEnv, "MISTRAL_API_KEY");
+  assert.equal(providerDraft("opencode").displayName, "OpenCode");
+  assert.equal(providerDraft("muse").route, "custom");
+  assert.equal(providerDraft("bharatcode").route, "bharatcode");
 });

@@ -1215,6 +1215,10 @@ importers:
         version: 18.3.1
 
   integrations/provider-hub:
+    dependencies:
+      '@muse-code/sdk':
+        specifier: 1.4.4
+        version: 1.4.4(@types/node@22.20.4)
     devDependencies:
       esbuild:
         specifier: 0.25.12
@@ -20043,6 +20047,15 @@ packages:
     resolution: {integrity: sha512-YhHWdHfpFMQfd0prsEnxKeS3Qz3ytIGmsS0sth4KDjnacIT7hxk6hXHkJ9KysxlkvTM+WZAtQbbcUhdoP4Hvtw==}
     engines: {node: '>=20'}
 
+  '@muse-code/sdk@1.4.4':
+    resolution: {integrity: sha512-hoYbcXf9qjXHCXoY8Mkcic60oGRlhLQz/8lCLN7uefQLlmO19Udrg4/oAYTR8KHN55TxqxbOV6yiuyr6yKrtUw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@types/node': '>=20'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   '@napi-rs/canvas-android-arm64@0.1.100':
     resolution: {integrity: sha512-hjhCKhntPv9+t4ckHymdx0phYNcVW+GKQR6Lzw2zE+pOVjOplSmtx9nNNknTjbEDLcuLZqA1y8ufKg1XfgftzQ==}
     engines: {node: '>= 10'}
@@ -34087,6 +34100,10 @@ snapshots:
     dependencies:
       '@modelcontextprotocol/core': 2.0.0
       zod: 4.4.3
+
+  '@muse-code/sdk@1.4.4(@types/node@22.20.4)':
+    optionalDependencies:
+      '@types/node': 22.20.4
 
   '@napi-rs/canvas-android-arm64@0.1.100':
     optional: true

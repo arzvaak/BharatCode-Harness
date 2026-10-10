@@ -94,6 +94,17 @@ try {
   assert.equal((await subscriptionRpc('status', {})).providers.copilot.accounts.length, 0, 'Native logout did not persist');
   assert.equal(await readFile(legacyAuth, 'utf8'), legacyBytes, 'Migration changed legacy credentials');
   assert.ok((await readFile(join(home, '.dsh/.credentials.yaml'), 'utf8')).includes('dsh-plugin-subscriptions/accounts'), 'Grant missing from native storage');
+  const providersResponse = await fetch(`${address}/api/llm/listProviders`, {
+    method: 'POST', headers: {Origin: address, Cookie: cookie, 'Content-Type':'application/json'},
+    body: JSON.stringify({type:'client-request',rpcId:'core-provider-defaults',method:'llm/listProviders',payload:{args:{}}}),
+  });
+  const providersEnvelope = await providersResponse.json();
+  const providers = providersEnvelope.result.value;
+  assert.ok(providers.some(row => row.id === 'bharatcode'), 'BharatCode default route missing');
+  assert.ok(!providers.some(row => ['deepseek-official', 'deepseek-account'].includes(row.id)), 'Upstream provider routes still enabled by default');
+  const museState = await fetch(`${address}/api/bc-muse`, {headers:{Origin:address,Cookie:cookie}});
+  assert.equal(museState.status,200,'Muse bridge unavailable in core composition');
+  assert.equal((await museState.json()).status,'disconnected','Muse CLI started without user action');
   const response = await fetch(`${address}/api/bc-extension-store`, {
     headers: { Origin: address, Cookie: cookie },
     signal: AbortSignal.timeout(10000),

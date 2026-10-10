@@ -59,6 +59,7 @@ export interface SessionSnapshot {
     }>;
 }
 export interface SectionProps {
+    initialScope?: string;
     t: Translate;
     useSessions?: (selector: (snapshot?: SessionSnapshot) => string | undefined) => string | undefined;
 }
@@ -86,10 +87,11 @@ export interface ClientContext {
         inject: (name: string, factory: () => unknown) => unknown;
         register: (options: {
             name: string;
-            id: string;
-            order: number;
-            label: () => string;
-            icon: string;
+            id?: string;
+            key?: string;
+            order?: number;
+            label?: () => string;
+            icon?: string;
             locale: string;
         }, component: React.ComponentType<SectionProps>) => unknown;
     };

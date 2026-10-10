@@ -5,7 +5,7 @@ export const en = {
   nav: 'Models',
   deepSeekAccount: 'DeepSeek Account',
   title: 'Models',
-  intro: 'Enter your API keys to use models from the following providers.',
+  intro: 'Connect a subscription or API key in Providers. BharatCode is the default; other providers are optional.',
   edit: 'Edit',
   editProvider: 'Edit {provider}',
   remove: 'Delete',

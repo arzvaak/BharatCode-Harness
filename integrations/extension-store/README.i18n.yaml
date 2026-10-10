@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/extension-store/README.md
 /bc-extension-store:
-  en: ee158604138015ef
-  zh: 3583f30469d5ee70
-/bc-extension-store/private-preview-installation:
-  en: c3589ae95c67f58c
-  zh: 0714f98afe0ad8f6
+  en: 0ec5750731757576
+  zh: 40c0e378ba7179e5
+/bc-extension-store/preview-build-and-public-downloads:
+  en: 3d624a9b0923012e
+  zh: dbe689008569c22a
 /bc-extension-store/version-and-release-contract:
-  en: 466faf232db6fdb4
-  zh: 17e424e410551095
+  en: 6fb8290757fb89cf
+  zh: 9857ef63c62572b4
 /bc-extension-store/local-requirement-inspection:
   en: 0f47ffc05e134b15
   zh: 126699e61cca2dc8

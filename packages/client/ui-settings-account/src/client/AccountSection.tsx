@@ -14,6 +14,8 @@ import css from './AccountSection.module.css'
 
 /** Safe account snapshot shared by the settings page and launcher. */
 export interface AccountSnapshot {
+  /** Device-local profile preference, independent of provider profile reads. */
+  displayName?: string
   /** Server-authored bonus notice awaiting display, absent when none is available. */
   notice?: BonusNotice
 
@@ -58,6 +60,8 @@ export interface AccountSectionInjected {
    * @returns after both reads settle.
    */
   refreshAccount: () => Promise<void>
+  /** Save a device-local profile label through the host configuration. */
+  saveDisplayName?: (name: string) => Promise<void>
   /** Open the external support questionnaire with the account, build and environment sampled by this click. */
   contactUs: () => void
   /** Open or dismiss the login dialog. */

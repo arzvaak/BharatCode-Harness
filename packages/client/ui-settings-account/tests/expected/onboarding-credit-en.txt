@@ -1,1 +1,1 @@
-Add creditsBharatCode charges credits based on the tokens used by models and tools. Add credits in advance to keep your tasks running without interruption. Your balance is only used while the agent is working on a task.Add creditsNextBackSkip
+Choose a providerBharatCode uses your subscription. You can also connect a supported subscription or API key below. Choose one provider now, or set it up later in Settings → Providers.ContinueSet up laterBackSkip

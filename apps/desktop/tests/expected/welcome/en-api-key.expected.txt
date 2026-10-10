@@ -1,7 +1,7 @@
 BharatCode
 BharatCode
 Add an API key to get started
-Configure official DeepSeek models to start using Harness
+Connect your BharatCode subscription, or set up a different provider after entering the app.
 Enter API key [password]
 Save and continue [disabled]
 Set up later

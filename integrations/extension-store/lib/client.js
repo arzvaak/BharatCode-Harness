@@ -2301,8 +2301,8 @@ function Store({ t = (key) => key } = {}) {
       )
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("summary", { children: "Private preview access" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Use your own GitHub credential with read access to arzvaak/Bharatcode-Harness. It is saved in BC's credential store." }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("summary", { children: "Optional GitHub access" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Public extensions do not require a GitHub account. An optional credential increases GitHub download limits and is saved in BC's credential store." }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
         "form",
         {
@@ -2373,7 +2373,7 @@ function apply(ctx) {
   const t = ctx.locale.bind(NS);
   ctx.effect(() => {
     const style = document.createElement("style");
-    style.textContent = ".bc-store{padding:24px;max-width:1200px;margin:auto;color:var(--dsh-text-primary,inherit)}.bc-store nav{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.bc-store label{display:inline-flex;gap:8px;margin:12px}.bc-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px}.bc-store-card{border:1px solid var(--dsh-border,#8886);border-radius:12px;padding:18px}.bc-store button{padding:8px 12px;margin:4px;cursor:pointer}.bc-store button:disabled{opacity:.5;cursor:default}.bc-store [role=alert]{color:var(--dsh-danger,#c44)}.bc-store-card p{overflow-wrap:anywhere}.bc-store-card li{margin-bottom:6px}";
+    style.textContent = ".bc-store{flex:1;min-height:0;min-width:0;width:100%;height:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;padding:24px;color:var(--dsw-alias-label-primary,inherit)}.bc-store nav{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.bc-store label{display:inline-flex;gap:8px;margin:12px}.bc-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;margin-top:20px}.bc-store-card{min-width:0;border:1px solid var(--dsh-border,#8886);border-radius:12px;padding:18px}.bc-store button{padding:8px 12px;margin:4px;cursor:pointer}.bc-store button:disabled{opacity:.5;cursor:default}.bc-store [role=alert]{color:var(--dsh-danger,#c44)}.bc-store-card p{overflow-wrap:anywhere}.bc-store-card li{margin-bottom:6px}";
     document.head.append(style);
     return () => style.remove();
   });

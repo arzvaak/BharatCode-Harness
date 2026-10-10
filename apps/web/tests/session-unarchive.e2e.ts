@@ -23,12 +23,12 @@ describe('web e2e: archived sessions are restored from the sidebar filter', () =
   let tripwire: ReturnType<typeof watchConsole>
 
   /**
-   * Expand the Ungrouped group when it renders collapsed so its rows are
+   * Expand the Chats group when it renders collapsed so its rows are
    * addressable, then return the section holding them.
-   * @returns the expanded Ungrouped section locator.
+   * @returns the expanded Chats section locator.
    */
   async function ungroupedSection(): Promise<Locator> {
-    const header = page.getByText('Ungrouped', { exact: true })
+    const header = page.getByText('Chats', { exact: true })
     const groupRow = header.locator('..').locator('..')
     await expect.poll(async () => {
       if (await groupRow.count() === 0) return 'absent'
@@ -59,7 +59,7 @@ describe('web e2e: archived sessions are restored from the sidebar filter', () =
   beforeAll(async () => {
     scaffold = await launchWebScaffold({})
     // Seed one cold session; with no Workspace registered it is the sidebar's
-    // only row, in the Ungrouped bucket.
+    // only row, in the Chats bucket.
     await seedSession(scaffold, await readFile(SEED, 'utf8'), SEED_ID)
     browser = await chromium.launch()
     page = await newEnglishPage(browser)
@@ -90,11 +90,11 @@ describe('web e2e: archived sessions are restored from the sidebar filter', () =
     await expect.poll(() => sessionRow.getAttribute('aria-selected'), { timeout: 10_000 }).toBe('true')
 
     // Archive from the row menu: no confirmation dialog, and losing the last
-    // visible Session withdraws the whole Ungrouped bucket.
+    // visible Session withdraws the whole Chats bucket.
     await clickHoverAction(sessionRow, `Session actions for ${title}`)
     await page.getByRole('menuitem', { name: 'Archive session' }).click()
     await expect.poll(() => sessionRow.count(), { timeout: 10_000 }).toBe(0)
-    await expect.poll(() => page.getByText('Ungrouped', { exact: true }).count(), { timeout: 10_000 }).toBe(0)
+    await expect.poll(() => page.getByText('Chats', { exact: true }).count(), { timeout: 10_000 }).toBe(0)
     // Durable on the host: the registry-global set carries the id while the
     // Session log itself stays in persistence untouched.
     expect([...scaffold.ctx.workspaceRegistry.archivedSessionIds]).toEqual([SessionId(SEED_ID)])

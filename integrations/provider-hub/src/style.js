@@ -1,4 +1,6 @@
 export default `
+.ph-muse pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:320px;overflow:auto}.ph-muse article{padding:12px;border-bottom:1px solid var(--dsw-alias-border-primary)}.ph-muse textarea{min-height:90px;font:inherit;}
+
 .ph-root{color:var(--dsw-alias-text-primary,currentColor);font:inherit;max-width:780px;padding:4px 0 24px}
 .ph-root h2{font-size:22px;margin:0 0 6px}.ph-root h3{font-size:17px;margin:0 0 8px}.ph-root h4{font-size:15px;margin:0}
 .ph-root p{font-size:13px;line-height:1.6;margin:6px 0 14px;max-width:70ch}.ph-root>section{border-top:1px solid var(--dsw-alias-border-primary,#8885);padding:22px 0;margin-top:20px}

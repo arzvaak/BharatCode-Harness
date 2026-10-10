@@ -13,6 +13,9 @@ import type {} from '@deepseek-ai/dsh-client-ui-slots'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface SlotMap {
+    /** Provider-owned setup inside the optional desktop introduction. */
+    'settings.account.provider-setup': { kind: 'single'; scope: 'root'; owner: Record<string, never> }
+
     /** Optional sidebar account launcher; opens the shell-owned settings panel. */
     'settings.launcher': { kind: 'single'; scope: 'root'; owner: SettingsLauncherOwnerProps }
 

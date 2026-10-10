@@ -46,6 +46,7 @@ export class DesktopOnboardingController {
     private readonly account: HostObservable<AccountSnapshot>,
     private readonly readApiKeyPresence: () => Promise<boolean>,
     private readonly settings: SettingsDescribeFace,
+    private readonly providerSetup = false,
   ) {
     this.disposers = [
       settings.subscribe(() => { this.derive() }),
@@ -74,14 +75,14 @@ export class DesktopOnboardingController {
    * @returns whether Host settings accepted the complete next progress value.
    */
   async update(change: OnboardingChange): Promise<boolean> {
-    if (this.completing || (this.saving && this.draft === undefined) || this.disposed || this.account.getSnapshot().view?.status !== 'credential-stored') return false
+    if (this.completing || (this.saving && this.draft === undefined) || this.disposed || (!this.providerSetup && this.account.getSnapshot().view?.status !== 'credential-stored')) return false
     const current = this.draft ?? this.readProgress()
     if (current === undefined || current.step === 'done') return false
     const next = { ...current, ...change }
     this.draft = next
     this.error = null
     const pending = this.updates.then(async () => {
-      if (this.disposed || this.account.getSnapshot().view?.status !== 'credential-stored') return false
+      if (this.disposed || (!this.providerSetup && this.account.getSnapshot().view?.status !== 'credential-stored')) return false
       return this.save(next, false)
     }).finally(() => {
       if (this.draft === next) this.draft = undefined
@@ -98,7 +99,7 @@ export class DesktopOnboardingController {
    * @returns whether preferences and the completion marker persisted.
    */
   async complete(reason: 'completed' | 'skipped'): Promise<boolean> {
-    if (this.completing || this.disposed || this.account.getSnapshot().view?.status !== 'credential-stored') return false
+    if (this.completing || this.disposed || (!this.providerSetup && this.account.getSnapshot().view?.status !== 'credential-stored')) return false
     this.completing = true
     this.derive()
     try {
@@ -111,7 +112,7 @@ export class DesktopOnboardingController {
   }
 
   private async finish(reason: 'completed' | 'skipped'): Promise<boolean> {
-    if (this.saving || this.disposed || this.account.getSnapshot().view?.status !== 'credential-stored') return false
+    if (this.saving || this.disposed || (!this.providerSetup && this.account.getSnapshot().view?.status !== 'credential-stored')) return false
     const current = this.readProgress()
     if (current === undefined || current.step === 'done' || current.step === 'welcome') return false
     const office = reason === 'completed' && current.purpose === 'office'
@@ -129,7 +130,7 @@ export class DesktopOnboardingController {
    * @returns whether the read or pending write succeeded; false when nothing can be retried.
    */
   async retry(): Promise<boolean> {
-    if (this.saving || this.completing || this.draft !== undefined || this.disposed || this.account.getSnapshot().view?.status !== 'credential-stored') return false
+    if (this.saving || this.completing || this.draft !== undefined || this.disposed || (!this.providerSetup && this.account.getSnapshot().view?.status !== 'credential-stored')) return false
     if (this.settings.getSnapshot().error !== null && this.progress.getSnapshot().status === 'loading') {
       await this.settings.ensure()
       return this.progress.getSnapshot().status === 'ready'
@@ -218,13 +219,13 @@ export class DesktopOnboardingController {
     const next: DesktopOnboardingState = {
       progress: shallowEqual(previous.progress, progress) ? previous.progress : progress,
       creditFunded: this.creditFunded ?? false,
-      visible: !done && signedIn && !unavailable,
+      visible: !done && (this.providerSetup || signedIn) && !unavailable,
       status: this.completing || (this.saving && this.draft === undefined) ? 'saving' : unavailable || readFailed || accountFailed || this.error !== null ? 'error'
         : host.status === 'loading' || account === undefined ? 'loading' : 'ready',
       error: unavailable || readFailed ? 'settings' : this.error,
     }
     if (!shallowEqual(previous, next)) this.state.set(next)
-    if (done || this.saving || this.completing || this.draft !== undefined || unavailable || host.status !== 'ready' || this.chat.getSnapshot().status !== 'ready'
+    if (this.providerSetup || done || this.saving || this.completing || this.draft !== undefined || unavailable || host.status !== 'ready' || this.chat.getSnapshot().status !== 'ready'
       || account?.status !== 'signed-out') return
     if (this.hasApiKey === true && this.error === null) {
       void this.save({ ...progress, step: 'done', process: 'standard', usage: 'detailed', developerTools: true, completion: 'api-key' }, true)

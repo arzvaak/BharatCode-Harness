@@ -2,7 +2,6 @@
 import type { ProductEventMap } from '@deepseek-ai/dsh-client-product-analytics/client'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
-import { hasOnboardingCredit } from './onboarding-balance.ts'
 import { OnboardingSurface } from './OnboardingSurface.tsx'
 import type { DesktopOnboardingProps } from './onboarding-contract.ts'
 import { OnboardingWelcomeStep } from './OnboardingWelcomeStep.tsx'
@@ -26,7 +25,7 @@ const onboardingPages = {
  * @returns the active first-run page.
  */
 export function DesktopOnboarding({
-  state, account, openPlatformPage, update, complete, retry, t, locale, track, exiting = false,
+  state, openPlatformPage, update, complete, retry, t, locale, track, providerSetup, exiting = false,
 }: DesktopOnboardingProps) {
   const [dialog, setDialog] = useState<OnboardingConfirmationKind | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -92,11 +91,7 @@ export function DesktopOnboarding({
     // Every control that reaches this is disabled without the callback.
     releaseRecharge.current = openPlatformPage?.('top-up', () => { releaseRecharge.current = undefined })
   }
-  const later = () => {
-    const balance = account.details?.balance
-    if (balance?.status === 'ready' && !hasOnboardingCredit(balance)) setDialog('credit')
-    else go('purpose')
-  }
+  const later = () => { go('purpose') }
   const purposeNext = () => {
     if (progress.purpose === 'office') void complete('completed')
     else go('process')
@@ -106,7 +101,7 @@ export function DesktopOnboarding({
       <section key={step} ref={page} className={`${css.page} ${dialog !== null ? css.blurred : ''}`} data-desktop-onboarding={step} lang={locale} aria-labelledby="desktop-onboarding-title" aria-busy={busy}>
         {step === 'welcome' && <OnboardingWelcomeStep t={t} locale={locale} heading={heading} busy={busy} onStart={() => { click('next'); go('credit') }} />}
         {step === 'credit' && <OnboardingCreditStep t={t} locale={locale} heading={heading} busy={busy}
-          funded={state.creditFunded} canRecharge={canRecharge} onContinue={() => { click('continue'); go('purpose') }} onRecharge={() => { click('charge'); recharge() }} onLater={() => { click('later'); later() }} />}
+          providerSetup={providerSetup} funded={state.creditFunded} canRecharge={canRecharge} onContinue={() => { click('continue'); go('purpose') }} onRecharge={() => { click('charge'); recharge() }} onLater={() => { click('later'); later() }} />}
         {step === 'purpose' && <OnboardingPurposeStep t={t} heading={heading} busy={busy} purpose={progress.purpose}
           onSelect={(purpose) => { void update({ purpose }) }} onContinue={() => { click('next'); purposeNext() }} />}
         {step === 'process' && <OnboardingProcessStep t={t} heading={heading} busy={busy} process={progress.process}
@@ -114,7 +109,7 @@ export function DesktopOnboarding({
         {state.error !== null && <div className={css.status} role="alert">{t('onboardingSaveFailed')}<Button disabled={busy} onClick={() => { void retry() }}>{t('onboardingRetry')}</Button></div>}
         {step !== 'welcome' && <footer className={css.navigation}>
           <button type="button" disabled={busy} onClick={() => { click('back'); go(step === 'credit' ? 'welcome' : step === 'purpose' ? 'credit' : 'purpose') }}><span className={css.backIcon} style={{ maskImage: `url(${backIcon})` }} aria-hidden="true" />{t('onboardingBack')}</button>
-          <button type="button" disabled={busy} onClick={() => { click('skip'); setDialog(step === 'credit' ? 'credit-skip' : 'skip') }}>{t('onboardingSkip')}</button>
+          <button type="button" disabled={busy} onClick={() => { click('skip'); setDialog('skip') }}>{t('onboardingSkip')}</button>
         </footer>}
       </section>
     </OnboardingSurface>

@@ -7,6 +7,8 @@ import z from '@deepseek-ai/schemastery'
 import { OnboardingSettingsFields, type OnboardingStep, type OnboardingPurpose, type OnboardingProcess } from './onboarding-settings.ts'
 /** Public contact options and live device-local onboarding progress. */
 export interface Config extends ContactConfig {
+  /** Device-local profile display name. */
+  displayName: Volatile<string>
   /** Onboarding progress format version. */
   version: Volatile<1>
   /** Last accepted onboarding page. */
@@ -25,6 +27,7 @@ export interface Config extends ContactConfig {
 
 /** Configuration projected through the account plugin's shared form. */
 export const Config = z.object({
+  displayName: z.string().max(80).default('').volatile(),
   contactFormUrl: ContactConfigFields.contactFormUrl,
   contactSource: ContactConfigFields.contactSource,
   bonusAckRetryDelayMs: ContactConfigFields.bonusAckRetryDelayMs,
@@ -48,6 +51,7 @@ export function apply(ctx: Context, config: Config): void {
     scope.effect(() => scope.settings.configure({ auto: false }, ctx.fiber))
   })
   ctx.on('webserver/index-inject', (table) => {
+    table.push({ kind: 'global', name: '__BC_LOCAL_PROFILE__', value: { name: config.displayName.get() } })
     table.push({ kind: 'global', name: CONTACT_CONFIG_GLOBAL, value: {
       contactFormUrl: config.contactFormUrl, contactSource: config.contactSource,
       bonusAckRetryDelayMs: config.bonusAckRetryDelayMs, bonusAckRetryMaxDelayMs: config.bonusAckRetryMaxDelayMs,

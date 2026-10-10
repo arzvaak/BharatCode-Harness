@@ -246,7 +246,7 @@ import { antdLocaleFromDocument } from "./antd-locale.js";
     }
     function SkillManagerSection(props: SectionProps) {
       var sessionId = props.useSessions ? props.useSessions(currentSessionId) : undefined;
-      var scopes = react.useState("user"), filtersState = react.useState<Record<string, Filters>>({}), expandedState = react.useState<Record<string, boolean>>({});
+      var scopes = react.useState(props.initialScope || "user"), filtersState = react.useState<Record<string, Filters>>({}), expandedState = react.useState<Record<string, boolean>>({});
       // Remount request and form state per session so asynchronous responses from an old session cannot overwrite the new session page.
       return h(SkillManagerView, Object.assign({}, props, { key: sessionId || "no-session", sessionId: sessionId, scope: scopes[0], setScope: scopes[1], savedFilters: filtersState[0], setSavedFilters: filtersState[1], expanded: expandedState[0], setExpanded: expandedState[1] }));
     }
@@ -376,5 +376,15 @@ import { antdLocaleFromDocument } from "./antd-locale.js";
     }
 
     var inject = ["slots", "locale"];
-    function apply(ctx: ClientContext) { ctx.effect(function () { return ctx.locale.register(NS, DICT); }); ctx.effect(function () { return observePluginUpdate({ endpoint: "/api/michengai/dsh-skills-manager/update", packageName: "@michengai/dsh-skills-manager", titleRowSelector: ".dssm-title-row", linksSelector: ".dssm-feedback-links", zhName: "Skill", enName: "Skills", createIcon: createPluginUpdateIcon }); }, "skills-manager: plugin update ui"); ctx.slots.inject("settings.section", function () { return ctx.slots.register({ name: "settings.section", id: "skills-manager", order: 17, label: function () { return ctx.locale.bind(NS)("title"); }, icon: "skill", locale: NS }, SkillManagerSection); }); }
+    function SkillsPage(props: SectionProps) {
+      return h("div", { className: "bc-skills-page", style: { flex: 1, minHeight: 0, minWidth: 0, width: "100%", height: "100%", overflowY: "auto", overflowX: "hidden", boxSizing: "border-box", padding: "24px" } }, h(SkillManagerSection, { ...props, initialScope: "repositories" }));
+    }
+    function apply(ctx: ClientContext) {
+      ctx.effect(function () { return ctx.locale.register(NS, DICT); });
+      ctx.effect(function () { return observePluginUpdate({ endpoint: "/api/michengai/dsh-skills-manager/update", packageName: "@michengai/dsh-skills-manager", titleRowSelector: ".dssm-title-row", linksSelector: ".dssm-feedback-links", zhName: "Skill", enName: "Skills", createIcon: createPluginUpdateIcon }); }, "skills-manager: plugin update ui");
+      ctx.slots.inject("sidebar.panellist", function () { return ctx.slots.register({ name: "sidebar.panellist", id: "bc-skills", order: 2, label: function () { return ctx.locale.bind(NS)("title"); }, locale: NS }, () => h("span", { "aria-hidden": true }, "✧")); });
+      ctx.slots.inject("main", function () { return ctx.slots.register({ name: "main", key: "bc-skills", locale: NS }, SkillsPage); });
+      ctx.slots.inject("settings.section", function () { return ctx.slots.register({ name: "settings.section", id: "skills-manager", order: 17, label: function () { return ctx.locale.bind(NS)("title"); }, icon: "skill", locale: NS }, SkillManagerSection); });
+    }
+
     module.exports.formatTrashTime = formatTrashTime; module.exports.DICT = DICT; module.exports.translateError = translateError; module.exports.parseApiResponse = parseApiResponse; module.exports.isSkillEnabled = isSkillEnabled; module.exports.countKey = countKey; module.exports.rootDisplayName = rootDisplayName; module.exports.summarizeImportResult = summarizeImportResult; module.exports.normalizeSkillQuery = normalizeSkillQuery; module.exports.matchSkillQuery = matchSkillQuery; module.exports.filterSkills = filterSkills; module.exports.visibleSkillRoots = visibleSkillRoots; module.exports.scopeSkillRoots = scopeSkillRoots; module.exports.skillStatus = skillStatus; module.exports.countSkillStatuses = countSkillStatuses; module.exports.currentSessionId = currentSessionId; module.exports.canToggleSource = canToggleSource; module.exports.recoverModalFocus = recoverModalFocus; module.exports.trapModalFocus = trapModalFocus; module.exports.inspectUploadSelection = inspectUploadSelection; module.exports.apply = apply; module.exports.inject = inject;

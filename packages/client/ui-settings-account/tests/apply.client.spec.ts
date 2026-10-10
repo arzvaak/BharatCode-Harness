@@ -67,7 +67,7 @@ it('keeps account UI and account RPC inactive in a plain browser, including afte
     await c.flush()
     expect(c.ctx.slots.entries('settings.launcher')).toHaveLength(0)
     expect(c.ctx.slots.entries('settings.models.sign-in')).toHaveLength(0)
-    expect(c.ctx.slots.entries('settings.section').some(entry => entry.options.id === 'account')).toBe(false)
+    expect(c.ctx.slots.entries('settings.section').some(entry => entry.options.id === 'deepseek-account')).toBe(false)
     expect(quotaNoticeEntry(c)).toBeUndefined()
     expect(platformHostEntry(c)).toBeUndefined()
     expect(mock.log.calls().filter(call => call.endpoint.startsWith('account/'))).toEqual([])
@@ -123,9 +123,9 @@ it('shares account actions across seats, publishes dialog ownership, and opens c
   c.mock.remote.account.getProfile.mockResolvedValue(ok(profile))
   c.mock.streams.push('account/watch', stored)
   await vi.waitFor(() => { expect(actions.hooks.account.getSnapshot().details?.profile).toEqual(profile) })
-  const entry = c.ctx.slots.entries('settings.section').find(entry => entry.options.id === 'account')!
+  const entry = c.ctx.slots.entries('settings.section').find(entry => entry.options.id === 'deepseek-account')!
   expect(entry.inject!()).toBe(actions)
-  expect(resolveSlotLabel(entry.options.label)).toBe('Account')
+  expect(resolveSlotLabel(entry.options.label)).toBe('DeepSeek provider account')
   vi.spyOn(c.ctx.locale, 'getSnapshot').mockReturnValue({ ...c.ctx.locale.getSnapshot(), active: 'zh' })
   actions.contactUs()
   const support = new URL(String(open.mock.calls.at(-1)![0]))
@@ -639,7 +639,7 @@ for (const native of [false, true]) it(`exposes desktop progress actions and dis
   expect(mock.remote.account.getBalance).not.toHaveBeenCalled()
 }, 60_000)
 
-it('applies API-key defaults through the desktop slot and shared configuration owners', async ({ start, mock }) => {
+it('keeps provider selection available when an API key already exists', async ({ start, mock }) => {
   vi.stubGlobal('dshDesktop', {})
   const values: Record<string, object> = {
     'ui-settings-account': { version: 1, step: 'welcome', purpose: null, process: null, completion: null, usage: 'compact', developerTools: false },
@@ -662,8 +662,8 @@ it('applies API-key defaults through the desktop slot and shared configuration o
   })
   const c = await start()
   const injected = c.ctx.slots.entries('shell.overlay').find(entry => entry.options.id === 'desktop-onboarding')!.inject!() as object as DesktopOnboardingInjected
-  await vi.waitFor(() => { expect(injected.hooks.onboarding.getSnapshot().progress.step).toBe('done') })
-  expect(hasApiKey).toHaveBeenCalled()
-  expect(values['ui-settings']).toEqual({ enabled: true })
-  expect(values['ui-chat']).toMatchObject({ transcriptView: 'standard' })
+  await vi.waitFor(() => { expect(injected.hooks.onboarding.getSnapshot().visible).toBe(true) })
+  expect(injected.hooks.onboarding.getSnapshot().progress.step).toBe('welcome')
+  expect(hasApiKey).not.toHaveBeenCalled()
+  expect(values['ui-settings']).toEqual({ enabled: false })
 }, 60_000)

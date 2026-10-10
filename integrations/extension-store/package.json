@@ -3,7 +3,7 @@
   "version": "0.1.0-preview.1",
   "type": "module",
   "license": "MIT",
-  "description": "Private BC extension catalog, verified downloads and demand-based runtime management.",
+  "description": "Public BC extension catalog, verified downloads and demand-based runtime management.",
   "exports": {
     ".": "./src/host.js",
     "./client": "./lib/client.js",

@@ -78,3 +78,9 @@ export class ProviderController {
     return this.load();
   }
 }
+
+export function providerDraft(id) {
+  if (id === "bharatcode") return bharatCodeDraft();
+  const preset = {mistral: ["Mistral", "https://api.mistral.ai/v1", "MISTRAL_API_KEY"], opencode: ["OpenCode", "https://opencode.ai/zen/v1", "OPENCODE_API_KEY"]}[id];
+  return preset ? {...customDraft(), route:id, displayName:preset[0], baseURL:preset[1], apiKeyEnv:preset[2]} : customDraft();
+}

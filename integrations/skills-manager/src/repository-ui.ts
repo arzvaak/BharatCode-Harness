@@ -199,7 +199,9 @@ export function createRepositoryUI({ react, Modal, Input, Button, SourceSelect, 
       dialog = h(Modal, { title: t("repo." + (modal.type === "remove" ? "remove" : modal.type)), closeLabel: t("repo.close"), onClose: close }, body);
     }
     const content = h("div", { key: "repositories", id: "dssm-scope-panel", role: "tabpanel", "aria-labelledby": "dssm-tab-repositories", className: "dssm-repo-panel", "aria-busy": busy }, h("style", null, CSS),
-      h("p", { className: "dssm-desc" }, t("repo.hint")), h(Input, { className: "dssm-search", allowClear: true, "aria-label": t("repo.search"), placeholder: t("repo.search"), value: query, onChange: (e: { target: { value: string } }) => { setQuery(e.target.value); setExpanded({}); } }),
+      h("p", { className: "dssm-desc" }, t("repo.hint")),
+      h("div", { className: "dssm-actions" }, ["arzvaak/BharatCode-Extensions", "vercel-labs/agent-skills", "anthropics/skills", "openai/skills"].map(url => h(Button, { key: url, disabled: busy, onClick: () => { setForm({ url, ref: "", subdirectory: "" }); setModal({ type: "add" }); } }, url)), h("a", { href: "https://skills.sh", target: "_blank", rel: "noreferrer" }, "Browse skills.sh")),
+      h(Input, { className: "dssm-search", allowClear: true, "aria-label": t("repo.search"), placeholder: t("repo.search"), value: query, onChange: (e: { target: { value: string } }) => { setQuery(e.target.value); setExpanded({}); } }),
       h("div", { className: "dssm-repo-filters" }, select("repo.all", source, setSource, repos.map((r) => [r.id, r.owner + "/" + r.name])), select("repo.states", status, (value) => { setStatus(value); setExpanded({}); }, ["available", "installed", "update", "conflict", "invalid"].map((s) => [s, t("repo." + s)]))),
       feedbackNode, !modal ? refreshProgress : null, busy && !refreshing ? h("div", { className: "dssm-note", role: "status" }, t("repo.loading")) : null,
       repos.length ? groups : h("div", { className: "dssm-empty" }, t("repo.empty")), h("p", { className: "dssm-note" }, t("repo.footer")), dialog);

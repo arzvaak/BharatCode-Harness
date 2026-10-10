@@ -1,3 +1,29 @@
 - insert:
     - id: provider-hub
       name: '@arzvaak/dsh-provider-hub'
+- id: llm-deepseek
+  disabled: true
+- id: llm-deepseek-account
+  disabled: true
+- id: llm-pi-ai
+  config:
+    providers:
+      bharatcode:
+        displayName: BharatCode
+        apiKeyEnv: BHARATCODE_API_KEY
+        api: openai-completions
+        baseURL: https://bharatcode.ai/api/model/v1
+        models:
+          - id: qwen-3.8-27b
+            name: Qwen 3.8 27B
+            contextWindow: 262144
+            maxTokens: 32000
+          - id: deepseek-v4.1-flash
+            name: DeepSeek V4.1 Flash
+            contextWindow: 1000000
+            maxTokens: 32000
+- id: agent-default-model
+  config:
+    provider: bharatcode
+    model: qwen-3.8-27b
+    reasoningEffort: high

@@ -185,7 +185,7 @@ it.each([en, zh])('offers settings, contact and sign-in from the signed-out acco
     useTheme={selector => selector(operations.hooks.theme.getSnapshot())} wide openOnboarding={() => {}} openSettings={openSettings}
     t={key => key in copy ? copy[key as AccountKey] : key} />)
   const trigger = screen.getByRole('button', { name: copy.menu })
-  expect(trigger.textContent).toBe(copy.more)
+  expect(trigger.textContent).toBe(copy.signedIn)
   expect(trigger.querySelector('svg')).not.toBeNull()
   fireEvent.click(trigger)
   expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([copy.settings, copy.contactUs, copy.signIn])
@@ -384,10 +384,12 @@ it.each(['usage', 'top-up'] as const)('shows an accessible spinner until %s fini
 
 
 it.each([
-  ['Preferred name', '138****0000', 'Preferred name'],
+  ['Sushi', '138****0000', 'Sushi'],
   [null, '138****0000', '138****0000'],
   [null, 'u***@example.com', 'u***@example.com'],
   [null, null, en.signedIn],
+  ['', '', en.signedIn],
+  ['   ', '   ', en.signedIn],
 ])('uses the sidebar profile label %s / %s', async (name, contact, expected) => {
   const operations = mount({ status: 'credential-stored', attempt: null }, en, {
     profile: { status: 'ready', value: { id: null, name, contact } },
@@ -399,6 +401,14 @@ it.each([
     useTheme={selector => selector(operations.hooks.theme.getSnapshot())}
     wide openSettings={() => {}} openOnboarding={() => {}} t={key => en[key as AccountKey]} />)
   expect(screen.getByRole('button', { name: en.menu }).textContent).toBe(expected)
+})
+
+it.each([undefined, '', '   ', 'Sushi'])('keeps a visible sidebar label with saved name %s', async (displayName) => {
+  const operations = operationsOf({ status: 'signed-out', attempt: null })
+  const snapshot: AccountSnapshot = { view: undefined, details: undefined, failed: false,
+    ...(displayName === undefined ? {} : { displayName }) }
+  render(await accountMenu(operations, () => snapshot, false))
+  expect(screen.getByRole('button', { name: en.menu }).textContent).toBe(displayName?.trim() || 'User')
 })
 
 it('shows the profile image in settings and the sidebar, with independent load-error fallbacks', async () => {

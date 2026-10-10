@@ -5,7 +5,7 @@
  */
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { SlotTestRuntime, stubConfigForm, usePinnedBrowserLanguages } from '@deepseek-ai/dsh-client-test-runtime'
 import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import type { SessionLiveEventEntry, SessionReference } from '@deepseek-ai/dsh-api-session-controller/client'
@@ -158,6 +158,7 @@ async function bench() {
   }, AccountSection))
   runtime.ctx.slots.inject('shell.overlay', () => runtime.ctx.slots.register({
     name: 'shell.overlay', id: 'desktop-onboarding', locale: 'settings.account',
+    children: { 'settings.account.provider-setup': { kind: 'single', scope: 'root' } },
     inject: (): DesktopOnboardingInjected => ({
       hooks: { onboarding, account },
       openPlatformPage: pages.open,
@@ -244,37 +245,6 @@ describe('shared Platform page ownership', () => {
     expect(document.activeElement).not.toBe(usage)
     expect(modal.contains(document.activeElement)).toBe(true)
     expect(b.pages.getSnapshot()).toBeNull()
-  })
-
-  it('defers the notice behind the onboarding recharge page and focuses it on return', async () => {
-    const b = await bench()
-    // Onboarding is the third caller of the shared channel, here on the credit
-    // step that offers recharge.
-    await act(async () => {
-      b.onboarding.set({
-        status: 'ready', visible: true, creditFunded: false, error: null,
-        progress: { version: 1, step: 'credit', purpose: null, process: null, completion: null, usage: 'compact', developerTools: false },
-      })
-    })
-    const recharge = screen.getByRole('button', { name: en.onboardingTopUp })
-    act(() => { recharge.focus() })
-    await act(async () => { fireEvent.click(recharge) })
-    // One native owner: onboarding asked the shared channel, so the bridge opens
-    // exactly one page and no second overlay exists.
-    expect(b.platform.open.mock.calls.map(([page]) => page)).toEqual(['top-up'])
-    expect(b.pages.getSnapshot()).toEqual({ page: 'top-up' })
-
-    // A background account failure arriving behind that page is deferred rather
-    // than painted under the opaque native view.
-    await fail(b.runtime, 0, 'ACCOUNT_QUOTA')
-    expect(screen.queryByRole('dialog', { name: en.quotaTitle })).toBeNull()
-
-    // Back closes the shared page and hands focus to the revealed Modal.
-    await act(async () => { screen.getByRole('button', { name: en.backToHarness }).click() })
-    expect(b.pages.getSnapshot()).toBeNull()
-    const modal = screen.getByRole('dialog', { name: en.quotaTitle })
-    expect(document.activeElement).not.toBe(recharge)
-    expect(modal.contains(document.activeElement)).toBe(true)
   })
 
   it('leaves an already-showing settings top-up page intact behind the deferred notice', async () => {

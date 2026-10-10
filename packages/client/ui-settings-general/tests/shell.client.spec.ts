@@ -109,7 +109,7 @@ describe('ui-settings-general shell', () => {
     off()
   })
 
-  it('shows Account first in Desktop while signed in and removes it on sign-out', async ({ start }) => {
+  it('labels the optional DeepSeek provider account separately and removes it on sign-out', async ({ start }) => {
     vi.stubGlobal('dshDesktop', {})
     onTestFinished(() => { vi.unstubAllGlobals() })
     const c = await start()
@@ -118,10 +118,10 @@ describe('ui-settings-general shell', () => {
     expect(sections.getSnapshot().map(row => row.id)).toEqual(PRODUCT_SECTIONS)
     c.mock.streams.push('account/watch', { status: 'credential-stored', attempt: null })
     await vi.waitFor(() => {
-      expect(sections.getSnapshot().map(row => row.id)).toEqual(['account', ...PRODUCT_SECTIONS])
+      expect(sections.getSnapshot().map(row => row.id)).toEqual([...PRODUCT_SECTIONS, 'deepseek-account'])
     })
     c.mock.streams.push('account/watch', { status: 'credential-stored', attempt: null })
-    await vi.waitFor(() => { expect(sections.getSnapshot().filter(row => row.id === 'account')).toHaveLength(1) })
+    await vi.waitFor(() => { expect(sections.getSnapshot().filter(row => row.id === 'deepseek-account')).toHaveLength(1) })
     c.mock.streams.push('account/watch', { status: 'signed-out', attempt: null })
     await vi.waitFor(() => { expect(sections.getSnapshot().map(row => row.id)).toEqual(PRODUCT_SECTIONS) })
   })

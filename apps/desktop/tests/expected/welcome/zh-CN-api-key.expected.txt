@@ -1,7 +1,7 @@
 BharatCode
 BharatCode
 添加一个 API Key 开始使用
-配置 DeepSeek 官方模型，即可开始使用
+连接 BharatCode 订阅，或进入应用后配置其他提供商。
 输入 API 密钥 [password]
 保存并继续 [disabled]
 稍后配置
