@@ -27,6 +27,10 @@ const commands = [
   run(['run', 'test:web:built', 'apps/web/tests/independent-chats.e2e.ts', 'apps/web/tests/sidebar-scrollbar.e2e.ts', 'apps/web/tests/sidebar-title-hover-scroll.e2e.ts', 'apps/web/tests/sidebar-right.e2e.ts', 'apps/web/tests/document-preview.e2e.ts']),
   run(['--dir', 'apps/desktop', 'run', 'package:linux:x64']),
   ['xvfb-run', ['-a', process.execPath, 'scripts/extensions/smoke-linux-appimage.mjs']],
+  node(['scripts/extensions/verify-linux-artifacts.mjs']),
+  node(['scripts/extensions/qualify-linux-native-packages.mjs']),
+  ['xvfb-run', ['-a', process.execPath, 'apps/desktop/scripts/test-linux-updater.mjs']],
+  node(['scripts/extensions/test-marketing-site.mjs']),
 ];
 const env = { ...process.env, DSH_TELEMETRY_DISABLED: '1', DSH_SNAPSHOT: 'replay' };
 for (const key of ['GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_SHA', 'BC_QUALIFICATION_GITHUB_TOKEN']) delete env[key];
@@ -50,7 +54,8 @@ const metadata = JSON.parse(readFileSync(join(root, desktop, 'linux-preview-buil
 if (metadata.commit !== commit || metadata.dirty !== false) throw Error('AppImage build identity differs from tested source');
 const files = [inventoryPath, ...inventory.assets.map(asset => `dist/packed-core/${asset.name}`), reportPath,
   `dist/managed-dependencies/${runtime.artifact.assetName}`, `${desktop}/linux-preview-build.json`,
-  ...readdirSync(join(root, desktop)).filter(name => name.endsWith('.AppImage')).map(name => `${desktop}/${name}`)];
+  ...readdirSync(join(root, desktop)).filter(name => (/\.(AppImage|deb|rpm|blockmap)$/u.test(name) || name === 'rc-linux.yml')).map(name => `${desktop}/${name}`),
+  'apps/desktop/.desktop-build/qualification/native-packages.json', 'apps/desktop/.desktop-build/qualification/linux-updater.json', 'dist/marketing-qualification/result.json'];
 if (!files.some(name => name.endsWith('.AppImage'))) throw Error('Qualified AppImage missing');
 const report = { schemaVersion: 1, execution: 'local', platform: 'linux', arch: 'x64', commit,
   result: 'passed', completedAt: new Date().toISOString(), gates, artifacts: files.map(path => localArtifact(path, root)) };

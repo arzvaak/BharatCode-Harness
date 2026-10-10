@@ -954,12 +954,7 @@ async function main(): Promise<void> {
         click: () => { void showAbout().catch((error: unknown) => { console.error(error) }) } }
       : { label: currentDesktopLocale().messages.aboutMenu, role: 'about' },
     { type: 'separator' },
-    process.platform === 'linux'
-      ? { label: currentDesktopLocale().messages.linuxUpdatesMenu, click: () => {
-        void shell.openExternal('https://github.com/arzvaak/BharatCode-Extensions/releases')
-          .catch((error: unknown) => { console.error(error) })
-      } }
-      : { label: currentDesktopLocale().messages.checkUpdatesMenu, click: () => { void openUpdatePrompt(true) } },
+    { label: currentDesktopLocale().messages.checkUpdatesMenu, click: () => { void openUpdatePrompt(true) } },
     ...process.platform === 'darwin' || process.platform === 'win32'
       ? [{ label: currentDesktopLocale().messages.cliCommandMenu, click: () => { void commandManager.show() } }] : [],
     ...development ? [

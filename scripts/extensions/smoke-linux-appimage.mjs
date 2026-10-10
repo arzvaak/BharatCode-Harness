@@ -9,7 +9,7 @@ import { spawn } from 'node:child_process';
 const root = resolve(import.meta.dirname, '../..');
 const require = createRequire(join(root, 'apps/web/package.json'));
 const { chromium } = require('playwright');
-const version = JSON.parse(readFileSync(join(root, 'apps/desktop/package.json'))).version;
+const version = JSON.parse(readFileSync(join(root, 'apps/desktop/.desktop-build/targets/linux-x64/artifacts/linux-preview-build.json'))).version;
 const executable = join(root, `apps/desktop/.desktop-build/targets/linux-x64/artifacts/bharatcode-${version}-linux-x86_64.AppImage`);
 const home = await mkdtemp(join(tmpdir(), 'bc-local-appimage-'));
 async function launch() {

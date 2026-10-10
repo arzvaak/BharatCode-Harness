@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 export const LOCAL_LINUX_GATES = [
   'immutable-install', 'build', 'typecheck', 'lint', 'documentation', 'profile', 'unit',
   'core-build', 'core-tests', 'store-tests', 'native-graphics', 'managed-runtime',
-  'core-profile', 'packed-core', 'browser', 'appimage', 'appimage-ui',
+  'core-profile', 'packed-core', 'browser', 'appimage', 'appimage-ui', 'linux-artifacts', 'linux-native-install', 'linux-updater', 'marketing',
 ];
 
 /** Read the clean checkout identity; unpublished changes cannot qualify a release. */
@@ -62,5 +62,11 @@ export function requireLocalRelease(root) {
   if (metadata.commit !== report.commit || metadata.dirty !== false
     || !paths.has(`${desktop}/bharatcode-${metadata.version}-linux-x86_64.AppImage`))
     throw Error('Locally qualified AppImage identity differs');
+  for (const kind of ['deb', 'rpm']) {
+    const packages = [...paths].filter(path => path.startsWith(`${desktop}/`) && path.endsWith(`.${kind}`));
+    if (packages.length !== 1) throw Error(`Exactly one qualified ${kind} required`);
+  }
+  for (const path of [`${desktop}/rc-linux.yml`, 'apps/desktop/.desktop-build/qualification/native-packages.json', 'apps/desktop/.desktop-build/qualification/linux-updater.json', 'dist/marketing-qualification/result.json'])
+    if (!paths.has(path)) throw Error(`Local qualification artifact missing: ${path}`);
   return report;
 }

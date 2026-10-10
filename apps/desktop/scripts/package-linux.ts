@@ -1,10 +1,12 @@
 /** Build the self-contained Linux x64 preview through the production runtime pipeline. */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { createPackagingRun } from './packaging-run.mjs'
 import { desktopTargetBuildPaths } from './desktop-build-paths.mjs'
 import { desktopBuildCommitEnvironment, readDesktopBuildCommit } from './desktop-build-commit.mjs'
+import { execFileSync } from 'node:child_process'
+import { resolveDesktopBuildVersion } from './desktop-build-version.mjs'
 import { withoutDesktopUploadCredentials, withoutWindowsSigningEnvironment } from './package-target.ts'
 
 const appRoot = resolve(import.meta.dirname, '..')
@@ -16,10 +18,15 @@ async function main(): Promise<void> {
   const pnpm = process.env.npm_execpath
   if (!pnpm) throw new Error('Invoke through pnpm run package:linux:x64')
   const paths = desktopTargetBuildPaths('linux-x64')
-  const { version } = JSON.parse(readFileSync(join(appRoot, 'package.json'), 'utf8')) as { version: string }
+  const { version: productVersion } = JSON.parse(readFileSync(join(appRoot, 'package.json'), 'utf8')) as { version: string }
+  const timestamp = Number(execFileSync('git', ['show', '-s', '--format=%ct', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim())
+  const date = new Date(timestamp * 1000).toISOString().slice(0, 10).replaceAll('-', '')
+  const version = resolveDesktopBuildVersion({ ...process.env,
+    DSH_DESKTOP_BUILD_VERSION: process.env.DSH_DESKTOP_BUILD_VERSION ?? `${productVersion}.${date}.${timestamp}` }, productVersion)
   const environment = {
     ...withoutDesktopUploadCredentials(withoutWindowsSigningEnvironment(process.env)),
     ...desktopBuildCommitEnvironment(readDesktopBuildCommit(root)),
+    DSH_DESKTOP_BUILD_VERSION: version,
     DSH_DESKTOP_TARGET_PLATFORM: 'linux', DSH_DESKTOP_TARGET_ARCH: 'x64',
     DSH_DESKTOP_APP_ID: 'org.bharatcode.Harness.preview',
     CSC_IDENTITY_AUTO_DISCOVERY: 'false',
@@ -42,9 +49,11 @@ async function main(): Promise<void> {
     await execute('prepare-runtime', ['run', 'prepare:runtime'], appRoot)
     await execute('prepare-packages', ['run', 'prepare:packages', '--from', paths.packedDsh, '--from', paths.packedVendor, '--from', paths.packedLandlock, '--from', join(root, 'dist/extensions')], appRoot)
     await execute('prepare-dsh', ['run', 'prepare:dsh'], appRoot)
+    rmSync(paths.artifacts, { recursive: true, force: true })
+    mkdirSync(paths.artifacts, { recursive: true })
     await execute('package-linux', ['exec', 'electron-builder', '--config', 'electron-builder.config.mjs', '--linux', '--x64', '--publish', 'never', ...(values.dir ? ['--dir'] : [])], appRoot)
     await execute('smoke-packaged-runtime', ['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts'], appRoot)
-    writeFileSync(join(paths.artifacts, 'linux-preview-build.json'), JSON.stringify({ schemaVersion: 1, target: 'linux-x64', version, ...readDesktopBuildCommit(root), updateMode: 'manual', run: run.directory }, null, 2) + '\n')
+    writeFileSync(join(paths.artifacts, 'linux-preview-build.json'), JSON.stringify({ schemaVersion: 1, target: 'linux-x64', version, ...readDesktopBuildCommit(root), updateMode: 'github', updateRepository: 'arzvaak/BharatCode-Extensions', updateChannel: 'rc', run: run.directory }, null, 2) + '\n')
     success = true
     console.log(`Linux preview artifacts: ${paths.artifacts}`)
   } finally { run.finish(success) }

@@ -51,8 +51,7 @@ export function createElectronBuilderConfig(
   preparedRuntimeVersion = undefined,
 ) {
   const appId = resolveDesktopAppId(env)
-  // The Linux preview is distributed manually through the BharatCode release
-  // channel; it has no upstream mandatory-update or COS deployment.
+  // Linux releases use the public BharatCode GitHub feed without an upstream policy service.
   const linuxPreview = (env.DSH_DESKTOP_TARGET_PLATFORM ?? hostPlatform) === 'linux'
   const policy = linuxPreview ? undefined : resolveDesktopPolicyEnvironment(env)
   const targetPlatform = env.DSH_DESKTOP_TARGET_PLATFORM
@@ -106,7 +105,10 @@ export function createElectronBuilderConfig(
     extraMetadata: {
       dshDesktopAppId: appId,
       dshMandatoryUpdatePolicy: policy,
-      ...linuxPreview ? { desktopName: 'bharatcode-preview.desktop' } : {},
+      ...linuxPreview ? { desktopName: 'bharatcode-harness.desktop',
+        homepage: 'https://arzvaak.github.io/BharatCode-Extensions/',
+        description: 'BharatCode Harness: chat, code, research, and write in one desktop workspace.',
+        author: { name: 'BharatCode', email: 'arzvaak@users.noreply.github.com' } } : {},
       ...buildVersion === productVersion ? {} : { version: buildVersion },
       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
     },
@@ -241,8 +243,12 @@ export function createElectronBuilderConfig(
       executableName: 'bharatcode',
       syncDesktopName: true,
       icon: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)),
-      target: ['AppImage'],
+      maintainer: 'BharatCode <arzvaak@users.noreply.github.com>',
+      synopsis: 'Chat, code, research, and write with BharatCode Harness',
+      target: ['AppImage', 'deb', 'rpm'],
     },
+    deb: { packageName: 'bharatcode-harness', depends: ['libgtk-3-0', 'libnotify4', 'libnss3', 'libxss1', 'libxtst6', 'xdg-utils', 'libatspi2.0-0', 'libuuid1', 'libsecret-1-0', 'libasound2t64 | libasound2', 'libgbm1'] },
+    rpm: { packageName: 'bharatcode-harness', depends: ['gtk3', 'libnotify', 'nss', 'libXScrnSaver', '(libXtst or libXtst6)', 'xdg-utils', 'at-spi2-core', '(libuuid or libuuid1)', 'alsa-lib', 'mesa-libgbm', 'libsecret'] },
     nsis: {
       installerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
       uninstallerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
@@ -255,6 +261,8 @@ export function createElectronBuilderConfig(
       differentialPackage: true,
     },
     detectUpdateChannel: false,
-    publish: update === undefined ? null : [{ provider: 'generic', url: update.publicUrl, channel: 'nightly' }],
+    publish: linuxPreview
+      ? [{ provider: 'github', owner: 'arzvaak', repo: 'BharatCode-Extensions', channel: 'rc', releaseType: 'prerelease' }]
+      : update === undefined ? null : [{ provider: 'generic', url: update.publicUrl, channel: 'nightly' }],
   }
 }

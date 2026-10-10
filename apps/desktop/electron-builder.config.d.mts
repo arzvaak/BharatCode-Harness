@@ -4,7 +4,9 @@ import type { AfterPackContext, BeforePackContext } from 'app-builder-lib'
 export interface DesktopElectronBuilderConfig {
   readonly productName: 'BharatCode'
   readonly electronDist: string
-  readonly linux: { readonly category: 'Development'; readonly executableName: 'bharatcode'; readonly icon: string; readonly target: readonly ['AppImage'] }
+  readonly linux: { readonly category: 'Development'; readonly executableName: 'bharatcode'; readonly icon: string; readonly target: readonly ['AppImage', 'deb', 'rpm'] }
+  readonly deb: { readonly packageName: 'bharatcode-harness'; readonly depends: readonly string[] }
+  readonly rpm: { readonly packageName: 'bharatcode-harness'; readonly depends: readonly string[] }
   readonly appId: string
   readonly artifactName: string
   readonly protocols: readonly [{ readonly name: 'BharatCode'; readonly schemes: readonly ['dsh'] }]
@@ -50,7 +52,7 @@ export interface DesktopElectronBuilderConfig {
   readonly afterPack: (context: AfterPackContext) => Promise<void>
   readonly afterSign: (context: AfterPackContext) => Promise<void>
   readonly artifactBuildCompleted: (artifact: { readonly file: string }) => Promise<void> | undefined
-  readonly publish: readonly [{ readonly provider: 'generic', readonly url: string }] | null
+  readonly publish: readonly [{ readonly provider: 'generic', readonly url: string } | { readonly provider: 'github', readonly owner: string, readonly repo: string, readonly channel: string, readonly releaseType: string }] | null
 }
 
 /**

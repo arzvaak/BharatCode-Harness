@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for 2026-10-10-linux-github-distribution.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-10-10-linux-github-distribution.md
+/agent-note-linux-github-distribution:
+  en: c2f6e0cc5c0fd19a
+  zh: 301496fc22fee68a
+/agent-note-linux-github-distribution/problem:
+  en: 8427c9fec8462d38
+  zh: fbdba01a519910c9
+/agent-note-linux-github-distribution/decision:
+  en: ab7c20b53e20b4b6
+  zh: 7c9f724f8ffe88b5
+/agent-note-linux-github-distribution/consequences:
+  en: 7f91b257ff14ee06
+  zh: 6339ff6457503a1b
+/agent-note-linux-github-distribution/verification:
+  en: f2badb0b62eabda2
+  zh: ef27ff421666a57a
+/agent-note-linux-github-distribution/alternatives-considered:
+  en: e4d0fc7517395720
+  zh: 3d15825b0f950181

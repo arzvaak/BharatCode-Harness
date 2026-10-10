@@ -231,17 +231,17 @@ pnpm run package:desktop:mac:x64
 pnpm run package:desktop:win:x64
 ```
 
-macOS arm64 命令要求 Apple Silicon。macOS x64 命令可以在 Intel macOS 或带 Rosetta 的 Apple Silicon 上运行。Windows x64 命令要求 Windows x64。BharatCode 另提供手动更新的 Linux x64 预览版；Linux ARM64 尚未完成验证。
+macOS arm64 命令要求 Apple Silicon。macOS x64 命令可以在 Intel macOS 或带 Rosetta 的 Apple Silicon 上运行。Windows x64 命令要求 Windows x64。BharatCode 另提供通过 GitHub release 更新的 Linux x64 预览版；Linux ARM64 尚未完成验证。
 
 每个目标都在 `apps/desktop/.desktop-build/targets/<target>/` 下持有自己的打包输入、已准备运行时、包集合、dsh 依赖树、pnpm 准备状态、未打包应用、更新元数据和最终产物。Electron 归档缓存继续由 `.desktop-build/downloads` 共享，因为每个归档文件名都包含版本、平台和架构，并且在解包前经过验证。目标构建绝不读取其他目标的可变准备状态。
 
 ### Linux 预览版
 
-发布前，在原生 Linux x64 主机的干净检出中运行 `node scripts/extensions/local-linux-gates.mjs`。它在本机执行完整构建、单元测试、文档、核心组件、原生图形、托管运行时、打包安装、浏览器和启用沙箱的 AppImage 检查，随后写入 `dist/local-linux-release/receipt.json`。公开发布脚本拒绝缺失或失败的检查、其他源码修订、未提交源码以及变化的产物字节。仅在记录存在后运行 `node scripts/extensions/publish-linux.mjs`。此分支仓库已禁用 GitHub Actions；保留的工作流仅可手动运行，不是发布前提。付费账户及其他平台检查不在本 Linux 预览版范围内。
+发布前，在原生 Linux x64 主机的干净检出中运行 `node scripts/extensions/local-linux-gates.mjs`。它在本机执行完整构建、单元测试、文档、核心组件、原生图形、托管运行时、打包安装、浏览器、启用沙箱的 AppImage、原生包元数据及一次性 Fedora/Debian 安装、真实 Linux 更新替换及营销页浏览器检查，随后写入 `dist/local-linux-release/receipt.json`。公开发布脚本拒绝缺失或失败的检查、其他源码修订、未提交源码以及变化的产物字节。仅在记录存在后运行 `node scripts/extensions/publish-linux.mjs`。此分支仓库已禁用 GitHub Actions；保留的工作流仅可手动运行，不是发布前提。依赖账户的检查及其他平台检查不在本 Linux 预览版范围内。
 
-在原生 Linux x64 主机上运行 `pnpm --dir apps/desktop run package:linux:x64`；追加 `:dir` 可生成应用目录而非 AppImage。流水线构建应用和核心扩展、打包依赖闭包、准备 Electron 及锁定的 Python、Node 和 pnpm 运行时，随后执行生产完整性和 Office 转换检查。产物与构建记录位于 `.desktop-build/targets/linux-x64/artifacts/`。
+在原生 Linux x64 主机上运行 `pnpm --dir apps/desktop run package:linux:x64`；追加 `:dir` 可生成应用目录而非安装包。流水线构建应用和核心扩展、打包依赖闭包、准备 Electron 及锁定的 Python、Node 和 pnpm 运行时，随后执行生产完整性和 Office 转换检查。产物与构建记录位于 `.desktop-build/targets/linux-x64/artifacts/`。
 
-预览版使用应用 ID `org.bharatcode.Harness.preview`，不接入上游更新服务，通过手动替换 AppImage 更新。Electron 运行 UI；锁定的独立 Node 运行 Linux 后端与 CLI，避免 Electron 的 GLib 与图像处理产生冲突。Linux 将运行时放在 `resources/dsh`，并在组装后验证完整描述符与文件清单；其他目标仍使用 ASAR。应用菜单的“下载更新”命令打开公开发布页。启动前为下载的 AppImage 添加执行权限。替换版本成功启动前保留旧文件，并单独保留 profile 备份。全新 profile 检查必须使用专属 `DSH_HOME` 和 `--user-data-dir`，避免修改已有安装。内置终端启动器解析安装镜像目录并使用其运行时；移动目录后需要修复命令链接。
+预览版使用应用 ID `org.bharatcode.Harness.preview`，不接入上游更新服务，而使用公开的 `arzvaak/BharatCode-Extensions` GitHub release 更新源。打包生成 AppImage、Fedora RPM 和 Debian DEB 安装包、`rc-linux.yml` 校验源及内嵌 GitHub 更新配置。打包版本在产品预发布版本后追加源码提交日期与时间戳，release 使用匹配的 `v<version>` 标签，确保发现更新的已验证构建。Electron 运行 UI；锁定的独立 Node 运行 Linux 后端与 CLI，避免 Electron 的 GLib 与图像处理产生冲突。Linux 将运行时放在 `resources/dsh`，并在组装后验证完整描述符与文件清单；其他目标仍使用 ASAR。应用菜单的“检查更新”命令打开现有更新提示。下载与重启分别要求确认；校验失败保留已安装应用，原生包安装可能要求系统授权。旧的手动更新 AppImage 需要先安装此版本一次，之后才能在应用内更新。主机构建后运行 `xvfb-run -a node apps/desktop/scripts/test-linux-updater.mjs`，用专属临时 AppImage 验证真实替换与重启。启动前为下载的 AppImage 添加执行权限。替换版本成功启动前保留旧文件，并单独保留 profile 备份。全新 profile 检查必须使用专属 `DSH_HOME` 和 `--user-data-dir`，避免修改已有安装。内置终端启动器解析安装镜像目录并使用其运行时；移动目录后需要修复命令链接。
 
 ### 运行时文件筛选
 
