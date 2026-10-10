@@ -22,7 +22,10 @@
               off: null
               high: high
             compat:
-              thinkingFormat: qwen-chat-template
+              thinkingFormat: chat-template
+              chatTemplateKwargs:
+                enable_thinking:
+                  $var: thinking.enabled
               supportsDeveloperRole: false
           - id: deepseek-v4.1-flash
             name: DeepSeek V4.1 Flash

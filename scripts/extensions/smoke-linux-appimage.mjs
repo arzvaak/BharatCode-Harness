@@ -150,16 +150,18 @@ try {
     await page.getByRole('button', { name: /^Chat/ }).click();
     await page.locator('[data-conversation-session]').waitFor();
     const composer = page.locator('[data-composer-input][contenteditable="true"]').last();
-    await composer.fill('Reply with the initial marker. Do not use tools.');
+    await composer.click();
+    await composer.pressSequentially('Reply with the initial marker. Do not use tools.', { delay: 15 });
     await page.getByRole('button', { name: 'Send message', exact: true }).click();
     await page.getByText('GUARD_CHAT_OK', { exact: true }).last().waitFor({ timeout: 30000 });
     await page.getByRole('button', { name: 'Send message', exact: true }).waitFor();
-    await composer.fill('Now reply with the follow-up marker. Do not use tools.');
+    await composer.click();
+    await composer.pressSequentially('Now reply with the follow-up marker. Do not use tools.', { delay: 15 });
     await page.getByRole('button', { name: 'Send message', exact: true }).click();
     await page.getByText('GUARD_FOLLOWUP_OK', { exact: true }).last().waitFor({ timeout: 30000 });
     const chats = requests.filter(request => JSON.stringify(request.messages).includes('initial marker'));
     assert.ok(chats.length >= 2, 'Chat and follow-up must reach the model through all bundled plugins');
-    assert.equal(chats[0].chat_template_kwargs.enable_thinking, true);
+    assert.deepEqual(chats[0].chat_template_kwargs, { enable_thinking: true });
     assert.ok(chats[0].tools.length > 0, 'Full chat tool configuration must reach the adapter');
     console.log('AppImage smoke: full chat and follow-up completed through bundled plugins');
 

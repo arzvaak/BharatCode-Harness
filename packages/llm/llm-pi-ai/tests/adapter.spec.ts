@@ -657,8 +657,8 @@ describe('provider profile lifecycle', () => {
           await assemble(ctx, { provider: 'bharatcode', model, reasoningEffort: ReasoningEffortId(effort), messages: [] })
         }
       }
-      expect(server.requests[0]).toMatchObject({ chat_template_kwargs: { enable_thinking: true } })
-      expect(server.requests[1]).toMatchObject({ chat_template_kwargs: { enable_thinking: false } })
+      expect(server.requests[0]?.chat_template_kwargs).toEqual({ enable_thinking: true })
+      expect(server.requests[1]?.chat_template_kwargs).toEqual({ enable_thinking: false })
       expect(server.requests[2]).toMatchObject({ thinking: { type: 'enabled' }, reasoning_effort: 'high' })
       expect(server.requests[3]).toMatchObject({ thinking: { type: 'disabled' } })
       expect(server.requests[3]).not.toHaveProperty('reasoning_effort')
