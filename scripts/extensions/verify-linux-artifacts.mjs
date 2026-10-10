@@ -38,12 +38,15 @@ for (const suffix of ['/resources/app-update.yml', '/resources/package-type', '/
 }
 const deb = join(directory, names.find(name => name.endsWith('.deb')));
 const entries = execFileSync('ar', ['t', deb], { encoding: 'utf8' }).trim().split('\n');
-const control = execFileSync('ar', ['p', deb, entries.find(name => name.startsWith('control.tar'))]);
-const fields = execFileSync('tar', ['-xOf', '-', './control'], { input: control, encoding: 'utf8' });
+const compression = name => name.endsWith('.xz') ? ['-J'] : name.endsWith('.gz') ? ['-z'] : name.endsWith('.zst') ? ['--zstd'] : [];
+const controlName = entries.find(name => name.startsWith('control.tar'));
+const control = execFileSync('ar', ['p', deb, controlName]);
+const fields = execFileSync('tar', [...compression(controlName), '-xOf', '-', './control'], { input: control, encoding: 'utf8' });
 assert.match(fields, /Package: bharatcode-harness\n/);
 assert.match(fields, /Architecture: amd64\n/);
-const data = execFileSync('ar', ['p', deb, entries.find(name => name.startsWith('data.tar'))], { maxBuffer: 1024 * 1024 * 1024 });
-const debFiles = execFileSync('tar', ['-tf', '-'], { input: data, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const dataName = entries.find(name => name.startsWith('data.tar'));
+const data = execFileSync('ar', ['p', deb, dataName], { maxBuffer: 1024 * 1024 * 1024 });
+const debFiles = execFileSync('tar', [...compression(dataName), '-tf', '-'], { input: data, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 for (const suffix of ['/resources/app-update.yml', '/resources/package-type', '/resources/dsh/desktop-runtime.json', '/bharatcode-harness.desktop']) {
   assert.ok(debFiles.includes(suffix), `DEB missing ${suffix}`);
 }
