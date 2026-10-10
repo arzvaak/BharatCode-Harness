@@ -882,6 +882,7 @@ describe('web e2e: shipped right Sidebar', () => {
       onTestFailed(() => saveFailureShot(fx, 'web-e2e-sidebar-right-sessions'))
       try {
         await fx.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+        await fx.getByRole('button', { name: 'All chats', exact: true }).click()
         const settled = fx.getByRole('treeitem', { name: /Show the right sidebar\./u }).first()
         await settled.click()
         await expect.poll(async () => await settled.getAttribute('aria-selected')).toBe('true')
@@ -1149,9 +1150,8 @@ describe('web e2e: shipped right Sidebar', () => {
       try {
         await zhPage.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
         await zhPage.waitForSelector('[class*="frame"]', { timeout: 30_000 })
-        // A fresh page opens the workspace on a blank session's hero, which has
-        // no session header and so no expand button. The settled session is the
-        // second row of the tree; pick it the way a user would.
+        // Browse all chats to select the settled workspace Session explicitly.
+        await zhPage.getByRole('button', { name: '全部聊天', exact: true }).click()
         await zhPage.getByRole('treeitem', { name: /Show the right sidebar\./u }).first().click()
         const column = zhPage.locator('[data-rightbar-col]')
         await expandOf(zhPage).waitFor({ timeout: 20_000 })

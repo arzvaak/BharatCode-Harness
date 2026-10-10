@@ -12,7 +12,7 @@ pnpm --filter @deepseek-ai/dsh-web-frontend exec playwright install --with-deps 
 
 在 Linux 上，`--with-deps` 会通过系统包管理器安装依赖。持久化 CI VM 必须通过镜像维护提供这些依赖，CI 只安装浏览器程序，遵循[故障切换手册](../../../.agents/notes/implemented/process/2026-07-26-ci-failover-runbook.zh.md)的要求。
 
-普通场景以没有已登记 Workspace 或 Session、但持久化标记记录默认 Workspace 已被删除的状态启动，使显式文件夹选择场景自行决定 cwd。`launchWebScaffold({ firstUse: true })` 保留初始化资格，供启动场景使用。
+普通用例启动时没有注册工作区或已保存的 Session，并保留默认工作区已移除的持久标记。客户端启动会在通用聊天目录中为独立聊天创建单独的文件夹。项目用例明确连接工作区，并在输入前等待所选 Session 改变。`launchWebScaffold({ firstUse: true })` 省略旧版初始化标记，以覆盖首次使用场景。
 
 ## 完成状态观察
 
