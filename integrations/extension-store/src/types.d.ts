@@ -21,8 +21,8 @@ export interface ExtensionDescriptor {
     | "client-restricted"
     | "web-only";
   requirements: string[];
-  dependencyIds?: ("node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg")[];
-  dependencyRanges?: Partial<Record<"node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg", string>>;
+  dependencyIds?: ("node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg" | "pdflatex" | "latexmk")[];
+  dependencyRanges?: Partial<Record<"node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg" | "pdflatex" | "latexmk", string>>;
   tools?: string[];
   packageName?: string;
   credentialReference?: string;
@@ -56,15 +56,16 @@ export interface ManagedDependencyArtifact {
 }
 export interface ManagedDependencyBundle {
   id: string;
+  architecture?: "x64" | "arm64";
   version: string;
   source: string;
   sourceCommit: string;
   license: string;
   status: "qualified" | "needs-qualification";
-  provides: Partial<Record<"node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg", string>>;
+  provides: Partial<Record<"node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg" | "pdflatex" | "latexmk", string>>;
   platforms: ("linux" | "win32" | "darwin")[];
   artifacts: Partial<Record<"linux" | "win32" | "darwin", ManagedDependencyArtifact>>;
-  commands: Partial<Record<"linux" | "win32" | "darwin", Partial<Record<"node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg", string>>>>;
+  commands: Partial<Record<"linux" | "win32" | "darwin", Partial<Record<"node" | "python" | "jupyter" | "duckdb" | "typst" | "tinymist" | "ffmpeg" | "pdflatex" | "latexmk", string>>>>;
   qualificationEvidence?: ManagedDependencyEvidence[];
 }
 export interface ManagedDependencyEvidence {

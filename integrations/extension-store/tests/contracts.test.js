@@ -166,7 +166,11 @@ test("checked-in discovery catalog obeys scope boundaries and never qualifies un
   const seed = validateCatalog(
     JSON.parse(await readFile(new URL("../catalog.json", import.meta.url))),
   );
-  assert.equal(seed.entries.length, 57);
+  assert.equal(seed.entries.length, 58);
+  const latex = seed.entries.find(entry => entry.id === 'bc-latex-documents');
+  assert.equal(latex.status, 'bundled');
+  assert.deepEqual(latex.dependencyIds, ['pdflatex', 'latexmk']);
+  assert.ok(seed.entries.find(entry => entry.id === 'publishing-pack').components.includes(latex.id));
   assert.ok(seed.entries.every((entry) => entry.status !== "qualified"));
   const unsafe = { ...entry, credentialReference: "OPENAI_API_KEY" };
   assert.throws(

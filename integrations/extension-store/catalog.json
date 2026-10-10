@@ -1265,7 +1265,8 @@
       ],
       "components": [
         "typst-preview",
-        "draw-io-official-mcp"
+        "draw-io-official-mcp",
+        "bc-latex-documents"
       ],
       "tools": []
     },
@@ -1299,6 +1300,52 @@
         "pipeline_rerun"
       ],
       "qualification": {}
+    },
+    {
+      "id": "bc-latex-documents",
+      "name": "LaTeX Papers and Reports",
+      "description": "Use existing TeX Live or MiKTeX for LaTeX templates, equations, bibliographies and PDF output. Inspect and install the BC LaTeX starter skill in Skills Manager.",
+      "kind": "skill",
+      "version": "1.0.0",
+      "source": "https://github.com/arzvaak/Bharatcode-Harness",
+      "license": "MIT",
+      "scope": "session",
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "bcVersion": ">=0.2.0-rc.2",
+      "status": "bundled",
+      "requirements": [
+        "The starter skill is bundled with the standard Skills Manager. Install it explicitly in Skills Manager.",
+        "Requires an existing LaTeX engine; latexmk is recommended for repeated passes and bibliography builds. Managed TeX distribution setup is not qualified.",
+        "A version probe does not qualify compilation, project-specific classes, bibliography, fonts or native Windows PDF output."
+      ],
+      "dependencyIds": [
+        "pdflatex",
+        "latexmk"
+      ],
+      "tools": []
+    }
+  ],
+  "managedDependencies": [
+    {
+      "id": "typst-runtime",
+      "version": "0.15.1",
+      "architecture": "x64",
+      "source": "https://github.com/typst/typst",
+      "sourceCommit": "9dfd3a08500b7896045f907433cf7b4b02434fad",
+      "license": "Apache-2.0",
+      "status": "needs-qualification",
+      "provides": {
+        "typst": "0.15.1"
+      },
+      "platforms": [
+        "linux",
+        "win32"
+      ],
+      "artifacts": {},
+      "commands": {}
     }
   ]
 }

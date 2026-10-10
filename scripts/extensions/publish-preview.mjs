@@ -4,6 +4,7 @@ import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash, sign } from "node:crypto";
 import { signCatalog } from "./catalog-release.mjs";
+import { assembleManagedRelease } from "./managed-release.mjs";
 const repository = "arzvaak/Bharatcode-Harness";
 const key = process.env.BC_EXTENSION_CATALOG_KEY;
 delete process.env.BC_EXTENSION_CATALOG_KEY;
@@ -70,9 +71,23 @@ for (const asset of inventory.assets) {
 const catalog = JSON.parse(
   await readFile("integrations/extension-store/catalog.json"),
 );
+const managedDirectory = resolve("dist/managed-dependencies");
+const nativeReports = await Promise.all(["linux", "win32"].map(async platform => {
+  const report = JSON.parse(await readFile(join(managedDirectory, `qualification-${platform}.json`)));
+  if (report.platform !== platform || report.hosted !== true || report.evidence !== `https://github.com/${repository}/actions/runs/${publicationRunId}`)
+    throw Error("Managed runtime reports must belong to this native publication run");
+  return report;
+}));
+const qualifiedBundles = assembleManagedRelease(nativeReports);
+catalog.managedDependencies = [
+  ...(catalog.managedDependencies ?? []).filter(bundle => !qualifiedBundles.some(qualified => qualified.id === bundle.id)),
+  ...qualifiedBundles,
+];
+await writeFile(join(managedDirectory, "inventory.json"), JSON.stringify({ assets: qualifiedBundles.flatMap(bundle =>
+  bundle.platforms.map(platform => ({ name: bundle.artifacts[platform].assetName, bytes: bundle.artifacts[platform].bytes,
+    sha256: bundle.artifacts[platform].sha256, platform, bundleId: bundle.id, sourceCommit: bundle.sourceCommit, license: bundle.license }))) }, null, 2) + "\n");
 const qualifiedRuntimeNames = new Set((catalog.managedDependencies ?? []).flatMap(bundle =>
   bundle.status === "qualified" ? bundle.platforms.map(platform => bundle.artifacts[platform].assetName) : []));
-const managedDirectory = resolve("dist/managed-dependencies");
 let managedInventory = { assets: [] };
 try {
   managedInventory = JSON.parse(await readFile(join(managedDirectory, "inventory.json")));

@@ -13,7 +13,12 @@ if (!process.env.BC_STARTER_FIXTURE) {
 } else {
   const { starterSkills, starterDocument } = await import('../lib/starter-skills.js');
   const { importUploadedSkill, state, setSkillEnabled, deleteSkill, userRoots } = await import('../lib/core.js');
-  assert.equal(new Set(starterSkills.map(s => s.name)).size, 5);
+  assert.equal(new Set(starterSkills.map(s => s.name)).size, 6);
+  const latex = starterSkills.find(skill => skill.name === 'bc-latex-documents');
+  assert.ok(latex, 'LaTeX is an inspectable starter workflow');
+  assert.match(latex.body, /latexmk/);
+  assert.match(latex.body, /shell.escape/);
+  assert.match(latex.body, /PDF/);
   for (const skill of starterSkills) {
     const document = starterDocument(skill);
     const result = await importUploadedSkill({ name: skill.name, entries: [{ path: 'SKILL.md', data: Buffer.from(document).toString('base64') }] });
@@ -26,5 +31,5 @@ if (!process.env.BC_STARTER_FIXTURE) {
     await deleteSkill(userRoots().find(r => r.key === 'dsh'), skill.name);
     assert.ok(!(await state()).roots.find(r => r.key === 'dsh').skills.some(s => s.name === skill.name));
   }
-  console.log('Five starter skills installed, discovered, disabled, and removed through native manager operations.');
+  console.log('Six starter skills installed, discovered, disabled, and removed through native manager operations.');
 }

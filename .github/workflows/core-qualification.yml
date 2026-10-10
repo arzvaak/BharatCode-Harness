@@ -54,6 +54,13 @@ jobs:
       - name: Core package checks (compatibility skips are reported)
         run: node scripts/extensions/core.mjs test
       - run: node --test integrations/extension-store/tests/*.test.js integrations/ci-pipelines/tests/*.test.js
+      - name: Qualify pinned managed runtime with native install and document workflow
+        run: node scripts/extensions/qualify-managed.mjs
+      - uses: actions/upload-artifact@v6
+        with:
+          name: managed-runtime-${{ runner.os }}
+          path: dist/managed-dependencies
+          retention-days: 14
       - run: node scripts/extensions/verify-core.mjs
       - name: Install archives, boot native core and inspect controlled GitHub Actions evidence
         env:

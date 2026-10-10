@@ -65,6 +65,8 @@ function validateManagedDependencies(bundles) {
       || Object.entries(bundle.provides).some(([id, version]) => !DEPENDENCY_IDS.includes(id) || !semver.valid(version)))
       throw Error("Invalid managed dependency descriptor");
     ids.add(bundle.id);
+    if (bundle.architecture !== undefined && !['x64', 'arm64'].includes(bundle.architecture))
+      throw Error('Invalid managed dependency architecture');
     let source;
     try { source = new URL(bundle.source); } catch { throw Error("Invalid managed dependency source"); }
     if (source.protocol !== "https:" || source.username || source.password) throw Error("Invalid managed dependency source");
@@ -282,8 +284,9 @@ export function canInstall(e, platform, bcVersion) {
     REQUIRED_EVIDENCE.every((x) => e.qualification?.[platform]?.includes(x))
   );
 }
-export function canInstallManagedDependency(bundle, platform, dependencyId, range = "*") {
+export function canInstallManagedDependency(bundle, platform, dependencyId, range = "*", architecture = process.arch) {
   if (!bundle || bundle.status !== "qualified" || !bundle.platforms.includes(platform)
+    || (bundle.architecture !== undefined && bundle.architecture !== architecture)
     || !bundle.artifacts?.[platform] || !bundle.commands?.[platform]
     || !Object.hasOwn(bundle.provides ?? {}, dependencyId)
     || !semver.validRange(range)) return false;

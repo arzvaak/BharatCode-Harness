@@ -93,6 +93,7 @@ export class ManagedDependencyStore {
         }
         const bundle = (catalog.managedDependencies ?? []).find(candidate => candidate.id === folder.name
           && candidate.version === version.name && candidate.status === 'qualified'
+          && (candidate.architecture === undefined || candidate.architecture === process.arch)
           && candidate.platforms.includes(this.platform));
         if (!bundle || metadata.schemaVersion !== 1 || metadata.platform !== this.platform
           || !isDeepStrictEqual(metadata.bundle, bundle)) {

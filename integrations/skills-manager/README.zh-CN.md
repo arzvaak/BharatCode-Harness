@@ -153,3 +153,5 @@ To create a test package from a source checkout, install dependencies using the 
 ## License
 
 [Apache License 2.0](LICENSE)
+
+BC 提供六个可检查的初始工作流，包括 LaTeX 论文和报告。单独安装 LaTeX 技能可复用现有 TeX Live 或 MiKTeX，并保留模板、参考文献和可编辑源文件。运行时安装和 PDF 编译成功需要单独检查。

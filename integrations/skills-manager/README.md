@@ -155,3 +155,5 @@ To test a source checkout, install dependencies using the pinned pnpm version, r
 ## License
 
 [Apache License 2.0](LICENSE)
+
+BC includes six inspectable starter workflows, including LaTeX papers and reports. Install the LaTeX skill individually to reuse existing TeX Live or MiKTeX and preserve templates, bibliographies and editable sources. Runtime installation and successful PDF compilation require separate checks.

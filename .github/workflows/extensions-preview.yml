@@ -28,6 +28,11 @@ jobs:
         with:
           name: packed-core-Linux
           path: dist/packed-core
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: managed-runtime-*
+          merge-multiple: true
+          path: dist/managed-dependencies
       - uses: actions/setup-node@v6
         with:
           node-version: 24

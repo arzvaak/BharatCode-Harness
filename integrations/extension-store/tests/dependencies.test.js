@@ -11,6 +11,21 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { inspectDependencies, probeCommand } from '../src/dependencies.js';
 
+test('LaTeX inspection recognizes TeX Live and MiKTeX engines separately from latexmk', async () => {
+  for (const output of ['pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)', 'MiKTeX-pdfTeX 4.21 (MiKTeX 25.4)']) {
+    const [engine, builder] = await inspectDependencies(['pdflatex', 'latexmk'], { subprocess,
+      runner: async (command, args, options) => {
+        assert.equal(command, args[0] === '-v' ? 'latexmk' : 'pdflatex');
+        return probeCommand(process.execPath, ['-e', `console.log(${JSON.stringify(command === 'latexmk' ? 'Latexmk, John Collins, 15 June 2025. Version 4.87' : output)})`], options);
+      },
+    });
+    assert.equal(engine.available, true);
+    assert.equal(engine.version, output.startsWith('pdfTeX') ? '1.40.29' : '4.21.0');
+    assert.equal(builder.version, '4.87.0');
+    assert.equal(engine.managedSetup, 'unavailable');
+  }
+});
+
 test('local inspection uses an existing runtime and never downloads or injects tools', async () => {
   const result = await inspectDependencies(['node'], { subprocess });
   assert.equal(result[0].available, true);
