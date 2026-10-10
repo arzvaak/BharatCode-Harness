@@ -1,5 +1,7 @@
 # DSH Zero
 
+English | [中文](README.zh.md)
+
 A model-independent DeepSeek Harness plugin that saves context by encoding consecutive repeated tool output. It keeps unique diagnostics and saves the full original through DSH's spill storage before changing the model-facing projection.
 
 The plugin uses the model and provider already selected in DSH. It adds no inference endpoint, credentials, tool runner, or permission system.
@@ -14,7 +16,7 @@ The plugin uses the model and provider already selected in DSH. It adds no infer
 
 ## Install the packaged plugin
 
-Requires Node 24 and DeepSeek Harness interfaces verified against `0.2.0-rc.2`, source commit `639ed015397290b3745d163aafe02ffee4aa3f84`. The native Cordis, Schemastery and Typert protocol peers are supplied by the running Harness. Other versions have not been verified.
+Requires Node 24 and DeepSeek Harness interfaces verified against `0.2.0-rc.2`, release tag `dsh-v0.2.0-rc.2`. The native Cordis, Schemastery and Typert protocol peers are supplied by the running Harness. Other versions have not been verified.
 
 After building and packing, install into the intended profile:
 

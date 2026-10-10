@@ -1,5 +1,7 @@
 # BharatCode English workflow integrations
 
+English | [中文](README.zh.md)
+
 Eight pinned plugin forks add writing continuity, close reading, a local source library, citation retrieval, GitHub review, language-server actions, browser research, and a task board to the existing UI. `registry.json` records every source revision, package, tarball, checksum, bundle patch, purpose, test result, and limitation. Canonical sources and original licenses remain under `upstream/`; editable forks are under `packages/`.
 
 Install the tarballs using the native host plugin inventory and compose their declared bundle patches. GitHub and Task Board supply ModuleLoader browser factories. GitHub uses the native `settings.section` slot; Task Board adds its existing navigation and execution surfaces. The other six additions expose host tools and reuse the existing workspace, reader, and writing UI.

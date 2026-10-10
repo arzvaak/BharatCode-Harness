@@ -306,7 +306,7 @@ function toolCallNames(blocks) {
 }
 /**
 * Producer label for an injection event, mirroring the dsh transcript's
-* context provenance (client-runtime context-provenance.ts): workspace
+* recorded context source: workspace
 * instructions name the files they were reconciled from, a plugin source its
 * plugin id, and any other producer its own durable kind. Returns '' when
 * the source is missing or carries no readable identity at all.

@@ -1,5 +1,7 @@
 # BharatCode Cost Meter
 
+English | [中文](README.zh.md)
+
 English fork of Cost Meter 1.8.12 for the BharatCode Harness UI. Conversation, turn and daily usage remain in the original ledger and session projection. The browser entry and statistics chunk register the fork's native Harness loader identity.
 
 API cost estimates require an exact provider route and model price. Known direct API routes are `openai`, `anthropic`, and `deepseek`. Custom gateways, BharatCode routes, local servers, missing provider identity and unknown model IDs remain unpriced until the user configures the actual route tariff. A model's vendor name does not establish a gateway's price. Configure exact rates under `prices.providers.<route>.models.<model>` or an explicit `priceOverrides` mapping after confirming the route's tariff.

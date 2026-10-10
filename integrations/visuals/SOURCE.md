@@ -1,4 +1,4 @@
-# BharatCode integration provenance
+# BharatCode integration source attribution
 
 Original local DSH Visuals implementation from /mnt/slow-stuff/deepseek/dsh-visuals; English locale aliases and shared Settings gallery adapted here.
 

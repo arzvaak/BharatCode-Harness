@@ -64,8 +64,11 @@ export async function recordPendingBuilds(dir: string): Promise<string[]> {
   }
   if (text.length > 1024 * 1024) throw new Error('pnpm modules metadata exceeds limit')
   const metadata = parseDocument(text)
-  if (metadata.errors.length > 0) throw metadata.errors[0]
-  const ignored = metadata.toJS().ignoredBuilds as unknown
+  if (metadata.errors[0] !== undefined) throw metadata.errors[0]
+  const data: unknown = metadata.toJS()
+  if (data === null || typeof data !== 'object' || Array.isArray(data))
+    throw new Error('pnpm modules metadata must be a YAML mapping')
+  const ignored = 'ignoredBuilds' in data ? data.ignoredBuilds : undefined
   if (ignored === undefined) return pending
   if (!Array.isArray(ignored) || ignored.length > 1000 || ignored.some(name =>
     typeof name !== 'string' || name.length === 0 || name.length > 4096 || /[\n\r\x00*?]/.test(name)))

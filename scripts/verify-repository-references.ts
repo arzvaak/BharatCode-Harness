@@ -29,12 +29,25 @@ function isMaintained(file: string): boolean {
   return !excludedPrefixes.some(prefix => file.startsWith(prefix))
 }
 
+// SVG coordinates can coincidentally resolve as abbreviated commits. Accept
+// only complete path-data attributes/properties, including their JSON-escaped
+// source-map spelling; references elsewhere on the same line remain checked.
+function isSvgPathCoordinate(line: string, match: RegExpMatchArray): boolean {
+  const start = match.index ?? 0
+  const end = start + match[0].length
+  const pathData = /\b(?:d|path)\s*[:=]\s*(\\?["'])([Mm][0-9.,\s+\-eEMmZzLlHhVvCcSsQqTtAa]*)\1/g
+  return [...line.matchAll(pathData)].some((path) => {
+    const pathStart = path.index
+    return start >= pathStart && end <= pathStart + path[0].length
+  })
+}
+
 /**
  * Inspect a maintained source file against known commit identifiers.
  * @param file - Repository-relative path used in diagnostics and exclusions.
  * @param source - File text or a symlink's stored target.
  * @param commits - Lowercase, unambiguous full or abbreviated commit identifiers.
- * @returns One finding per line and reference kind; digests and other Git object types are accepted.
+ * @returns One finding per line and reference kind; SVG path coordinates, digests, and other Git object types are accepted.
  */
 export function findRepositoryReferences(
   file: string,
@@ -47,7 +60,8 @@ export function findRepositoryReferences(
     if (organizationUrl.test(canonicalReferenceText(line).replace(kitRepositoryUrl, ''))) {
       references.push({ file, line: index + 1, kind: 'organization-url' })
     }
-    if ([...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
+    if ([...line.matchAll(commitCandidate)].some(match =>
+      commits.has(match[0].toLowerCase()) && !isSvgPathCoordinate(line, match))) {
       references.push({ file, line: index + 1, kind: 'commit-hash' })
     }
   }

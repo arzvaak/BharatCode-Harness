@@ -1,5 +1,7 @@
 # DSH Visuals
 
+English | [中文](README.zh.md)
+
 Polished inline charts and diagrams for DeepSeek Harness. Graphics appear beside the part of an answer they explain, with readable typography, restrained colour, light/dark themes, exact data tables and editable source. All rendering happens locally.
 
 ## Included
@@ -60,7 +62,7 @@ sequenceDiagram
 ```
 ````
 
-Custom syntax examples are in `src/examples.js`; standard Mermaid examples are in `src/diagram-examples.js`. Numeric chart data must be finite plain numbers. Metrics allow formatted display values. Use short labels and add captions for provenance or uncertainty. The host prompt supplies these instructions to the model only while the plugin is loaded.
+Custom syntax examples are in `src/examples.js`; standard Mermaid examples are in `src/diagram-examples.js`. Numeric chart data must be finite plain numbers. Metrics allow formatted display values. Use short labels and add captions for source attribution or uncertainty. The host prompt supplies these instructions to the model only while the plugin is loaded.
 
 Mermaid styling and security configuration belong to the plugin. Diagram-authored init directives and YAML configuration are ignored. Scripts, click actions, HTML labels, external images and network CSS are excluded from the displayed SVG. Icons requiring an external icon pack are not fetched. Limits are 64 KiB per source and 240 Mermaid edges; custom charts have smaller row/series limits. Invalid Mermaid shows a readable syntax error and source. Invalid custom blocks remain native code.
 

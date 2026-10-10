@@ -79,6 +79,6 @@ jobs:
 
       # Trusted publishing (OIDC) — no NODE_AUTH_TOKEN required; npm >= 11.5.1
       # exchanges the Actions OIDC token for a short-lived publish credential
-      # and attaches provenance automatically.
+      # and attaches npm build attestations automatically.
       - name: Publish to npm
         run: npm publish

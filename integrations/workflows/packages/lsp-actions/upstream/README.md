@@ -1,5 +1,7 @@
 # Upstream seam-extension tracking
 
+English | [中文](README.zh.md)
+
 This directory tracks the plugin's proposal to extend the official `ctx.lsp` seam with the action
 operations (`diagnostics` / `formatDocument` / `completion`).
 
@@ -7,12 +9,12 @@ operations (`diagnostics` / `formatDocument` / `completion`).
 
 | Date | Event |
 | --- | --- |
-| 2026-08-14 | Proposal submitted to upstream [Discussion #781](https://github.com/deepseek-ai/deepseek-harness/discussions/781) (issues/PRs disabled upstream at the time); fork branch `PerryLink/deepseek-harness:agent/lsp-action-seam` (commit `7f10651`), all gates green. |
-| 2026-08-15 | `git apply --check upstream/lsp-action-seam.patch` against the current harness tree (`a0ab396`) passes cleanly: **34 files, +1201/−201**. The patch is still replayable; only the Discussion link and any upstream review feedback need to be folded in before opening a PR once upstream enables pull requests. |
+| 2026-08-14 | Proposal submitted to upstream [Discussion #781](https://github.com/deepseek-ai/deepseek-harness/discussions/781) (issues/PRs disabled upstream at the time); fork branch `PerryLink/deepseek-harness:agent/lsp-action-seam`, all gates green. |
+| 2026-08-15 | `git apply --check upstream/lsp-action-seam.patch` against the harness tree available on that date passes cleanly: **34 files, +1201/−201**. The patch is still replayable; only the Discussion link and any upstream review feedback need to be folded in before opening a PR once upstream enables pull requests. |
 | 2026-08-15 | The plugin's seam-first path now resolves `ctx.lsp` lazily per call (`src/runner.ts`, `src/index.ts`), so it works regardless of whether the seam loads before or after the plugin — no apply-time snapshot to go stale. |
-| 2026-09-18 | **Not merged as of `dsh-v0.1.6-alpha.2`** (checkout `ddefc45`): the released seam still declares `LspOperation = 'goToDefinition' \| 'findReferences' \| 'goToImplementation' \| 'hover'` and documents "exactly the four operations", so the plugin's own client is still required. Patch replay against that tree now **fails** (21 hunks, listed below) — the proposal needs a rebase before it can be re-submitted. |
+| 2026-09-18 | **Not merged as of `dsh-v0.1.6-alpha.2`**: the released seam still declares `LspOperation = 'goToDefinition' \| 'findReferences' \| 'goToImplementation' \| 'hover'` and documents "exactly the four operations", so the plugin's own client is still required. Patch replay against that tree now **fails** (21 hunks, listed below) — the proposal needs a rebase before it can be re-submitted. |
 
-### Current patch drift (2026-09-18, base `dsh-v0.1.6-alpha.2` = `ddefc45`)
+### Current patch drift (2026-09-18, base `dsh-v0.1.6-alpha.2`)
 
 `git apply --check upstream/lsp-action-seam.patch` fails on these 21 files; the seam code itself is
 unaffected (the vocabulary is still the four operations), the drift is docs/README/i18n scaffolding

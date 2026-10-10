@@ -240,7 +240,7 @@
 ## [1.7.27] - 2026-09-15
 
 - **#149 源码宿主加载失败**：Host 和 Client 的全部 strict codec 同时提供 `schema` 与 `create()`，修复新版 DSH 源码启动时报 `result codec has no create() factory`，保留 npm 旧宿主的 schema 接口及原有参数/结果校验。
-- CI 新增固定上游提交 `0d1f50007f9bca3f52b06e1c3074fa14d5fb0720` 的真实 loader、registry 和双端 RPC 检查。已发布的 DSH 0.1.6-alpha.1 npm 包仍使用旧契约，不能代替源码版回归；既有安装测试继续覆盖 Windows / Linux，并修正回归脚本忽略 `DSH_TEST_NODE_MODULES` 的问题。
+- CI 新增固定上游发布标签 `dsh-v0.2.0-rc.2` 的真实 loader、registry 和双端 RPC 检查。已发布的 DSH 0.1.6-alpha.1 npm 包仍使用旧契约，不能代替源码版回归；既有安装测试继续覆盖 Windows / Linux，并修正回归脚本忽略 `DSH_TEST_NODE_MODULES` 的问题。
 - **#140 恢复反馈**：补充手工备份应放在 sessions 根目录外、Zstandard 头帧必须独立且保留换行的说明。真实宿主回归确认工具生成的相邻非规范备份不会被扫描，且未修改帧原样保留；再次明确 1.7.22+ 搜索明细写入插件独立文件，`ignorable: true` 仅用于旧日志修复。详见[恢复说明](docs/session-history-recovery.md)。
 
 ## [1.7.26] - 2026-09-15

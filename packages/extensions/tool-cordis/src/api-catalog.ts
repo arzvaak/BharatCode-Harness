@@ -1848,7 +1848,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       {
         signature: 'async registerSessionSnapshot(request: RegisterSessionSnapshotRequest): Promise<ArtifactRevision>',
         description: 'Register a bounded host-projected conversation capture without reading or rewriting a file.',
-        parameters: [{ name: 'request', description: 'Project, projected untrusted text, and immutable snapshot provenance.' }],
+        parameters: [{ name: 'request', description: 'Project, projected untrusted text, and immutable snapshot identity.' }],
         returns: 'The same revision for an identical sequence capture.',
       },
       {

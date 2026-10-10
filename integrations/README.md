@@ -1,5 +1,7 @@
 # BharatCode English integrations
 
+English | [中文](README.zh.md)
+
 This directory owns reviewed local forks and original plugins for the BharatCode workflow UI. SearXNG is deferred. The project editors, reader, context handoffs, and shell remain owned by the Harness; workflow plugins add capabilities through its native services.
 
 `registry.json` records enabled packages and qualified archives. Every shipped UI, setting, help/error message, tool description, and instruction is English. Locale identifiers, protocol keys, user documents, and licensed third-party content retain their identity. Vendor libraries can contain other language data without exposing it as the product's UI.

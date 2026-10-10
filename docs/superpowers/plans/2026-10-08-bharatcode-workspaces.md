@@ -1,5 +1,7 @@
 # BharatCode shared harness and workflow workspaces
 
+English | [中文](2026-10-08-bharatcode-workspaces.zh.md)
+
 This implementation follows the user-approved release specification. Start from verified GitHub master in an isolated worktree; retain candidate branches, existing profiles, credentials, and historical session generations. Keep Electron, React, TypeScript, Cordis, and upstream technical package identifiers. Linux, Windows, and web share the revision. Finance, swarms, marketplaces, sync, and collaborative editing are outside this release.
 
 ## Task 1 — BharatCode branding

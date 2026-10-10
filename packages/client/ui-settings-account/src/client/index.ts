@@ -57,7 +57,7 @@ export function apply(ctx: Context): void {
   const syncDisplayName = () => {
     const savedName = profileForm.getSnapshot().value?.displayName
     const name = (typeof savedName === 'string' ? savedName.trim() : '') || localName
-    if (name !== undefined && name !== snapshot.displayName) publish({ ...snapshot, displayName: name })
+    if (name !== snapshot.displayName) publish({ ...snapshot, displayName: name })
   }
   ctx.effect(() => profileForm.subscribe(syncDisplayName), 'account: profile display preference')
   syncDisplayName()

@@ -10,6 +10,8 @@ Status: implemented
 
 ## Decision
 
+本记录保留上游 DeepSeek Harness 的决策依据。下文固定版本的 CI 文件及工作流测试链接指向上游 `dsh-v0.2.0-rc.2` 发布标签；其中的运行器、触发器和发布行为描述适用于该上游实现。BharatCode 当前的验证流程以[分支 CI](../../../../.github/workflows/ci.yml)和[开发文档](../../../../docs/development.zh.md)为准。
+
 Harness 从已安装 kit API 的 `optionalDependencies` 中选择一个引擎。声明了 `@deepseek-ai/libreoffice-kit-${platform}-${arch}` 的目标要求该原生包，其余目标要求共享 WASM 包。受支持的原生目标集合由 kit 发布版本决定，不由 Harness 中的操作系统分支决定。已声明的原生包缺失表示安装不完整，不会改选 WASM。provider 不直接依赖 WASM。
 
 Python sidecar 组装仅复制所选引擎及其依赖闭包。wheel 打包和运行时查找依据同一份 kit 清单选择；迁移目录后的转换冒烟检查所选后端。Desktop 在签名和完整性封装前将 npm 安装结果过滤为该引擎。引擎编译、解析器兼容性、npm 平台元数据、资格验证与发布仍由 kit 仓库负责。
@@ -28,4 +30,4 @@ Python sidecar 组装仅复制所选引擎及其依赖闭包。wheel 打包和�
 
 新增引擎包标识还需要更新 `scripts/gen-third-party-notices.ts` 中的 `LIBREOFFICE_PACKAGES`、`pnpm-workspace.yaml` 中适用的 `minimumReleaseAgeExclude` 条目，以及 [kit 归属记录](2026-09-14-independent-libreoffice-kit.zh.md)中的包列表。许可证允许列表仍使用明确的包标识。
 
-[公开 Python 发布工作流](../../../../.github/workflows/python-release.yml)拒绝任何大于等于 100,000,000 字节的 wheel。只选择一个引擎会减少载荷，但不能据此认定运行时 wheel 已满足此限制；npm 引擎发布、本地转换与 wheel 上传资格是不同的验证。
+[公开 Python 发布工作流](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/python-release.yml)拒绝任何大于等于 100,000,000 字节的 wheel。只选择一个引擎会减少载荷，但不能据此认定运行时 wheel 已满足此限制；npm 引擎发布、本地转换与 wheel 上传资格是不同的验证。

@@ -10,7 +10,9 @@ Wall-clock performance checks need an isolated execution lane and a consistent r
 
 ## Decision
 
-The required benchmark job in [ci.yml](../../../../.github/workflows/ci.yml) uses the standard GitHub-hosted `ubuntu-24.04` runner independently of Linux failover. It always attempts to restore the pnpm store cache and retains a standalone benchmark lane. The complete job has a 15-minute timeout covering setup, installation, builds, and measurements. This bounds infrastructure execution, not an individual performance assertion.
+This record preserves the upstream DeepSeek Harness decision rationale. Pinned CI-file and workflow-test links below refer to the upstream `dsh-v0.2.0-rc.2` release tag; runner, trigger, and publication descriptions apply to that upstream implementation. The current BharatCode validation workflows are owned by [fork CI](../../../../.github/workflows/ci.yml) and the [development guide](../../../../docs/development.md).
+
+The required benchmark job in [ci.yml](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/ci.yml) uses the standard GitHub-hosted `ubuntu-24.04` runner independently of Linux failover. It always attempts to restore the pnpm store cache and retains a standalone benchmark lane. The complete job has a 15-minute timeout covering setup, installation, builds, and measurements. This bounds infrastructure execution, not an individual performance assertion.
 
 The [Session performance decision](2026-09-04-session-open-performance-gate.md) continues to own workloads, timing and memory budgets, worker isolation, and calibration. Only current-generation `open` uses an endpoint-specific 50 ms standard-runner expectation with the existing 1.25× headroom, giving a 63 ms limit. All other performance budgets and the worker, test, and hook deadlines remain unchanged. Successful raw measurements remain in the Actions log through step-local `DSH_GATE_VERBOSE=1`. The hardware-comparison workflows retain their deliberately different runner sizes.
 
@@ -23,4 +25,4 @@ The [Session performance decision](2026-09-04-session-open-performance-gate.md) 
 
 A standard runner trades parallel build capacity for a fixed measurement class without removing the required verdict. Cache misses and runner variation can still affect total duration. Each runner change needs an actual hosted benchmark run before its job timeout is treated as validated; local workflow assertions alone cannot establish execution time.
 
-The owning [workflow tests](../../../../scripts/ci-workflow.spec.ts) pin runner routing, unconditional cache restoration, required status, and the job timeout. Negative controls reject failover routing, a cache condition, and the former 30-minute job bound.
+The owning [workflow tests](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/ci-workflow.spec.ts) pin runner routing, unconditional cache restoration, required status, and the job timeout. Negative controls reject failover routing, a cache condition, and the former 30-minute job bound.

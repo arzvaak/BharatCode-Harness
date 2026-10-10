@@ -1,5 +1,7 @@
 # BharatCode Provider Hub
 
+English | [中文](README.zh.md)
+
 English provider setup for the BharatCode Harness UI. The Providers settings section mounts the subscription fork's own `subscriptions` settings slot, so account login, quota refresh, device codes, errors, and account management use the real adapter implementation.
 
 Install this local package and `@arzvaak/bharatcode-subscriptions` into the same web or desktop profile. The bundle self-activation patch mounts the host entry; `lib/client.js` registers a native Harness module-loader factory. Restart the profile after installing.

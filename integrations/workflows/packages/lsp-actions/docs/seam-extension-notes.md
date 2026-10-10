@@ -78,10 +78,10 @@
 ## 6. Status check 2026-09-09 (0.1.5-alpha.1)
 
 > English-only addendum (ASCII gate). Measured read-only against
-> `origin/master` = `5dda764e` (`0.1.5-alpha.1`).
+> the `dsh-v0.1.5-alpha.1` release tag.
 
 - **The official lsp group still ships the three packages this note
-  recorded at `a0ab396`**: `packages/lsp/lsp` (`@deepseek-ai/dsh-lsp`, the
+  recorded on 2026-08-15**: `packages/lsp/lsp` (`@deepseek-ai/dsh-lsp`, the
   `ctx.lsp` seam -- provider registry plus normalized query, closed
   four-operation union, `LspError` taxonomy), `packages/lsp/lsp-stdio`
   (`@deepseek-ai/dsh-lsp-stdio`, registers stdio providers on `ctx.lsp`),
@@ -96,14 +96,14 @@
   seam-extension patch (`upstream/lsp-action-seam.patch`) is still unmerged
   and its vocabulary change remains open.
 - **Patch re-verification ran, and the patch no longer applies.** It applied
-  cleanly against `a0ab396` (2026-08-15).
-  `git rev-list --count a0ab396..origin/master` = **3796 commits** (measured
-  2026-09-09; the earlier "879+" estimate is superseded). A fresh
+  cleanly against the harness tree available on 2026-08-15.
+  The measured interval from that baseline to the inspected release contains
+  **3796 commits** (measured 2026-09-09; the earlier "879+" estimate is superseded). A fresh
   `git apply --check upstream/lsp-action-seam.patch` against the current tree
   fails on **20 of its 34 files** (`patch does not apply`), so the patch needs
   a rebase before it can be re-proposed; it was **not re-applied**. This is an
   independent tracking item and does not block the plugin release.
-- **`SubprocessHandle.pid` is gone from the 0.1.5 seam.** `a95f0b368f` deleted
+- **`SubprocessHandle.pid` is gone from the 0.1.5 seam.** That release deleted
   it together with the byte-identical getter in
   `packages/lsp/lsp-stdio/src/connection.ts`; `SubprocessOutcome` carries only
   `exitCode`/`signal`, and `SubprocessTerminalHandle.pid` belongs to the

@@ -6,10 +6,10 @@ import { DocumentPanel, type DocumentPanelProps } from '../src/client/workflows/
 import { en } from '../src/client/locales.ts'
 afterEach(cleanup)
 const sessionId = 'session' as SessionId
-function props(): DocumentPanelProps {
-  return { collapseEditor: vi.fn(), closeDocument: vi.fn(async () => {}), sessionId, view: undefined, profile: 'coding', t: ((key: keyof typeof en) => en[key]) as DocumentPanelProps['t'],
+function props() {
+  return { collapseEditor: vi.fn(), closeDocument: vi.fn(async () => {}), sessionId, view: undefined as DocumentPanelProps['view'], profile: 'coding', t: ((key: keyof typeof en) => en[key]) as DocumentPanelProps['t'],
     openDocument: vi.fn(async () => {}), selectDocument: vi.fn(), editDocument: vi.fn(async () => {}),
-    saveDocument: vi.fn(async () => {}), rebaseDocument: vi.fn(async () => {}) }
+    saveDocument: vi.fn(async () => {}), rebaseDocument: vi.fn(async () => {}) } satisfies DocumentPanelProps
 }
 it('opens an explicitly selected project file and does not write merely by rendering it', () => {
   const p = props()
@@ -34,7 +34,7 @@ it('shows both conflicting texts and requires an explicit rebase before saving',
   } } }
   render(<DocumentPanel {...p} />)
   expect(screen.getByRole('button', { name: 'Save' }).hasAttribute('disabled')).toBe(true)
-  expect((screen.getByRole('textbox', { name: 'Document source' }) as HTMLTextAreaElement).value).toBe('My text')
+  expect(screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Document source' }).value).toBe('My text')
   expect(screen.getByText('Agent text')).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: 'Use this revision as the save base' }))
   expect(p.rebaseDocument).toHaveBeenCalledWith(sessionId, 'chapter.md')

@@ -30,6 +30,23 @@ function containsBlockedTerm(value: string): boolean {
   return value.normalize('NFKC').toLowerCase().includes(blockedTerm)
 }
 
+// npm's public attestation interface has a fixed external spelling. Preserve
+// only its exact command option and YAML setting in the imported publishers;
+// surrounding prose and identifiers remain subject to the terminology policy.
+function withoutFixedNpmAttestationOption(file: string, line: string): string {
+  if (file === 'integrations/tool-call-guard/.github/workflows/publish.yml') {
+    return line.replace(new RegExp(`^(\\s*)NPM_CONFIG_${blockedTerm.toUpperCase()}(?=: true(?:\\s|$))`, 'u'), '$1NPM_BUILD_ATTESTATION')
+  }
+  if ([
+    'integrations/workflows/packages/github/.github/workflows/release.yml',
+    'integrations/workflows/packages/library/.github/workflows/release.yml',
+    'integrations/workflows/packages/lsp-actions/.github/workflows/publish.yml',
+  ].includes(file) && !line.trimStart().startsWith('#')) {
+    return line.replace(new RegExp(`^(\\s*(?:run: |out="\\$\\()?npm publish --access public )--${blockedTerm}(?=\\s|$)`, 'u'), '$1--build-attestation')
+  }
+  return line
+}
+
 /**
  * Find the blocked term in one maintained tracked file.
  * @param file - repository-relative tracked path.
@@ -44,7 +61,7 @@ export function findConcreteTermViolations(file: string, source: string): Concre
   const schemaRegion = historicalSchemaRegion(file, source)
   for (const [index, line] of lines.entries()) {
     if (schemaRegion !== undefined && index >= schemaRegion[0] && index < schemaRegion[1]) continue
-    if (containsBlockedTerm(line)) violations.push({ file, line: index + 1 })
+    if (containsBlockedTerm(withoutFixedNpmAttestationOption(file, line))) violations.push({ file, line: index + 1 })
   }
   return violations
 }
@@ -92,7 +109,7 @@ const isMain = invokedPath !== undefined && import.meta.url === pathToFileURL(re
 if (isMain) {
   const violations = scanRepository(root)
   if (violations.length === 0) {
-    console.log(`verify-concrete-terms: maintained tracked files contain no ${blockedTerm}.`)
+    console.log(`verify-concrete-terms: maintained tracked files contain no forbidden uses of ${blockedTerm}.`)
   } else {
     console.error(`verify-concrete-terms: ${blockedTerm} is forbidden; name the exact source, field, identity, or evidence:`)
     for (const violation of violations) {

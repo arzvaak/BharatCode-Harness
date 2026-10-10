@@ -1,6 +1,6 @@
 # dsh-tool-call-guard
 
-English | [English copy](README.zh.md)
+English | [中文](README.zh.md)
 
 Neutralize tool calls with invalid JSON **arguments** before they reach the wire — so one malformed model generation cannot brick an entire session.
 

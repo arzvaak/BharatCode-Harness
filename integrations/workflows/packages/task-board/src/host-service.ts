@@ -67,7 +67,7 @@ const MAX_TIMER_DELAY_MS = 2_147_483_647
 const UNREADABLE_SETTLE_POLLS = 24
 
 /**
- * Provenance of one cron-triggered cascade: when the rule fired and the zone
+ * Source attribution of one cron-triggered cascade: when the rule fired and the zone
  * its wall clock was read in. Passed into every launched prompt of that run so
  * a scheduled job knows its own clock rather than inferring one.
  */

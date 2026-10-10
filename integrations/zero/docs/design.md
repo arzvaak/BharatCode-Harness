@@ -13,7 +13,7 @@ Working name: DSH Zero. This name is a proposal.
 
 Use native Cordis tool-result policies, DSH spill storage, native tool execution, and client settings. A shell wrapper would miss other tools and require different workflows. A Harness fork would allow deeper changes but couple releases to upstream internals. A plugin is the recommended first release.
 
-Verified against local Harness commit `639ed015397290b3745d163aafe02ffee4aa3f84`: `tools/post-execute` can replace result projections; `spillStore.saveText` saves verbatim session-owned text with retrieval guidance. Agent-loop model requests are frozen and must not be rewritten through `llm/stream`. The built-in token meter uses a fixed character-density heuristic, not exact model tokenization.
+Verified against local Harness release tag `dsh-v0.2.0-rc.2`: `tools/post-execute` can replace result projections; `spillStore.saveText` saves verbatim session-owned text with retrieval guidance. Agent-loop model requests are frozen and must not be rewritten through `llm/stream`. The built-in token meter uses a fixed character-density heuristic, not exact model tokenization.
 
 ## First release
 

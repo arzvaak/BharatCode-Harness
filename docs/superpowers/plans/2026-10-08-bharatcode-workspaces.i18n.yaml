@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for 2026-10-08-bharatcode-workspaces.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/superpowers/plans/2026-10-08-bharatcode-workspaces.md
+/bharatcode-shared-harness-and-workflow-workspaces:
+  en: 362b82a3c938e793
+  zh: 7d3db4341641dd42
+/bharatcode-shared-harness-and-workflow-workspaces/task-1-bharatcode-branding:
+  en: a64e0a86d7739079
+  zh: 1da345fdfcca4f36
+/bharatcode-shared-harness-and-workflow-workspaces/task-2-shared-project-knowledge-and-handoffs:
+  en: 9498f61b80fe858a
+  zh: a407bea8a53050df
+/bharatcode-shared-harness-and-workflow-workspaces/task-3-shared-shell-and-working-layouts:
+  en: c86ca9ffd21ef05c
+  zh: ea96d1f339653c69
+/bharatcode-shared-harness-and-workflow-workspaces/task-4-english-retained-integrations:
+  en: 05ad0d9a0c8b4ac4
+  zh: e35e2c7d2f4611dc
+/bharatcode-shared-harness-and-workflow-workspaces/task-5-original-graphics-motion-and-polish:
+  en: 69e2732ee16176c6
+  zh: b881f8281afe321a
+/bharatcode-shared-harness-and-workflow-workspaces/task-6-integrated-qualification-and-delivery:
+  en: cd8c8d9a1cab3613
+  zh: c641139997d3a14e

@@ -122,7 +122,7 @@ export interface TaskFreeze extends FreezeSnapshot {
   redacted?: boolean
   /**
    * Session id of the DSH session that authored the frozen snapshot (issue #6
-   * provenance): stamped by the Host ledger from the create/update action's
+   * author identity): stamped by the Host ledger from the create/update action's
    * initiator, or kept from the wire payload when no initiator was asserted.
    */
   frozenBy?: string
@@ -636,7 +636,7 @@ export function startExecution(
     error: undefined,
     ...(runGroupId === undefined || runGroupId === '' ? {} : { runGroupId }),
     ...(initiatedBy === undefined || initiatedBy === '' ? {} : { initiatedBy }),
-    // Capture the card's freeze provenance on the execution record so the
+    // Capture the card's freeze author and timestamp on the execution record so the
     // audit trail stays queryable even if the snapshot is replaced later.
     ...(task.freeze === undefined ? {} : {
       frozenAt: task.freeze.frozenAt,

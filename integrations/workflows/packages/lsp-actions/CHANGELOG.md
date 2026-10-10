@@ -113,7 +113,7 @@ Adds the versioned five-language **interoperability declaration** to the READMEs
 
 ### Fixed
 
-- Remove the `LspConnection.pid` accessor: dsh `0.1.5-alpha.1` deleted `SubprocessHandle.pid` (`a95f0b368f`, which also removed the byte-identical getter from the official `lsp-stdio` connection), and no code in this plugin ever read it; the connection still terminates through `terminate()` / `waitForExit()` and reports failures through the retained stderr tail. No behavior change.
+- Remove the `LspConnection.pid` accessor: dsh `0.1.5-alpha.1` deleted `SubprocessHandle.pid` (the same release also removed the byte-identical getter from the official `lsp-stdio` connection), and no code in this plugin ever read it; the connection still terminates through `terminate()` / `waitForExit()` and reports failures through the retained stderr tail. No behavior change.
 
 ### Changed
 

@@ -2,24 +2,27 @@ import { expect, it, vi } from 'vitest'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { WorkspaceDocuments, type DocumentAccess } from '../src/client/workflows/documents.ts'
 import type { DocumentRecoveryDraft } from '@deepseek-ai/dsh-workspace/types'
+type TestDocumentAccess = {
+  [K in keyof DocumentAccess]: (...args: Parameters<DocumentAccess[K]>) => ReturnType<DocumentAccess[K]>
+}
 const session = 'editor-session' as SessionId
 function bench() {
   let disk = { absolutePath: '/project/章.md', version: 'v1', text: '# Chapter\r\n\r\nOriginal\r\n' }
   let draft: DocumentRecoveryDraft | undefined
   let count = 0
-  const access: DocumentAccess = {
-    read: vi.fn(async () => ({ ...disk })),
-    readDraft: vi.fn(async () => draft),
-    saveDraft: vi.fn(async (request) => {
+  const access: TestDocumentAccess = {
+    read: vi.fn<DocumentAccess['read']>(async () => ({ ...disk })),
+    readDraft: vi.fn<DocumentAccess['readDraft']>(async () => draft),
+    saveDraft: vi.fn<DocumentAccess['saveDraft']>(async (request) => {
       if (request.expectedDraftRevision !== (draft?.revision ?? null)) throw new Error('Newer recovery draft')
       draft = { sessionId: request.sessionId, path: request.path, baseVersion: request.baseVersion, text: request.text, revision: String(++count), updatedAt: 'now' }
       return draft
     }),
-    clearDraft: vi.fn(async (_session, _path, revision) => {
+    clearDraft: vi.fn<DocumentAccess['clearDraft']>(async (_session, _path, revision) => {
       if (revision !== draft?.revision) throw new Error('Newer recovery draft')
       draft = undefined
     }),
-    save: vi.fn(async (_session, _path, text, version) => {
+    save: vi.fn<DocumentAccess['save']>(async (_session, _path, text, version) => {
       if (disk.version !== version) return { status: 'conflict' as const, current: { ...disk } }
       disk = { ...disk, version: `v${++count + 1}`, text }
       return { status: 'saved' as const, document: { ...disk } }
@@ -76,7 +79,7 @@ it('retains edits made during an in-flight disk save as a newer recovery copy', 
   const save = b.access.save
   b.access.save = async (...args) => { await waiting; return save(...args) }
   const operation = b.controller.save(session, '章.md')
-  await vi.waitFor(() => expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.busy).toBe(true))
+  await vi.waitFor(() => { expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.busy).toBe(true) })
   const editing = b.controller.edit(session, '章.md', 'Newer typing')
   finish()
   await Promise.all([operation, editing])

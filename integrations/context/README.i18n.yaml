@@ -1,0 +1,73 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/context/README.md
+/:
+  en: 7d0bb15d59a11ad5
+  zh: 5e97d9d28ba1cd71
+/dsh-context:
+  en: 754e094c707f58b2
+  zh: efe39845200b14ae
+/dsh-context/install-update:
+  en: ca38e4f4f7218d36
+  zh: 0d1ea621f72a1c0f
+/dsh-context/install-update/install-on-deekseek-harness-web-or-desktop:
+  en: 3737041e13fea185
+  zh: 6f7a847adc4e5f04
+/dsh-context/install-update/install-with-dsh-cli:
+  en: a0cd071e0b41db9f
+  zh: 94158f7939b3d33c
+/dsh-context/use-it:
+  en: 44537dfa29527a83
+  zh: de8a53df66cf08f8
+/dsh-context/the-context-insights-page:
+  en: 90c47b43731d9523
+  zh: 9a4b0fc11a4d5793
+/dsh-context/the-context-tab:
+  en: 021e03eef47f8142
+  zh: acf5b621e8685f9c
+/dsh-context/the-context-tab/context-stats:
+  en: 6efb2f2f94031bdc
+  zh: 6efb2f2f94031bdc
+/dsh-context/the-context-tab/context-stats/token-stats-and-timing-stats:
+  en: 053ae01abd11f009
+  zh: d9f5d8d6be69f9f7
+/dsh-context/the-context-tab/context-stats/context-stats:
+  en: 5d688e594d624ac7
+  zh: 5d688e594d624ac7
+/dsh-context/the-context-tab/current-context-what-s-in-the-context-window-now:
+  en: 0a1ae4eddf7ac682
+  zh: 03df3b27104031cb
+/dsh-context/the-context-tab/context-trend-how-the-context-grew-and-evolved-by-turn-or-steps:
+  en: 37d2ece0fe607dd3
+  zh: 810b9b39d4b935d8
+/dsh-context/the-context-tab/context-browser-open-the-box-of-any-request:
+  en: 25ca1cc5dea31ae5
+  zh: b5349cba36f9696e
+/dsh-context/the-context-tab/context-events-when-and-why-the-window-changed:
+  en: 53e2884dab02eb22
+  zh: 412de870c8d7c157
+/dsh-context/the-context-tab/file-activity-what-the-agent-did-to-your-files:
+  en: f1793d780ac791ff
+  zh: 92d8504f95e0580a
+/dsh-context/the-context-tab/agent-network-the-family-portrait:
+  en: c3a12681b65725b7
+  zh: a9a48a4d2adc6faa
+/dsh-context/context-command:
+  en: c0b6cfcde638199a
+  zh: d0f783c8681c1310
+/dsh-context/settings:
+  en: 79795844311dd956
+  zh: 49e5804e4146ec80
+/dsh-context/good-to-know:
+  en: 98be8f2678ad9f73
+  zh: bcdb3d36e664b03c
+/dsh-context/like-it:
+  en: 62f2a53b13e8069a
+  zh: de2cc666d29c7bf9
+/dsh-context/license:
+  en: 240bf55ff97a3507
+  zh: 7d7e41800bdc3e0e
+/dsh-context/bharatcode-workflow-integration:
+  en: 8934a642b1be588f
+  zh: 0fbe7d007fb84bf0

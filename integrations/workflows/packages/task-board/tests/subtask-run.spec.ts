@@ -441,7 +441,7 @@ describe('Agent Team runs', () => {
   })
 
   it('operator reading a cron-triggered run sees its firing instant, zone and expression', () => {
-    // Given a plain card and a scheduled-run provenance
+    // Given a plain card and a scheduled-run source attribution
     const root = createTask({ title: 'root', description: '', prompt: 'do it' }, NOW, 'root')
     const triggeredAt = Date.UTC(2026, 8, 29, 1, 0)
 

@@ -377,33 +377,25 @@ export class SubscriptionsAuthController implements AuthController {
    */
   private claims = new Map<ProviderId, number>()
 
+  /** Create the subscription service with host-owned authentication dependencies.
+   * @param deviceFlows - Device-flow attempts (copilot); polled in the background like the loopback flows.
+   * @param onAuthChanged - Announces an auth-state change so catalog readers re-query (fires `llm/adapters-updated`).
+   * @param resolveAttachments - Lazy attachment-store lookup for the `image` endpoint.
+   * @param usageFetchers - Usage lookups for providers that expose a usage endpoint.
+   * @param readClaudeCreds - Reads the Claude Code session from its own store. Constructor-injected so tests can drive both login paths without a real credential store; the plugin itself always uses the default.
+   * @param poolUsage - The pool's usage cache, when the pool is enabled. Routing `usage` through it (instead of the raw fetcher) means the Settings page shares the same negative cache as `quota_aware` selection — reopening the page can no longer re-hit an endpoint that is still cooling down from a 429.
+   * @param antigravityConfig - Antigravity OAuth/runtime configuration.
+   * @param clientVersions - The CLI version each route presents, shown beside the provider in Settings.
+   */
   constructor(
     private readonly flows: OAuthFlowManager,
-    /** Device-flow attempts (copilot); polled in the background like the loopback flows. */
     private readonly deviceFlows: DeviceFlowManager,
-    /** Announces an auth-state change so catalog readers re-query (fires `llm/adapters-updated`). */
     private readonly onAuthChanged: (provider: ProviderId, account?: string) => void,
-    /** Lazy attachment-store lookup for the `image` endpoint. */
     private readonly resolveAttachments: () => AttachmentStore | undefined,
-    /** Usage lookups for providers that expose a usage endpoint. */
     private readonly usageFetchers: UsageFetchers = {},
-    /**
-     * Reads the Claude Code session from its own store. Constructor-injected so
-     * tests can drive both login paths without a real credential store; the
-     * plugin itself always uses the default.
-     */
     private readonly readClaudeCreds: () => ClaudeSession | undefined = readClaudeCodeCredentials,
-    /**
-     * The pool's usage cache, when the pool is enabled. Routing `usage`
-     * through it (instead of the raw fetcher) means the Settings page shares
-     * the same negative cache as `quota_aware` selection — reopening the
-     * page can no longer re-hit an endpoint that is still cooling down from
-     * a 429.
-     */
     private readonly poolUsage: PoolUsageTracker | undefined = undefined,
-    /** Antigravity OAuth/runtime configuration. */
     private readonly antigravityConfig: Config['antigravity'] = {},
-    /** The CLI version each route presents, shown beside the provider in Settings. */
     private readonly clientVersions: Partial<Record<ProviderId, () => Promise<CliVersion | undefined>>> = {},
     private readonly store: SessionStoreLocation | undefined = undefined,
   ) {}

@@ -10,7 +10,9 @@ Status: implemented
 
 ## Decision
 
-[release.yml](../../../../.github/workflows/release.yml) 的两个作业和 [release-vendor.yml](../../../../.github/workflows/release-vendor.yml) 的打包作业仅在写权限维护者控制的仓库变量 `DSH_CI_FAILOVER_LINUX` 设为 `selfhosted` 时选择现有 Linux 自托管池。选择器要求当前仓库为正式仓库且触发者不是 Dependabot，然后只接纳 master 推送，或作者不是 Dependabot 的同仓库、非 fork PR（Pull Request）。手动触发始终选择 `ubuntu-24.04`，其他不满足条件的上下文也一样。[故障切换手册](2026-07-26-ci-failover-runbook.zh.md) 负责按平台划分的开关与热备操作。发布演练有意与主 CI 共用 Linux 开关：启用或禁用会同时路由两类负载，不能独立切换发布演练。未设置时仍默认使用托管池；只有运维人员选择 `selfhosted` 期间才节省托管分钟，无论该选择用于故障恢复还是持续的成本控制。
+本记录保留上游 DeepSeek Harness 的决策依据。下文固定版本的 CI 文件及工作流测试链接指向上游 `dsh-v0.2.0-rc.2` 发布标签；其中的运行器、触发器和发布行为描述适用于该上游实现。BharatCode 当前的验证流程以[分支 CI](../../../../.github/workflows/ci.yml)和[开发文档](../../../../docs/development.zh.md)为准。
+
+[release.yml](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/release.yml) 的两个作业和 [release-vendor.yml](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/release-vendor.yml) 的打包作业仅在写权限维护者控制的仓库变量 `DSH_CI_FAILOVER_LINUX` 设为 `selfhosted` 时选择现有 Linux 自托管池。选择器要求当前仓库为正式仓库且触发者不是 Dependabot，然后只接纳 master 推送，或作者不是 Dependabot 的同仓库、非 fork PR（Pull Request）。手动触发始终选择 `ubuntu-24.04`，其他不满足条件的上下文也一样。[故障切换手册](2026-07-26-ci-failover-runbook.zh.md) 负责按平台划分的开关与热备操作。发布演练有意与主 CI 共用 Linux 开关：启用或禁用会同时路由两类负载，不能独立切换发布演练。未设置时仍默认使用托管池；只有运维人员选择 `selfhosted` 期间才节省托管分钟，无论该选择用于故障恢复还是持续的成本控制。
 
 运行器标签为 `[self-hosted, linux, x64, vm-backup]`。运行器注册共享一台虚拟机，不代表独立机器容量。每个作业在 pnpm 设置前将 Node 编译缓存与 node-gyp 头文件放在运行器私有临时卷上，pnpm 设置目标路径包含运行、重试次数和作业标识。`TMPDIR` 也指向 `runner.temp`，因此临时 npm 消费目录既在检出目录之外，也在运行器清理范围之内，即使进程被强杀而无法执行 `finally` 也一样。持久化 pnpm 存储位于检出清理范围之外；只有 GitHub 托管运行器恢复远端存储缓存。两个演练工作流都不保存远端缓存。
 
@@ -24,4 +26,4 @@ Status: implemented
 
 取消变量或将其改为非 `selfhosted` 值，会将后续符合条件的作业路由到托管 Ubuntu。这是运维人员选择的回退，不会自动探测运行器健康，也不会切换已排队的作业。共享虚拟机仍可能与其他受信任作业竞争资源；仓库写权限维护者仍对进入持久化信任域的代码负责。工作流不安装主机系统包，也不修改全局主机配置。
 
-[scripts/tests/ci-release-selfhosted.spec.ts](../../../../scripts/tests/ci-release-selfhosted.spec.ts) 使用受信任事件和 fork、Dependabot、其他仓库、非 master 推送、手动触发、缺失 PR 数据、禁用开关等负向对照求值已提交的选择器。测试固定设置顺序、检出清理、仅托管运行器访问远端缓存、发布隔离和保留命令。真实发布构建与打包安装执行仍由 PR CI 验证；选择器测试不声称重现这些构建。
+[scripts/tests/ci-release-selfhosted.spec.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/tests/ci-release-selfhosted.spec.ts) 使用受信任事件和 fork、Dependabot、其他仓库、非 master 推送、手动触发、缺失 PR 数据、禁用开关等负向对照求值已提交的选择器。测试固定设置顺序、检出清理、仅托管运行器访问远端缓存、发布隔离和保留命令。真实发布构建与打包安装执行仍由 PR CI 验证；选择器测试不声称重现这些构建。

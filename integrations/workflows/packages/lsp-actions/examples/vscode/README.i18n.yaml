@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/workflows/packages/lsp-actions/examples/vscode/README.md
+/dsh-lsp-actions-vs-code-example:
+  en: 54a899634a751caa
+  zh: bccd2d783ef6fa4f
+/dsh-lsp-actions-vs-code-example/what-the-sidebar-shows:
+  en: 2c19bf9cd2fa87b3
+  zh: 3749377bc671fe1b
+/dsh-lsp-actions-vs-code-example/install-run:
+  en: 6fc0db744d19cd79
+  zh: d7c9c44bb38ca124
+/dsh-lsp-actions-vs-code-example/install-run/1-install-the-backend:
+  en: 0ae61e342827520d
+  zh: 95546789a0081fda
+/dsh-lsp-actions-vs-code-example/install-run/2-launch-the-extension:
+  en: f9482bea87429262
+  zh: ef10ace9dd9f3923
+/dsh-lsp-actions-vs-code-example/install-run/3-use-it:
+  en: f6b212a87cb8a368
+  zh: f5047bcf5812a827
+/dsh-lsp-actions-vs-code-example/settings:
+  en: 0376428f7395b1c7
+  zh: efd9d88557f1508e
+/dsh-lsp-actions-vs-code-example/recording-the-demo-gif:
+  en: a2cd2dc47ccf348d
+  zh: 8cfd2d7d2fa55371
+/dsh-lsp-actions-vs-code-example/boundaries-read-this:
+  en: 7ccace5fb5dca630
+  zh: ca69228a72f5273c

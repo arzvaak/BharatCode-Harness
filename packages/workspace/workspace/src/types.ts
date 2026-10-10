@@ -305,7 +305,7 @@ export interface SearchArtifactsResult {
   readonly hasMore: boolean
 }
 
-/** Provenance of an immutable conversation snapshot retained by the existing reference projection. */
+/** Source identity of an immutable conversation snapshot retained by the existing reference projection. */
 export interface SessionArtifactOrigin {
   readonly sessionId: SessionId
   readonly capturedThroughSeq: number | null

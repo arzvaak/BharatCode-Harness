@@ -81,7 +81,7 @@ export function AccountMenu({
       onClose={() => { setOpen(false) }}
       onSelect={(id) => {
         if (id === 'settings') { setOpen(false); trigger.current?.focus(); openSettings() }
-        else if (id === 'displayName') { setOpen(false); setNameError(false); setEditName(account.displayName ?? label ?? '') }
+        else if (id === 'displayName') { setOpen(false); setNameError(false); setEditName(account.displayName ?? label) }
         else if (id === 'contact') { setOpen(false); contactUs() }
         else if (id === 'signin') beginSignIn()
         else void requestSignOut()

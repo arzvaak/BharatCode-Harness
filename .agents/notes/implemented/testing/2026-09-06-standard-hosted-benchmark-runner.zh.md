@@ -10,7 +10,9 @@ Status: implemented
 
 ## 决定
 
-[ci.yml](../../../../.github/workflows/ci.yml) 中的必需 benchmark job 使用标准 GitHub 托管 `ubuntu-24.04` 运行器，不受 Linux 故障转移影响。它始终尝试恢复 pnpm 存储缓存，并保留独立的 benchmark lane。整个 job 的超时为 15 分钟，覆盖准备、安装、构建和测量。这限制的是基础设施执行时间，而非单项性能断言。
+本记录保留上游 DeepSeek Harness 的决策依据。下文固定版本的 CI 文件及工作流测试链接指向上游 `dsh-v0.2.0-rc.2` 发布标签；其中的运行器、触发器和发布行为描述适用于该上游实现。BharatCode 当前的验证流程以[分支 CI](../../../../.github/workflows/ci.yml)和[开发文档](../../../../docs/development.zh.md)为准。
+
+[ci.yml](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/ci.yml) 中的必需 benchmark job 使用标准 GitHub 托管 `ubuntu-24.04` 运行器，不受 Linux 故障转移影响。它始终尝试恢复 pnpm 存储缓存，并保留独立的 benchmark lane。整个 job 的超时为 15 分钟，覆盖准备、安装、构建和测量。这限制的是基础设施执行时间，而非单项性能断言。
 
 [Session 性能决策](2026-09-04-session-open-performance-gate.zh.md) 继续拥有工作负载、时间和内存预算、worker 隔离及校准。仅当前 generation `open` 使用端点专属的 50 ms 标准运行器预期值，乘以既有 1.25 倍余量后得到 63 ms 上限。其他性能预算以及 worker、测试和钩子的截止时间均保持不变。步骤级 `DSH_GATE_VERBOSE=1` 使成功运行的原始测量保留在 Actions 日志中。硬件比较工作流保留有意设置的不同运行器规格。
 
@@ -23,4 +25,4 @@ Status: implemented
 
 标准运行器以并行构建容量换取固定测量类别，不移除必需判定。缓存未命中和运行器波动仍会影响总耗时。每次更换运行器都需要实际托管 benchmark 运行，才能认定 job 超时经过验证；本地工作流断言无法单独证明执行耗时。
 
-所属[工作流测试](../../../../scripts/ci-workflow.spec.ts) 固定运行器路由、无条件缓存恢复、必需状态及 job 超时。反例验证拒绝故障转移路由、缓存条件和原来的 30 分钟 job 上限。
+所属[工作流测试](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/ci-workflow.spec.ts) 固定运行器路由、无条件缓存恢复、必需状态及 job 超时。反例验证拒绝故障转移路由、缓存条件和原来的 30 分钟 job 上限。

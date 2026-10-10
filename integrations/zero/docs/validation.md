@@ -1,6 +1,6 @@
 # Validation — 2026-10-08
 
-Baseline: local DeepSeek Harness 0.2.0-rc.2, commit `639ed015397290b3745d163aafe02ffee4aa3f84`; Node 24.19.0.
+Baseline: local DeepSeek Harness 0.2.0-rc.2, release tag `dsh-v0.2.0-rc.2`; Node 24.19.0.
 
 - Unit/DOM suite: 41 passing checks for literal codec round trips, complete-candidate counting, route isolation, cancellation/storage bypasses, canonical policy decisions, bounded recovery, mixed-basis accounting, settings revisions and UI unmount handling.
 - Real Loader composition: tools/spill/filesystem, canonical result preservation, native model read/recovery-overhead accounting, exact original recovery, strict gateway invocation/rejection, settings mode transitions, route-specific counter registration, cancellation, native spill-policy ordering, storage fallback and changed-file refusal.

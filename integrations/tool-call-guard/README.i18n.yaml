@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write integrations/tool-call-guard/README.md
+/dsh-tool-call-guard:
+  en: 22f3478c44da4580
+  zh: 3c0274015b6bff48
+/dsh-tool-call-guard/why:
+  en: fa81a1a54ec5a1f0
+  zh: af1b36de7cfe74aa
+/dsh-tool-call-guard/what-it-does:
+  en: 36ae7038b405834a
+  zh: d50bdb4c75e1368b
+/dsh-tool-call-guard/what-it-does/properties:
+  en: 2956e13fc9e60695
+  zh: c372ad7d2ef8d74a
+/dsh-tool-call-guard/install:
+  en: 86d8ed1c3230e5e1
+  zh: 491f091070af2072
+/dsh-tool-call-guard/observed-in-production:
+  en: 7cfc0c980e263ee2
+  zh: e0b2e20d85cc3d5f
+/dsh-tool-call-guard/tests:
+  en: a030883f69075108
+  zh: ba5684e2dd6374d5
+/dsh-tool-call-guard/license:
+  en: aad9b93c8b488fac
+  zh: 0a553bf347728a12
+/dsh-tool-call-guard/bharatcode-integration:
+  en: 50b7ca02eff90775
+  zh: c39d5a8fb9b0c244

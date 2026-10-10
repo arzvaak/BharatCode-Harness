@@ -1,5 +1,7 @@
 # BharatCode Subscriptions
 
+English | [中文](README.zh.md)
+
 Local English fork of `dsh-plugin-subscriptions` 0.9.7. Supports Codex (ChatGPT), Claude, Grok (X Premium), GitHub Copilot, and Google Antigravity through the original provider adapters. OAuth, device authorization, token refresh, account pools, model discovery and usage RPCs remain adapter-owned.
 
 Install `@arzvaak/bharatcode-subscriptions` into the same profile as Provider Hub. Host route IDs remain `codex`, `claude`, `grok`, `copilot`, and `antigravity`; the UI slot remains `subscriptions`. The renamed browser loader factory matches this fork's package identity. English strings are registered under both existing locale IDs.

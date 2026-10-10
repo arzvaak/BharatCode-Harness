@@ -22,7 +22,7 @@
 - Retrieval outputs must bypass compression.
 - Live installation is a subsequent activation step.
 - Implement in a new `/mnt/slow-stuff/deepseek/dsh-zero` directory. The workspace root is not a Git repository; initialize only this new plugin repository and commit its files, never neighboring projects.
-- Verified source baseline: Harness `639ed015397290b3745d163aafe02ffee4aa3f84`. Capture actual supported version from its package metadata at packaging time.
+- Verified source baseline: Harness release tag `dsh-v0.2.0-rc.2`. Capture actual supported version from its package metadata at packaging time.
 
 ## Review Focus
 

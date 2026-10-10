@@ -12,17 +12,19 @@ A monotonic projection also cannot return an automation-owned Issue from `In rev
 
 ## Decision
 
+This record preserves the upstream DeepSeek Harness decision rationale. Pinned CI-file and workflow-test links below refer to the upstream `dsh-v0.2.0-rc.2` release tag; runner, trigger, and publication descriptions apply to that upstream implementation. The current BharatCode validation workflows are owned by [fork CI](../../../../.github/workflows/ci.yml) and the [development guide](../../../../docs/development.md).
+
 The Issue lifecycle workflow treats review webhooks as commands. `pull_request.review_requested`, including a repeated request, targets `In review`. `pull_request_review.submitted` targets `In progress` only when `review.state` is `changes_requested`; the submitted event remains necessary because a reviewer can request changes without an earlier review-request event. Approved and commented submissions do not allocate a lifecycle runner, while dismissed reviews are not subscribed. [Selective policy evaluation](2026-09-07-selective-issue-policy-evaluation.md) owns lifecycle scheduling.
 
 Ordinary subscribed pull-request events remain forward-only implementation signals: they can move `Inbox`, `Backlog`, or `Ready` to `In progress`, but they cannot move `In review` backward. Review-request commands can move any earlier active status to `In review`. Changes-requested commands can move earlier active statuses forward to `In progress` and can move `In review` back only when the latest status event for the target Project was written by the configured lifecycle actor. A human or unknown latest actor preserves the current status.
 
 The status projection resolves only exact same-repository `Fixes`, `Closes`, or `Resolves` references. It does not alter terminal statuses, add an Issue with no Project status, depend on PR metadata validity, query `reviewDecision`, reconstruct review rounds, look up pull requests from Issues, or run a scheduled reconciler. [Project-local Issue planning fields](2026-09-02-project-local-issue-planning-fields.md) own the separate date initialization for every same-repository Issue reference.
 
-[Issue lifecycle](../../../../.github/workflows/issue-lifecycle.yml) remains unsubscribed from `pull_request.ready_for_review`; neither event command depends on that action. [Issue policy](../../../../.github/workflows/issue-policy.yml) retains `ready_for_review` because it owns required-check enforcement when a human pull request enters review.
+[Issue lifecycle](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/issue-lifecycle.yml) remains unsubscribed from `pull_request.ready_for_review`; neither event command depends on that action. [Issue policy](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/issue-policy.yml) retains `ready_for_review` because it owns required-check enforcement when a human pull request enters review.
 
 ## Verification
 
-[Issue-management tests](../../../../.github/issue-management/policy.test.mjs) pin the event-to-command mapping, the repeated-review-request transition after a changes-requested command, the changes-requested regression, terminal protection, and human override preservation. [Workflow tests](../../../../scripts/ci-workflow.spec.ts) pin the subscribed events, the job-level condition that excludes approved/commented reviews before runner allocation, and the separate `ready_for_review` policy trigger.
+[Issue-management tests](../../../../.github/issue-management/policy.test.mjs) pin the event-to-command mapping, the repeated-review-request transition after a changes-requested command, the changes-requested regression, terminal protection, and human override preservation. [Workflow tests](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/ci-workflow.spec.ts) pin the subscribed events, the job-level condition that excludes approved/commented reviews before runner allocation, and the separate `ready_for_review` policy trigger.
 
 ## Alternatives considered
 

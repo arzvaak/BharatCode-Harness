@@ -168,7 +168,7 @@ it('returns bounded search excerpts with an omission signal rather than complete
   expect(Buffer.byteLength(JSON.stringify(result))).toBeLessThanOrEqual(1024)
 })
 
-it('preserves a bounded conversation snapshot and its sequence provenance across restart', async () => {
+it('preserves a bounded conversation snapshot and its sequence source attribution across restart', async () => {
   const h = await harness()
   const revision = await h.knowledge.registerSessionSnapshot({
     projectId: h.workspace.id,

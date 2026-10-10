@@ -1,5 +1,7 @@
 # dsh-lsp-actions VS Code example
 
+English | [中文](README.zh.md)
+
 A minimal VS Code extension that consumes the [`dsh-lsp-actions`](../../) **editor action protocol** (`lsp.actions.list` / `lsp.actions.run` / `lsp.events`) over ACP-style JSON-RPC. The extension is **UI-only**: it never implements LSP logic, never computes diagnostics, and never edits buffers — every capability and every byte written belongs to the plugin backend.
 
 ```

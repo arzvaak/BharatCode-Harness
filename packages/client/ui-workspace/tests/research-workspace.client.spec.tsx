@@ -50,16 +50,16 @@ it('drops late source results when the selected project changes', async () => {
   let resolve!: (value: { hits: never[]; hasMore: boolean }) => void
   p.searchArtifacts = vi.fn(() => new Promise<{ hits: never[]; hasMore: boolean }>((r) => { resolve = r }))
   const v = render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'sources' }} />)
-  await waitFor(() => expect(p.searchArtifacts).toHaveBeenCalledOnce())
+  await waitFor(() => { expect(p.searchArtifacts).toHaveBeenCalledOnce() })
   v.rerender(<ResearchWorkspace {...p} project={undefined} />)
   resolve({ hits: [], hasMore: false })
-  await waitFor(() => expect(screen.getByText('Choose a project to organise research.')).toBeTruthy())
+  await waitFor(() => { expect(screen.getByText('Choose a project to organise research.')).toBeTruthy() })
   expect(screen.queryByText('Loading project research…')).toBeNull()
 })
 it('restricts evidence classifications before the server bounds search results', async () => {
   const p = props()
   render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'evidence' }} />)
-  await waitFor(() => expect(p.searchArtifacts).toHaveBeenCalledWith({ projectId: 'p', query: '', kinds: ['hypothesis', 'finding', 'decision', 'requirement'] }))
+  await waitFor(() => { expect(p.searchArtifacts).toHaveBeenCalledWith({ projectId: 'p', query: '', kinds: ['hypothesis', 'finding', 'decision', 'requirement'] }) })
 })
 it('does not observe or display another session’s selected run', async () => {
   const p = props()
@@ -68,7 +68,7 @@ it('does not observe or display another session’s selected run', async () => {
   p.observed = { 'job-a': { text: 'session A output' } } as never
   const v = render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'runs' }} />)
   fireEvent.click(screen.getByRole('button', { name: /Experiment A/ }))
-  await waitFor(() => expect(p.observeRun).toHaveBeenCalledWith('s', 'job-a'))
+  await waitFor(() => { expect(p.observeRun).toHaveBeenCalledWith('s', 'job-a') })
   v.rerender(<ResearchWorkspace {...p} sessionId={'b' as never} jobs={[]} preference={{ complexity: 'full', section: 'runs' }} />)
   expect(p.observeRun).not.toHaveBeenCalledWith('b', 'job-a')
   expect(screen.queryByText('session A output')).toBeNull()
@@ -86,7 +86,7 @@ it('opens a recent source reader after navigating out of Overview', async () => 
   expect(p.changePreference).toHaveBeenCalledWith({ section: 'sources', sourceRevision: 'recent' })
   v.unmount()
   render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'sources', sourceRevision: 'recent' as never }} />)
-  await waitFor(() => expect(p.readArtifact).toHaveBeenCalledWith('recent'))
+  await waitFor(() => { expect(p.readArtifact).toHaveBeenCalledWith('recent') })
   resolveRead(artifact)
   expect(await screen.findByText('Captured recent source', { selector: 'pre' })).toBeTruthy()
 })

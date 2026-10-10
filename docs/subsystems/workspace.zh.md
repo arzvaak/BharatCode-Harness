@@ -302,7 +302,7 @@ Durable project evidence service independent of optional memory/search integrati
 async register(request: RegisterArtifactRequest): Promise<ArtifactRevision>
 
 /** Register a bounded host-projected conversation capture without reading or rewriting a file.
- * @param request - Project, projected untrusted text, and immutable snapshot provenance.
+ * @param request - Project, projected untrusted text, and immutable snapshot identity.
  * @returns The same revision for an identical sequence capture.
  */
 async registerSessionSnapshot(request: RegisterSessionSnapshotRequest): Promise<ArtifactRevision>

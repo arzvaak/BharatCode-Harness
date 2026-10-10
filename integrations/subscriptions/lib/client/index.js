@@ -108,8 +108,7 @@ export function apply(ctx) {
         scope.effect(() => command.register({
             name: 'fast',
             // dsh 0.1.5-alpha made `description` a locale resolver evaluated per
-            // candidate pass (commit 5d9603b76, "feat(web): localize slash command
-            // descriptions"); earlier lines read the value as a plain string. The
+            // candidate pass; earlier lines read the value as a plain string. The
             // bare string threw `contribution.description is not a function` inside
             // the registry's candidate pass on 0.1.5, aborting the whole `/` source
             // and hiding every host command — /plan, /model, /goal, ... — not just

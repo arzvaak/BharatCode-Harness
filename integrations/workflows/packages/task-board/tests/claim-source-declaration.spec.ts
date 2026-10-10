@@ -1,4 +1,4 @@
-// Claim-time prompt wrapping and provenance audit (issue #6):
+// Claim-time prompt wrapping and source audit (issue #6):
 // 1) Record the run/rerun initiator sessionId in ExecutionRecord.initiatedBy.
 // 2) Capture the freeze origin (frozenAt/frozenBy) when a frozen card runs.
 // 3) Thread the create/update initiator into freeze.frozenBy (source session).

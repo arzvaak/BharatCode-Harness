@@ -6,6 +6,8 @@
 
 # DSH Skills Manager
 
+English | [中文](README.zh.md)
+
   **Manage local and project skills, install from GitHub, preview updates and restore backups**
 
   [Chinese (Simplified)](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Apache-2.0](LICENSE)

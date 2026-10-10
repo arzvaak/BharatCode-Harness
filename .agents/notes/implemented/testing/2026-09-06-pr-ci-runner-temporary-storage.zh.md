@@ -10,7 +10,9 @@ Linux 故障切换池在同一台虚拟机上运行多个 runner 实例。PR 覆
 
 ## 决策
 
-[PR CI](../../../../.github/workflows/ci.yml) 的静态检查、覆盖率和消费者作业在任何准备或测试进程启动前，在首个步骤通过 `GITHUB_ENV` 导出 `TMPDIR=runner.temp`。Node、Vite、tsx 和临时测试消费者继承 runner 管理的位置。每个 runner 管理自己的目录，GitHub Actions 在作业开始和完成时清除其中可删除的内容；测试夹具仍分配唯一子目录，并保留自身清理逻辑。
+本记录保留上游 DeepSeek Harness 的决策依据。下文固定版本的 CI 文件及工作流测试链接指向上游 `dsh-v0.2.0-rc.2` 发布标签；其中的运行器、触发器和发布行为描述适用于该上游实现。BharatCode 当前的验证流程以[分支 CI](../../../../.github/workflows/ci.yml)和[开发文档](../../../../docs/development.zh.md)为准。
+
+[PR CI](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/.github/workflows/ci.yml) 的静态检查、覆盖率和消费者作业在任何准备或测试进程启动前，在首个步骤通过 `GITHUB_ENV` 导出 `TMPDIR=runner.temp`。Node、Vite、tsx 和临时测试消费者继承 runner 管理的位置。每个 runner 管理自己的目录，GitHub Actions 在作业开始和完成时清除其中可删除的内容；测试夹具仍分配唯一子目录，并保留自身清理逻辑。
 
 npm 保留配置的持久化缓存，在 POSIX 上通常为 `$HOME/.npm`；主 CI 和发布工作流不设置每作业覆盖。pnpm store 保持共享于 `$HOME/.local/share/pnpm/store`。两者依靠包管理器的并发访问支持保留跨 runner 复用；共享缓存容量及文件系统故障仍由运维负责。消费者作业将 Playwright 浏览器下载和安装锁放在 `RUNNER_TEMP` 旁；托管缓存恢复使用同一位置。
 
@@ -48,4 +50,4 @@ Queue 快照在捕获前将指针移离 Stop/Send 控件，并等待其 Send too
 
 Linux bwrap 和 Landlock 的 workspace-write profile 允许写入字面路径 `/tmp` 和 workspace，而不允许写入其外部继承的 `TMPDIR`；受限测试夹具必须将临时写入放在这些已授权路径中。[快照 spill helper](../../../../packages/test-support/session-snapshot/src/harness.ts) 将固定长度的逻辑定位符与原子分配的实际存储分开。仅用于夹具的适配器将保存操作委托给真实的本地 spill provider，并仅将本次运行已保存的定位符解析到实际文件。录制的预览长度、省略计数及检索断言保持不变；逻辑 `/tmp/dsh-acp-snap-*` 前缀下不分配文件。本变更不扩大产品沙箱授权。
 
-[ci-workflow.spec.ts](../../../../scripts/ci-workflow.spec.ts) 的 YAML 解析用例要求三个 worker 都包含该赋值，并拒绝步骤级别的覆盖。它们在未修改的工作流上失败。独立进程 smoke 检查和重复 PR 运行验证实际工具链；仅有 YAML 断言不能证明主机容量充足。
+[ci-workflow.spec.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/scripts/ci-workflow.spec.ts) 的 YAML 解析用例要求三个 worker 都包含该赋值，并拒绝步骤级别的覆盖。它们在未修改的工作流上失败。独立进程 smoke 检查和重复 PR 运行验证实际工具链；仅有 YAML 断言不能证明主机容量充足。

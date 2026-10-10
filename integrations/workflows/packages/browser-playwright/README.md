@@ -1,5 +1,7 @@
 # dsh-browser-playwright
 
+English | [中文](README.zh.md)
+
 Browse and extract research sources with scoped tabs, snapshots, screenshots and interactions.
 
 English local fork for BharatCode and DeepSeek Harness 0.2.0-rc.2. Install the generated tarball through the host plugin inventory; its bundle patch registers the plugin. The client packages use the existing host UI and ModuleLoader.

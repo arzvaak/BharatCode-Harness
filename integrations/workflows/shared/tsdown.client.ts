@@ -174,7 +174,7 @@ interface ClientBundleOptions {
   /** Extra browser-bundle resolve plugins, prepended ahead of the purity gate
    *  so a package can remap generated specifiers onto sources before default
    *  resolution (e.g. the aggregate's client-children alias). */
-  readonly clientPlugins?: readonly NonNullable<UserConfig['plugins']>
+  readonly clientPlugins?: readonly NonNullable<UserConfig['plugins']>[]
 }
 
 type BuildFace = 'host' | 'client' | undefined
@@ -211,7 +211,7 @@ function clientLibraryConfig(
   }
 }
 
-function clientConfig(id: string, entry: string, extraPlugins: readonly NonNullable<UserConfig['plugins']> = []): UserConfig {
+function clientConfig(id: string, entry: string, extraPlugins: readonly NonNullable<UserConfig['plugins']>[] = []): UserConfig {
   return {
     name: `${id}/client`,
     entry: { client: entry },
