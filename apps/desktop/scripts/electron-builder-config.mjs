@@ -247,8 +247,8 @@ export function createElectronBuilderConfig(
       synopsis: 'Chat, code, research, and write with BharatCode Harness',
       target: ['AppImage', 'deb', 'rpm'],
     },
-    deb: { packageName: 'bharatcode-harness', depends: ['libgtk-3-0', 'libnotify4', 'libnss3', 'libxss1', 'libxtst6', 'xdg-utils', 'libatspi2.0-0', 'libuuid1', 'libsecret-1-0', 'libasound2t64 | libasound2', 'libgbm1'] },
-    rpm: { packageName: 'bharatcode-harness', depends: ['gtk3', 'libnotify', 'nss', 'libXScrnSaver', '(libXtst or libXtst6)', 'xdg-utils', 'at-spi2-core', '(libuuid or libuuid1)', 'alsa-lib', 'mesa-libgbm', 'libsecret'] },
+    deb: { packageName: 'bharatcode-harness', depends: ['libgtk-3-0', 'libnotify4', 'libnss3', 'libxss1', 'libxtst6', 'xdg-utils', 'libatspi2.0-0', 'libuuid1', 'libsecret-1-0', 'libasound2t64 | libasound2', 'libgbm1', 'pkexec'] },
+    rpm: { packageName: 'bharatcode-harness', depends: ['gtk3', 'libnotify', 'nss', 'libXScrnSaver', '(libXtst or libXtst6)', 'xdg-utils', 'at-spi2-core', '(libuuid or libuuid1)', 'alsa-lib', 'mesa-libgbm', 'libsecret', 'polkit'] },
     nsis: {
       installerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
       uninstallerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),

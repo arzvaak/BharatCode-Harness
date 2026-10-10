@@ -11,6 +11,8 @@ it('packages a self-contained Linux preview with GitHub updates and native distr
   expect(config.rpm.packageName).toBe('bharatcode-harness')
   expect(config.deb.depends).toContain('libasound2t64 | libasound2')
   expect(config.rpm.depends).toContain('alsa-lib')
+  expect(config.deb.depends).toContain('pkexec')
+  expect(config.rpm.depends).toContain('polkit')
   expect(config.asar).toBe(true)
   expect(config.extraMetadata.dshMandatoryUpdatePolicy).toBeUndefined()
   expect(config.extraResources).toContainEqual(expect.objectContaining({ to: 'dsh' }))
