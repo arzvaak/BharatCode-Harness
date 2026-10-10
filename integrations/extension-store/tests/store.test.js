@@ -399,10 +399,13 @@ test('Linux cached package tampering never reaches the native manager', async t 
   assert.equal(installs.length, 1);
 });
 
-test('Linux managed runtime reinstalls from verified disk cache after restart and refuses cache tampering', async t => {
-  const bytes = managedArchive();
+test('managed runtime reinstalls from verified disk cache after restart and refuses cache tampering', async t => {
+  const platform = process.platform === 'win32' ? 'win32' : 'linux';
+  const bytes = platform === 'win32'
+    ? managedArchive([{ path: 'runtime/python.exe', data: 'fixture-runtime' }])
+    : managedArchive();
   const dependencyProbeRunner = async () => ({ available: true, version: '3.12.14' });
-  const { dir, store } = await fixture({ platform: 'linux', dependencyProbeRunner, initialManagedBytes: bytes });
+  const { dir, store } = await fixture({ platform, dependencyProbeRunner, initialManagedBytes: bytes });
   t.after(() => rm(dir, { recursive: true, force: true }));
   await store.refresh();
   const bundle = store.catalog.managedDependencies[0];
@@ -415,7 +418,7 @@ test('Linux managed runtime reinstalls from verified disk cache after restart an
   await offline.dependencies.install(offline.catalog.managedDependencies[0]);
   assert.equal(offline.view().managedDependencies[0].verified, true);
   await offline.dependencies.remove(bundle.id, bundle.version);
-  await writeFile(join(dir, 'managed-dependency-cache', bundle.artifacts.linux.sha256 + '.tar.gz'), 'tampered');
+  await writeFile(join(dir, 'managed-dependency-cache', bundle.artifacts[platform].sha256 + '.tar.gz'), 'tampered');
   await assert.rejects(offline.dependencies.install(bundle), /integrity/);
   assert.equal(offline.view().managedDependencies.length, 0);
 });
