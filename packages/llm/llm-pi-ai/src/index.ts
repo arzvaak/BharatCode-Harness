@@ -326,6 +326,8 @@ export function apply(ctx: Context, config: Config): void {
   const importing = new Set<string>()
   const revisions = new Map<string, number>()
   const pending = new Set<string>()
+  const waitingForCredentials = new Set<string>()
+  let credentialsReady = false
   const configuredModels = (route: string): readonly PiAiModelProfile[] => {
     const raw = config.providers.get() as unknown as Record<string, { models?: readonly PiAiModelProfile[] }>
     return raw[route]?.models ?? []
@@ -336,6 +338,7 @@ export function apply(ctx: Context, config: Config): void {
     if (isStopped() || settingsService === undefined || profile?.autoImport !== true || !profile.baseURL) return
     if (importing.has(route)) { pending.add(route); return }
     importing.add(route)
+    const readyAtStart = credentialsReady
     const revision = revisions.get(route)
     const snapshot = config.providers.get()
     const previous = new Map(configuredModels(route).map(model => [model.id, model]))
@@ -366,7 +369,15 @@ export function apply(ctx: Context, config: Config): void {
         ctx.logger.info(`llm-pi-ai: refreshed ${String(models.length)} models for route "${route}"`)
       }
     } catch (error) {
-      if (isStopped() || (error instanceof LlmError && error.code === 'MISSING_CREDENTIAL')) return
+      if (isStopped()) return
+      if (error instanceof LlmError && error.code === 'MISSING_CREDENTIAL') {
+        if (!readyAtStart) {
+          waitingForCredentials.add(route)
+          attempted.delete(route)
+          if (credentialsReady) pending.add(route)
+        }
+        return
+      }
       ctx.logger.warn(`llm-pi-ai: could not refresh models for route "${route}"; keeping its configured catalog`)
     } finally {
       importing.delete(route)
@@ -388,6 +399,14 @@ export function apply(ctx: Context, config: Config): void {
     settingsService = child.settings
     pumpCatalogs()
     child.effect(() => () => { settingsService = undefined })
+  })
+  // A stored key becomes readable only when the credential service has finished
+  // initialization. A keyless early probe must not suppress that startup refresh.
+  ctx.inject(['credentials'], () => {
+    credentialsReady = true
+    for (const route of waitingForCredentials) attempted.delete(route)
+    waitingForCredentials.clear()
+    pumpCatalogs()
   })
   ctx.on('loader/volatile-update', pumpCatalogs)
   ctx.on('credentials/reference-updated', (ref) => {

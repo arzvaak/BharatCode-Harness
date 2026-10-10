@@ -57,9 +57,10 @@ async function listingServer(replies: Array<{ status?: number; body?: string; de
 }
 
 /** Boot a minimal profile whose bundle mounts the gateway route under test. */
-async function harness(baseURL: string): Promise<{ ctx: Awaited<ReturnType<typeof boot>>; entryId: string }> {
+async function harness(baseURL: string, storedKey?: string): Promise<{ ctx: Awaited<ReturnType<typeof boot>>; entryId: string }> {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'dsh-pi-autoimport-')))
   homes.push(home)
+  if (storedKey !== undefined) writeFileSync(join(home, '.credentials.yaml'), `version: 1\nrefs:\n  GW_IMPORT_KEY: ${storedKey}\n`, { mode: 0o600 })
   const dir = join(home, 'profiles', 'test')
   initProfile(dir, ['test-bundle'])
   const bundle = join(dir, 'node_modules', 'test-bundle')
@@ -229,6 +230,14 @@ describe('endpoint-owned model membership', () => {
     await vi.waitFor(() => { expect(models(ctx)[0]?.reasoningEfforts).toEqual({ high: 'high', max: 'max' }) })
     expect(models(ctx).map(model => model.id)).toEqual(['seed-model'])
     expect(server.headers.map(headers => headers.authorization)).toEqual(['Bearer sk-old-key', 'Bearer sk-new-key'])
+  })
+
+
+  it('refreshes at boot using a key already saved in the credential file', async () => {
+    const server = await listingServer([{ body: JSON.stringify({ data: [{ id: 'seed-model', name: 'Loaded from saved account', supported_reasoning_levels: ['high', 'max'] }] }) }])
+    const { ctx } = await harness(server.url, 'sk-saved-key')
+    await vi.waitFor(() => { expect(models(ctx)[0]?.name).toBe('Loaded from saved account') })
+    expect(server.headers[0]?.authorization).toBe('Bearer sk-saved-key')
   })
 
 })
