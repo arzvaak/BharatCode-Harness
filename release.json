@@ -1,25 +1,25 @@
 {
-  "version": "0.2.0-rc.2.20261010.1791653029",
-  "commit": "cb693b65102a1f9d0362e739fdc5a9d7f769e2ee",
-  "url": "https://github.com/arzvaak/BharatCode-Harness/releases/tag/v0.2.0-rc.2.20261010.1791653029",
+  "version": "0.2.0-rc.2.20261010.1791657089",
+  "commit": "e9b078cc0061b02894b6b888afb34579739227d5",
+  "url": "https://github.com/arzvaak/BharatCode-Harness/releases/tag/v0.2.0-rc.2.20261010.1791657089",
   "packages": {
     "AppImage": {
-      "name": "bharatcode-0.2.0-rc.2.20261010.1791653029-linux-x86_64.AppImage",
-      "url": "https://github.com/arzvaak/BharatCode-Harness/releases/download/v0.2.0-rc.2.20261010.1791653029/bharatcode-0.2.0-rc.2.20261010.1791653029-linux-x86_64.AppImage",
-      "sha256": "b503d4f84147ec6410b3a3faca69a0b310b099080fe70b59010e1ac5622a4c7c",
-      "bytes": 360343239
+      "name": "bharatcode-0.2.0-rc.2.20261010.1791657089-linux-x86_64.AppImage",
+      "url": "https://github.com/arzvaak/BharatCode-Harness/releases/download/v0.2.0-rc.2.20261010.1791657089/bharatcode-0.2.0-rc.2.20261010.1791657089-linux-x86_64.AppImage",
+      "sha256": "2dff565bb306e5e4b913f91bc21a69277210c1cd71c89668765447e54ac5eb16",
+      "bytes": 360347188
     },
     "deb": {
-      "name": "bharatcode-0.2.0-rc.2.20261010.1791653029-linux-amd64.deb",
-      "url": "https://github.com/arzvaak/BharatCode-Harness/releases/download/v0.2.0-rc.2.20261010.1791653029/bharatcode-0.2.0-rc.2.20261010.1791653029-linux-amd64.deb",
-      "sha256": "1d1a6eaf5ad2f29f8199bcaf0d4966969c0a4f87e91652eef7b45cf3880956c1",
-      "bytes": 310100148
+      "name": "bharatcode-0.2.0-rc.2.20261010.1791657089-linux-amd64.deb",
+      "url": "https://github.com/arzvaak/BharatCode-Harness/releases/download/v0.2.0-rc.2.20261010.1791657089/bharatcode-0.2.0-rc.2.20261010.1791657089-linux-amd64.deb",
+      "sha256": "11f60f091e270dedd5d9219bcfd76a95bed86d117b529d30046ca868a598ce6b",
+      "bytes": 310099836
     },
     "rpm": {
-      "name": "bharatcode-0.2.0-rc.2.20261010.1791653029-linux-x86_64.rpm",
-      "url": "https://github.com/arzvaak/BharatCode-Harness/releases/download/v0.2.0-rc.2.20261010.1791653029/bharatcode-0.2.0-rc.2.20261010.1791653029-linux-x86_64.rpm",
-      "sha256": "9168a9140b05929e13de86292c24e7e794f173b4a7ea5d92a2ab76de5a1a8d46",
-      "bytes": 242994889
+      "name": "bharatcode-0.2.0-rc.2.20261010.1791657089-linux-x86_64.rpm",
+      "url": "https://github.com/arzvaak/BharatCode-Harness/releases/download/v0.2.0-rc.2.20261010.1791657089/bharatcode-0.2.0-rc.2.20261010.1791657089-linux-x86_64.rpm",
+      "sha256": "7dddbc8c490d88de71f8b4665a37f46b568bd8ecc61729ec74e6aa0006706da3",
+      "bytes": 242995261
     }
   }
 }
