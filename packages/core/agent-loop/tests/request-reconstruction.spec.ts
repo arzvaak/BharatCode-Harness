@@ -90,7 +90,7 @@ describe('request stability across the loop', () => {
     ])
     const ctx = await harness(adapter)
     try {
-      const guard = await import(new URL('../../../../integrations/tool-call-guard/src/tool-call-guard.js', import.meta.url).href)
+      const guard = await import(new URL('../../../../integrations/tool-call-guard/src/tool-call-guard.js', import.meta.url).href) as { apply(ctx: Context): void; inject: string[] }
       await ctx.plugin(guard)
       registerEcho(ctx)
       const agent = await ctx.agentLoop.create(SessionId('guard-chat'), { provider: 'mock', model: 'mock' })
