@@ -200,6 +200,7 @@ export const en = {
 
 /** Locale keys and compatibility alias preserve English copy in every locale. */
 export type PluginManagerLocaleKey = keyof typeof en
+/** Chinese plugin manager messages. */
 export const zh = {
   panel: en.panel,
   title: en.title,

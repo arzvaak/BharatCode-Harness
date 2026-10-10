@@ -1254,7 +1254,7 @@ else process.exit(1);
     ].join('\n'))
 
     const officeMenus: number[] = []
-    const configurationGuide = 'Read failed: Office previews are unavailable. Enable the document preview service on the computer running DeepSeek Harness.'
+    const configurationGuide = 'Read failed: Office previews are unavailable. Enable the document preview service on the computer running BharatCode.'
     for (const extension of ['doc', 'docx', 'ppt', 'pptx']) {
       await openFile(`unavailable.${extension}`)
       expect(await preview.locator('[data-document-viewer-menu]').count()).toBe(0)
@@ -1271,6 +1271,19 @@ else process.exit(1);
       '- Binary text shown: false',
       '- Plain-text option and viewer picker: hidden',
     ].join('\n'))
+
+    // Spreadsheet cell coordinates below require a visible 600px reading pane.
+    const panel = page.locator('[data-sidebar-right-panel]')
+    const panelBounds = await panel.boundingBox()
+    const gripBounds = await page.locator('[data-side="rightbar"]').first().boundingBox()
+    if (panelBounds === null || gripBounds === null) throw new Error('missing document panel resize handle')
+    const gripX = gripBounds.x + gripBounds.width / 2
+    const gripY = gripBounds.y + gripBounds.height / 2
+    await page.mouse.move(gripX, gripY)
+    await page.mouse.down()
+    await page.mouse.move(gripX - (700 - panelBounds.width), gripY, { steps: 8 })
+    await page.mouse.up()
+    await expect.poll(async () => (await panel.boundingBox())!.width).toBeGreaterThan(600)
 
     await openFile('budget.xlsx')
     const excel = preview.locator('[data-excel-preview]')
@@ -1597,7 +1610,7 @@ describe.skipIf(MODE === 'record')('web e2e: Host Office preview', () => {
       for (const colorScheme of ['dark', 'light'] as const) {
         await page.emulateMedia({ colorScheme })
         await expect.poll(() => preview.locator('[data-pdf-preview]').evaluate(node => getComputedStyle(node).backgroundColor))
-          .toBe(colorScheme === 'dark' ? 'rgb(21, 21, 23)' : 'rgb(235, 238, 242)')
+          .toBe(colorScheme === 'dark' ? 'rgb(41, 38, 33)' : 'rgb(243, 241, 236)')
         await expectPdfPageSpacing(preview)
         await copyPdfText(page, preview, '中文文档')
         await successShot(page, `office-background-${colorScheme}`)

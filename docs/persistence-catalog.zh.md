@@ -714,7 +714,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'project/handoff': HandoffAdmission
 ```
 
-来源：[`packages/workspace/workspace/src/types.ts:251`](../packages/workspace/workspace/src/types.ts)
+来源：[`packages/workspace/workspace/src/types.ts:270`](../packages/workspace/workspace/src/types.ts)
 
 ### `request/*`
 
@@ -1292,7 +1292,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'workflow/assignment': { readonly workflow: WorkflowProfile }
 ```
 
-来源：[`packages/workspace/workspace/src/types.ts:249`](../packages/workspace/workspace/src/types.ts)
+来源：[`packages/workspace/workspace/src/types.ts:268`](../packages/workspace/workspace/src/types.ts)
 
 ### `workspace/*`
 
@@ -3612,7 +3612,7 @@ SHA-256: `1df34a6c086866ffdc2dd9e8e5c581c3751a010cdf6b8538a7327f7a3237f0b4`
 
 SHA-256: `4c2cdc2bfc1613ddcd6dbac3923655ed8b9c9afd66c51c84c0e03a94de2b1a78`
 
-来源：[`packages/workspace/workspace/src/types.ts:237`](../packages/workspace/workspace/src/types.ts)
+来源：[`packages/workspace/workspace/src/types.ts:256`](../packages/workspace/workspace/src/types.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|
@@ -5294,7 +5294,7 @@ SHA-256: `c2deb7c9183735d4e0fffddf5c623f4e34daa1c8e96b111982e957dfcbbcf896`
 
 SHA-256: `8152dee5fd02cb0807e0b80155eafd3baf412ad771af05aa748cb1b24a90c5a2`
 
-来源：[`packages/workspace/workspace/src/types.ts:192`](../packages/workspace/workspace/src/types.ts)
+来源：[`packages/workspace/workspace/src/types.ts:194`](../packages/workspace/workspace/src/types.ts)
 
 以下类型之一：
 
@@ -5482,7 +5482,7 @@ SHA-256: `5d03ba38734809bcbd2a55221bd938b3b3fc34b49bb686c6113e9e4931e3aa78`
 
 SHA-256: `4cd48f3e5108bd6ebedf7301c3638839b8b2b9db8dbd493974177fbdeb91a01b`
 
-来源：[`packages/api/session-controller/src/types.ts:398`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts) · [`packages/workspace/workspace/src/types.ts:147`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:16`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:194`](../packages/workspace/workspace/src/types.ts)
+来源：[`packages/api/session-controller/src/types.ts:398`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts) · [`packages/workspace/workspace/src/types.ts:147`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:16`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:213`](../packages/workspace/workspace/src/types.ts)
 
 `string`
 
@@ -8966,7 +8966,7 @@ SHA-256: `e308ccf867a5398e316e0af8cb6ce238a8d33a63b9b384c8250a686786285f72`
 
 SHA-256: `443000524ce3bb379745cb41b4872b06764d6795abf986e68c09d1d416b4ef4c`
 
-来源：[`packages/workspace/workspace/src/types.ts:249`](../packages/workspace/workspace/src/types.ts)
+来源：[`packages/workspace/workspace/src/types.ts:268`](../packages/workspace/workspace/src/types.ts)
 
 | 属性 | 存在性 | 类型 |
 |---|---|---|

@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 The right Sidebar: where the docking kit meets this product. It holds one docking surface per session, draws it as one edge-anchored panel in the frame's right column in either of two presentations, puts the expand button in the conversation header, and owns the navigation controller (`ctx.sidebarRight`), the tab-type registry (`ctx.sidebarRightTabs`), and the Tab domain that tells each open tab how it was navigated to and how long it lives.
 
-Empty resource panes keep the add control interactive and omit Split until a page is open. The independent bottom terminal dock also omits Split because it does not support pane splitting.
+Empty resource panes keep the add control interactive and omit Split until a page is open. The bottom terminal dock also omits Split because it does not support pane splitting.
 
 ## Table of Contents
 

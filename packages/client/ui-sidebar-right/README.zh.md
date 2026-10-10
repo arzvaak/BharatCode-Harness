@@ -11,6 +11,8 @@ kind: "package-reference"
 
 右侧 Sidebar：停靠套件与本产品相遇的地方。它为每个会话持有一个停靠面，以两种呈现形态之一把它画成贴靠框架右列边缘的一块面板，把展开按钮放进会话 header，并拥有导航控制器（`ctx.sidebarRight`）、tab 类型注册表（`ctx.sidebarRightTabs`），以及告诉每个已开 tab 它是如何被导航到、能活多久的 Tab 域。
 
+空的资源窗格保留可交互的添加控件，在页面打开前不显示 Split。底部终端停靠区同样不显示 Split，因为它不支持窗格分栏。
+
 ## 目录
 
 - [什么住在这里，什么不住](#what-lives-here-and-what-does-not)

@@ -9,6 +9,12 @@
 
 ```mermaid
 flowchart LR
+  pkg_workspace["workspace"]
+  svc_documentDrafts["ctx.documentDrafts<br/>Workspace document drafts"]
+  pkg_api_workspace_controller["api-workspace-controller"]
+  svc_projectKnowledge["ctx.projectKnowledge<br/>Workspace knowledge records"]
+  svc_documentDraftController["ctx.documentDraftController<br/>Host document draft Remote controller"]
+  svc_projectKnowledgeController["ctx.projectKnowledgeController<br/>Host project knowledge Remote controller"]
   pkg_hmr["hmr"]
   svc_hmr["ctx.hmr<br/>Serialized module and configuration reloads"]
   pkg_app_boot["app-boot"]
@@ -84,7 +90,6 @@ flowchart LR
   svc_workspaceChanges["ctx.workspaceChanges<br/>Host per-turn changed-file summaries"]
   pkg_api_terminal_controller["api-terminal-controller"]
   svc_terminalController["ctx.terminalController<br/>Session interactive terminal Remote controller"]
-  pkg_api_workspace_controller["api-workspace-controller"]
   svc_workspaceController["ctx.workspaceController<br/>Host Workspace Remote controller"]
   svc_directoryPickerController["ctx.directoryPickerController<br/>Host directory-picking Remote controller"]
   svc_invariants["ctx.invariants<br/>Package-owned invariant registry"]
@@ -129,7 +134,6 @@ flowchart LR
   pkg_storage_sqlite["storage-sqlite"]
   pkg_storage_domain["storage-domain"]
   svc_storageDomain["ctx.storageDomain<br/>Domain data facility"]
-  pkg_workspace["workspace"]
   svc_messageFeedback["ctx.messageFeedback<br/>Lifecycle-bound message feedback"]
   pkg_command_feedback["command-feedback"]
   svc_sessionFeedback["ctx.sessionFeedback<br/>Session-level feedback recorder"]
@@ -291,6 +295,8 @@ flowchart LR
   pkg_api_settings_controller --> svc_settingsController
   pkg_api_terminal_controller --> svc_terminalController
   pkg_api_workspace_controller --> svc_directoryPickerController
+  pkg_api_workspace_controller --> svc_documentDraftController
+  pkg_api_workspace_controller --> svc_projectKnowledgeController
   pkg_api_workspace_controller --> svc_workspaceController
   pkg_api_workspace_files --> svc_workspaceFiles
   pkg_app_boot --> svc_profileContext
@@ -425,6 +431,8 @@ flowchart LR
   pkg_webhook --> svc_webhookRuntime
   pkg_workflow --> svc_workflowEngine
   pkg_workflow_ptc --> svc_workflowEngine
+  pkg_workspace --> svc_documentDrafts
+  pkg_workspace --> svc_projectKnowledge
   pkg_workspace --> svc_workspaceRegistry
   pkg_workspace_changes --> svc_workspaceChanges
   svc_agentDefaultModel --> pkg_api_session_controller
@@ -462,6 +470,7 @@ flowchart LR
   svc_deepseekAccount --> pkg_llm_deepseek
   svc_deepseekLlmApiExtensions --> pkg_llm_deepseek
   svc_directoryPicker --> pkg_api_workspace_controller
+  svc_documentDrafts --> pkg_api_workspace_controller
   svc_dynamicCordisRunner --> pkg_tool_cordis
   svc_fileReferences --> pkg_api_session_controller
   svc_fileUploads --> pkg_api_session_controller
@@ -488,6 +497,7 @@ flowchart LR
   svc_pluginManager --> pkg_ui_settings_plugin_inventory
   svc_pluginRegistryProbe --> pkg_client_ui_plugin_manager
   svc_profileContext --> pkg_plugin_manager
+  svc_projectKnowledge --> pkg_api_workspace_controller
   svc_ptcRuntime --> pkg_tools
   svc_ptcRuntime --> pkg_workflow_ptc
   svc_sandbox --> pkg_bash_sandbox
@@ -579,6 +589,10 @@ flowchart LR
 
 | ctx 键 | 角色 | 所属包 | 实现 | 直接消费方 | 配套插件 | 说明 |
 | --- | --- | --- | --- | --- | --- | --- |
+| `ctx.documentDrafts` | `core` | [`workspace`](../packages/workspace/workspace) | - | [`api-workspace-controller`](../packages/api/workspace-controller) | - | 按工作区权限和持久化修订存储文档草稿。 |
+| `ctx.projectKnowledge` | `core` | [`workspace`](../packages/workspace/workspace) | - | [`api-workspace-controller`](../packages/api/workspace-controller) | - | 管理工作区知识来源、搜索记录和索引状态。 |
+| `ctx.documentDraftController` | `core` | [`api-workspace-controller`](../packages/api/workspace-controller) | - | - | - | 通过 documents Remote 命名空间提供受工作区权限约束的文档草稿读取和编辑。 |
+| `ctx.projectKnowledgeController` | `core` | [`api-workspace-controller`](../packages/api/workspace-controller) | - | - | - | 通过 knowledge Remote 命名空间提供受工作区权限约束的知识导入和搜索。 |
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | 负责模块和精确配置监听；应用修改共用其队列，自动重载等待应用文件锁。 |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | 在 Host 上并发比较公共安装源响应；初始安装源推荐由 Client 负责。 |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | 与 CLI 共享 profile 包操作，并向 Web 和 Agent 调用方分别报告持久状态与运行状态。 |

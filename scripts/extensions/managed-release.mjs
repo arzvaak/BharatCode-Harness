@@ -26,18 +26,21 @@ export async function packageRuntime(files) {
   } finally { await rm(directory, { recursive: true, force: true }); }
 }
 
-/** Assemble one descriptor per runtime only after Linux and Windows checks pass. */
-export function assembleManagedRelease(reports) {
+/** Assemble descriptors only for the explicitly selected native release platforms. */
+export function assembleManagedRelease(reports, platforms = ['linux', 'win32']) {
+  if (!Array.isArray(platforms) || !platforms.length || new Set(platforms).size !== platforms.length
+    || platforms.some(platform => !['linux', 'win32'].includes(platform))) throw Error('Invalid native release platforms');
   const bundles = [];
   const grouped = Map.groupBy(reports, report => report.id);
   for (const records of grouped.values()) {
-    const linux = records.find(record => record.platform === 'linux');
-    const windows = records.find(record => record.platform === 'win32');
-    if (records.length !== 2 || !linux || !windows) throw Error('Native runtime qualification requires Linux and Windows');
-    const bundle = { id: linux.id, version: linux.version, architecture: linux.architecture,
-      source: linux.source, sourceCommit: linux.sourceCommit, license: linux.license,
-      provides: linux.provides, status: 'qualified', platforms: ['linux', 'win32'], artifacts: {}, commands: {}, qualificationEvidence: [] };
-    for (const record of [linux, windows]) {
+    const selected = platforms.map(platform => records.find(record => record.platform === platform));
+    if (records.length !== platforms.length || selected.some(record => !record))
+      throw Error('Native runtime qualification requires exactly the selected platforms');
+    const first = selected[0];
+    const bundle = { id: first.id, version: first.version, architecture: first.architecture,
+      source: first.source, sourceCommit: first.sourceCommit, license: first.license,
+      provides: first.provides, status: 'qualified', platforms: [...platforms], artifacts: {}, commands: {}, qualificationEvidence: [] };
+    for (const record of selected) {
       for (const field of ['id', 'version', 'architecture', 'source', 'sourceCommit', 'license', 'provides'])
         if (JSON.stringify(record[field]) !== JSON.stringify(bundle[field])) throw Error('Native runtime qualification identities differ');
       if (!Array.isArray(record.checks) || [...REQUIRED_MANAGED_EVIDENCE, 'document-workflow'].some(check => !record.checks.includes(check)))

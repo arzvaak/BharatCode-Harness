@@ -108,6 +108,26 @@ const GROUP_ORDER = [
 
 const SERVICE_ROLES: ServiceRole[] = [
   {
+    key: 'documentDrafts', pkg: 'workspace', title: 'Workspace document drafts',
+    mode: 'core', consumers: ['api-workspace-controller'],
+    note: 'Stores document drafts with workspace authority and durable revisions.',
+  },
+  {
+    key: 'projectKnowledge', pkg: 'workspace', title: 'Workspace knowledge records',
+    mode: 'core', consumers: ['api-workspace-controller'],
+    note: 'Owns workspace knowledge sources, search records and indexing state.',
+  },
+  {
+    key: 'documentDraftController', pkg: 'api-workspace-controller', title: 'Host document draft Remote controller',
+    mode: 'core',
+    note: 'Exposes workspace-authorized document draft reads and edits through the documents Remote namespace.',
+  },
+  {
+    key: 'projectKnowledgeController', pkg: 'api-workspace-controller', title: 'Host project knowledge Remote controller',
+    mode: 'core',
+    note: 'Exposes workspace-authorized knowledge ingestion and search through the knowledge Remote namespace.',
+  },
+  {
     key: 'hmr',
     pkg: 'hmr',
     title: 'Serialized module and configuration reloads',

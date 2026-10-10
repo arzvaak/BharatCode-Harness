@@ -146,7 +146,9 @@ async function resetSidebar(page: Page): Promise<Locator> {
   await ensureExpanded(page, column)
   await column.locator('[data-sidebar-right-guide-entry="files"]').click()
   await expect.poll(async () => await tabTitles(column)).toEqual(['Files'])
-  await width(column)
+  const viewport = page.viewportSize()
+  if (viewport === null) throw new Error('gesture fixture viewport missing')
+  await setPanelWidth(page, Math.round(viewport.width * 0.45))
   return column
 }
 
@@ -1102,11 +1104,10 @@ describe('web e2e: shipped right Sidebar', () => {
 
     it('opens a context menu on right-click that the strip cannot clip', async () => {
       onTestFailed(() => saveFailureShot(page, 'web-e2e-sidebar-right-menu'))
-      const column = page.locator('[data-rightbar-col]')
+      const column = await resetSidebar(page)
 
       await ensureExpanded(page, column)
       await expect.poll(async () => await column.locator('[data-dockkit-tab]').count()).toBeGreaterThan(0)
-      await column.locator('[data-sidebar-right-guide-entry="files"]').click()
       await column.locator('[data-dockkit-add-tab]').click()
       await expect.poll(async () => await tabTitles(column)).toEqual(['Files', 'Start'])
       // No "more" control on the chip: the chip carries its close, and the menu

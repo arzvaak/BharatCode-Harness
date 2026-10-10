@@ -37,3 +37,15 @@ test('signed architecture restricts runtime setup and refuses unknown architectu
   assert.equal(canInstallManagedDependency(bundle, 'linux', 'typst', '*', 'arm64'), false);
   assert.throws(() => validateCatalog({ schemaVersion: 1, revision: 1, channel: 'preview', entries: [], managedDependencies: [{ ...bundle, architecture: 'anything' }] }), /architecture/);
 });
+
+test('an explicit Linux release advertises only its verified native platform', () => {
+  const bundle = assembleManagedRelease([report('linux')], ['linux'])[0];
+  assert.deepEqual(bundle.platforms, ['linux']);
+  assert.deepEqual(Object.keys(bundle.artifacts), ['linux']);
+  assert.equal(canInstallManagedDependency(bundle, 'linux', 'typst', '*', 'x64'), true);
+  assert.equal(canInstallManagedDependency(bundle, 'win32', 'typst', '*', 'x64'), false);
+  for (const platforms of [[], ['darwin'], ['linux', 'linux']])
+    assert.throws(() => assembleManagedRelease([report('linux')], platforms), /platform|qualification/);
+  assert.throws(() => assembleManagedRelease([report('win32')], ['linux']), /qualification/);
+  assert.throws(() => assembleManagedRelease([report('linux'), report('win32')], ['linux']), /qualification/);
+});

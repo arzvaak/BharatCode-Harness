@@ -9,12 +9,14 @@ import type {
   TabRecord,
 } from '@deepseek-ai/dsh-client-ui-dockkit'
 import type { WorkflowProfile } from '@deepseek-ai/dsh-workspace/types'
+/** Localized titles for the four workflow panes. */
 export interface WorkspacePaneTitles {
   readonly chat: string
   readonly document: string
   readonly explorer: string
   readonly support: string
 }
+/** Supported pane arrangements, retaining stable tab identities. */
 export type WorkspacePreset = 'document-focus' | 'chat-focus' | 'balanced' | 'focus'
 /** Stable seed identities keep live pane bodies mounted while changing presets. */
 const ids = {
@@ -24,6 +26,13 @@ const ids = {
   support: { pane: 'pane7' as PaneId, tab: 'tab8' as TabId },
   root: 'split9' as SplitId,
 }
+/**
+ * Build a workflow arrangement with stable pane and tab identities.
+ * @param profile Workflow whose document and explorer contents are selected.
+ * @param preset Requested pane arrangement.
+ * @param titles Localized pane titles.
+ * @returns Expanded docking state for the selected arrangement.
+ */
 export function workspaceLayout(profile: WorkflowProfile, preset: WorkspacePreset, titles: WorkspacePaneTitles): LayoutState {
   const tabs: Record<TabId, TabRecord> = {
     [ids.chat.tab]: { id: ids.chat.tab, kind: 'chat', title: titles.chat, contentId: 'workspace:chat' },
@@ -88,6 +97,11 @@ export function workspaceLayout(profile: WorkflowProfile, preset: WorkspacePrese
   }
   return { nodes, tabs, rootId: ids.root, floats: [], activePaneId: ids.document.pane, expanded: true, mode: 'push' }
 }
+/**
+ * Reverse root split order while retaining pane contents.
+ * @param state Existing docking state.
+ * @returns Reversed root split state, or the same state when no split exists.
+ */
 export function swapWorkspaceSides(state: LayoutState): LayoutState {
   const root = state.nodes[state.rootId]
   if (root?.kind !== 'split') return state
@@ -99,6 +113,11 @@ export function swapWorkspaceSides(state: LayoutState): LayoutState {
     },
   }
 }
+/**
+ * Combine workflow tabs into one pane for a narrow viewport.
+ * @param state Existing docking state.
+ * @returns Single-pane state retaining the selected tab when available.
+ */
 export function narrowWorkspaceLayout(state: LayoutState): LayoutState {
   const active = state.nodes[state.activePaneId]
   const activeTabId = active?.kind === 'pane' ? active.activeTabId : undefined

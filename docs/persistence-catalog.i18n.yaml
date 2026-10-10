@@ -150,8 +150,8 @@
   en: 960c458a6c2acfef
   zh: 960c458a6c2acfef
 /session-persistence-event-catalog/events/project/project-handoff-log-only:
-  en: e1ad7101ab17c950
-  zh: 46ae568c09256e2e
+  en: 287160e8a1988af7
+  zh: 63e49e711c0fca5d
 /session-persistence-event-catalog/events/request:
   en: a8df82440ebdf5f8
   zh: a8df82440ebdf5f8
@@ -294,8 +294,8 @@
   en: 7004868482206f47
   zh: 7004868482206f47
 /session-persistence-event-catalog/events/workflow/workflow-assignment-log-only:
-  en: ae4bbfdbe4ea6aa8
-  zh: 067576f2a39f4368
+  en: 8f121c2001b6b962
+  zh: 99007486182ef5a0
 /session-persistence-event-catalog/events/workspace:
   en: 63ee1a85e4b59ae3
   zh: 63ee1a85e4b59ae3
@@ -1041,8 +1041,8 @@
   en: 7435bbe1c4e37f93
   zh: 45b51aa0ef161a4a
 /session-persistence-event-catalog/resolved-persistence-types/handoffadmission:
-  en: cf1ce97e8fb7b712
-  zh: 2510dc01f3621967
+  en: 02f32c9ff4c0f3f5
+  zh: 91afa8c14920d3fa
 /session-persistence-event-catalog/resolved-persistence-types/headerline:
   en: 0228dc7dcff3ff5a
   zh: bfab168767453f00
@@ -1302,8 +1302,8 @@
   en: a88217a601ef9154
   zh: 45fcf9c3d07af0a3
 /session-persistence-event-catalog/resolved-persistence-types/workflowprofile:
-  en: 4eb0635b81540e69
-  zh: 673fad7f40db15a6
+  en: 1b79711624b3256c
+  zh: bb3efe46ab48fc28
 /session-persistence-event-catalog/resolved-persistence-types/workflowstopreason:
   en: a0d0018c68abc564
   zh: 299d86dbba56b528
@@ -1326,8 +1326,8 @@
   en: b422d27cc2e8e62e
   zh: d5edbe6781c336ef
 /session-persistence-event-catalog/resolved-persistence-types/string:
-  en: 316e26d5b388fec7
-  zh: f0fc073f45667f4c
+  en: e05529adce1d5061
+  zh: b7ad22ab2d5d937b
 /session-persistence-event-catalog/resolved-persistence-types/string~2:
   en: 0089620bf4638263
   zh: 1922bef1713094bb
@@ -2112,8 +2112,8 @@
   en: 80c9192676de4c05
   zh: 13c60fa8230aa024
 /session-persistence-event-catalog/resolved-persistence-types/workflow:
-  en: ec1ebc43a84e4a74
-  zh: caf335d628088d2a
+  en: 6f8769961d72ecfe
+  zh: b26ed1896a46249d
 /session-persistence-event-catalog/resolved-persistence-types/section:
   en: 762ba6afa8d1774b
   zh: 11bd0f051f176ac9

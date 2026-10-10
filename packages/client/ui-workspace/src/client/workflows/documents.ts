@@ -36,6 +36,7 @@ const message = (error: unknown): string => error instanceof Error ? error.messa
 
 /** One owner serializes disk/recovery operations while edits remain immediately available. */
 export class WorkspaceDocuments {
+  /** Reactive document and tab state, partitioned by Session. */
   readonly state = createSnapshotStore<EditorSnapshot>({ sessions: {} })
   private readonly queues = new Map<string, Promise<void>>()
   private readonly opening = new Map<string, Promise<void>>()
@@ -68,7 +69,11 @@ export class WorkspaceDocuments {
     return result
   }
 
-  /** Open exact UTF-8 source and recover unsaved text without writing the file. */
+  /**
+   * Open exact UTF-8 source and recover unsaved text without writing the file.
+   * @param session Session that authorizes the document read.
+   * @param path Workspace-relative source path.
+   */
   async open(session: SessionId, path: string): Promise<void> {
     this.selected.set(session, path)
     const existing = this.state.getSnapshot().sessions[session]?.documents[path]
@@ -103,7 +108,11 @@ export class WorkspaceDocuments {
       } } })
     }
   }
-  /** Activate an already opened document without changing its text. */
+  /**
+   * Activate an already opened document without changing its text.
+   * @param session Session that owns the open document.
+   * @param path Already opened workspace-relative source path.
+   */
   select(session: SessionId, path: string): void {
     this.selected.set(session, path)
     const snapshot = this.state.getSnapshot()
@@ -111,7 +120,12 @@ export class WorkspaceDocuments {
     if (view?.documents[path] === undefined || this.disposed) return
     this.state.set({ sessions: { ...snapshot.sessions, [session]: { ...view, active: path } } })
   }
-  /** Publish an edit immediately and persist a serialized host-private recovery copy. */
+  /**
+   * Publish an edit immediately and persist a serialized host-private recovery copy.
+   * @param session Session that owns the document.
+   * @param path Opened workspace-relative source path.
+   * @param text Complete replacement editor text.
+   */
   edit(session: SessionId, path: string, text: string): Promise<void> {
     this.update(session, path, value => ({ ...value, text, error: undefined }))
     return this.enqueue(session, path, async () => {
@@ -127,7 +141,11 @@ export class WorkspaceDocuments {
     })
     this.update(session, path, latest => ({ ...latest, recovery }))
   }
-  /** Compare against the opened version; conflicting disk text remains separately visible. */
+  /**
+   * Compare against the opened version; conflicting disk text remains separately visible.
+   * @param session Session that authorizes the save.
+   * @param path Opened workspace-relative source path.
+   */
   save(session: SessionId, path: string): Promise<void> {
     return this.enqueue(session, path, async () => {
       const value = this.document(session, path)
@@ -147,7 +165,11 @@ export class WorkspaceDocuments {
       }
     })
   }
-  /** Explicitly accept the compared disk revision as the next save base, retaining the user's text. */
+  /**
+   * Explicitly accept the compared disk revision as the next save base, retaining the user's text.
+   * @param session Session that owns the conflicting document.
+   * @param path Opened workspace-relative source path.
+   */
   rebase(session: SessionId, path: string): Promise<void> {
     return this.enqueue(session, path, async () => {
       this.update(session, path, value => value.conflict === undefined ? value : {
@@ -156,7 +178,12 @@ export class WorkspaceDocuments {
       await this.recover(session, path)
     })
   }
-  /** Close a tab after its latest unsaved text is safely retained in private recovery storage. */
+  /**
+   * Close a tab after its latest unsaved text is safely retained in private recovery storage.
+   * @param session Session that owns the tab.
+   * @param path Opened workspace-relative source path.
+   * @returns Whether the tab closed after recovery persistence succeeded.
+   */
   async close(session: SessionId, path: string): Promise<boolean> {
     let closed = false
     await this.enqueue(session, path, async () => {

@@ -25,4 +25,5 @@ export interface ResearchPreference {
   section: ResearchSection
   sourceRevision?: ArtifactRevisionId | undefined
 }
+/** Selectable research workspace areas. */
 export type ResearchSection = 'overview' | 'sources' | 'workspace' | 'notes' | 'runs' | 'terminal' | 'evidence' | 'manuscript' | 'context' | 'history'

@@ -4,7 +4,9 @@ import type { ResearchPreference } from './surfaces.ts'
 import type { WorkspacePreset } from './layout.ts'
 import type { WorkflowProfile } from '@deepseek-ai/dsh-workspace/types'
 
+/** Presentation profile independent of running agent work. */
 export type WorkflowView = WorkflowProfile | 'chat'
+/** Persisted per-session workflow presentation preferences. */
 export interface WorkflowPresentationState {
   research?: Record<string, ResearchPreference>
   researchChat?: Record<string, boolean>
@@ -14,7 +16,15 @@ export interface WorkflowPresentationState {
   editorVisibility?: Record<string, boolean>
   layouts?: Record<string, { preset: WorkspacePreset; swapped: boolean }>
 }
-export function createWorkflowPresentationStore() {
+/**
+ * Create the persisted workflow presentation store.
+ * @returns Store with per-session layout, editor, research and profile actions.
+ */
+export function createWorkflowPresentationStore(): ReturnType<typeof defineWorkflowPresentationStore> {
+  return defineWorkflowPresentationStore()
+}
+
+function defineWorkflowPresentationStore() {
   return defineStore({
     init: (): WorkflowPresentationState => ({ profiles: {} }),
     persist: 'bharatcode.workspace.presentation.v1',
