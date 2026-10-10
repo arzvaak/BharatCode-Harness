@@ -1,7 +1,5 @@
 # BharatCode Harness
 
-English | [中文](README.zh.md)
-
 ![BharatCode Harness — a desktop for chat, coding, research and writing](integrations/extension-store/site/assets/readme-cover.svg)
 
 BharatCode Harness brings conversations, project files and useful tools into one desktop. Start a quick chat, work in a coding workspace, gather research or shape a draft. Choose your provider when you are ready; setup is optional.
