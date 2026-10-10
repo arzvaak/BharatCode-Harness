@@ -239,7 +239,7 @@ macOS arm64 命令要求 Apple Silicon。macOS x64 命令可以在 Intel macOS �
 
 在原生 Linux x64 主机上运行 `pnpm --dir apps/desktop run package:linux:x64`；追加 `:dir` 可生成应用目录而非 AppImage。流水线构建应用和核心扩展、打包依赖闭包、准备 Electron 及锁定的 Python、Node 和 pnpm 运行时，随后执行生产完整性和 Office 转换检查。产物与构建记录位于 `.desktop-build/targets/linux-x64/artifacts/`。
 
-预览版使用应用 ID `org.bharatcode.Harness.preview`，不接入上游更新服务，通过手动替换 AppImage 更新。Electron 运行 UI；锁定的独立 Node 运行 Linux 后端与 CLI，避免 Electron 的 GLib 与图像处理产生冲突。Linux 将运行时放在 `resources/dsh`，并在组装后验证完整描述符与文件清单；其他目标仍使用 ASAR。启动前为下载的 AppImage 添加执行权限。替换版本成功启动前保留旧文件，并单独保留 profile 备份。全新 profile 检查必须使用专属 `DSH_HOME` 和 `--user-data-dir`，避免修改已有安装。内置终端启动器解析安装镜像目录并使用其运行时；移动目录后需要修复命令链接。
+预览版使用应用 ID `org.bharatcode.Harness.preview`，不接入上游更新服务，通过手动替换 AppImage 更新。Electron 运行 UI；锁定的独立 Node 运行 Linux 后端与 CLI，避免 Electron 的 GLib 与图像处理产生冲突。Linux 将运行时放在 `resources/dsh`，并在组装后验证完整描述符与文件清单；其他目标仍使用 ASAR。应用菜单的“下载更新”命令打开公开发布页。启动前为下载的 AppImage 添加执行权限。替换版本成功启动前保留旧文件，并单独保留 profile 备份。全新 profile 检查必须使用专属 `DSH_HOME` 和 `--user-data-dir`，避免修改已有安装。内置终端启动器解析安装镜像目录并使用其运行时；移动目录后需要修复命令链接。
 
 ### 运行时文件筛选
 
