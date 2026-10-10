@@ -34,10 +34,9 @@ function runCommands(job: Record<string, unknown>): unknown[] {
 }
 
 describe('fork CI workflows (.github/workflows)', () => {
-  it('triggers on trunk pushes and on pull requests', () => {
+  it('runs only when explicitly dispatched', () => {
     const workflow = loadWorkflow('ci.yml')
-    expect(workflow.on).toHaveProperty('push')
-    expect(workflow.on).toHaveProperty('pull_request')
+    expect(workflow.on).toEqual({ workflow_dispatch: null })
   })
 
   it('runs install, sandbox backend, build, profile composition, tests — in that order', () => {

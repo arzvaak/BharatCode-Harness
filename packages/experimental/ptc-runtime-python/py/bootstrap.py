@@ -7,7 +7,7 @@ the completion), and posts a terminal :class:`DoneMessage`. The program calls
 host functions through the ``tools`` (or other namespace) proxy, whose attribute
 and subscript access return awaitables that ride binding messages over fd 3.
 
-This module runs under ``python3 -I`` with only ``TMPDIR`` in its environment
+This module runs under ``python3 -I -X utf8`` with ``TMPDIR`` and fixed ``LC_ALL=C`` in its environment
 and ``sys.path`` containing only its own directory.
 """
 

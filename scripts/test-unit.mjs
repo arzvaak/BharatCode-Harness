@@ -13,6 +13,7 @@ for (const args of [
   const result = spawnSync(process.execPath, [runner, ...args], {
     cwd: root,
     stdio: "inherit",
+    env: { ...process.env, DSH_UNIT_SOURCE_SCANNERS: args.includes("--exclude") ? "1" : "0" },
   });
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
