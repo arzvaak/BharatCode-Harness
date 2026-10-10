@@ -1,8 +1,6 @@
 name: Linux product browser checks
 on:
-  pull_request:
-  push:
-    branches: [main, master]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:

@@ -6,8 +6,6 @@ name: Upstream track
 # conflict-risk set), and keep one tracker issue updated with the delta.
 
 on:
-  schedule:
-    - cron: '23 6 * * *'
   workflow_dispatch:
 
 permissions:

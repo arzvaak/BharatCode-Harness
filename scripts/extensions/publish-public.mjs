@@ -7,6 +7,8 @@ import { signCatalog } from './catalog-release.mjs';
 import { assembleManagedRelease } from './managed-release.mjs';
 import { validatePublicRevision } from './public-channel.mjs';
 import { verifyCatalog } from '../../integrations/extension-store/src/contracts.js';
+import { requireLocalRelease } from './local-release.mjs';
+requireLocalRelease(resolve(import.meta.dirname, '../..'));
 const repository = 'arzvaak/BharatCode-Extensions';
 const [keyFile, sourceCommit, revisionText = '2', runtimeDirectory] = process.argv.slice(2);
 const revision = Number(revisionText);
@@ -37,7 +39,7 @@ catalog.revision = revision; catalog.channel = 'preview';
 const runtimes = [];
 if (runtimeDirectory) {
   const report = JSON.parse(await readFile(join(resolve(runtimeDirectory), 'qualification-linux.json')));
-  if (!report.hosted || report.platform !== 'linux') throw Error('Hosted native Linux runtime qualification required');
+  if (report.platform !== 'linux') throw Error('Native Linux runtime qualification required');
   const bundles = assembleManagedRelease([report], ['linux']);
   for (const bundle of bundles) {
     const asset = bundle.artifacts.linux;

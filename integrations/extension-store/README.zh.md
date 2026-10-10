@@ -15,7 +15,7 @@
 
 ## 预览构建与公开下载
 
-尚未发布面向用户的安装器。当前工程分支可使用 Node 24 和固定版本的 pnpm 构建：在仓库根目录运行 `pnpm install --frozen-lockfile --ignore-scripts`、`pnpm run build` 和 `node scripts/extensions/core.mjs build`。运行 `node scripts/extensions/verify-core.mjs` 可使用独立的临时 profile。此冒烟检查结束后会删除其 fixture（测试前置数据）主目录，不会配置用户的实时 profile。
+独立 Linux AppImage 预览版可通过[桌面发布指南](../../apps/desktop/README.zh.md#linux-preview)获取。当前工程分支可使用 Node 24 和固定版本的 pnpm 构建：在仓库根目录运行 `pnpm install --frozen-lockfile --ignore-scripts`、`pnpm run build` 和 `node scripts/extensions/core.mjs build`。运行 `node scripts/extensions/verify-core.mjs` 可使用独立的临时 profile。此冒烟检查结束后会删除其 fixture（测试前置数据）主目录，不会配置用户的实时 profile。
 
 公开发行使用 `arzvaak/BharatCode-Extensions`，无需登录 GitHub。可选 GitHub 凭据可提高 API 限额。目录签名、软件包哈希、平台检查和资格证据仍决定是否可安装。核心扩展已内置；可选候选项将在工作流验证通过后开放。 目录卡片会说明发布可用性、版本、平台、下载元数据或验证为何阻止安装。已安装但未启用的原生扩展会显示激活指引；工作区扩展会提示选择工作区。
 
@@ -25,7 +25,7 @@
 
 应用版本、软件包 semver 和目录版本号彼此独立。符合资格的描述符必须包含精确的源提交、许可证、产物标识/大小/SHA-256、BC 版本范围和平台证据。每条 `qualificationEvidence` 记录都包含平台、打包安装/生命周期/工作流检查、源提交、归档 SHA-256、结果和 HTTPS 证据链接。每个声明的平台都必须为完全匹配的描述符源和产物通过全部三项检查；重复、陈旧或不完整的记录均不能授权安装。不兼容、受限或不符合资格的候选项仍会显示，但不能安装。目录版本号必须是递增的正整数；离线加载时会重新验证之前已验证过的目录。同一版本出现不同字节的软件包和目录版本替换都会被拒绝。
 
-公开预览通过 `scripts/extensions/publish-public.mjs` 发布，使用外部 Ed25519 私钥和已审查的公开源提交。脚本先验证原生 Linux 打包安装清单和精确归档哈希，再上传十三个核心扩展包、签名目录和校验和。可选的托管 Linux 运行时报告会加入对应的已验证归档；每次发布所请求的目录修订版必须递增。订阅适配器仍内置于应用中；其原生 OAuth 客户端配置尚待审查，因此不包含在公开快照中。公开仓库还提供六个初始技能。可选条目保留其资格状态；公开可下载不代表未经验证的工作流已可用。
+公开预览通过 `scripts/extensions/publish-public.mjs` 发布，使用外部 Ed25519 私钥和已审查的公开源提交。脚本先验证原生 Linux 打包安装清单和精确归档哈希，再上传十三个核心扩展包、签名目录和校验和。可选的原生 Linux 运行时报告会加入对应的已验证归档；每次发布所请求的目录修订版必须递增。订阅适配器仍内置于应用中；其原生 OAuth 客户端配置尚待审查，因此不包含在公开快照中。公开仓库还提供六个初始技能。可选条目保留其资格状态；公开可下载不代表未经验证的工作流已可用。 发布脚本要求[桌面发布指南](../../apps/desktop/README.zh.md#linux-preview)所述的完整本机 Linux 发布检查记录。
 
 此前的私有发布和晋级工作流属于独立的旧通道，不用于发布该公开通道；原有签名密钥也不是公开通道的密钥。操作系统应用签名使用单独的密钥，不能由目录签名替代。已发布产物的升级和恢复验收仍待完成。
 

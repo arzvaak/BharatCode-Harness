@@ -1,8 +1,6 @@
 name: Core and packed extensions
 on:
-  pull_request:
-  push:
-    branches: [master, main]
+  workflow_dispatch:
   workflow_call:
 permissions:
   contents: read
