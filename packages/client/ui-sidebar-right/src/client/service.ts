@@ -73,6 +73,8 @@ interface SidebarRightSessions {
   readonly adopted: ReadonlyMap<SessionId, Adoption>
   /** Each Session's room rule as its seat last reported it; a Session without one has room in every pane. */
   readonly rooms: ReadonlyMap<SessionId, RoomRule>
+  /** Whether the active right panel is showing Files. */
+  readonly filesVisible: ObservableSnapshot<boolean>
   /** The Session the plugin names as on screen. */
   readonly onScreen: ObservableSnapshot<SessionId | undefined>
   /** Open tab metadata across saved and adopted Sessions. */
@@ -98,14 +100,16 @@ export function createSidebarRightController(tabs: SidebarRightTabRegistry, pin:
   const rooms = new Map<SessionId, RoomRule>()
   const onScreen = createSnapshotStore<SessionId | undefined>(undefined)
   const inventory = new SidebarTabInventory()
-  const controller = new SidebarRightController(tabs, pin, host, { adopted, rooms, onScreen, openTabs: inventory.source })
+  const filesVisible = createSnapshotStore(false)
+  const controller = new SidebarRightController(tabs, pin, host, { adopted, rooms, onScreen, filesVisible, openTabs: inventory.source })
+  const syncFilesVisible = (): void => { filesVisible.set(controller.isExpanded() && controller.active()?.kind === 'files') }
   return {
     controller,
     forget: (sessionId) => {
       inventory.remove(sessionId)
       rooms.delete(sessionId)
     },
-    show: (sessionId) => { if (onScreen.getSnapshot() !== sessionId) onScreen.set(sessionId) },
+    show: (sessionId) => { if (onScreen.getSnapshot() !== sessionId) onScreen.set(sessionId); syncFilesVisible() },
     measure: (sessionId, canSplitPane) => { rooms.set(sessionId, canSplitPane) },
     adopt(sessionId, store) {
       adopted.get(sessionId)?.unsubscribe()
@@ -113,6 +117,7 @@ export function createSidebarRightController(tabs: SidebarRightTabRegistry, pin:
         const surface = store.getSnapshot().bySession[sessionId]
         inventory.update(sessionId, Object.values(surface?.layout.tabs ?? {}))
         if (surface !== undefined) controller.tabDomain.sync(sessionId, surface.layout)
+        syncFilesVisible()
       }
       const adoption: Adoption = { store, unsubscribe: store.subscribe(sync) }
       adopted.set(sessionId, adoption)
@@ -120,6 +125,7 @@ export function createSidebarRightController(tabs: SidebarRightTabRegistry, pin:
       return () => {
         adoption.unsubscribe()
         if (adopted.get(sessionId) === adoption) adopted.delete(sessionId)
+        syncFilesVisible()
       }
     },
   }
@@ -194,6 +200,8 @@ export interface ISidebarRight {
    * commits are silent.
    */
   readonly mounted: ObservableSnapshot<SessionId | undefined>
+  /** Whether the active right panel is showing Files. */
+  readonly filesVisible: ObservableSnapshot<boolean>
   /**
    * Open a resource: claim it, place it, reveal the column, record the navigation.
    *
@@ -267,6 +275,8 @@ export class SidebarRightController implements ISidebarRight {
   readonly openTabs: SidebarTabInventory['source']
   /** The on-screen Session; see {@link ISidebarRight.mounted}. */
   readonly mounted: ObservableSnapshot<SessionId | undefined>
+  /** Whether the active right panel is showing Files. */
+  readonly filesVisible: ObservableSnapshot<boolean>
   private readonly adopted: ReadonlyMap<SessionId, Adoption>
   private readonly rooms: ReadonlyMap<SessionId, RoomRule>
   private readonly closeHandlers = new Map<string, SidebarRightCloseHandler>()
@@ -303,6 +313,7 @@ export class SidebarRightController implements ISidebarRight {
   ) {
     this.adopted = sessions.adopted
     this.rooms = sessions.rooms
+    this.filesVisible = sessions.filesVisible
     this.mounted = sessions.onScreen
     this.openTabs = sessions.openTabs
     this.tabDomain = new TabDomain(this, pin)

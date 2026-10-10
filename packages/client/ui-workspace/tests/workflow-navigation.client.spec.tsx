@@ -59,6 +59,7 @@ it('preserves the live composer DOM and unsent text while switching profiles and
     let profile = 'coding'
     const props = {
       sessionId: 'session-a',
+      useFilesVisible: (select: (value: boolean) => unknown) => select(false),
       useDocuments: (select: (value: { sessions: Record<string, never> }) => unknown) => select({ sessions: {} }),
       showEditor: vi.fn(), closeDocument: vi.fn(), arrange: vi.fn(), restoreDocuments: vi.fn(),
       openDocument: vi.fn(), selectDocument: vi.fn(), editDocument: vi.fn(), saveDocument: vi.fn(), rebaseDocument: vi.fn(),
@@ -103,13 +104,16 @@ it('preserves the live composer DOM and unsent text while switching profiles and
   }
 })
 
-it('hides and reopens the editor without replacing the composer or source DOM', () => {
+it('toggles Files and the editor without replacing the composer or source DOM', () => {
   let visible = true
+  let filesVisible = false
   const p = {
     useWorkspaces: (select: (value: unknown) => unknown) => select({ items: [] }),
     useSessions: (select: (value: unknown) => unknown) => select({ byId: {} }),
     useJobs: (select: (value: unknown) => unknown) => select({ rows: {}, observed: {} }),
     listFiles: vi.fn(async () => ({ path: '', entries: [], truncated: false })),
+    useFilesVisible: (select: (value: boolean) => unknown) => select(filesVisible),
+    toggleFiles: vi.fn(() => { filesVisible = !filesVisible }),
     sessionId: 'session-a', phase: 'active', hero: false,
     usePresentation: (select: (value: unknown) => unknown) => select({
       profiles: { 'session-a': 'writing' }, surfaceVisibility: { '["session-a","writing"]': visible },
@@ -125,6 +129,16 @@ it('hides and reopens the editor without replacing the composer or source DOM', 
     t: (key: string) => copy[key] ?? key,
   } as WorkflowWorkspaceProps
   const view = render(<WorkflowWorkspace {...p} />)
+  const filesButton = screen.getByRole('button', { name: 'editor.files' })
+  expect(filesButton.getAttribute('aria-expanded')).toBe('false')
+  fireEvent.click(filesButton)
+  view.rerender(<WorkflowWorkspace {...p} />)
+  expect(filesButton.getAttribute('aria-expanded')).toBe('true')
+  expect(filesButton.getAttribute('aria-pressed')).toBe('true')
+  fireEvent.click(filesButton)
+  view.rerender(<WorkflowWorkspace {...p} />)
+  expect(filesButton.getAttribute('aria-expanded')).toBe('false')
+  expect(p.toggleFiles).toHaveBeenCalledTimes(2)
   const composer = screen.getByRole('textbox', { name: 'Unsent draft' }) as HTMLTextAreaElement
   const source = screen.getByRole('textbox', { name: 'editor.source' })
   fireEvent.change(composer, { target: { value: 'Unsent' } })

@@ -276,17 +276,17 @@ describe('web e2e: shipped right Sidebar', () => {
     await scaffold?.close()
   })
 
-  it('shows nothing on the right while no session keys a surface', async () => {
+  it('starts an independent chat with the right surface collapsed', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-sidebar-right-hero'))
     const frame = page.locator('[class*="frame"]').first()
     const column = page.locator('[data-rightbar-col]')
     await column.waitFor({ state: 'attached', timeout: 15_000 })
 
-    // With no session there is no surface: no panel in the column, no expand
-    // button in the header, and no track — the conversation reaches the frame's edge.
+    // Startup selects an independent chat, with its right surface collapsed.
     expect(await frame.getAttribute('data-rightbar-collapsed')).toBe('true')
-    expect(await column.locator('[data-sidebar-right-panel]').count()).toBe(0)
-    expect(await expandOf(page).count()).toBe(0)
+    await expandOf(page).waitFor()
+    expect(await column.locator('[data-sidebar-right-panel]').count()).toBe(1)
+    expect(await expandOf(page).count()).toBe(1)
     expect(await width(column)).toBe(0)
     await shot(page, '01-hero-no-sidebar')
 
@@ -299,7 +299,7 @@ describe('web e2e: shipped right Sidebar', () => {
       await connectFreshWorkspace(page, scaffold.workspaceCwd)
       // A settled session is what keys the surface; seed one turn through the
       // real append path so the Chat surface is live before the Sidebar is driven.
-      const agent = scaffold.ctx.agents.list()[0]
+      const agent = scaffold.ctx.agents.list().find(candidate => candidate.session.header.cwd === join(scaffold.workspaceCwd, 'workspace'))
       if (agent === undefined) throw new Error('connected workspace did not create an Agent')
       // The wire parameter is `agentId`; the client passes a session id. If the
       // scaffold's Agent and Session carry different ids, that mismatch is the
@@ -748,7 +748,7 @@ describe('web e2e: shipped right Sidebar', () => {
         } | undefined
       }).get('workspaceFiles')
       if (files === undefined) throw new Error('host endpoint is not provided')
-      const agent = scaffold.ctx.agents.list()[0]
+      const agent = scaffold.ctx.agents.list().find(candidate => candidate.session.header.cwd === join(scaffold.workspaceCwd, 'workspace'))
       if (agent === undefined) throw new Error('no Agent to read for')
       const scope = {
         sessionId: agent.session.id,

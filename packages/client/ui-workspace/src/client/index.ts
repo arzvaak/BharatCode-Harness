@@ -288,7 +288,8 @@ export function apply(ctx: Context): void {
   ctx.slots.inject('conversation.workspace', () => ctx.slots.register({
     name: 'conversation.workspace', locale: NS,
     inject: () => ({
-      hooks: { presentation: workflowInstance, documents: documents.state, jobs: ctx.jobs.state },
+      hooks: { presentation: workflowInstance, documents: documents.state, jobs: ctx.jobs.state,
+        filesVisible: ctx.sidebarRight.filesVisible },
       changeResearch: (key: string, change: Partial<import('./workflows/surfaces.ts').ResearchPreference>) => { workflowInstance.actions.researchView(key, change) },
       showResearchChat: (key: string, visible: boolean) => { workflowInstance.actions.showResearchChat(key, visible) },
       searchArtifacts: async (request: import('@deepseek-ai/dsh-workspace/types').SearchArtifactsRequest) => unwrap(await ctx.remote.knowledge.search(request)),
@@ -306,7 +307,8 @@ export function apply(ctx: Context): void {
       openFiles: () => { if (ctx.sidebarRight.mounted.getSnapshot() !== undefined) ctx.sidebarRight.openTab('files') },
       openTerminal: () => { ctx.sidebarRight.openTab('terminal') },
       toggleFiles: () => {
-        if (ctx.sidebarRight.isExpanded()) ctx.sidebarRight.toggleExpanded()
+        if (ctx.sidebarRight.mounted.getSnapshot() === undefined) return
+        if (ctx.sidebarRight.isExpanded() && ctx.sidebarRight.active()?.kind === 'files') ctx.sidebarRight.toggleExpanded()
         else ctx.sidebarRight.openTab('files')
       },
       toggleTerminal: () => { ctx.sidebarRight.toggleTerminal() },

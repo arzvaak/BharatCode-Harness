@@ -27,6 +27,7 @@ export type WorkflowWorkspaceProps = PropsRuntime<'conversation.workspace'> &
     presentation: HostObservable<WorkflowPresentationState>
     documents: HostObservable<EditorSnapshot>
     jobs: HostObservable<JobsSnapshot>
+    filesVisible: HostObservable<boolean>
   }> &
   {
     changeResearch: (key: string, change: Partial<ResearchPreference>) => void
@@ -53,9 +54,10 @@ export function WorkflowWorkspace({
   restoreDocuments,
   changeResearch, showResearchChat: _showResearchChat, useJobs, watchRuns, observeRun,
   useWorkspaces, useSessions,
-  openFiles, toggleFiles, toggleTerminal,
+  openFiles: _openFiles, toggleFiles, toggleTerminal, useFilesVisible,
   ...documents
 }: WorkflowWorkspaceProps) {
+  const filesVisible = useFilesVisible(value => value)
   const profile = usePresentation(value => value.profiles[sessionId ?? 'new'] ?? 'chat')
   const layoutKey = JSON.stringify([sessionId ?? 'new', profile])
   const layout = usePresentation(value => value.layouts?.[layoutKey])
@@ -102,7 +104,7 @@ export function WorkflowWorkspace({
         <button ref={documentsToggle} type="button" aria-expanded={editorVisible} onClick={() => { showEditor(layoutKey, !editorVisible) }}>
           {t(toggleKey)}
         </button>
-        {profile !== 'chat' && <button type="button" onClick={() => { openFiles?.() }}>{t('editor.files')}</button>}
+        {profile !== 'chat' && <button type="button" aria-expanded={filesVisible} aria-pressed={filesVisible} onClick={() => { toggleFiles?.() }}>{t('editor.files')}</button>}
         <select disabled={!editorVisible} aria-label={t('layout.label')} value={preset}
           onChange={(event) => { arrange(layoutKey, event.target.value as WorkspacePreset, swapped) }}>
           {(['balanced', 'chat-focus', 'document-focus', ...(profile === 'research' ? [] : ['focus'])] as WorkspacePreset[])

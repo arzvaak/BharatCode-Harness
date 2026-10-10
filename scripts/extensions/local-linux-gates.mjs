@@ -24,7 +24,7 @@ const commands = [
   ['xvfb-run', ['-a', process.execPath, 'integrations/visuals/scripts/native-export.mjs']],
   node(['scripts/extensions/qualify-managed.mjs']), node(['scripts/extensions/verify-core.mjs']),
   node(['scripts/extensions/packed-core.mjs']),
-  run(['run', 'test:web:built', 'apps/web/tests/sidebar-scrollbar.e2e.ts', 'apps/web/tests/sidebar-title-hover-scroll.e2e.ts', 'apps/web/tests/sidebar-right.e2e.ts', 'apps/web/tests/document-preview.e2e.ts']),
+  run(['run', 'test:web:built', 'apps/web/tests/independent-chats.e2e.ts', 'apps/web/tests/sidebar-scrollbar.e2e.ts', 'apps/web/tests/sidebar-title-hover-scroll.e2e.ts', 'apps/web/tests/sidebar-right.e2e.ts', 'apps/web/tests/document-preview.e2e.ts']),
   run(['--dir', 'apps/desktop', 'run', 'package:linux:x64']),
   ['xvfb-run', ['-a', process.execPath, 'scripts/extensions/smoke-linux-appimage.mjs']],
 ];

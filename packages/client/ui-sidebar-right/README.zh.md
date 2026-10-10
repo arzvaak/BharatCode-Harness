@@ -127,7 +127,10 @@ Tab 域按（Session，Tab id）保留品牌化 occurrence id、导航、中止�
 
 该列里的每个字符串都来自 `sidebarRight` 语言命名空间，包括套件的无障碍名称。tab 的标题在 tab 铸造时固定；类型的显示名跟随当前语言。
 
+`filesVisible` 观察当前右侧面板是否展开且激活 Files。所选会话、活动标签页或展开状态变化时会更新，供工作流 Files 控件展示当前状态。
+
 <a id="model-experience"></a>
+
 ## 模型体验
 
 无，因为本包是浏览器侧 UI 插件层，不注册任何面向模型的内容。

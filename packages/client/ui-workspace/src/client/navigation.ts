@@ -60,7 +60,7 @@ export interface UiWorkspace {
   /**
    * Start a New Session flow and navigate to its Session; a creation the Host
    * refuses is shown through the Workspace notice and leaves the selection as it was.
-   * @param workspaceId - explicit target; absent inherits the current or most recent Workspace.
+   * @param workspaceId - explicit target; absent starts an independent chat without Workspace membership.
    */
   startSession(workspaceId?: WorkspaceId): void
   /**
@@ -223,23 +223,19 @@ class UiWorkspaceService extends Service implements UiWorkspace {
   }
 
   startSession(workspaceId?: WorkspaceId): void {
-    const workspace = this.workspaces.list.getSnapshot()
-    const sessions = this.sessions.list.getSnapshot()
-    const current = this.mainReference?.sessionId
-    const currentWorkspaceId = current === undefined
-      ? undefined
-      : workspace.items.find(item => item.sessionIds.includes(current))?.workspaceId
-    const recent = workspace.phase === 'ready' && sessions.phase === 'ready'
-      ? recentWorkspace(workspace.items, sessions.byId)
-      : undefined
-    const target = workspaceId ?? currentWorkspaceId ?? recent
-    if (target === undefined) {
-      this.clearMain()
-      return
+    const operation = workspaceId === undefined ? this.openStandalone() : this.openWorkspace(workspaceId)
+    void operation.catch((reason: unknown) => { console.warn('new session failed:', reason) })
+  }
+
+  private async openStandalone(): Promise<void> {
+    const navigation = AbortSignal.any([this.ctx.layout.beginNavigation(), this.lifetime.signal])
+    let sessionId: SessionId
+    try { sessionId = await this.sessions.create({}) }
+    catch (error: unknown) {
+      if (!navigation.aborted) this.notify({ kind: 'createFailed', message: creationFailureMessage(error) })
+      throw error
     }
-    void this.openWorkspace(target).catch(
-      (reason: unknown) => { console.warn('new session failed:', reason) },
-    )
+    if (!navigation.aborted) this.replaceMain(sessionId, navigation, 'reveal')
   }
 
   async archiveSession(sessionId: SessionId, options: { readonly stopActivity?: boolean } = {}): Promise<void> {
@@ -336,24 +332,13 @@ class UiWorkspaceService extends Service implements UiWorkspace {
       && !workspaces.archivedSessionIds.includes(summary.id)) {
       sessionId = await this.reuseBlank(workspace.workspaceId, summary.id)
     }
-    let target = workspace?.workspaceId ?? recentWorkspace(workspaces.items, sessions.byId)
-    if (target === undefined && workspaces.items.length === 0 && sessions.ids.length === 0) {
-      const prepared = await this.initializeDefaultWorkspace(navigation)
-      if (navigation.aborted) return
-      target = prepared?.workspaceId
+    const target = workspace?.workspaceId
+    if (target === undefined && sessions.ids.length === 0) {
+      sessionId = await this.sessions.create({})
     }
     if (sessionId === undefined && target !== undefined) sessionId = await this.connectWorkspace(target)
     if (sessionId !== undefined && !navigation.aborted) {
       this.replaceMain(sessionId, navigation, 'preserve')
-    }
-  }
-
-  private async initializeDefaultWorkspace(signal: AbortSignal): Promise<WorkspaceView | undefined> {
-    try {
-      return await this.workspaces.initializeDefault(signal)
-    } catch (_error: unknown) {
-      if (!signal.aborted) this.notify({ kind: 'defaultWorkspaceFailed' })
-      return undefined
     }
   }
 
@@ -425,28 +410,6 @@ function creationFailureMessage(error: unknown): string {
   const refused = sessionCreateErrorOf(error)
   if (refused !== undefined) return `${refused.rpcError.code}: ${refused.rpcError.message}`
   return error instanceof Error ? error.message : String(error)
-}
-
-/** Stable tie-breaking follows Host Workspace order. */
-function recentWorkspace(
-  workspaces: readonly WorkspaceView[],
-  sessions: SessionListState['byId'],
-): WorkspaceId | undefined {
-  let selected: WorkspaceId | undefined
-  let selectedTime = Number.NEGATIVE_INFINITY
-  for (const workspace of workspaces) {
-    let latest = Number.NEGATIVE_INFINITY
-    for (const sessionId of workspace.sessionIds) {
-      const session = sessions[sessionId]
-      if (session !== undefined) latest = Math.max(latest, session.updatedAt)
-    }
-    if (latest === Number.NEGATIVE_INFINITY) latest = Date.parse(workspace.createdAt)
-    if (selected === undefined || latest > selectedTime) {
-      selected = workspace.workspaceId
-      selectedTime = latest
-    }
-  }
-  return selected
 }
 
 export { UiWorkspaceService }

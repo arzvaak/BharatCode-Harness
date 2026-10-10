@@ -126,7 +126,7 @@
 .workspaceCaption { flex: 1; }
 .workspaceHeader { flex-wrap: wrap; }
 .workspaceHeader select, .workspaceHeader button { flex: none; max-width: 100%; }
-.workspaceHeader button[aria-expanded='true'] { color: var(--dsw-alias-brand-primary); }
+.workspaceHeader button[aria-expanded='true'] { color: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); }
 .workspaceBody { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); }
 .chatPane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .documentPane { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }

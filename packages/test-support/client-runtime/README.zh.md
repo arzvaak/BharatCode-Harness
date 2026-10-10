@@ -158,7 +158,10 @@ test('registers into the sidebar', async ({ remote, start }) => {
 
 -----
 
+默认 Remote 脚本创建独立的空白启动会话，并保持其 follow 流打开而不发送帧；需要就绪会话的测试提供自己的 follow 投影。
+
 <a id="model-experience"></a>
+
 ## 模型体验
 
 无；本包是浏览器侧测试基础设施，不会发起任何模型请求。

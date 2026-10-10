@@ -84,6 +84,25 @@ function harness() {
 }
 
 describe('SidebarRightController — opening', () => {
+  it('publishes Files visibility across opening, collapsing, and Session changes', () => {
+    const h = harness()
+    h.tabs.register({ id: 'test/files', kind: 'files', title: () => 'Files' })
+    h.publish()
+    expect(h.controller.filesVisible.getSnapshot()).toBe(false)
+    h.controller.openTab('files')
+    expect(h.controller.filesVisible.getSnapshot()).toBe(true)
+    h.controller.toggleExpanded()
+    expect(h.controller.filesVisible.getSnapshot()).toBe(false)
+    h.controller.openTab('files')
+    expect(h.controller.filesVisible.getSnapshot()).toBe(true)
+    h.show(undefined)
+    expect(h.controller.filesVisible.getSnapshot()).toBe(false)
+    h.show(SESSION)
+    expect(h.controller.filesVisible.getSnapshot()).toBe(true)
+    h.unadopt()
+    expect(h.controller.filesVisible.getSnapshot()).toBe(false)
+  })
+
   it('keeps independently opened instances distinct when they return to the same pane', () => {
     const h = harness()
     h.tabs.register({ id: 'test/terminal', kind: 'terminal', multiple: true, title: () => 'terminal' })

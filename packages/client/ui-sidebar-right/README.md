@@ -127,7 +127,10 @@ The guide tab is a muted compass over one entry capsule per `guide` entry the re
 
 Every string in the column comes from the `sidebarRight` locale namespace, including the kit's accessible names. A tab's title is fixed when the tab is minted; a type's display name follows the current language.
 
+`filesVisible` observes whether the on-screen right panel is expanded with Files active. It updates when the selected Session, active tab, or expansion changes, so workflow Files controls can show their current state.
+
 <a id="model-experience"></a>
+
 ## Model Experience
 
 None, as the package is a browser-side UI plugin layer that registers nothing model-facing.

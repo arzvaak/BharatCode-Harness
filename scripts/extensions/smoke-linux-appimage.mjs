@@ -74,6 +74,22 @@ try {
     const footer = page.getByRole('button', { name: 'Account menu', exact: true });
     await footer.waitFor();
     console.log('AppImage smoke: onboarding deferred');
+    await footer.click();
+    if (await page.getByRole('menuitem', { name: 'Feedback', exact: true }).count()) throw Error('External Feedback remains in the account menu');
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'All chats', exact: true }).waitFor();
+    if (await page.getByRole('treeitem').filter({ hasText: 'Default workspace' }).count()) throw Error('Fresh profile registered a default Workspace');
+    await page.locator('[data-conversation-session]').waitFor();
+    await page.getByRole('button', { name: /^Research/ }).click();
+    const files = page.getByRole('button', { name: 'Files', exact: true });
+    await files.click();
+    const filesDeadline = Date.now() + 10000;
+    while (await files.getAttribute('aria-expanded') !== 'true' && Date.now() < filesDeadline) await new Promise(resolve => setTimeout(resolve, 100));
+    if (await files.getAttribute('aria-expanded') !== 'true') throw Error('Files did not expand');
+    await files.click();
+    const collapseDeadline = Date.now() + 10000;
+    while (await files.getAttribute('aria-expanded') !== 'false' && Date.now() < collapseDeadline) await new Promise(resolve => setTimeout(resolve, 100));
+    if (await files.getAttribute('aria-expanded') !== 'false') throw Error('Files did not collapse on the second click');
     const footerDeadline = Date.now() + 10000;
     let footerText = (await footer.innerText()).trim();
     while (footerText !== 'User' && Date.now() < footerDeadline) {

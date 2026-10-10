@@ -71,8 +71,10 @@
 }
 
 .sectionLabel {
+  display: flex;
+  gap: 8px;
   flex: none;
-  max-width: 45%;
+  max-width: 65%;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
@@ -620,4 +622,18 @@
   .headerActions {
     transition: none;
   }
+}
+
+.browseMode {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.browseMode[aria-pressed='true'] {
+  opacity: 1;
 }

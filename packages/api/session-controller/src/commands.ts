@@ -2,6 +2,8 @@
 
 import { modelAvailable } from './catalog.ts'
 import { randomUUID } from 'node:crypto'
+import { mkdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Agent, ModelSelection as AgentModelSelection } from '@deepseek-ai/dsh-agent'
@@ -89,12 +91,14 @@ export class SessionCommandController {
   /**
    * @param ctx - Host context carrying Agent, model, attachment, title, and Workspace services.
    * @param agents - sole owner of create, resume, and Session-local model selection.
-   * @param defaultCwd - project directory used when create names neither a Workspace nor a cwd.
+   * @param defaultCwd - fallback directory for callers without a standalone directory.
+   * @param standaloneDirectory - parent of per-chat folders for fresh independent Sessions.
    */
   constructor(
     private readonly ctx: Context,
     private readonly agents: ApiSessionAgentController,
     private readonly defaultCwd: string,
+    private readonly standaloneDirectory?: string,
   ) {}
 
   /**
@@ -116,7 +120,17 @@ export class SessionCommandController {
         })
       }
     }
-    const cwd = workspace?.path ?? request.cwd ?? this.defaultCwd
+    let cwd = workspace?.path ?? request.cwd
+    if (cwd === undefined && request.sessionId !== undefined && this.standaloneDirectory !== undefined) {
+      try { cwd = (await inspectApiSession(this.ctx, sessionId)).meta.cwd }
+      catch (error) { if (!(error instanceof ApiSessionNotFound)) throw error }
+    }
+    if (cwd === undefined && this.standaloneDirectory !== undefined) {
+      // Caller-supplied ids never become path segments; each new folder has an independent identity.
+      cwd = join(this.standaloneDirectory, `chat-${randomUUID()}`)
+      await mkdir(cwd, { recursive: true })
+    }
+    cwd ??= this.defaultCwd
     let adopted: Agent
     try {
       adopted = await this.agents.ensureSession(
