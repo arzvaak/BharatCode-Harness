@@ -45,7 +45,6 @@ import type {
   UsageWindow,
 } from './common.js'
 import { proxiedFetch } from '../http.js'
-import { ANTIGRAVITY_DEFAULT_CLIENT_ID, ANTIGRAVITY_DEFAULT_CLIENT_SECRET } from './antigravity-oauth-client.js'
 import { AccountTokenManager, DISCOVERY_TIMEOUT_MS, unionAccountCatalogs } from './accounts.js'
 import type { PoolAdapter } from './pool.js'
 import { DEFAULT_RATE_LIMIT_WAIT, DEFAULT_RETRY, subscriptionRetryPolicy } from './rate-limit.js'
@@ -73,7 +72,7 @@ export const ANTIGRAVITY_SCOPES = [
   'https://www.googleapis.com/auth/experimentsandconfigs',
 ] as const
 
-/** OAuth client configuration; explicit clients override the bundled desktop identity. */
+/** OAuth client configuration; supplied by the deployment or user. */
 export interface AntigravityOAuthConfig {
   clientId: string
   clientSecret?: string
@@ -88,7 +87,7 @@ export interface AntigravityRuntimeConfig {
   onboard?: boolean
 }
 
-/** Resolve a client pair: plugin config, environment, then the public desktop default. */
+/** Resolve one explicit client pair from plugin config or environment. */
 export function resolveAntigravityOAuthConfig(config?: Partial<AntigravityOAuthConfig>): AntigravityOAuthConfig {
   const configuredId = config?.clientId?.trim()
   const configuredSecret = config?.clientSecret?.trim()
@@ -103,7 +102,7 @@ export function resolveAntigravityOAuthConfig(config?: Partial<AntigravityOAuthC
     return { clientId: environmentId, ...environmentSecret ? { clientSecret: environmentSecret } : {} }
   }
   if (environmentSecret) throw new Error('ANTIGRAVITY_CLIENT_SECRET requires ANTIGRAVITY_CLIENT_ID')
-  return { clientId: ANTIGRAVITY_DEFAULT_CLIENT_ID, clientSecret: ANTIGRAVITY_DEFAULT_CLIENT_SECRET }
+  throw new Error('Google Antigravity requires your own OAuth client: configure antigravity.clientId or ANTIGRAVITY_CLIENT_ID, and a matching client secret if your registration requires it. No third-party OAuth client is bundled.')
 }
 
 /** Normalize the configured API origin and reject paths/credentials. */

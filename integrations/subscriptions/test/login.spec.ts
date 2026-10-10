@@ -611,14 +611,21 @@ test('auth RPC: an unknown provider is rejected, not dispatched', async () => {
 })
 
 
-test('login(antigravity): no client configuration opens the Google PKCE authorization flow', async () => {
+test('login(antigravity): missing client configuration fails before opening authorization', async () => {
   await inIsolatedHome(() => withEnv('ANTIGRAVITY_CLIENT_ID', '', () => withEnv('ANTIGRAVITY_CLIENT_SECRET', '', async () => {
+    const controller = makeController(() => undefined)
+    await assert.rejects(controller.login('antigravity'), /requires your own OAuth client/)
+  })))
+})
+
+test('login(antigravity): an explicit environment client opens Google PKCE authorization', async () => {
+  await inIsolatedHome(() => withEnv('ANTIGRAVITY_CLIENT_ID', 'fixture-client.apps.example.invalid', () => withEnv('ANTIGRAVITY_CLIENT_SECRET', '', async () => {
     const controller = makeController(() => undefined)
     try {
       const { authorizeUrl } = await controller.login('antigravity')
       const url = new URL(authorizeUrl)
       assert.equal(url.origin + url.pathname, 'https://accounts.google.com/o/oauth2/v2/auth')
-      assert.match(url.searchParams.get('client_id') ?? '', /\.apps\.googleusercontent\.com$/)
+      assert.equal(url.searchParams.get('client_id'), 'fixture-client.apps.example.invalid')
       assert.equal(url.searchParams.get('code_challenge_method'), 'S256')
       assert.equal(url.searchParams.get('access_type'), 'offline')
       assert.ok((url.searchParams.get('state') ?? '').length >= 43)

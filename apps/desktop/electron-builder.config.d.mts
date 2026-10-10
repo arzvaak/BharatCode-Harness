@@ -2,27 +2,20 @@ import type { AfterPackContext, BeforePackContext } from 'app-builder-lib'
 
 /** Electron-builder fields asserted by the Desktop release tests. */
 export interface DesktopElectronBuilderConfig {
+  readonly productName: 'BharatCode'
+  readonly electronDist: string
+  readonly linux: { readonly category: 'Development'; readonly executableName: 'bharatcode'; readonly icon: string; readonly target: readonly ['AppImage'] }
   readonly appId: string
   readonly artifactName: string
   readonly protocols: readonly [{ readonly name: 'BharatCode'; readonly schemes: readonly ['dsh'] }]
   readonly directories: {
     readonly output: string
   }
-  readonly files: readonly [
-    string,
-    string,
-    string,
-    string,
-    { readonly from: string, readonly to: 'dsh', readonly filter: readonly ['**/*'] },
-    { readonly from: string, readonly to: 'dsh/node_modules', readonly filter: readonly ['**/*'] },
-  ]
-  readonly extraMetadata: { readonly dshDesktopAppId: string }
+  readonly files: readonly (string | { readonly from: string; readonly to: string; readonly filter: readonly string[] })[]
+  readonly extraMetadata: { readonly dshDesktopAppId: string; readonly dshMandatoryUpdatePolicy: unknown }
+  readonly asar: boolean
   readonly asarUnpack: readonly string[]
-  readonly extraResources: readonly [
-    { readonly from: string, readonly to: 'runtime' },
-    { readonly from: string, readonly to: 'icon.png' },
-    ...{ readonly from: string, readonly to: 'tray.ico' }[],
-  ]
+  readonly extraResources: readonly { readonly from: string; readonly to: string }[]
   readonly mac: {
     readonly extendInfo: { readonly NSMicrophoneUsageDescription: string }
     readonly entitlements: string

@@ -12,7 +12,7 @@ type Page = 'entry' | 'key' | 'account'
  * Render the standalone welcome flow using shell-owned operations and localized copy.
  * Clearing the account attempt returns the sign-in status page to the initial choices.
  * @param props.api - isolated preload API; no account credentials reach the renderer.
- * @returns welcome pages with fixed bottom actions.
+ * @returns welcome pages with scrollable content and keyboard-accessible actions.
  */
 export function Welcome({ api }: { api: WelcomeApi }) {
   const { messages: m } = api
@@ -33,10 +33,13 @@ export function Welcome({ api }: { api: WelcomeApi }) {
   const mounted = useRef(true)
   const revision = useRef(0)
   const input = useRef<HTMLInputElement>(null)
+  const authHeading = useRef<HTMLHeadingElement>(null)
   const keyButton = useRef<HTMLButtonElement>(null)
-  const focusEntry = useRef(false)
+  const accountButton = useRef<HTMLButtonElement>(null)
+  const focusEntry = useRef<'key' | 'account' | null>(null)
 
   function navigate(next: Page) {
+    setError('')
     pageRef.current = next
     setPage(next)
   }
@@ -46,7 +49,9 @@ export function Welcome({ api }: { api: WelcomeApi }) {
     setAttempt(state.attempt)
     setStarting(false)
     setCopyFeedback({ status: 'idle' })
-    navigate(state.attempt === null || state.attempt.phase === 'cancelled' ? 'entry' : 'account')
+    const returning = state.attempt === null || state.attempt.phase === 'cancelled'
+    if (returning) focusEntry.current = 'account'
+    navigate(returning ? 'entry' : 'account')
   }
 
   useEffect(() => {
@@ -73,9 +78,11 @@ export function Welcome({ api }: { api: WelcomeApi }) {
     if (page === 'entry' && visiblePage.current !== 'entry') void api.analytics?.('auth_page_view', {})
     visiblePage.current = page
     if (page === 'key') input.current?.focus()
-    else if (page === 'entry' && focusEntry.current) {
-      focusEntry.current = false
-      keyButton.current?.focus()
+    else if (page === 'account') authHeading.current?.focus()
+    else if (focusEntry.current) {
+      const target = focusEntry.current === 'key' ? keyButton : accountButton
+      focusEntry.current = null
+      target.current?.focus()
     }
   }, [page, api])
 
@@ -115,6 +122,7 @@ export function Welcome({ api }: { api: WelcomeApi }) {
     if (busyRef.current) return
     busyRef.current = true
     setBusy(true)
+    setError('')
     try {
       await api.skip()
       if (mounted.current) setDraft('')
@@ -126,6 +134,7 @@ export function Welcome({ api }: { api: WelcomeApi }) {
     }
   }
   async function start() {
+    if (busyRef.current || starting) return
     navigate('account')
     setStarting(true)
     setAttempt(null)
@@ -163,6 +172,13 @@ export function Welcome({ api }: { api: WelcomeApi }) {
     }
   }
 
+  function back() {
+    if (busyRef.current) return
+    focusEntry.current = page === 'key' ? 'key' : 'account'
+    setDraft('')
+    navigate('entry')
+  }
+
   const phase = starting ? 'initializing' : attempt?.phase ?? 'failed'
   const waiting = phase === 'waiting-browser'
   const failed = phase === 'expired' || phase === 'failed'
@@ -174,7 +190,11 @@ export function Welcome({ api }: { api: WelcomeApi }) {
   return <>
     {expiryNotice && <Toast text={m.welcomeSessionExpired} onDone={() => { setExpiryNotice(false) }} />}
     <div className="titlebar" aria-hidden="true" />
-    <main className="welcome" aria-labelledby={heading}>
+    <main className="welcome" aria-labelledby={heading} aria-busy={busy} onKeyDown={(event) => {
+      if (event.key !== 'Escape' || busyRef.current) return
+      if (page === 'key' || (page === 'account' && failed)) { event.preventDefault(); back() }
+      else if (page === 'account' && waiting && !cancelling) { event.preventDefault(); void cancel() }
+    }}>
       <div className="brand"><img src="assets/welcome-brand.svg" alt="" width="40" height="40" /><span>{m.welcomeBrand}</span></div>
       <div id="tagline" className="tagline" hidden={page !== 'entry'}>
         <h1 id="welcome-heading"><span>{m.welcomeTaglineBefore}</span><em>{m.welcomeTaglineBrand}</em><span>{m.welcomeTaglineAfter}</span></h1>
@@ -192,7 +212,7 @@ export function Welcome({ api }: { api: WelcomeApi }) {
       </form>
       <section id="auth-page" className={`key-heading ${waiting ? 'auth-waiting' : phase === 'expired' ? 'auth-expired' : ''}`}
         hidden={page !== 'account'} aria-live="polite">
-        <h1 id="auth-status">{title}</h1>
+        <h1 ref={authHeading} id="auth-status" tabIndex={-1}>{title}</h1>
         <p id="auth-description" hidden={!waiting && phase !== 'expired'}>{waiting ? m.welcomeAuthWaitingDescription : m.welcomeAuthExpiredDescription}</p>
         <button id="auth-copy" className="copy-link" type="button" hidden={!waiting} disabled={!waiting || (copyState === 'busy' || copyState === 'copied')} onClick={() => { void copyLink() }}>
           {copyState === 'copied' ? m.welcomeAuthCopied : copyState === 'failed' ? m.welcomeAuthCopyFailed : m.welcomeAuthCopyLink}
@@ -202,25 +222,25 @@ export function Welcome({ api }: { api: WelcomeApi }) {
         <button id="auth-loading" className="primary" type="button" hidden={failed} disabled aria-label={m.welcomeAuthExchanging}>
           <StateDot state="ongoing" size={16} className="welcome-loading" />
         </button>
-        <button id="auth-retry" className="primary" type="button" hidden={!failed} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeAuthRetry}</button>
-        <button id="auth-api-key" className="secondary" type="button" hidden={!failed} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'api-key' }); navigate('key') }}>{m.welcomeApiKey}</button>
+        <button id="auth-retry" className="primary" type="button" hidden={!failed} disabled={busy} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeAuthRetry}</button>
+        <button id="auth-api-key" className="secondary" type="button" hidden={!failed} disabled={busy} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'api-key' }); navigate('key') }}>{m.welcomeApiKey}</button>
         <button id="auth-cancel" className="secondary" type="button" hidden={failed}
           disabled={cancelling || phase === 'committing' || phase === 'succeeded' || (phase === 'initializing' && !attempt?.id)}
           onClick={() => { void cancel() }}>{m.welcomeAuthCancel}</button>
+        <button id="auth-skip" className="secondary" type="button" hidden={!failed} disabled={busy} onClick={() => { void skip() }}>{m.welcomeKeyLater}</button>
+        <button id="auth-back" className="back" type="button" hidden={!failed} disabled={busy} onClick={back}>{m.welcomeKeyBack}</button>
       </div>
       <div id="entry-actions" className="actions" hidden={page !== 'entry'}>
-        <button id="skip-provider" className="primary" type="button" disabled={busy} onClick={() => { void skip() }}>{m.welcomeKeyLater}</button>
-        <button id="sign-in" className="secondary" type="button" onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeSignIn}</button>
-        <button ref={keyButton} id="api-key" className="secondary" type="button" onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'api-key' }); navigate('key') }}>{m.welcomeApiKey}</button>
+        <button id="skip-provider" className="primary" type="button" disabled={busy} onClick={() => { void skip() }}>{m.welcomeStart}</button>
+        <button ref={accountButton} id="sign-in" className="secondary" type="button" disabled={busy} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'sign_in' }); void start() }}>{m.welcomeSignIn}</button>
+        <button ref={keyButton} id="api-key" className="secondary" type="button" disabled={busy} onClick={() => { void api.analytics?.('auth_page_click', { button_name: 'api-key' }); navigate('key') }}>{m.welcomeApiKey}</button>
       </div>
       <div id="key-actions" className="actions" hidden={page !== 'key'}>
         <button id="save-key" className="primary" type="submit" form="key-form" disabled={busy || draft.trim() === ''}>{m.welcomeKeySave}</button>
         <button id="skip-key" className="secondary" type="button" disabled={busy} onClick={() => { void skip() }}>{m.welcomeKeyLater}</button>
-        <button id="back-to-login" className="back" type="button" disabled={busy} onClick={() => {
-          if (busyRef.current) return
-          setDraft(''); setError(''); focusEntry.current = true; navigate('entry')
-        }}>{m.welcomeKeyBack}</button>
+        <button id="back-to-login" className="back" type="button" disabled={busy} onClick={back}>{m.welcomeKeyBack}</button>
       </div>
+      <p className="welcome-error" role="alert" hidden={page === 'key' || error === ''}>{error}</p>
     </main>
   </>
 }

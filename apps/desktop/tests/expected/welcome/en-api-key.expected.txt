@@ -1,8 +1,8 @@
 BharatCode
 BharatCode
-Add an API key to get started
-Connect your BharatCode subscription, or set up a different provider after entering the app.
-Enter API key [password]
+Connect BharatCode
+Enter the access key for your BharatCode subscription. You can skip this step and choose another provider in Settings → Providers.
+Enter BharatCode access key [password]
 Save and continue [disabled]
 Set up later
-Back to sign in
+Back

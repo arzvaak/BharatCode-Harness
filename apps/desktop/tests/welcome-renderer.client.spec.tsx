@@ -341,3 +341,70 @@ it('reports each return to the welcome entry once, including account cancellatio
   await act(async () => { pending.resolve({ links: { usageUrl: 'http://localhost/usage', topUpUrl: 'http://localhost/top_up' }, status: 'signed-out', attempt: null }) })
   expect(view.api.analytics.mock.calls.map(([action]) => action)).toEqual(['auth_page_click', 'auth_page_view', 'auth_page_click', 'auth_page_view'])
 })
+
+it('reports a failed workspace open on the entry and leaves setup available for retry', async () => {
+  const view = mount('en')
+  view.api.skip.mockRejectedValueOnce(new Error('workspace unavailable'))
+  fireEvent.click(view.button('#skip-provider'))
+  await vi.waitFor(() => { expect(view.button('#skip-provider').disabled).toBe(false) })
+  const error = screen.getAllByRole('alert').find(element => element.closest('[hidden]') === null)
+  expect(error?.textContent).toBe(view.api.messages.welcomeContinueFailed)
+  expect(view.button('#api-key').disabled).toBe(false)
+})
+
+it('prevents sign-in and API-key navigation while the workspace is opening', async () => {
+  const view = mount('en')
+  const opened = Promise.withResolvers<undefined>()
+  view.api.skip.mockReturnValueOnce(opened.promise)
+  fireEvent.click(view.button('#skip-provider'))
+  try {
+    expect(view.button('#sign-in').disabled).toBe(true)
+    expect(view.button('#api-key').disabled).toBe(true)
+    fireEvent.click(view.button('#sign-in'))
+    fireEvent.click(view.button('#api-key'))
+    expect(view.api.startSignIn).not.toHaveBeenCalled()
+    expect(view.document.querySelector<HTMLElement>('#key-form')!.hidden).toBe(true)
+  } finally {
+    await act(async () => { opened.resolve(undefined); await opened.promise })
+  }
+})
+
+it('returns from an API-key draft with Escape and restores focus without saving', () => {
+  const view = mount('en')
+  fireEvent.click(view.button('#api-key'))
+  view.enterKey('sk-unsaved')
+  fireEvent.keyDown(view.input, { key: 'Escape' })
+  expect(view.document.querySelector<HTMLElement>('#key-form')!.hidden).toBe(true)
+  expect(view.document.activeElement).toBe(view.button('#api-key'))
+  expect(view.input.value).toBe('')
+  expect(view.api.saveApiKey).not.toHaveBeenCalled()
+})
+
+it('allows setup deferral after sign-in fails without saving credentials', async () => {
+  const view = mount('en')
+  view.api.startSignIn.mockRejectedValueOnce(new Error('account unavailable'))
+  fireEvent.click(view.button('#sign-in'))
+  await vi.waitFor(() => { expect(view.button('#auth-retry').hidden).toBe(false) })
+  fireEvent.click(screen.getByRole('button', { name: view.api.messages.welcomeKeyLater }))
+  await vi.waitFor(() => { expect(view.api.skip).toHaveBeenCalledOnce() })
+  expect(view.api.saveApiKey).not.toHaveBeenCalled()
+})
+
+it('returns from failed sign-in with Escape and restores focus to the account choice', async () => {
+  const view = mount('en')
+  view.api.startSignIn.mockRejectedValueOnce(new Error('account unavailable'))
+  fireEvent.click(view.button('#sign-in'))
+  await vi.waitFor(() => { expect(view.button('#auth-retry').hidden).toBe(false) })
+  fireEvent.keyDown(view.document.querySelector('main')!, { key: 'Escape' })
+  expect(view.document.querySelector<HTMLElement>('#auth-page')!.hidden).toBe(true)
+  expect(view.document.activeElement).toBe(view.button('#sign-in'))
+})
+
+it('moves focus into sign-in status before the entry action becomes hidden', async () => {
+  const view = mount('en')
+  view.api.startSignIn.mockRejectedValueOnce(new Error('account unavailable'))
+  fireEvent.click(view.button('#sign-in'))
+  expect(view.document.activeElement).toBe(view.document.querySelector('#auth-status'))
+  await vi.waitFor(() => { expect(view.button('#auth-retry').hidden).toBe(false) })
+  expect(view.document.activeElement).toBe(view.document.querySelector('#auth-status'))
+})

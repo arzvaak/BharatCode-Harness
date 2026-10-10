@@ -2,6 +2,14 @@ export const NS = 'bc.extension-store';
 
 export const en = {
   nav: 'Extensions',
+  unavailableRelease: 'This extension is not available for installation yet.',
+  incompatibleVersion: 'This extension requires a different BharatCode version. Check its listed requirements.',
+  unsupportedPlatform: 'This extension is not available for your operating system.',
+  missingDownload: 'No verified download is available for this release.',
+  unverifiedPlatform: 'Installation and activation checks are not complete for this operating system.',
+  selectWorkspaceToActivate: 'Select a workspace above to enable this extension.',
+  installedInactive: 'Installed and ready to enable. Choose Enable profile-wide to activate it.',
+  loadingCatalog: 'Loading extensions…',
   setupManagedRequirements: 'Set up managed requirements',
   managedRequirementsAvailable: 'A signed compatible runtime is available for explicit setup.',
   managedRequirementsInstalled: 'Compatible managed requirements are installed. Activation still checks their versions.',
@@ -16,6 +24,14 @@ export const en = {
 
 export const zh = {
   nav: '扩展',
+  unavailableRelease: '此扩展尚不可安装。',
+  incompatibleVersion: '此扩展需要不同版本的 BharatCode，请查看列出的要求。',
+  unsupportedPlatform: '此扩展不支持当前操作系统。',
+  missingDownload: '此版本尚无经过验证的下载包。',
+  unverifiedPlatform: '此操作系统上的安装和启用检查尚未完成。',
+  selectWorkspaceToActivate: '请先在上方选择工作区，然后启用此扩展。',
+  installedInactive: '已安装，可随时启用。选择“Enable profile-wide”以启用此扩展。',
+  loadingCatalog: '正在加载扩展…',
   setupManagedRequirements: '设置托管依赖',
   managedRequirementsAvailable: '可显式设置已签名且兼容的运行时。',
   managedRequirementsInstalled: '已安装兼容的托管依赖；启用时仍会检查其版本。',

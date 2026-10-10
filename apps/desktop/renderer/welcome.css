@@ -80,10 +80,14 @@ body {
   display: grid;
   flex: 1;
   min-height: 0;
-  grid-template-rows: 40px minmax(0, 1fr) 104px;
+  grid-template-rows: 40px minmax(min-content, 1fr) auto;
+  width: 100%;
+  gap: 28px;
+  overflow-y: auto;
+  overflow-x: hidden;
   justify-items: center;
   align-items: center;
-  padding: 24px 48px 76px;
+  padding: 24px clamp(8px, 6vw, 48px) 28px;
 }
 
 .welcome > .tagline,
@@ -109,13 +113,19 @@ body {
   font-weight: 300;
   line-height: 40px;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .tagline h1,
 .tagline p {
   margin: 0;
   font: inherit;
+}
+
+.tagline p {
+  margin-top: 16px;
+  max-width: 440px;
+  font: 400 14px/22px var(--dsw-font-family);
 }
 
 .tagline em {
@@ -139,14 +149,14 @@ body {
   flex: none;
   flex-direction: column;
   gap: 16px;
-  width: 240px;
+  width: min(100%, 280px);
 }
 
 .actions button {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
+  min-height: 44px;
   padding: 8px 16px;
   border: 1px solid transparent;
   border-radius: 10px;
@@ -190,10 +200,7 @@ body {
 }
 
 .actions .back {
-  position: absolute;
-  top: calc(100% + 16px);
-  left: 50%;
-  transform: translateX(-50%);
+  align-self: center;
   white-space: nowrap;
   min-width: 58px;
   height: 28px;
@@ -233,11 +240,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
-  width: 440px;
+  gap: 24px;
+  width: min(100%, 440px);
 }
 
 .key-heading {
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -295,8 +303,6 @@ body {
 }
 
 .key-error {
-  position: absolute;
-  top: 100%;
   width: 100%;
   margin: 8px 0 0;
   color: var(--dsw-alias-label-primary);
@@ -341,6 +347,17 @@ body {
 .actions .welcome-loading { color: inherit; }
 
 .auth-waiting .copy-link:disabled { cursor: default; }
+.auth-waiting .copy-link:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+.welcome-error { grid-column: 1; margin: 0; max-width: 440px; font: 400 14px/22px var(--dsw-font-family); text-align: center; }
+@media (max-height: 580px) {
+  .welcome { gap: 20px; padding-top: 8px; }
+  .titlebar { flex-basis: 28px; }
+}
+@media (max-width: 420px) {
+  #root { padding-inline: 8px; }
+  .tagline { font-size: 20px; line-height: 30px; }
+  .key-heading p { font-size: 14px; line-height: 22px; }
+}
 
 /* Share the canonical orange mark and product typography with the workspace. */
-.brand { display: flex; align-items: center; gap: 12px; font: 600 28px/40px var(--dsw-font-family); }
+.brand { display: flex; align-items: center; justify-content: center; gap: 12px; font: 600 28px/40px var(--dsw-font-family); }

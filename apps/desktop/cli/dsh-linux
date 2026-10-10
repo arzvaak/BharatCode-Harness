@@ -1,0 +1,14 @@
+#!/bin/sh
+# Reuse the installed Linux Electron runtime for the supported dsh CLI profile.
+set -e
+launcher=$0
+while [ -L "$launcher" ]; do
+  directory=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd -P)
+  target=$(readlink "$launcher")
+  case "$target" in
+    /*) launcher=$target ;;
+    *) launcher=$directory/$target ;;
+  esac
+done
+resources=$(CDPATH= cd -- "$(dirname -- "$launcher")/../../.." && pwd -P)
+ELECTRON_RUN_AS_NODE=1 exec "$resources/runtime/primary-runtime/dependencies/node/bin/node" --expose-internals "$resources/dsh/node_modules/@deepseek-ai/dsh-desktop-host/lib/cli.js" "$@"

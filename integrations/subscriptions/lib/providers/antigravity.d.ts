@@ -22,7 +22,7 @@ export declare const ANTIGRAVITY_DEFAULT_USER_AGENT = "antigravity/1.104.0 dsh-p
 export declare const ANTIGRAVITY_PREEMPT_MS: number;
 /** Antigravity, not Gemini CLI, OAuth scopes from the local reference clients. */
 export declare const ANTIGRAVITY_SCOPES: readonly ["openid", "https://www.googleapis.com/auth/cloud-platform", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/cclog", "https://www.googleapis.com/auth/experimentsandconfigs"];
-/** OAuth client configuration; explicit clients override the bundled desktop identity. */
+/** OAuth client configuration; supplied by the deployment or user. */
 export interface AntigravityOAuthConfig {
     clientId: string;
     clientSecret?: string;
@@ -35,7 +35,7 @@ export interface AntigravityRuntimeConfig {
     /** Activate an eligible account when loadCodeAssist has no project yet. */
     onboard?: boolean;
 }
-/** Resolve a client pair: plugin config, environment, then the public desktop default. */
+/** Resolve one explicit client pair from plugin config or environment. */
 export declare function resolveAntigravityOAuthConfig(config?: Partial<AntigravityOAuthConfig>): AntigravityOAuthConfig;
 /** Normalize the configured API origin and reject paths/credentials. */
 export declare function antigravityBaseURL(value?: string): string;

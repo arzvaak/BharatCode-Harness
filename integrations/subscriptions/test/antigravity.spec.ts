@@ -740,17 +740,15 @@ test('Antigravity catalog discovery shares endpoint fallback', async () => {
   assert.ok(calls[1].startsWith('https://cloudcode-pa.googleapis.com/'))
 })
 
-test('Antigravity OAuth selects defaults or one complete override source without mixing secrets', async () => {
+test('Antigravity OAuth requires an explicit client and selects one source without mixing secrets', async () => {
   const { resolveAntigravityOAuthConfig } = await import('../src/providers/antigravity.js')
   const clientId = process.env.ANTIGRAVITY_CLIENT_ID
   const clientSecret = process.env.ANTIGRAVITY_CLIENT_SECRET
   try {
     delete process.env.ANTIGRAVITY_CLIENT_ID
     delete process.env.ANTIGRAVITY_CLIENT_SECRET
-    const defaults = resolveAntigravityOAuthConfig()
-    assert.match(defaults.clientId, /\.apps\.googleusercontent\.com$/)
-    assert.ok(defaults.clientSecret && defaults.clientSecret.length > 10)
-    assert.deepEqual(resolveAntigravityOAuthConfig({ clientId: '  ', clientSecret: ' ' }), defaults)
+    assert.throws(() => resolveAntigravityOAuthConfig(), /requires your own OAuth client/)
+    assert.throws(() => resolveAntigravityOAuthConfig({ clientId: '  ', clientSecret: ' ' }), /requires your own OAuth client/)
     assert.deepEqual(resolveAntigravityOAuthConfig(oauth), oauth)
     assert.deepEqual(resolveAntigravityOAuthConfig({ clientId: 'pkce-client' }), { clientId: 'pkce-client' })
     process.env.ANTIGRAVITY_CLIENT_ID = ' env-client '

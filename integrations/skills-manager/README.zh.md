@@ -78,6 +78,8 @@ dsh plugin --profile web add @michengai/dsh-skills-manager@latest --registry=htt
 
 ## 使用
 
+筛选控件根据 Skills 分区的宽度调整布局：在较窄的设置面板中，搜索框移至来源和状态筛选器下方，仓库筛选器则纵向排列。
+
 | 目标 | 方法 |
 | --- | --- |
 | 查找 skill | 选择 Global 或 Project，展开来源分组，或使用搜索和筛选。 |

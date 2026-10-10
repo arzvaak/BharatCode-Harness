@@ -360,6 +360,14 @@ describe('SettingsPanel close paths', () => {
 })
 
 describe('SettingsPanel navigation', () => {
+  it('names section navigation and exposes the complete label when a section is truncated', () => {
+    const label = 'A contributed section with a long descriptive name'
+    mount({ rows: [{ id: 'contributed', order: 0, label }] })
+    openPanel()
+    expect(screen.getByRole('navigation', { name: 'Settings Title' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: label }).getAttribute('title')).toBe(label)
+  })
+
   it('projects rows, marks the first active, and renders only that section', () => {
     mount()
     openPanel()

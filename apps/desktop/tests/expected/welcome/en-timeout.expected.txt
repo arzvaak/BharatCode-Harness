@@ -3,4 +3,6 @@ BharatCode
 Sign in timed out
 Sign in again
 BharatCode access key
+Set up later
+Back
 Sign in again to continue

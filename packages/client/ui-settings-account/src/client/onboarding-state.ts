@@ -170,10 +170,10 @@ export class DesktopOnboardingController {
         ])
         const saved = this.chat.getSnapshot().value
         if (!accepted || saved?.transcriptView !== mode || saved.performanceUsage !== next.usage) throw new Error('Chat preferences were not saved')
-        if (this.disposed || this.account.getSnapshot().view?.status !== accountStatus) return false
+        if (this.disposed || (!this.providerSetup && this.account.getSnapshot().view?.status !== accountStatus)) return false
         await this.setDeveloperTools(next.developerTools)
       }
-      if (this.disposed || this.account.getSnapshot().view?.status !== accountStatus) return false
+      if (this.disposed || (!this.providerSetup && this.account.getSnapshot().view?.status !== accountStatus)) return false
       const fields = Object.keys(next) as (keyof OnboardingProgress)[]
       const accepted = await this.progress.mutate(
         fields.map(field => ({ op: 'set' as const, path: [field], value: next[field] })),
@@ -214,14 +214,14 @@ export class DesktopOnboardingController {
     const done = progress.step === 'done'
     const unavailable = host.status === 'unavailable' || (host.status === 'ready' && !host.writable)
     const readFailed = host.status === 'loading' && this.settings.getSnapshot().error !== null
-    const accountFailed = account === undefined && snapshot.failed
+    const accountFailed = !this.providerSetup && account === undefined && snapshot.failed
     const previous = this.state.getSnapshot()
     const next: DesktopOnboardingState = {
       progress: shallowEqual(previous.progress, progress) ? previous.progress : progress,
       creditFunded: this.creditFunded ?? false,
       visible: !done && (this.providerSetup || signedIn) && !unavailable,
       status: this.completing || (this.saving && this.draft === undefined) ? 'saving' : unavailable || readFailed || accountFailed || this.error !== null ? 'error'
-        : host.status === 'loading' || account === undefined ? 'loading' : 'ready',
+        : host.status === 'loading' || (!this.providerSetup && account === undefined) ? 'loading' : 'ready',
       error: unavailable || readFailed ? 'settings' : this.error,
     }
     if (!shallowEqual(previous, next)) this.state.set(next)

@@ -1969,7 +1969,20 @@ __export(client_exports, {
   inject: () => inject
 });
 module.exports = __toCommonJS(client_exports);
+var import_semver2 = __toESM(require_semver2(), 1);
+
+// src/eligibility.js
 var import_semver = __toESM(require_semver2(), 1);
+function installationBlock(entry, view) {
+  if (entry.status !== "qualified") return "unavailableRelease";
+  if (!import_semver.default.satisfies(view.bcVersion, entry.bcVersion, { includePrerelease: true })) return "incompatibleVersion";
+  if (!entry.platforms.includes(view.platform)) return "unsupportedPlatform";
+  if (!entry.artifact) return "missingDownload";
+  if (!["packed-install", "lifecycle", "workflow"].every((check) => entry.qualification?.[view.platform]?.includes(check))) return "unverifiedPlatform";
+  return void 0;
+}
+
+// src/client.jsx
 var import_react = __toESM(require("react"), 1);
 
 // src/operations.js
@@ -2013,6 +2026,14 @@ function validateOperation(input) {
 var NS = "bc.extension-store";
 var en = {
   nav: "Extensions",
+  unavailableRelease: "This extension is not available for installation yet.",
+  incompatibleVersion: "This extension requires a different BharatCode version. Check its listed requirements.",
+  unsupportedPlatform: "This extension is not available for your operating system.",
+  missingDownload: "No verified download is available for this release.",
+  unverifiedPlatform: "Installation and activation checks are not complete for this operating system.",
+  selectWorkspaceToActivate: "Select a workspace above to enable this extension.",
+  installedInactive: "Installed and ready to enable. Choose Enable profile-wide to activate it.",
+  loadingCatalog: "Loading extensions\u2026",
   setupManagedRequirements: "Set up managed requirements",
   managedRequirementsAvailable: "A signed compatible runtime is available for explicit setup.",
   managedRequirementsInstalled: "Compatible managed requirements are installed. Activation still checks their versions.",
@@ -2026,6 +2047,14 @@ var en = {
 };
 var zh = {
   nav: "\u6269\u5C55",
+  unavailableRelease: "\u6B64\u6269\u5C55\u5C1A\u4E0D\u53EF\u5B89\u88C5\u3002",
+  incompatibleVersion: "\u6B64\u6269\u5C55\u9700\u8981\u4E0D\u540C\u7248\u672C\u7684 BharatCode\uFF0C\u8BF7\u67E5\u770B\u5217\u51FA\u7684\u8981\u6C42\u3002",
+  unsupportedPlatform: "\u6B64\u6269\u5C55\u4E0D\u652F\u6301\u5F53\u524D\u64CD\u4F5C\u7CFB\u7EDF\u3002",
+  missingDownload: "\u6B64\u7248\u672C\u5C1A\u65E0\u7ECF\u8FC7\u9A8C\u8BC1\u7684\u4E0B\u8F7D\u5305\u3002",
+  unverifiedPlatform: "\u6B64\u64CD\u4F5C\u7CFB\u7EDF\u4E0A\u7684\u5B89\u88C5\u548C\u542F\u7528\u68C0\u67E5\u5C1A\u672A\u5B8C\u6210\u3002",
+  selectWorkspaceToActivate: "\u8BF7\u5148\u5728\u4E0A\u65B9\u9009\u62E9\u5DE5\u4F5C\u533A\uFF0C\u7136\u540E\u542F\u7528\u6B64\u6269\u5C55\u3002",
+  installedInactive: "\u5DF2\u5B89\u88C5\uFF0C\u53EF\u968F\u65F6\u542F\u7528\u3002\u9009\u62E9\u201CEnable profile-wide\u201D\u4EE5\u542F\u7528\u6B64\u6269\u5C55\u3002",
+  loadingCatalog: "\u6B63\u5728\u52A0\u8F7D\u6269\u5C55\u2026",
   setupManagedRequirements: "\u8BBE\u7F6E\u6258\u7BA1\u4F9D\u8D56",
   managedRequirementsAvailable: "\u53EF\u663E\u5F0F\u8BBE\u7F6E\u5DF2\u7B7E\u540D\u4E14\u517C\u5BB9\u7684\u8FD0\u884C\u65F6\u3002",
   managedRequirementsInstalled: "\u5DF2\u5B89\u88C5\u517C\u5BB9\u7684\u6258\u7BA1\u4F9D\u8D56\uFF1B\u542F\u7528\u65F6\u4ECD\u4F1A\u68C0\u67E5\u5176\u7248\u672C\u3002",
@@ -2097,18 +2126,14 @@ function Store({ t = (key) => key } = {}) {
   }, []);
   const entries = view?.catalog.entries ?? [];
   const installed = view?.installed ?? [];
-  const qualifies = (e) => e.status === "qualified" && import_semver.default.satisfies(view.bcVersion, e.bcVersion, {
-    includePrerelease: true
-  }) && e.platforms.includes(view.platform) && e.artifact && ["packed-install", "lifecycle", "workflow"].every(
-    (x) => e.qualification?.[view.platform]?.includes(x)
-  );
+  const qualifies = (e) => installationBlock(e, view) === void 0;
   const installedRequirements = (e) => e.kind === "mcp" && (e.dependencyIds ?? []).length > 0 && e.dependencyIds.every((id) => dependencyResults[e.id]?.some((result) => result.id === id && result.available && result.managedSetup === "installed"));
   const canSetUpRequirements = (e) => {
     if (e.kind !== "mcp" || !(e.dependencyIds?.length > 0) || !dependencyResults[e.id]?.some((result) => !result.available)) return false;
     const pythonIds = e.dependencyIds.filter(isPythonDependency);
     const otherIds = e.dependencyIds.filter((id) => !pythonIds.includes(id));
     const bundles = view?.catalog.managedDependencies ?? [];
-    return (!pythonIds.length || bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && pythonIds.every((id) => bundle.provides[id] && import_semver.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")))) && otherIds.every((id) => bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && bundle.provides[id] && import_semver.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")));
+    return (!pythonIds.length || bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && pythonIds.every((id) => bundle.provides[id] && import_semver2.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")))) && otherIds.every((id) => bundles.some((bundle) => bundle.status === "qualified" && bundle.platforms.includes(view.platform) && bundle.provides[id] && import_semver2.default.satisfies(bundle.provides[id], e.dependencyRanges?.[id] ?? "*")));
   };
   const dependencyStatusText = (status) => t(status === "installed" ? "dependencyManagedInstalled" : status === "available" ? "dependencyManagedAvailable" : "dependencyLocalOnly");
   const filtered = entries.filter(
@@ -2116,6 +2141,7 @@ function Store({ t = (key) => key } = {}) {
   );
   const rows = (list) => list.map((e) => {
     const record = installed.find((x) => x.id === e.id);
+    const blocked = installationBlock(e, view);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "bc-store-card", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: e.name }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: e.description }),
@@ -2165,111 +2191,116 @@ function Store({ t = (key) => key } = {}) {
       e.kind === "pack" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("summary", { children: "Choose components" }),
         rows(entries.filter((x) => e.components.includes(x.id)))
-      ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: !record ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-        "button",
-        {
-          disabled: busy || !qualifies(e),
-          onClick: () => run({ action: "install", id: e.id }),
-          children: "Install"
-        }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-          "button",
-          {
-            disabled: busy || e.scope === "session" && !workspace,
-            onClick: () => run(
-              e.scope === "profile" ? {
-                action: "profile-enable",
-                id: e.id,
-                enabled: !record.enabled
-              } : {
-                action: "workspace-enable",
-                id: e.id,
-                workspace,
-                enabled: !view.workspaceEnabled.some(
-                  ([w, id]) => w === workspace && id === e.id
-                )
-              }
-            ),
-            children: e.scope === "profile" ? record.enabled ? "Disable" : "Enable profile-wide" : view.workspaceEnabled.some(
-              ([w, id]) => w === workspace && id === e.id
-            ) ? "Disable in workspace" : "Enable in workspace"
-          }
-        ),
-        record.descriptor.credentialReference && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
-          "form",
-          {
-            onSubmit: (event) => {
-              event.preventDefault();
-              const value = connectionTokens[e.id];
-              setConnectionTokens((current) => ({
-                ...current,
-                [e.id]: ""
-              }));
-              void run({
-                action: "connect-extension",
-                id: e.id,
-                token: value
-              });
-            },
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-                "Connector credential",
-                " ",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                  "input",
-                  {
-                    type: "password",
-                    autoComplete: "new-password",
-                    value: connectionTokens[e.id] ?? "",
-                    onChange: (event) => setConnectionTokens((current) => ({
-                      ...current,
-                      [e.id]: event.target.value
-                    }))
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || !connectionTokens[e.id], children: "Save connection" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-                "button",
-                {
-                  type: "button",
-                  disabled: busy,
-                  onClick: () => run({ action: "disconnect-extension", id: e.id }),
-                  children: "Disconnect connector"
-                }
-              )
-            ]
-          }
-        ),
-        record.descriptor.version !== e.version && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+      ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        blocked && (!record || record.descriptor.version !== e.version) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: t(blocked) }),
+        record && e.scope === "session" && !workspace && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: t("selectWorkspaceToActivate") }),
+        record && e.scope === "profile" && !record.enabled && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: t("installedInactive") }),
+        !record ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
           "button",
           {
             disabled: busy || !qualifies(e),
             onClick: () => run({ action: "install", id: e.id }),
-            children: [
-              "Update to ",
-              e.version
-            ]
+            children: "Install"
           }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-          "button",
-          {
-            disabled: busy,
-            onClick: () => run({ action: "rollback", id: e.id }),
-            children: "Check rollback availability"
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-          "button",
-          {
-            disabled: busy,
-            onClick: () => run({ action: "remove", id: e.id }),
-            children: "Uninstall"
-          }
-        )
-      ] }) })
+        ) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              disabled: busy || e.scope === "session" && !workspace,
+              onClick: () => run(
+                e.scope === "profile" ? {
+                  action: "profile-enable",
+                  id: e.id,
+                  enabled: !record.enabled
+                } : {
+                  action: "workspace-enable",
+                  id: e.id,
+                  workspace,
+                  enabled: !view.workspaceEnabled.some(
+                    ([w, id]) => w === workspace && id === e.id
+                  )
+                }
+              ),
+              children: e.scope === "profile" ? record.enabled ? "Disable" : "Enable profile-wide" : view.workspaceEnabled.some(
+                ([w, id]) => w === workspace && id === e.id
+              ) ? "Disable in workspace" : "Enable in workspace"
+            }
+          ),
+          record.descriptor.credentialReference && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+            "form",
+            {
+              onSubmit: (event) => {
+                event.preventDefault();
+                const value = connectionTokens[e.id];
+                setConnectionTokens((current) => ({
+                  ...current,
+                  [e.id]: ""
+                }));
+                void run({
+                  action: "connect-extension",
+                  id: e.id,
+                  token: value
+                });
+              },
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+                  "Connector credential",
+                  " ",
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                    "input",
+                    {
+                      type: "password",
+                      autoComplete: "new-password",
+                      value: connectionTokens[e.id] ?? "",
+                      onChange: (event) => setConnectionTokens((current) => ({
+                        ...current,
+                        [e.id]: event.target.value
+                      }))
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: busy || !connectionTokens[e.id], children: "Save connection" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+                  "button",
+                  {
+                    type: "button",
+                    disabled: busy,
+                    onClick: () => run({ action: "disconnect-extension", id: e.id }),
+                    children: "Disconnect connector"
+                  }
+                )
+              ]
+            }
+          ),
+          record.descriptor.version !== e.version && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(
+            "button",
+            {
+              disabled: busy || !qualifies(e),
+              onClick: () => run({ action: "install", id: e.id }),
+              children: [
+                "Update to ",
+                e.version
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              disabled: busy,
+              onClick: () => run({ action: "rollback", id: e.id }),
+              children: "Check rollback availability"
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+            "button",
+            {
+              disabled: busy,
+              onClick: () => run({ action: "remove", id: e.id }),
+              children: "Uninstall"
+            }
+          )
+        ] })
+      ] })
     ] }, e.id);
   });
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "bc-store", children: [
@@ -2334,6 +2365,7 @@ function Store({ t = (key) => key } = {}) {
     view && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: view.diagnostic }),
     error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "alert", children: error }),
     busy && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: "Working\u2026" }),
+    !view && !error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: t("loadingCatalog") }),
     (view?.managedDependencies?.length ?? 0) > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
         t("managedRuntimes"),
@@ -2373,7 +2405,7 @@ function apply(ctx) {
   const t = ctx.locale.bind(NS);
   ctx.effect(() => {
     const style = document.createElement("style");
-    style.textContent = ".bc-store{flex:1;min-height:0;min-width:0;width:100%;height:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;padding:24px;color:var(--dsw-alias-label-primary,inherit)}.bc-store nav{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.bc-store label{display:inline-flex;gap:8px;margin:12px}.bc-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;margin-top:20px}.bc-store-card{min-width:0;border:1px solid var(--dsh-border,#8886);border-radius:12px;padding:18px}.bc-store button{padding:8px 12px;margin:4px;cursor:pointer}.bc-store button:disabled{opacity:.5;cursor:default}.bc-store [role=alert]{color:var(--dsh-danger,#c44)}.bc-store-card p{overflow-wrap:anywhere}.bc-store-card li{margin-bottom:6px}";
+    style.textContent = ".bc-store{flex:1;min-height:0;min-width:0;width:100%;height:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;padding:24px;color:var(--dsw-alias-label-primary,inherit)}.bc-store nav{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.bc-store label{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;max-width:100%;box-sizing:border-box;margin:12px 12px 12px 0}.bc-store input,.bc-store select{min-width:0;max-width:100%;box-sizing:border-box}.bc-store form{display:flex;align-items:center;flex-wrap:wrap;gap:4px}.bc-store h3,.bc-store li,.bc-store summary{overflow-wrap:anywhere}.bc-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;margin-top:20px}.bc-store-card{min-width:0;border:1px solid var(--dsh-border,#8886);border-radius:12px;padding:18px}.bc-store button{max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:8px 12px;margin:4px;cursor:pointer;font:inherit;border-radius:var(--dsw-radius-sm,6px);border:1px solid var(--dsw-alias-border-l2,#8886);background:var(--dsw-alias-bg-layer-2,transparent);color:inherit}.bc-store button:focus-visible,.bc-store input:focus-visible,.bc-store select:focus-visible,.bc-store summary:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,currentColor);outline-offset:2px}.bc-store button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,transparent)}.bc-store button:disabled{opacity:.5;cursor:default}.bc-store [role=alert]{color:var(--dsh-danger,#c44)}.bc-store-card p{overflow-wrap:anywhere}.bc-store-card li{margin-bottom:6px}@media(max-width:600px){.bc-store{padding:16px}.bc-store-card{padding:14px}}";
     document.head.append(style);
     return () => style.remove();
   });

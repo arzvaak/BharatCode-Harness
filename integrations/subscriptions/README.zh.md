@@ -6,7 +6,7 @@
 
 将 `@arzvaak/bharatcode-subscriptions` 与 Provider Hub 安装到同一个 profile。宿主路由 ID 仍为 `codex`、`claude`、`grok`、`copilot` 和 `antigravity`；UI slot 仍为 `subscriptions`。重命名后的浏览器 loader 工厂与此 fork 的包标识匹配。英文字符串注册在两个现有语言 ID 下。
 
-Provider Hub 复用本包的设置组件和真实 `subscriptions-auth` RPC 注入。Copilot 设备授权在打开验证网站前显示用户代码。每位用户都需要自行完成提供方授权。可用性取决于其套餐、提供方账号及当前上游服务限制。
+Provider Hub 复用本包的设置组件和真实 `subscriptions-auth` RPC 注入。Copilot 设备授权在打开验证网站前显示用户代码。每位用户都需要自行完成提供方授权。 Google Antigravity 登录和令牌刷新还要求通过 `antigravity.clientId`/`clientSecret` 或 `ANTIGRAVITY_CLIENT_ID`/`ANTIGRAVITY_CLIENT_SECRET` 显式配置 OAuth 客户端，且该注册须获提供方授权。软件不内置第三方应用客户端密钥，也尚未实现 Google CLI 凭据导入。显式配置客户端不代表账号具备使用资格，亦不代表实时登录已验证。可用性取决于其套餐、提供方账号及当前上游服务限制。
 
 `npm run build` 编译宿主和原生浏览器产物。`npm test` 执行模拟适配器、授权、刷新、翻译、路由、用量及客户端测试。本地验证使用隔离 fixture（测试前置数据）home 和假凭据；未验证真实账号登录或真实提供方推理。
 

@@ -328,3 +328,27 @@
 .cardCheckbox input:checked + .indicator svg { visibility: visible; }
 
 .providerSetup { top: 64px; bottom: 76px; transform: translateX(-50%); overflow-y: auto; max-width: 880px; }
+
+/* Compact windows keep page actions in the reading flow instead of overlapping cards. */
+@media (max-width: 1400px), (max-height: 700px) {
+  .page { --page-padding: clamp(20px, 4vw, 40px); display: flex; flex-direction: column; min-height: 0; height: 100%; padding: 32px var(--page-padding) 24px; box-sizing: border-box; overflow: auto; }
+  .content { position: static; width: 100%; transform: none; flex: none; margin-block: auto; margin-inline: auto; }
+  .welcome { height: auto; }
+  .welcome .copy { position: static; width: min(100%, 520px); margin-inline: auto; transform: none; }
+  .welcomeIllustration { display: none; }
+  .start { margin-top: 32px; max-width: 100%; }
+  .purpose, .process { gap: 24px; }
+  .card { padding: 24px; min-height: 180px; }
+  .primaryAction { position: static; margin-top: 24px; }
+  .navigation { position: static; width: 100%; transform: none; margin-top: 32px; flex: none; }
+  .status { position: static; transform: none; margin-top: 16px; text-align: center; }
+  .providerSetup { max-width: 880px; overflow: visible; margin-inline: auto; }
+  .creditActions { margin-top: 24px; flex-wrap: wrap; gap: 12px; }
+  .creditActions > button { max-width: none; min-width: 140px; }
+}
+@media (max-width: 640px) {
+  .purposeCards, .processCards { grid-template-columns: minmax(0, 1fr); }
+  .copy h1, .welcome .copy h1, .purpose .copy h1, .process .copy h1 { font-size: 24px; line-height: 34px; }
+  .heroDescription { margin-top: 16px; }
+  .card { min-height: 0; }
+}

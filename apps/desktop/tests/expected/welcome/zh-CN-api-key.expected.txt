@@ -1,8 +1,8 @@
 BharatCode
 BharatCode
-添加一个 API Key 开始使用
-连接 BharatCode 订阅，或进入应用后配置其他提供商。
-输入 API 密钥 [password]
+连接 BharatCode
+输入 BharatCode 订阅的访问密钥。也可以跳过此步骤，在设置 → Providers 中选择其他提供商。
+输入 BharatCode 访问密钥 [password]
 保存并继续 [disabled]
 稍后配置
-返回登录
+返回

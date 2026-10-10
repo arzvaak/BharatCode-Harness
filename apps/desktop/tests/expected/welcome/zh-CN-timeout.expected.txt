@@ -3,4 +3,6 @@ BharatCode
 登录已超时
 重新登录
 BharatCode 访问密钥
+稍后配置
+返回
 请重新登录后继续操作

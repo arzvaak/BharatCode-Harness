@@ -1,4 +1,5 @@
 import semver from "semver";
+import { installationBlock } from "./eligibility.js";
 import React, { useEffect, useState } from "react";
 import { validateOperation } from "./operations.js";
 import { en, NS, zh } from './locales.js';
@@ -64,16 +65,7 @@ export function Store({ t = key => key } = {}) {
   }, []);
   const entries = view?.catalog.entries ?? [];
   const installed = view?.installed ?? [];
-  const qualifies = (e) =>
-    e.status === "qualified" &&
-    semver.satisfies(view.bcVersion, e.bcVersion, {
-      includePrerelease: true,
-    }) &&
-    e.platforms.includes(view.platform) &&
-    e.artifact &&
-    ["packed-install", "lifecycle", "workflow"].every((x) =>
-      e.qualification?.[view.platform]?.includes(x),
-    );
+  const qualifies = (e) => installationBlock(e, view) === undefined;
   const installedRequirements = (e) => e.kind === 'mcp' && (e.dependencyIds ?? []).length > 0
     && e.dependencyIds.every(id => dependencyResults[e.id]?.some(result =>
       result.id === id && result.available && result.managedSetup === 'installed'));
@@ -106,6 +98,7 @@ export function Store({ t = key => key } = {}) {
   const rows = (list) =>
     list.map((e) => {
       const record = installed.find((x) => x.id === e.id);
+      const blocked = installationBlock(e, view);
       return (
         <article key={e.id} className="bc-store-card">
           <h3>{e.name}</h3>
@@ -152,6 +145,9 @@ export function Store({ t = key => key } = {}) {
             </details>
           ) : (
             <div>
+              {blocked && (!record || record.descriptor.version !== e.version) && <p>{t(blocked)}</p>}
+              {record && e.scope === "session" && !workspace && <p>{t('selectWorkspaceToActivate')}</p>}
+              {record && e.scope === "profile" && !record.enabled && <p>{t('installedInactive')}</p>}
               {!record ? (
                 <button
                   disabled={busy || !qualifies(e)}
@@ -335,6 +331,7 @@ export function Store({ t = key => key } = {}) {
       {view && <p role="status">{view.diagnostic}</p>}
       {error && <p role="alert">{error}</p>}
       {busy && <p role="status">Working…</p>}
+      {!view && !error && <p role="status">{t('loadingCatalog')}</p>}
       {(view?.managedDependencies?.length ?? 0) > 0 && <details>
         <summary>{t('managedRuntimes')} ({view.managedDependencies.length})</summary>
         {view.managedDependencies.map(bundle => <p key={`${bundle.id}/${bundle.version}`}>
@@ -367,7 +364,7 @@ export function apply(ctx) {
   ctx.effect(() => {
     const style = document.createElement("style");
     style.textContent =
-      ".bc-store{flex:1;min-height:0;min-width:0;width:100%;height:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;padding:24px;color:var(--dsw-alias-label-primary,inherit)}.bc-store nav{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.bc-store label{display:inline-flex;gap:8px;margin:12px}.bc-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;margin-top:20px}.bc-store-card{min-width:0;border:1px solid var(--dsh-border,#8886);border-radius:12px;padding:18px}.bc-store button{padding:8px 12px;margin:4px;cursor:pointer}.bc-store button:disabled{opacity:.5;cursor:default}.bc-store [role=alert]{color:var(--dsh-danger,#c44)}.bc-store-card p{overflow-wrap:anywhere}.bc-store-card li{margin-bottom:6px}";
+      ".bc-store{flex:1;min-height:0;min-width:0;width:100%;height:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;padding:24px;color:var(--dsw-alias-label-primary,inherit)}.bc-store nav{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.bc-store label{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;max-width:100%;box-sizing:border-box;margin:12px 12px 12px 0}.bc-store input,.bc-store select{min-width:0;max-width:100%;box-sizing:border-box}.bc-store form{display:flex;align-items:center;flex-wrap:wrap;gap:4px}.bc-store h3,.bc-store li,.bc-store summary{overflow-wrap:anywhere}.bc-store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;margin-top:20px}.bc-store-card{min-width:0;border:1px solid var(--dsh-border,#8886);border-radius:12px;padding:18px}.bc-store button{max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:8px 12px;margin:4px;cursor:pointer;font:inherit;border-radius:var(--dsw-radius-sm,6px);border:1px solid var(--dsw-alias-border-l2,#8886);background:var(--dsw-alias-bg-layer-2,transparent);color:inherit}.bc-store button:focus-visible,.bc-store input:focus-visible,.bc-store select:focus-visible,.bc-store summary:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,currentColor);outline-offset:2px}.bc-store button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,transparent)}.bc-store button:disabled{opacity:.5;cursor:default}.bc-store [role=alert]{color:var(--dsh-danger,#c44)}.bc-store-card p{overflow-wrap:anywhere}.bc-store-card li{margin-bottom:6px}@media(max-width:600px){.bc-store{padding:16px}.bc-store-card{padding:14px}}";
     document.head.append(style);
     return () => style.remove();
   });

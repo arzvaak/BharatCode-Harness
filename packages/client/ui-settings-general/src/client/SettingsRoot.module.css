@@ -129,6 +129,8 @@
 
 /* Cell stack (figma 501:29961): gap 4. */
 .navList {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -138,6 +140,7 @@
 /* Nav cell (figma .Setting-nav-cell 501:29962): 164x40, r12, pad
    (12,9,16,9), gap 8; label 14/400 lh22; selected fill #EBEEF2. */
 .navCell {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -179,6 +182,7 @@
 /* Content column (figma Content 501:29980): header + options. */
 .content {
   flex: 1;
+  min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -246,3 +250,40 @@
    ui-web base.css's `body > :not(#root)` subtraction covers it wherever it
    overlaps a chrome row's drag — including above every column, which an in-root
    overlay could not promise once a chrome row declares drag itself. */
+
+/* Compact windows keep the content column usable while every section remains
+   reachable in a horizontal, keyboard-scrollable navigation list. */
+@media (max-width: 600px) {
+  .panel {
+    flex-direction: column;
+    max-width: calc(100vw - 24px);
+  }
+
+  .nav {
+    width: 100%;
+    gap: 10px;
+    padding: 16px 12px 0;
+  }
+
+  .navList {
+    flex: none;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+  }
+
+  .navCell {
+    max-width: 240px;
+  }
+
+  .header {
+    height: auto;
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .options {
+    padding: 0 16px 16px;
+  }
+}

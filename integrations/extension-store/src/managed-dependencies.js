@@ -243,21 +243,22 @@ export class ManagedDependencyStore {
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
 
     checkAbort(signal);
-    const downloaded = await this.transport.asset(releaseAsset.id, { signal, maxBytes: artifact.bytes });
+    await ensureDirectory(this.cache);
+    const archivePath = join(this.cache, `${artifact.sha256}.tar.gz`);
+    let downloaded;
+    let cached = true;
+    try {
+      downloaded = await readFile(archivePath);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      cached = false;
+      downloaded = await this.transport.asset(releaseAsset.id, { signal, maxBytes: artifact.bytes });
+    }
     checkAbort(signal);
     if (!Buffer.isBuffer(downloaded) || downloaded.length !== artifact.bytes
       || createHash('sha256').update(downloaded).digest('hex') !== artifact.sha256)
       throw Error('Managed dependency artifact integrity mismatch');
-    await ensureDirectory(this.cache);
-    const archivePath = join(this.cache, `${artifact.sha256}.tar.gz`);
-    try {
-      const existing = await readFile(archivePath);
-      if (createHash('sha256').update(existing).digest('hex') !== artifact.sha256)
-        throw Error('Cached managed dependency artifact integrity mismatch');
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-      await atomicWrite(archivePath, downloaded);
-    }
+    if (!cached) await atomicWrite(archivePath, downloaded);
     checkAbort(signal);
     await ensureDirectory(this.root);
     const staging = join(this.root, `.stage-${randomUUID()}`);

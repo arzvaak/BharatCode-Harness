@@ -7,6 +7,8 @@ kind: "package-reference"
 
 English | [中文](README.zh.md)
 
+The page header and its actions wrap in narrow panels so installation and refresh controls stay reachable.
+
 The BharatCode Web profile activates this page by default. Product copy remains English for every locale selection.
 
 Desktop product events use the optional [product analytics service](../product-analytics/README.md); ordinary Web interactions are excluded.

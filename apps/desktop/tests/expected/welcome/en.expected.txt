@@ -1,7 +1,7 @@
 BharatCode
 BharatCode
 Welcome to BharatCode
-Build potential. Explore intelligence.
-Set up later
+BharatCode is the default. Add your access key, or set up Codex, Google, Muse, OpenCode, or Mistral in Settings → Providers after entering the app.
+Get started
 DeepSeek account (optional)
 BharatCode access key

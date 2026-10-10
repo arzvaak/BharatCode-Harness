@@ -3,5 +3,5 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write integrations/subscriptions/README.md
 /bharatcode-subscriptions:
-  en: c31802a92c5401ee
-  zh: d84495184fca8fb5
+  en: d45a67b61699b9d7
+  zh: 5ced0a6e858cac9f

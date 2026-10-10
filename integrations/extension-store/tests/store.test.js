@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { lstat, mkdir, mkdtemp, readFile, readdir } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
@@ -366,4 +366,107 @@ test('managed Windows archive rejects case collisions and unsafe path names', as
     assert.equal(store.view().managedDependencies.length, 0);
     await assert.rejects(lstat(join(dir, 'managed-dependencies', 'python-data-runtime', '3.12.14')), { code: 'ENOENT' });
   }
+});
+
+test('Linux restart reinstalls a package from reverified offline cache and clearCache removes that recovery path', async t => {
+  const { dir, store, installs } = await fixture();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  store.options.manager.removeBundle = async () => ({ application: 'applied' });
+  await store.refresh();
+  await store.install('tool');
+  await store.remove('tool');
+  const offline = new ExtensionStore({ ...store.options, transport: {
+    request: async () => { throw Error('offline'); }, asset: async () => { throw Error('offline'); },
+  } });
+  await offline.load();
+  await offline.install('tool');
+  assert.equal(installs.length, 2);
+  assert.equal(offline.view().installed[0].enabled, false);
+  await offline.remove('tool');
+  await offline.clearCache();
+  await assert.rejects(offline.install('tool'), /offline/);
+  assert.equal(offline.view().installed.length, 0);
+});
+
+test('Linux cached package tampering never reaches the native manager', async t => {
+  const { dir, store, installs } = await fixture();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await store.refresh();
+  await store.install('tool');
+  await writeFile(join(dir, 'archives', store.catalog.entries[0].artifact.sha256 + '.tgz'), 'tampered');
+  store.options.transport.asset = async () => { throw Error('Network must not replace a tampered cache'); };
+  await assert.rejects(store.install('tool'), /integrity/);
+  assert.equal(installs.length, 1);
+});
+
+test('Linux managed runtime reinstalls from verified disk cache after restart and refuses cache tampering', async t => {
+  const bytes = managedArchive();
+  const dependencyProbeRunner = async () => ({ available: true, version: '3.12.14' });
+  const { dir, store } = await fixture({ platform: 'linux', dependencyProbeRunner, initialManagedBytes: bytes });
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await store.refresh();
+  const bundle = store.catalog.managedDependencies[0];
+  await store.dependencies.install(bundle);
+  await store.dependencies.remove(bundle.id, bundle.version);
+  const offline = new ExtensionStore({ ...store.options, transport: {
+    request: async () => { throw Error('offline'); }, asset: async () => { throw Error('offline'); },
+  } });
+  await offline.load();
+  await offline.dependencies.install(offline.catalog.managedDependencies[0]);
+  assert.equal(offline.view().managedDependencies[0].verified, true);
+  await offline.dependencies.remove(bundle.id, bundle.version);
+  await writeFile(join(dir, 'managed-dependency-cache', bundle.artifacts.linux.sha256 + '.tar.gz'), 'tampered');
+  await assert.rejects(offline.dependencies.install(bundle), /integrity/);
+  assert.equal(offline.view().managedDependencies.length, 0);
+});
+
+test('Linux declared upgrade preserves the previous descriptor and restart state while rollback remains unavailable', async t => {
+  const { dir, store, transport, installs } = await fixture();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await store.refresh();
+  await store.install('tool');
+  const entry = store.catalog.entries[0];
+  const upgrade = archive({ name: entry.packageName, version: '1.1.0' });
+  entry.version = '1.1.0';
+  entry.artifact = { ...entry.artifact, bytes: upgrade.length, sha256: createHash('sha256').update(upgrade).digest('hex') };
+  entry.qualificationEvidence.forEach(record => { record.artifactSha256 = entry.artifact.sha256; });
+  transport.asset = async () => upgrade;
+  await assert.rejects(store.install('tool'), /migration declaration/);
+  assert.equal(installs.length, 1);
+  entry.updateFrom = ['1.0.0'];
+  await store.install('tool');
+  assert.equal(installs.length, 2);
+  assert.equal(store.view().installed[0].descriptor.version, '1.1.0');
+  assert.equal(store.view().installed[0].previous.version, '1.0.0');
+  const reopened = new ExtensionStore(store.options);
+  await reopened.load();
+  assert.equal(reopened.view().installed[0].descriptor.version, '1.1.0');
+  assert.equal(reopened.view().installed[0].enabled, false);
+  await assert.rejects(reopened.rollback(), /reversible migration/);
+});
+
+test('Linux cancelled package download leaves no activation or installation and restart can retry', async t => {
+  const { dir, store, transport, bytes, installs } = await fixture();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await store.refresh();
+  let started;
+  const ready = new Promise(resolve => { started = resolve; });
+  transport.asset = async (_id, { signal }) => new Promise((_resolve, reject) => {
+    started();
+    signal.addEventListener('abort', () => reject(Error('download cancelled')), { once: true });
+  });
+  const pending = store.install('tool');
+  await ready;
+  const request = store.view().operations[0];
+  assert.equal(store.cancel(request), true);
+  await assert.rejects(pending, /cancel/);
+  assert.equal(installs.length, 0);
+  assert.equal(store.view().operations.length, 0);
+  assert.equal(store.view().installed.length, 0);
+  const reopened = new ExtensionStore(store.options);
+  await reopened.load();
+  transport.asset = async () => bytes;
+  await reopened.install('tool');
+  assert.equal(installs.length, 1);
+  assert.equal(reopened.view().installed[0].enabled, false);
 });

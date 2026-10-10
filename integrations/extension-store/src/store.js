@@ -309,13 +309,20 @@ export class ExtensionStore {
         : abort.signal;
       this.operations.set(requestId, abort);
       try {
-        const bytes = await this.options.transport.asset(
-          entry.artifact.assetId,
-          {
+        const directory = join(this.options.directory, "archives");
+        const path = join(directory, entry.artifact.sha256 + ".tgz");
+        let bytes;
+        let cached = true;
+        try {
+          bytes = await readFile(path);
+        } catch (error) {
+          if (error.code !== "ENOENT") throw error;
+          cached = false;
+          bytes = await this.options.transport.asset(entry.artifact.assetId, {
             signal: cancel,
             maxBytes: entry.artifact.bytes,
-          },
-        );
+          });
+        }
         cancel.throwIfAborted();
         if (
           bytes.length !== entry.artifact.bytes ||
@@ -324,10 +331,8 @@ export class ExtensionStore {
         )
           throw Error("Extension artifact integrity mismatch");
         validateArchive(bytes, entry);
-        const directory = join(this.options.directory, "archives");
         await mkdir(directory, { recursive: true, mode: 0o700 });
-        const path = join(directory, entry.artifact.sha256 + ".tgz");
-        await atomic(path, bytes);
+        if (!cached) await atomic(path, bytes);
         await this.downloaded();
         cancel.throwIfAborted();
         const cancelManager = () =>

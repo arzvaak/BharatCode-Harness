@@ -77,6 +77,8 @@ Restart DSH, refresh the page, and open **Settings → Skills**. To update, sele
 
 ## Usage
 
+Filters adapt to the width of the Skills section: in narrow settings panels, search moves below source and status filters, and repository filters stack vertically.
+
 | What you want to do | How |
 | --- | --- |
 | Find a skill | Choose Global or Project, expand a source group, or use search and filters. |
