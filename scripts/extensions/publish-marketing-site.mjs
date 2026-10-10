@@ -32,7 +32,7 @@ try {
   git(['push', 'origin', 'gh-pages']);
   api('actions/permissions', { enabled: true, allowed_actions: 'selected' });
   api('actions/permissions/selected-actions', { github_owned_allowed: false, verified_allowed: false,
-    patterns_allowed: ['actions/checkout@v4', 'actions/configure-pages@v5', 'actions/upload-pages-artifact@v3', 'actions/deploy-pages@v4'] });
+    patterns_allowed: ['actions/checkout@v4', 'actions/configure-pages@v5', 'actions/upload-pages-artifact@v3', 'actions/upload-artifact@v4', 'actions/deploy-pages@v4'] });
   let exists = true;
   try { execFileSync('gh', ['api', `repos/${repository}/pages`], { stdio: 'pipe' }); } catch { exists = false; }
   api('pages', { build_type: 'workflow', source: { branch: 'gh-pages', path: '/' } }, exists ? 'PUT' : 'POST');
