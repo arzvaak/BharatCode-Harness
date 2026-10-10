@@ -24,11 +24,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: packed-core-Linux
           path: dist/packed-core
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           pattern: managed-runtime-*
           merge-multiple: true
