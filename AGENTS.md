@@ -113,7 +113,7 @@ If a required `gh`, `pnpm`, build, test, or generator command fails because the 
 
 ### Run relevant checks locally
 
-BharatCode Linux releases run `node scripts/extensions/local-linux-gates.mjs` on the native release host before publication. The public publishers require its clean-source and exact-artifact receipt; GitHub Actions is disabled and workflows are manual-only to preserve the owner's Actions budget.
+Releases require [local gates](apps/desktop/README.md#linux-preview).
 
 Before pushing, follow [dsh-pre-push-checks](.agents/skills/dsh-pre-push-checks/SKILL.md); report only commands run. After `gh stack sync`, validate immediately; do not merge before checks pass.
 
