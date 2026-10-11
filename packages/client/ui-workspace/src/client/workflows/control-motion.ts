@@ -1,7 +1,10 @@
 /** Shared spring press feedback for workbench controls, including keyboard activation. */
 import { useEffect, type RefObject } from 'react'
 
-/** @param root - Workbench control boundary. Springs stop at rest and are disposed with the owner. */
+/**
+ * Attach spring feedback to the controls inside a workbench.
+ * @param root - Control boundary whose disposal restores styles and stops frames.
+ */
 export function useControlMotion(root: RefObject<HTMLElement>): void {
   useEffect(() => {
     const element = root.current

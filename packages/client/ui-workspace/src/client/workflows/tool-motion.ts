@@ -1,6 +1,10 @@
 /** Interruptible tool changes preserve editor DOM and respect live reduced-motion settings. */
 import { useLayoutEffect, useRef, type RefObject } from 'react'
-/** @param tool - Active tool identity. @returns Container of stable tool panels. */
+/**
+ * Animate the visible tool while keeping all tool panels mounted.
+ * @param tool - Active tool identity.
+ * @returns Container of stable tool panels.
+ */
 export function useToolMotion<T extends HTMLElement>(tool: string): RefObject<T> {
   const root = useRef<T>(null)
   const running = useRef<Animation>()

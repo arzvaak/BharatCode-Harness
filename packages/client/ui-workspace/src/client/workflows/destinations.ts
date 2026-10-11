@@ -32,7 +32,10 @@ export class WorkflowDestinations {
     const session = this.port.selection()
     if (session !== undefined) this.port.remember(session, this.port.snapshot().owners?.[session] ?? 'chat')
   }
-  /** Open the remembered destination, creating a fresh conversation only on first entry. */
+  /**
+   * Open the remembered destination, creating a fresh conversation only on first entry.
+   * @param profile - Workflow whose independent conversation should open.
+   */
   async navigate(profile: WorkflowView): Promise<void> {
     if (this.isDisposed()) return
     const revision = ++this.revision
@@ -68,7 +71,7 @@ export class WorkflowDestinations {
       if (this.isDisposed()) return
       const destination = this.port.snapshot().destinations?.[key]
       const current = revision === this.revision && !navigation.aborted && this.port.visible()
-      // Keep the new session's provenance without replacing a newer history selection.
+      // Keep the new session's workflow ownership without replacing a newer history selection.
       this.port.remember(session, profile, current || destination === undefined || !this.port.available(destination))
       if (current) this.port.open(session)
     } catch (reason: unknown) {
