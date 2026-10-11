@@ -11,6 +11,9 @@
  * @module dsh-lsp-actions
  */
 
+import { fileURLToPath } from 'node:url'
+import { canonicalizeWorkspace, readHostSource } from './host.ts'
+import { applyEdits as applyPreviewEdits } from './edits.ts'
 import type { Context } from '@deepseek-ai/cordis'
 import { LspActionClient } from './client.ts'
 import { registerCodeActionTool, registerInlayHintsTool, registerSignatureTool, registerSymbolsTool } from './extra-tools.ts'
@@ -192,6 +195,27 @@ export async function apply(ctx: Context, config: ConfigType): Promise<void> {
   // The fs seam drives project-marker routing: a file whose nearest ancestor holds a marker some
   // entry declares (`projectMarkers`) is served by that entry instead of the extension default.
   const runner = createActionRunner({ getSeam, client, servers, fs: ctx.fs })
+
+  ctx.reflect.provide('workspaceLanguage', {
+    async review(request: { root: string; path: string; text: string; position: { line: number; character: number }; newName?: string }, signal?: AbortSignal) {
+      const workspace = await canonicalizeWorkspace(ctx.fs, request.root, signal)
+      const source = await readHostSource(ctx.fs, request.path, workspace, resolved.maxDocumentBytes, signal)
+      if (source.text !== request.text) throw new Error('Save the current revision before requesting language review')
+      const action = { workspaceRoot: workspace.canonicalPath, filePath: request.path, source, position: request.position, range: { start: request.position, end: request.position } }
+      const diagnostics = await runner.diagnostics(action, signal)
+      const proposals: { title: string; files: { path: string; before: string; after: string }[] }[] = []
+      const collect = async (title: string, edits: Readonly<Record<string, readonly import('./vocabulary.ts').LspTextEdit[]>>): Promise<void> => {
+        const files = await Promise.all(Object.entries(edits).map(async ([uri, changes]) => {
+          const file = await readHostSource(ctx.fs, fileURLToPath(uri), workspace, resolved.maxDocumentBytes, signal)
+          return { path: ctx.fs.processPath(file.target), before: file.text, after: applyPreviewEdits(file.text, changes) }
+        }))
+        if (files.length > 0) proposals.push({ title, files })
+      }
+      if (request.newName !== undefined) { const renamed = await runner.rename(action, request.newName, signal); await collect(`Rename to ${request.newName}`, renamed.edits) }
+      else { const actions = await runner.codeActions(action, signal); for (const item of actions.items.slice(0, resolved.maxCodeActions)) await collect(item.title, item.edits) }
+      return { path: ctx.fs.processPath(source.target), base: source.text, diagnostics: diagnostics.diagnostics.slice(0, resolved.maxDiagnostics), proposals }
+    },
+  })
 
   // Service Provider — registers the eight LSP action tools plus the optional editor JSON-RPC transport through a scoped ctx.effect.
   ctx.effect(() => {

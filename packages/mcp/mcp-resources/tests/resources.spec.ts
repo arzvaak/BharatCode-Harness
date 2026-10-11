@@ -226,6 +226,47 @@ describe('MCP resource tools', () => {
     expect(renderPrompt(await ctx.systemPrompt.assemble())).toContain('server argument: ["docs"]')
   })
 
+  it('rejects an app resource read if its descriptor changes while the HTML is loading', async () => {
+    const ctx = await setup()
+    const owner = {} as Agent
+    const readStarted = Promise.withResolvers<undefined>()
+    const releaseRead = Promise.withResolvers<undefined>()
+    let generation = 'generation-1'
+    const applications = vi.fn<NonNullable<McpResourceProvider['applications']>>().mockImplementation(async () => [
+      {
+        tool: 'host',
+        resourceUri: 'ui://host',
+        title: 'Host',
+        allowedTools: [],
+        generation,
+      },
+    ])
+    const applicationResource = vi.fn<NonNullable<McpResourceProvider['applicationResource']>>().mockImplementation(
+      async (uri, _signal, expectedGeneration) => {
+        expect(uri).toBe('ui://host')
+        expect(expectedGeneration).toBe('generation-1')
+        readStarted.resolve(undefined)
+        await releaseRead.promise
+        return { contents: [{ uri, mimeType: 'text/html;profile=mcp-app', text: '<p>Host</p>' }] }
+      },
+    )
+    ctx.mcpResources.register('server', {
+      request: async () => ({}),
+      applications,
+      applicationResource,
+    })
+    const signal = new AbortController().signal
+    const [app] = await ctx.mcpResources.applications(owner, signal)
+    const pending = ctx.mcpResources.applicationResource('server', 'host', owner, signal, app!.generation)
+    await readStarted.promise
+    generation = 'generation-2'
+    releaseRead.resolve(undefined)
+
+    await expect(pending).rejects.toThrow('MCP application changed while reading its resource')
+    expect(applications).toHaveBeenCalledTimes(3)
+    expect(applicationResource).toHaveBeenCalledOnce()
+  })
+
   it.each([false, true])('rolls back a partial shared-tool registration (scoped: %s)', async (scoped) => {
     const ctx = await setup()
     const owner = {} as Agent

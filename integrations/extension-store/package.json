@@ -53,7 +53,8 @@
     "semver": "7.7.4",
     "zod": "4.4.3",
     "@deepseek-ai/dsh-app-boot": "workspace:*",
-    "tar": "^7.5.22"
+    "tar": "^7.5.22",
+    "@deepseek-ai/dsh-tools": "workspace:*"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

@@ -20,6 +20,7 @@ const testToolSignal = new AbortController().signal
 // ---- Mock MCP Client ----
 
 interface MockTool {
+  _meta?: Record<string, unknown>
   name: string
   description?: string
   inputSchema: Record<string, unknown>
@@ -193,6 +194,15 @@ describe('syncTools', () => {
     // Raw names are NOT registered.
     expect(ctx.tools.get('greet')).toBeUndefined()
     expect(ctx.tools.get('add')).toBeUndefined()
+  })
+
+  it('does not disclose app-only tools to the primary model', async () => {
+    const client = createMockClient([{ name: 'private-widget', inputSchema: { type: 'object' }, _meta: { ui: { visibility: ['app'] } } }, { name: 'shared', inputSchema: { type: 'object' }, _meta: { ui: { visibility: ['model', 'app'] } } }])
+    const disposers = await syncTools(client as never, ctx, defaultOpts, new Map())
+    expect(disposers.size).toBe(2)
+    expect(ctx.tools.get('mcp__srv__private-widget')?.audience).toBe('app')
+    expect(ctx.tools.schemas().map(tool => tool.name)).toEqual(['mcp__srv__shared'])
+    expect(ctx.tools.get('mcp__srv__shared')).toBeDefined()
   })
 
   it('keeps unqualified tools out of every synchronization generation', async () => {

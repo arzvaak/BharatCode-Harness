@@ -66,11 +66,13 @@ describe.skipIf(MODE === 'record')('web e2e: durable workflow run in Chat', () =
     page = await newEnglishPage(browser)
     tripwire = watchConsole(page)
     await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
-    await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    try { await page.waitForSelector('[class*="frame"]', { timeout: 30_000 }) } catch (reason) { console.error('Workflow boot diagnostics', tripwire.pageErrors, tripwire.warnings, await page.locator('body').innerText()); throw reason }
     await connectFreshWorkspace(page, scaffold.workspaceCwd)
     const sessions = scaffold.ctx.sessions.list()
-    expect(sessions).toHaveLength(1)
-    scaffold.ctx.permissionPresets.set(sessions[0]!, 'danger-full-access')
+    const project = scaffold.ctx.workspaceRegistry.list().find(value => value.path === join(scaffold.workspaceCwd, 'workspace'))!
+    const owning = sessions.filter(session => project.sessionIds.includes(session.id))
+    expect(owning.length).toBeGreaterThanOrEqual(1)
+    for (const session of owning) scaffold.ctx.permissionPresets.set(session, 'danger-full-access')
   }, 120_000)
 
   afterAll(async () => {
@@ -220,9 +222,36 @@ describe.skipIf(MODE === 'record')('web e2e: durable workflow run in Chat', () =
 
   }, 60_000)
 
+  it('persists a writing brief beside the replayed owning session, with canon separate from ideas', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-workflow-writing'))
+    await page.getByRole('navigation', { name: 'Workflows' }).getByRole('button', { name: 'Writing', exact: true }).click()
+    const writing = page.getByRole('region', { name: 'Writing', exact: true })
+    await writing.getByRole('button', { name: 'Documents', exact: true }).click()
+    await writing.getByRole('button', { name: 'Project structure', exact: true }).click()
+    await writing.getByLabel('Writing specialization', { exact: true }).selectOption('novel')
+    await writing.getByLabel('Brief', { exact: true }).fill('A researcher follows a disputed source.')
+    await writing.getByLabel('Style guidance', { exact: true }).fill('Plain prose, precise source attribution.')
+    await writing.getByLabel('Outline', { exact: true }).fill('Arrival\nEvidence\nResolution')
+    await writing.getByLabel('Established canon', { exact: true }).fill('Mira is the archivist.')
+    await writing.getByLabel('Tentative ideas', { exact: true }).fill('The missing page may be a decoy.')
+    await writing.getByLabel('Characters', { exact: true }).fill('Mira: archivist')
+    await writing.getByLabel('Chronology', { exact: true }).fill('Arrival precedes the source review.')
+    await writing.getByLabel('Scenes and objectives', { exact: true }).fill('Archive: establish the disputed claim')
+    await writing.getByRole('button', { name: 'Save project structure', exact: true }).click()
+    const project = scaffold.ctx.workspaceRegistry.list().find(value => value.path === join(scaffold.workspaceCwd, 'workspace'))!
+    await expect.poll(() => scaffold.ctx.projectKnowledge.workflowRecords(project.id).find(record => record.id === 'writing-project')?.revision).toEqual(expect.any(String))
+    await page.reload({ waitUntil: 'load' })
+    await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    await page.getByRole('region', { name: 'Writing', exact: true }).getByRole('button', { name: 'Project structure', exact: true }).click()
+    await expect.poll(() => page.getByLabel('Established canon', { exact: true }).inputValue()).toBe('Mira is the archivist.')
+    expect(await page.getByLabel('Tentative ideas', { exact: true }).inputValue()).toBe('The missing page may be a decoy.')
+    const snapshot = await captureStableAria(page, '[aria-label="Writing workspace"]', scaffold.workspaceCwd)
+    await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'writing.expected.md'), snapshot, MODE)
+  }, 60_000)
+
   it('stays clean and owns only its one golden', async () => {
     expect(tripwire.pageErrors).toEqual([])
     expect(tripwire.warnings).toEqual([])
-    await assertFixtureInventory(SNAPSHOT_DIR, ['ui-live.expected.md', 'ui.expected.md'])
+    await assertFixtureInventory(SNAPSHOT_DIR, ['ui-live.expected.md', 'ui.expected.md', 'writing.expected.md'])
   })
 })

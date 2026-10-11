@@ -85,7 +85,12 @@
     "@deepseek-ai/dsh-workspace": "workspace:*",
     "@deepseek-ai/dsh-api-session-controller": "workspace:*",
     "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-session-reference": "workspace:*"
+    "@deepseek-ai/dsh-session-reference": "workspace:*",
+    "@deepseek-ai/dsh-subprocess": "workspace:*",
+    "@deepseek-ai/dsh-jobs": "workspace:*",
+    "@deepseek-ai/dsh-mcp-resources": "workspace:*",
+    "@deepseek-ai/dsh-mcp-client": "workspace:*",
+    "@deepseek-ai/dsh-tools": "workspace:*"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
@@ -101,6 +106,11 @@
     "@deepseek-ai/dsh-workspace": "workspace:*",
     "@deepseek-ai/dsh-api-session-controller": "workspace:*",
     "@deepseek-ai/dsh-session-query": "workspace:*",
-    "@deepseek-ai/dsh-session-reference": "workspace:*"
+    "@deepseek-ai/dsh-session-reference": "workspace:*",
+    "@deepseek-ai/dsh-subprocess": "workspace:*",
+    "@deepseek-ai/dsh-jobs": "workspace:*",
+    "@deepseek-ai/dsh-mcp-resources": "workspace:*",
+    "@deepseek-ai/dsh-mcp-client": "workspace:*",
+    "@deepseek-ai/dsh-tools": "workspace:*"
   }
 }

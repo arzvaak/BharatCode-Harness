@@ -76,6 +76,7 @@ function bench(
     pending?: ClientBundleRegistration[]
     defaultTransport?: boolean
     chunks?: Record<string, Factory | null>
+    dependencies?: Record<string, readonly string[]>
     /** Remaining transport rejections per URL (the `<script>` error event). */
     transportFailures?: Record<string, number>
     /** URLs whose script loads but registers only the listed ids (a runtime throw after those registrations). */
@@ -101,7 +102,7 @@ function bench(
       const id = sibling[1] as string
       const chunk = sibling[2] as string
       const factory = opts.chunks?.[`${id}/${chunk}`]
-      if (factory != null) win.__ModuleLoader__?.load({ id, chunk, factory })
+      if (factory != null) win.__ModuleLoader__?.load({ id, chunk, factory, ...(opts.dependencies?.[`${id}/${chunk}`] === undefined ? {} : { dependencies: opts.dependencies[`${id}/${chunk}`] }) })
       return
     }
     const batchIds = url === BOOTSTRAP_URL
@@ -262,6 +263,23 @@ describe('lazy CJS arrival', () => {
     expect(first).toBe(second)
     expect(first).toEqual({ marker: 'terminal' })
     expect(b.fetched).toEqual([APPLICATION_URL, chunkReference('a', 'client.terminal.js')])
+  })
+
+  it('resolves shared static siblings before entry and dynamic chunk factories run', async () => {
+    const b = bench([row('a')], {}, {
+      pending: [{ id: 'a', dependencies: ['client.styles.js'], factory: req => ({ styles: req('./client.styles.js'), load: () => req.async('./client.editor.js') }) }],
+      chunks: {
+        'a/client.styles.js': () => ({ marker: 'styles' }),
+        'a/client.engine.js': () => ({ marker: 'engine' }),
+        'a/client.editor.js': req => ({ engine: req('./client.engine.js'), styles: req('./client.styles.js') }),
+      },
+      dependencies: { 'a/client.editor.js': ['client.engine.js', 'client.styles.js'] },
+    })
+    const entry = await b.loader.import('a', '', {}) as { styles: unknown; load: () => Promise<unknown> }
+    expect(entry.styles).toEqual({ marker: 'styles' })
+    expect(b.fetched).toEqual([chunkReference('a', 'client.styles.js')])
+    expect(await entry.load()).toEqual({ engine: { marker: 'engine' }, styles: { marker: 'styles' } })
+    expect(b.fetched).toEqual([chunkReference('a', 'client.styles.js'), chunkReference('a', 'client.editor.js'), chunkReference('a', 'client.engine.js')])
   })
 
   it('loads a package-local chunk with the revision that invalidated its entry', async () => {

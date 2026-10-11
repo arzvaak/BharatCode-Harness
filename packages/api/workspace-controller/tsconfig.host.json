@@ -14,7 +14,12 @@
     "src/feed.ts",
     "src/default-directory.ts",
     "src/knowledge.ts",
-    "src/documents.ts"
+    "src/documents.ts",
+    "src/notebook-runner.ts",
+    "src/document-review.ts",
+    "src/language-review.ts",
+    "src/git-review.ts",
+    "src/request-review.ts"
   ],
   "references": [
     {
@@ -52,6 +57,21 @@
     },
     {
       "path": "../../context/session-reference"
+    },
+    {
+      "path": "../../jobs/jobs"
+    },
+    {
+      "path": "../../subprocess/subprocess"
+    },
+    {
+      "path": "../../mcp/mcp-resources"
+    },
+    {
+      "path": "../../mcp/mcp-client"
+    },
+    {
+      "path": "../../core/tools"
     }
   ]
 }

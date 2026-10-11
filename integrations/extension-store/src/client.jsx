@@ -1,3 +1,4 @@
+import { capabilityState } from './capability-state.js';
 import semver from "semver";
 import { installationBlock } from "./eligibility.js";
 import React, { useEffect, useState } from "react";
@@ -99,10 +100,13 @@ export function Store({ t = key => key } = {}) {
     list.map((e) => {
       const record = installed.find((x) => x.id === e.id);
       const blocked = installationBlock(e, view);
+      const capability = capabilityState({ installed: Boolean(record), qualified: !blocked, enabled: e.scope === 'profile' ? Boolean(record?.enabled) : view.workspaceEnabled.some(([w, id]) => w === workspace && id === e.id), dependencies: (e.dependencyIds ?? []).map(id => dependencyResults[e.id]?.find(result => result.id === id) ?? { title: id, available: false, reason: e.dependencyRanges?.[id] ?? 'Inspect the runtime version' }), credential: !e.credentialReference || view.connectedCapabilities?.some(([id, connected]) => id === e.id && connected), failure: view.capabilityFailures?.find(value => value.identity[0] === workspace && value.identity[2] === e.id)?.reason });
       return (
         <article key={e.id} className="bc-store-card">
           <h3>{e.name}</h3>
           <p>{e.description}</p>
+          <strong>{t(`capability.${capability.status}`)}</strong>
+          <ul>{capability.requirements.map((value, index) => <li key={index}>{value}</li>)}</ul>
           <p>
             <strong>{e.status.replaceAll("-", " ")}</strong> · {e.version} ·{" "}
             {e.scope === "profile"

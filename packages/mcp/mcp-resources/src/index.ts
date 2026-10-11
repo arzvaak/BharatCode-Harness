@@ -22,8 +22,19 @@ export type McpResourceRequest =
   | { method: 'resources/list' | 'resources/templates/list'; cursor?: string }
   | { method: 'resources/read'; uri: string }
 
+/** One negotiated, application-visible tool UI. */
+export interface McpAppDescriptor {
+  server: string
+  tool: string
+  resourceUri: string
+  title: string
+  allowedTools: readonly string[]
+  generation: string
+}
 /** One configured server's resource access, owned by its MCP connection plugin. */
 export interface McpResourceProvider {
+  applications?(signal: AbortSignal): Promise<readonly Omit<McpAppDescriptor, 'server'>[]>
+  applicationResource?(uri: string, signal: AbortSignal, expectedGeneration: string): Promise<JsonValue>
   /**
    * Run an operation against one live connection generation.
    * @param request - MCP resource method and parameters.
@@ -34,8 +45,9 @@ export interface McpResourceProvider {
 }
 
 class ResourceLayer implements ScopeLayer {
-  readonly servers = new NamedEntries<McpResourceProvider>(name =>
-    new Error(`MCP resource server "${name}" is already registered in this scope`))
+  readonly servers = new NamedEntries<McpResourceProvider>(
+    name => new Error(`MCP resource server "${name}" is already registered in this scope`),
+  )
   disposeTools: (() => void | Promise<void>) | undefined
 
   isEmpty(): boolean {
@@ -48,7 +60,10 @@ export class McpResourceRuntime extends Service {
   /** Tool registry required by the resource consumer. */
   static inject = ['tools']
 
-  private readonly layers = new ScopedLayers(() => new ResourceLayer(), () => undefined)
+  private readonly layers = new ScopedLayers(
+    () => new ResourceLayer(),
+    () => undefined,
+  )
   /** Shared tool registrations outlive any one server's registering context. */
   private readonly selfCtx: Context
 
@@ -63,9 +78,11 @@ export class McpResourceRuntime extends Service {
         interpolate: false,
         text: ({ scope }) => {
           const names = [...this.layers.merge(scope, layer => layer.servers).keys()].sort()
-          return names.length === 0 ? '' : '## MCP resource servers\n\n'
-            + 'Use list_mcp_resources, list_mcp_resource_templates, or read_mcp_resource with one of these names '
-            + `as the server argument: ${JSON.stringify(names)}.`
+          return names.length === 0
+            ? ''
+            : '## MCP resource servers\n\n' +
+                'Use list_mcp_resources, list_mcp_resource_templates, or read_mcp_resource with one of these names ' +
+                `as the server argument: ${JSON.stringify(names)}.`
         },
       })
     })
@@ -80,26 +97,33 @@ export class McpResourceRuntime extends Service {
   register(server: string, provider: McpResourceProvider): () => void {
     const ctx = this.ctx
     const scope = scopeOf(ctx)
-    const dispose = ctx.effect(function* (this: McpResourceRuntime) {
-      let disposal: void | Promise<void>
-      // Tools disappear synchronously; Cordis owns any pending scoped-fiber teardown.
-      yield () => disposal
-      yield this.layers.effect(ctx, (layer) => {
-        const first = layer.servers.isEmpty()
-        const remove = layer.servers.insert(server, provider)
-        try {
-          if (first) layer.disposeTools = this.registerTools(scope)
-        } catch (error) {
-          remove()
-          throw error
-        }
-        return () => {
-          remove()
-          // oxlint-disable-next-line typescript/no-non-null-assertion -- successful provider registration owns the shared tools
-          if (layer.servers.isEmpty()) disposal = layer.disposeTools!()
-        }
-      }, { label: `mcpResources.provider(${server})` })
-    }.bind(this), `mcpResources.register(${server})`)
+    const dispose = ctx.effect(
+      function* (this: McpResourceRuntime) {
+        let disposal: void | Promise<void>
+        // Tools disappear synchronously; Cordis owns any pending scoped-fiber teardown.
+        yield () => disposal
+        yield this.layers.effect(
+          ctx,
+          (layer) => {
+            const first = layer.servers.isEmpty()
+            const remove = layer.servers.insert(server, provider)
+            try {
+              if (first) layer.disposeTools = this.registerTools(scope)
+            } catch (error) {
+              remove()
+              throw error
+            }
+            return () => {
+              remove()
+              // oxlint-disable-next-line typescript/no-non-null-assertion -- successful provider registration owns the shared tools
+              if (layer.servers.isEmpty()) disposal = layer.disposeTools!()
+            }
+          },
+          { label: `mcpResources.provider(${server})` },
+        )
+      }.bind(this),
+      `mcpResources.register(${server})`,
+    )
     // oxlint-disable-next-line typescript/no-misused-promises -- visibility cleanup is synchronous; Cordis retains pending fiber disposal
     return dispose
   }
@@ -107,17 +131,48 @@ export class McpResourceRuntime extends Service {
   /** Own one scope's tools independently of its configured server plugins. */
   private registerTools(scope: ScopeKey | undefined): () => void | Promise<void> {
     const ctx = this.selfCtx
-    return ctx.effect(function* (this: McpResourceRuntime) {
-      let toolCtx = ctx
-      if (scope !== undefined) {
-        const owned = createScope(ctx, scope)
-        yield owned.rawDispose
-        toolCtx = owned.ctx
-      }
-      yield registerResourceTools(toolCtx, (server, request, exec) => this.request(server, request, exec))
-    }.bind(this), 'mcpResources.tools')
+    return ctx.effect(
+      function* (this: McpResourceRuntime) {
+        let toolCtx = ctx
+        if (scope !== undefined) {
+          const owned = createScope(ctx, scope)
+          yield owned.rawDispose
+          toolCtx = owned.ctx
+        }
+        yield registerResourceTools(toolCtx, (server, request, exec) => this.request(server, request, exec))
+      }.bind(this),
+      'mcpResources.tools',
+    )
   }
 
+  /** List UI resources from the caller-visible connection scope only. */
+  async applications(agent: NonNullable<ToolExecution['agent']>, signal: AbortSignal): Promise<readonly McpAppDescriptor[]> {
+    const providers = this.layers.merge(agent, layer => layer.servers)
+    const values = await Promise.all(
+      [...providers].map(async ([server, provider]) =>
+        ((await provider.applications?.(signal)) ?? []).map(value => ({ ...value, server })),
+      ),
+    )
+    return values.flat()
+  }
+  /** Recheck the negotiated tool URI at every read, including after reconnect. */
+  async applicationResource(
+    server: string,
+    tool: string,
+    agent: NonNullable<ToolExecution['agent']>,
+    signal: AbortSignal,
+    expectedGeneration: string,
+  ): Promise<JsonValue> {
+    const provider = this.layers.merge(agent, layer => layer.servers).get(server)
+    const application = (await provider?.applications?.(signal))?.find(value => value.tool === tool)
+    if (application === undefined || application.generation !== expectedGeneration || provider?.applicationResource === undefined)
+      throw new Error('MCP application is unavailable in this session')
+    const result = await provider.applicationResource(application.resourceUri, signal, expectedGeneration)
+    const current = (await provider.applications?.(signal))?.find(value => value.tool === tool)
+    if (current?.generation !== expectedGeneration || current.resourceUri !== application.resourceUri)
+      throw new Error('MCP application changed while reading its resource')
+    return result
+  }
   /** Resolve the caller-visible server before starting any network operation. */
   private request(server: string, request: McpResourceRequest, exec: ToolExecution): Promise<JsonValue> {
     const provider = this.layers.merge(exec.agent, layer => layer.servers).get(server)

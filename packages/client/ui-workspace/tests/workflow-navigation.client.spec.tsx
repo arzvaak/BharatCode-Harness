@@ -140,6 +140,7 @@ it('toggles Files and the editor without replacing the composer or source DOM', 
   expect(filesButton.getAttribute('aria-expanded')).toBe('false')
   expect(p.toggleFiles).toHaveBeenCalledTimes(2)
   const composer = screen.getByRole('textbox', { name: 'Unsent draft' }) as HTMLTextAreaElement
+  fireEvent.click(screen.getByRole('button', { name: 'editor.sourceMode' }))
   const source = screen.getByRole('textbox', { name: 'editor.source' })
   fireEvent.change(composer, { target: { value: 'Unsent' } })
   fireEvent.click(screen.getByRole('button', { name: 'editor.collapse' }))

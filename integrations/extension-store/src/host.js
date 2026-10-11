@@ -1,3 +1,4 @@
+import { registerDisclosure } from './disclosure.js';
 import { createHash } from "node:crypto";
 import { getDshRuntimeVersion } from "@deepseek-ai/dsh-app-boot";
 import { readFile } from "node:fs/promises";
@@ -23,6 +24,7 @@ export const inject = [
   "credentials",
   "profileContext",
   "agents",
+  "tools",
   "workspaceRegistry",
   "storageDomain",
   "subprocess",
@@ -163,8 +165,15 @@ export async function apply(ctx, config = {}) {
         return next();
       if (!allowed.has(exec.name)) throw Error("Tool is outside the qualified connector allowlist");
       const release = runtime.lease(workspace, session, entry.id);
+      const failureKey = JSON.stringify([workspace, session, entry.id]);
       try {
-        return await next();
+        const result = await next();
+        if (result.isError) runtime.failures.set(failureKey, result.error?.message ?? 'Connector invocation failed');
+        else runtime.failures.delete(failureKey);
+        return result;
+      } catch (reason) {
+        runtime.failures.set(failureKey, reason instanceof Error ? reason.message : String(reason));
+        throw reason;
       } finally {
         release();
       }
@@ -189,6 +198,7 @@ export async function apply(ctx, config = {}) {
     )
       runtime.enable(workspace, record.descriptor);
   }
+  registerDisclosure(ctx, { store, runtime, workspaceFor, credentials: async reference => ctx.credentials.resolve(credentialRef(reference)) });
   const snapshot = async () => ({
     ...store.view(),
     credential: await ctx.credentials.describe(reference),
@@ -196,6 +206,8 @@ export async function apply(ctx, config = {}) {
       .list()
       .map((w) => ({ id: w.id, title: w.title })),
     running: runtime.snapshot(),
+    capabilityFailures: [...runtime.failures.entries()].map(([key, reason]) => ({ identity: JSON.parse(key), reason })),
+    connectedCapabilities: await Promise.all(store.catalog.entries.filter(entry => entry.credentialReference).map(async entry => [entry.id, Boolean(await ctx.credentials.resolve(credentialRef(entry.credentialReference)))])),
     bundles: (await ctx.pluginManager.listBundles()).map((b) => ({
       name: b.name,
       enabled: b.enabled,

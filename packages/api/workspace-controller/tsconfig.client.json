@@ -10,7 +10,9 @@
     "src/client/model.ts",
     "src/client/service.ts",
     "src/default-workspace.ts",
-    "src/types.ts"
+    "src/types.ts",
+    "src/document-review.ts",
+    "src/language-review.ts"
   ],
   "references": [
     { "path": "../../../vendor/cordis" },

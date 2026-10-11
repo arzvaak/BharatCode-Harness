@@ -319,6 +319,8 @@ export interface ClientBundleRegistration {
   id: string
   /** Package-local chunk filename; absent for the package's `client.js` entry. */
   chunk?: string
+  /** Static sibling chunks that must arrive before this synchronous factory runs. */
+  dependencies?: readonly string[]
   /**
    * Closure factory holding the whole bundle body: receives the module-table
    * require whose `async` operation loads generated chunks, and returns the

@@ -15,6 +15,7 @@
  * @module
  */
 
+import { randomUUID } from 'node:crypto'
 import { Client, type Transport } from '@modelcontextprotocol/client'
 import type { Context } from '@deepseek-ai/cordis'
 import { assertNever, type JsonValue } from '@deepseek-ai/dsh-util-values'
@@ -145,6 +146,7 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
   let serverInstructions = ''
   /** Current generation: the connecting or connected client; undefined during backoff waits and after final failure. */
   let client: Client | undefined
+  const generationIds = new WeakMap<Client, string>()
   /** Transport-aware close operation paired with {@link client}. */
   let closeClient: (() => Promise<boolean>) | undefined
   /** Live tool registrations owned by this server; only {@link enqueueSync} and dispose swap it. */
@@ -259,7 +261,7 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     const generation = new Client(
       { name: 'dsh-mcp-client', version: '0.0.1' },
       {
-        capabilities: {},
+        capabilities: { extensions: { 'io.modelcontextprotocol/ui': { mimeTypes: ['text/html;profile=mcp-app'] } } },
         versionNegotiation: { mode: 'auto' },
         listChanged: {
           tools: {
@@ -275,6 +277,7 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     let closeObserved = false
     let transport: Transport | undefined
     const hasClosed = (): boolean => closeObserved
+    generationIds.set(generation, randomUUID())
     client = generation
     closeClient = closeGeneration
     generation.onclose = () => {
@@ -365,6 +368,36 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
     ready,
     instructions: () => serverInstructions,
     resources: {
+      async applications(signal) {
+        const generation = client
+        if (!generation || connectedAt === undefined) return []
+        const tools = (await generation.listTools(undefined, { signal, timeout: config.toolCallTimeoutMs })).tools
+        if (!isCurrent(generation)) throw new Error('MCP connection changed while listing apps')
+        const generationId = generationIds.get(generation)
+        if (generationId === undefined) throw new Error('MCP connection generation is unavailable')
+        const allowedTools = tools.filter((tool) => {
+          if (config.allowedTools !== undefined && !config.allowedTools.includes(tool.name)) return false
+          const ui = tool._meta?.['ui']; const visibility = ui !== null && typeof ui === 'object' && 'visibility' in ui ? ui.visibility : undefined
+          return !Array.isArray(visibility) || visibility.includes('app')
+        }).map(tool => tool.name)
+        return tools.flatMap((tool) => {
+          if (config.allowedTools !== undefined && !config.allowedTools.includes(tool.name)) return []
+          const ui = tool._meta?.['ui']
+          if (ui === null || typeof ui !== 'object') return []
+          const uri = 'resourceUri' in ui ? ui.resourceUri : undefined
+          const visibility = 'visibility' in ui ? ui.visibility : undefined
+          if (typeof uri !== 'string' || !uri.startsWith('ui://') || (Array.isArray(visibility) && !visibility.includes('app'))) return []
+          return [{ tool: tool.name, resourceUri: uri, title: tool.title ?? tool.name, allowedTools, generation: generationId }]
+        })
+      },
+      async applicationResource(uri, signal, expectedGeneration) {
+        const generation = client
+        if (!generation || connectedAt === undefined || generationIds.get(generation) !== expectedGeneration)
+          throw new Error('MCP app server connection changed')
+        const result = await generation.readResource({ uri }, { signal, timeout: config.toolCallTimeoutMs })
+        if (!isCurrent(generation)) throw new Error('MCP connection changed while reading an app')
+        return result as JsonValue
+      },
       async request(request, exec): Promise<JsonValue> {
         const generation = client
         if (!generation || connectedAt === undefined) throw new Error(`${label}: server is disconnected`)

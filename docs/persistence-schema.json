@@ -23006,7 +23006,7 @@
         "packages/core/tools/src/index.ts#ToolRestriction"
       ],
       "sources": [
-        "packages/core/tools/src/index.ts:700"
+        "packages/core/tools/src/index.ts:704"
       ]
     },
     {
@@ -23087,7 +23087,7 @@
       "digest": "443000524ce3bb379745cb41b4872b06764d6795abf986e68c09d1d416b4ef4c",
       "names": [],
       "sources": [
-        "packages/workspace/workspace/src/types.ts:268"
+        "packages/workspace/workspace/src/types.ts:270"
       ]
     },
     {
@@ -23220,7 +23220,7 @@
         "packages/workspace/workspace/src/types.ts#HandoffAdmission"
       ],
       "sources": [
-        "packages/workspace/workspace/src/types.ts:256"
+        "packages/workspace/workspace/src/types.ts:258"
       ]
     },
     {
@@ -23279,7 +23279,7 @@
         "packages/workflow/workflow/src/types.ts:13",
         "packages/workspace/workspace/src/types.ts:147",
         "packages/workspace/workspace/src/types.ts:16",
-        "packages/workspace/workspace/src/types.ts:213"
+        "packages/workspace/workspace/src/types.ts:215"
       ]
     },
     {
@@ -24036,7 +24036,7 @@
         "packages/workspace/workspace/src/types.ts#WorkflowProfile"
       ],
       "sources": [
-        "packages/workspace/workspace/src/types.ts:194"
+        "packages/workspace/workspace/src/types.ts:196"
       ]
     },
     {

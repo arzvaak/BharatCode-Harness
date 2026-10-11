@@ -241,3 +241,73 @@ it('filters classification before the bounded search result budget', async () =>
   expect(h.knowledge.search({ projectId: h.workspace.id, query: '', kinds: ['finding'] }).hits.map(hit => hit.id)).toEqual([finding.id])
   expect(h.knowledge.search({ projectId: h.workspace.id, query: '', kinds: [] }).hits).toEqual([])
 })
+
+it('anchors a claim to the selected immutable passage and preserves it after source changes', async () => {
+  const h = await harness()
+  await writeFile(join(h.root, 'paper.md'), 'Repeated. Evidence 😀. Repeated.')
+  await writeFile(join(h.root, 'claim.md'), 'The claim')
+  const paper = await h.knowledge.register({ projectId: h.workspace.id, path: 'paper.md', kind: 'source' })
+  const claim = await h.knowledge.register({ projectId: h.workspace.id, path: 'claim.md', kind: 'finding' })
+  const passage = { start: 10, end: 22, quote: 'Evidence 😀.' }
+  const link = await h.knowledge.link({ projectId: h.workspace.id, from: claim.id, to: paper.id, relation: 'supports', passage })
+  expect(h.knowledge.related(claim.id)).toContainEqual(link)
+  await writeFile(join(h.root, 'paper.md'), 'New version')
+  expect((await h.knowledge.inspect(paper.id)).status).toBe('stale')
+  expect(h.knowledge.read(paper.id).text.slice(passage.start, passage.end)).toBe(passage.quote)
+  await expect(h.knowledge.link({ projectId: h.workspace.id, from: claim.id, to: paper.id, relation: 'cites', passage: { ...passage, start: 0 } })).rejects.toThrow('Passage')
+})
+
+it('preserves writing canon separately from tentative ideas and rejects conflicting saves', async () => {
+  const h = await harness()
+  const payload = { kind: 'writing' as const, specialization: 'novel' as const, brief: 'A novel', style: 'Direct', outline: ['Scene'], canon: ['Established'], tentative: ['Possible'], characters: ['Hero'], chronology: [], scenes: [{ title: 'Opening', objective: 'Introduce the hero' }], sourceIds: [] }
+  const first = await h.knowledge.saveWorkflowRecord({ id: 'writing-project', projectId: h.workspace.id, title: 'Writing', expectedRevision: null, payload })
+  expect(h.knowledge.workflowRecords(h.workspace.id)[0]?.payload).toEqual(payload)
+  await expect(h.knowledge.saveWorkflowRecord({ id: first.id, projectId: h.workspace.id, title: 'Writing', expectedRevision: null, payload })).rejects.toThrow('changed')
+  const next = await h.knowledge.saveWorkflowRecord({ id: first.id, projectId: h.workspace.id, title: 'Writing', expectedRevision: first.revision, payload: { ...payload, tentative: ['Another possibility'] } })
+  expect(next.payload).toMatchObject({ canon: ['Established'], tentative: ['Another possibility'] })
+})
+
+it('freezes analysis identity and permits only explicit lifecycle transitions', async () => {
+  const h = await harness()
+  await writeFile(join(h.root, 'analysis.ipynb'), '{"cells":[]}')
+  const notebook = await h.knowledge.register({ projectId: h.workspace.id, path: 'analysis.ipynb', kind: 'note' })
+  const payload = { kind: 'analysis' as const, notebook: notebook.id, inputs: [], code: notebook.text, kernel: 'python3', environment: 'test', parameters: {}, outputs: [], status: 'prepared' as const, detail: '' }
+  const first = await h.knowledge.saveWorkflowRecord({ id: 'run', projectId: h.workspace.id, title: 'Analysis', expectedRevision: null, payload })
+  await expect(h.knowledge.saveWorkflowRecord({ id: first.id, projectId: h.workspace.id, title: 'Analysis', expectedRevision: first.revision, payload: { ...payload, status: 'completed', jobId: 'probe', outputs: [notebook.id] } })).rejects.toThrow('transition')
+  const output = await h.knowledge.captureAnalysisOutput(h.workspace.id, first.id, 'Executed notebook', notebook.text)
+  const running = await h.knowledge.saveWorkflowRecord({ id: first.id, projectId: h.workspace.id, title: 'Analysis', expectedRevision: first.revision, payload: { ...payload, status: 'running' } })
+  await expect(h.knowledge.saveWorkflowRecord({ id: first.id, projectId: h.workspace.id, title: 'Analysis', expectedRevision: running.revision, payload: { ...payload, code: 'print(2)', status: 'completed', jobId: 'probe', outputs: [output.id] } })).rejects.toThrow('immutable')
+  const completed = await h.knowledge.saveWorkflowRecord({ id: first.id, projectId: h.workspace.id, title: 'Analysis', expectedRevision: running.revision, payload: { ...payload, status: 'completed', jobId: 'probe', outputs: [output.id] } })
+  expect(completed.payload).toMatchObject({ status: 'completed' })
+})
+
+it('rejects forged analysis identity and preserves terminal outcomes across restart', async () => {
+  const h = await harness()
+  await writeFile(join(h.root, 'run.ipynb'), '{"cells":[]}')
+  const notebook = await h.knowledge.register({ projectId: h.workspace.id, path: 'run.ipynb', kind: 'note' })
+  const payload = { kind: 'analysis' as const, notebook: notebook.id, inputs: [], code: notebook.text, kernel: 'python3', environment: 'test', parameters: {}, outputs: [], status: 'prepared' as const, detail: '' }
+  const request = { id: 'run', projectId: h.workspace.id, title: 'Run', expectedRevision: null, payload }
+  await expect(h.knowledge.saveWorkflowRecord({ ...request, payload: { ...payload, status: 'completed', jobId: 'fake', outputs: [notebook.id] } })).rejects.toThrow('start prepared')
+  await expect(h.knowledge.saveWorkflowRecord({ ...request, payload: { ...payload, code: 'different code' } })).rejects.toThrow('captured notebook')
+  const first = await h.knowledge.saveWorkflowRecord(request)
+  const running = await h.knowledge.saveWorkflowRecord({ ...request, expectedRevision: first.revision, payload: { ...payload, status: 'running', jobId: 'job' } })
+  await expect(h.knowledge.saveWorkflowRecord({ ...request, expectedRevision: running.revision, payload: { ...payload, status: 'completed', jobId: 'job', outputs: [notebook.id] } })).rejects.toThrow('does not belong')
+  await h.dispose()
+  const reopened = await harness(h.pool, h.root)
+  const recovered = reopened.knowledge.workflowRecords(h.workspace.id)[0]!
+  expect(recovered.payload).toMatchObject({ status: 'failed', jobId: 'job' })
+  await expect(reopened.knowledge.saveWorkflowRecord({ ...request, expectedRevision: recovered.revision, payload: { ...payload, status: 'failed', jobId: 'replaced' } })).rejects.toThrow('immutable')
+})
+
+it('retains the latest file lookup beyond the search budget and validates comment bounds', async () => {
+  const h = await harness(undefined, undefined, 1)
+  await writeFile(join(h.root, 'older.md'), 'Original quote')
+  const older = await h.knowledge.register({ projectId: h.workspace.id, path: 'older.md', kind: 'source' })
+  await writeFile(join(h.root, 'newer.md'), 'Newer')
+  await h.knowledge.register({ projectId: h.workspace.id, path: 'newer.md', kind: 'source' })
+  expect(h.knowledge.latestForPath(h.workspace.id, 'older.md')?.id).toBe(older.id)
+  const request = { id: 'comment', projectId: h.workspace.id, title: 'Comment', expectedRevision: null, payload: { kind: 'comment' as const, artifact: older.id, start: 0, end: 100, quote: older.text, comment: 'Review', resolved: false } }
+  await expect(h.knowledge.saveWorkflowRecord(request)).rejects.toThrow('passage')
+  const value = await h.knowledge.saveWorkflowRecord({ ...request, payload: { ...request.payload, end: older.text.length } })
+  expect(value.payload).toMatchObject({ quote: older.text })
+})

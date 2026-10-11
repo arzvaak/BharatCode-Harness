@@ -23,7 +23,10 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { RemoteHostFacts } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client'
 import type {
-  IWorkspaces, SessionActivity, WorkspaceArchiveError, WorkspaceSnapshot,
+  IWorkspaces,
+  SessionActivity,
+  WorkspaceArchiveError,
+  WorkspaceSnapshot,
 } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { HostObservable, SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
@@ -39,36 +42,66 @@ import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 // Type-only: pulls the Session root standard-hook merge.
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import {
-  type ArchiveSessionInjected, type ForkSessionInjected, menuOpenStateFactory, type PinSessionInjected,
-  type SessionArchiveConfirmInjected, type SessionArchiveConfirmRequest,
-  type RenameSessionInjected, type RowToast, type RowToastInjected, type RowToastState, type SessionRenameDialogInjected,
-  type WorkspaceBrowserInjected, type WorkspacePickerInjected,
+  type ArchiveSessionInjected,
+  type ForkSessionInjected,
+  menuOpenStateFactory,
+  type PinSessionInjected,
+  type SessionArchiveConfirmInjected,
+  type SessionArchiveConfirmRequest,
+  type RenameSessionInjected,
+  type RowToast,
+  type RowToastInjected,
+  type RowToastState,
+  type SessionRenameDialogInjected,
+  type WorkspaceBrowserInjected,
+  type WorkspacePickerInjected,
 } from './contract/slots.ts'
 import { createWorkspaceShortcutControls, installWorkspaceShortcuts } from './shortcuts.ts'
 import { UiWorkspaceService } from './navigation.ts'
 import { createWorkspaceViewStore } from './stores.ts'
 import { WorkspaceBrowser } from './rows/WorkspaceBrowser.tsx'
-import { ArchiveSessionMenuItem, ArchiveSessionRowButton, SessionArchiveConfirmDialog } from './session-actions/ArchiveSession.tsx'
+import {
+  ArchiveSessionMenuItem,
+  ArchiveSessionRowButton,
+  SessionArchiveConfirmDialog,
+} from './session-actions/ArchiveSession.tsx'
 import { derive } from './session-actions/derived.ts'
 import { ForkSessionMenuItem } from './session-actions/ForkSession.tsx'
 import { PinSessionMenuItem, PinSessionRowButton } from './session-actions/PinSession.tsx'
 import { RenameSessionMenuItem, SessionRenameDialog } from './session-actions/RenameSession.tsx'
 import { RowActionToast } from './session-actions/RowActionToast.tsx'
 import { WorkspacePicker } from './WorkspacePicker.tsx'
-import { HandoffDialog, HandoffMenuItem, UsingContext, type HandoffTarget, type HandoffDialogInjected, type UsingContextInjected } from './handoffs.tsx'
+import {
+  HandoffDialog,
+  HandoffMenuItem,
+  UsingContext,
+  type HandoffTarget,
+  type HandoffDialogInjected,
+  type UsingContextInjected,
+} from './handoffs.tsx'
 import { en, zh, type WorkspaceKey } from './locales.ts'
 import { createWorkflowPresentationStore } from './workflows/presentation.ts'
 import { WorkflowNavigation } from './workflows/WorkflowNavigation.tsx'
 import { WorkspaceDocuments } from './workflows/documents.ts'
+import { configureMonacoWorkers } from './workflows/monaco-runtime.ts'
 import { WorkflowWorkspace } from './workflows/WorkflowWorkspace.tsx'
 
 export type { UiWorkspace } from './navigation.ts'
 export type {
-  DirectoryFlowOwnerProps, DirectoryFlowSlotName, DirectoryPickingHooks, DirectoryPickingInjected,
-  MenuOpenState, RowToast, SessionRenameTarget, SessionRowOwnerProps, UseMenuOpenState, WorkspaceBrowserInjected,
+  DirectoryFlowOwnerProps,
+  DirectoryFlowSlotName,
+  DirectoryPickingHooks,
+  DirectoryPickingInjected,
+  MenuOpenState,
+  RowToast,
+  SessionRenameTarget,
+  SessionRowOwnerProps,
+  UseMenuOpenState,
+  WorkspaceBrowserInjected,
   SessionRowScheduleOwnerProps,
   WorkspaceBrowserProps,
-  WorkspacePickerInjected, WorkspacePickerProps,
+  WorkspacePickerInjected,
+  WorkspacePickerProps,
 } from './contract/slots.ts'
 export type { WorkspaceKey } from './locales.ts'
 
@@ -114,7 +147,19 @@ const NS = 'workspace'
  * declaration through `slots.inject()` instead of assuming order.
  */
 export const inject = [
-  'slots', 'sessions', 'workspaces', 'locale', 'remote', 'remote.directoryPicker', 'remote.knowledge', 'remote.workspaceFiles', 'remote.documents', 'layout', 'shortcuts', 'sidebarRight', 'jobs',
+  'slots',
+  'sessions',
+  'workspaces',
+  'locale',
+  'remote',
+  'remote.directoryPicker',
+  'remote.knowledge',
+  'remote.workspaceFiles',
+  'remote.documents',
+  'layout',
+  'shortcuts',
+  'sidebarRight',
+  'jobs',
 ]
 
 /**
@@ -124,6 +169,7 @@ export const inject = [
  * @param ctx - client root context.
  */
 export function apply(ctx: Context): void {
+  ctx.effect(() => configureMonacoWorkers(), 'workspace.monaco-workers')
   const sessions = ctx.get('sessions') as ISessions
   const workspaces = ctx.get('workspaces') as IWorkspaces
   const unwrap = <T>(result: { ok: true; value: T } | { ok: false; error: { message: string } }): T => {
@@ -136,9 +182,16 @@ export function apply(ctx: Context): void {
       unwrap(await ctx.remote.workspaceFiles.saveEditable(session, path, { text, expectedVersion })),
     readDraft: async (session, path) => unwrap(await ctx.remote.documents.readDraft(session, path)),
     saveDraft: async request => unwrap(await ctx.remote.documents.saveDraft(request)),
-    clearDraft: async (session, path, revision) => { unwrap(await ctx.remote.documents.clearDraft(session, path, revision)) },
+    clearDraft: async (session, path, revision) => {
+      unwrap(await ctx.remote.documents.clearDraft(session, path, revision))
+    },
   })
-  ctx.effect(() => () => { documents.dispose() }, 'workspace.documents')
+  ctx.effect(
+    () => () => {
+      documents.dispose()
+    },
+    'workspace.documents',
+  )
   const workflowHandle = createWorkflowPresentationStore()
   const workflowInstance = workflowHandle.create()
   ctx.on('workspace/file/open', (sessionId: SessionId, path: string) => {
@@ -148,9 +201,13 @@ export function apply(ctx: Context): void {
     if (profile === 'research') workflowInstance.actions.researchView(sessionId, { section: 'notes' })
     const cwd = sessions.list.getSnapshot().byId[sessionId]?.cwd
     const view = documents.state.getSnapshot().sessions[sessionId]
-    const existingPath = Object.keys(view?.documents ?? {}).find(key => resolveWorkspacePath(cwd, key) === resolveWorkspacePath(cwd, path))
+    const existingPath = Object.keys(view?.documents ?? {}).find(
+      key => resolveWorkspacePath(cwd, key) === resolveWorkspacePath(cwd, path),
+    )
     const documentPath = existingPath ?? (cwd !== undefined && path.startsWith(`${cwd}/`) ? path.slice(cwd.length + 1) : path)
-    void documents.open(sessionId, documentPath).then(() => { rememberDocument(sessionId, documentPath) })
+    void documents.open(sessionId, documentPath).then(() => {
+      rememberDocument(sessionId, documentPath)
+    })
     return true
   })
   const restoredDocuments = new Set<SessionId>()
@@ -170,10 +227,10 @@ export function apply(ctx: Context): void {
   const viewStore: typeof viewHandle = { ...viewHandle, create: () => viewInstance }
   const rowToast = createSnapshotStore<RowToastState | null>(null)
   let toastSeq = 0
-  const notify = (toast: RowToast): void => { rowToast.set({ ...toast, seq: ++toastSeq }) }
-  const uiWorkspace = new UiWorkspaceService(
-    ctx, ctx.remote.directoryPicker, workspaces, sessions, viewInstance.actions, notify,
-  )
+  const notify = (toast: RowToast): void => {
+    rowToast.set({ ...toast, seq: ++toastSeq })
+  }
+  const uiWorkspace = new UiWorkspaceService(ctx, ctx.remote.directoryPicker, workspaces, sessions, viewInstance.actions, notify)
   ctx.slots.provideRoot({ hooks: { workspaces: workspaces.list } })
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-workspace: dictionaries')
   const shortcutControls = createWorkspaceShortcutControls()
@@ -186,7 +243,9 @@ export function apply(ctx: Context): void {
 
   // Stable per-surface occupancy sources (the renderer's hook cache keys by
   // source identity): true while the surface's directory-flow hole is filled.
-  const flowSource = (hole: 'sidebar.workspaces.directoryFlow' | 'conversation.hero.workspace.directoryFlow'): HostObservable<boolean> => ({
+  const flowSource = (
+    hole: 'sidebar.workspaces.directoryFlow' | 'conversation.hero.workspace.directoryFlow',
+  ): HostObservable<boolean> => ({
     getSnapshot: () => ctx.slots.entries(hole).length > 0,
     subscribe: listener => ctx.slots.subscribe(hole, listener),
   })
@@ -215,18 +274,21 @@ export function apply(ctx: Context): void {
     })
   }
   const renameSession: SessionRenameDialogInjected['renameSession'] = async (sessionId, title) => {
-    const result = await sessions.using(
-      sessionId,
-      { source: 'workspaceOperation' },
-      reference => reference.binding.session.rename(title),
+    const result = await sessions.using(sessionId, { source: 'workspaceOperation' }, reference =>
+      reference.binding.session.rename(title),
     )
     if (!result.ok) throw new Error(result.error.message)
   }
   const handoffTarget = createSnapshotStore<HandoffTarget | null>(null)
-  const requestHandoff: UsingContextInjected['requestHandoff'] = (sessionId, workflow) => { handoffTarget.set({ sessionId, workflow }) }
+  const requestHandoff: UsingContextInjected['requestHandoff'] = (sessionId, workflow) => {
+    handoffTarget.set({ sessionId, workflow })
+  }
   const handoffInjected = (): HandoffDialogInjected => ({
     hooks: { handoffTarget },
-    closeHandoff: () => { handoffTarget.set(null) }, openDestination: openSession,
+    closeHandoff: () => {
+      handoffTarget.set(null)
+    },
+    openDestination: openSession,
     captureSession: async (request) => {
       const result = await ctx.remote.knowledge.captureSession(request)
       if (!result.ok) throw new Error(result.error.message)
@@ -258,7 +320,8 @@ export function apply(ctx: Context): void {
       return result.value
     },
   })
-  const contextInjected = (): UsingContextInjected => ({ requestHandoff,
+  const contextInjected = (): UsingContextInjected => ({
+    requestHandoff,
     inspectArtifact: async (id) => {
       const result = await ctx.remote.knowledge.inspect(id)
       if (!result.ok) throw new Error(result.error.message)
@@ -269,9 +332,13 @@ export function apply(ctx: Context): void {
       if (!result.ok) throw new Error(result.error.message)
       const destinationProject = workspaces.list.getSnapshot().items.find(project => project.sessionIds.includes(sessionId))
       if (destinationProject === undefined) throw new Error('The receiving project is unavailable.')
-      handoffTarget.set({ sessionId: handoff.sourceSessionId ?? sessionId, workflow: handoff.workflow,
-        sourceProjectId: result.value.projectId, destinationProjectId: destinationProject.workspaceId,
-        destinationSessionId: sessionId, evidence: [result.value],
+      handoffTarget.set({
+        sessionId: handoff.sourceSessionId ?? sessionId,
+        workflow: handoff.workflow,
+        sourceProjectId: result.value.projectId,
+        destinationProjectId: destinationProject.workspaceId,
+        destinationSessionId: sessionId,
+        evidence: [result.value],
       })
     },
     readContext: async (sessionId) => {
@@ -280,72 +347,195 @@ export function apply(ctx: Context): void {
       return result.value
     },
   })
-  ctx.slots.inject('conversation.input.left', () => ctx.slots.register({ name: 'conversation.input.left', id: 'project.context', locale: NS, inject: contextInjected }, UsingContext))
-  ctx.slots.inject('sidebar.workflows', () => ctx.slots.register({
-    name: 'sidebar.workflows', locale: NS, store: workflowPresentation,
-    inject: () => ({ hooks: { selection: uiWorkspace.selection }, reveal: () => { ctx.layout.selectPanel(null) } }),
-  }, WorkflowNavigation))
-  ctx.slots.inject('conversation.workspace', () => ctx.slots.register({
-    name: 'conversation.workspace', locale: NS,
-    inject: () => ({
-      hooks: { presentation: workflowInstance, documents: documents.state, jobs: ctx.jobs.state,
-        filesVisible: ctx.sidebarRight.filesVisible },
-      changeResearch: (key: string, change: Partial<import('./workflows/surfaces.ts').ResearchPreference>) => { workflowInstance.actions.researchView(key, change) },
-      showResearchChat: (key: string, visible: boolean) => { workflowInstance.actions.showResearchChat(key, visible) },
-      searchArtifacts: async (request: import('@deepseek-ai/dsh-workspace/types').SearchArtifactsRequest) => unwrap(await ctx.remote.knowledge.search(request)),
-      readArtifact: async (id: import('@deepseek-ai/dsh-workspace/types').ArtifactRevisionId) => unwrap(await ctx.remote.knowledge.read(id)),
-      registerArtifact: async (request: import('@deepseek-ai/dsh-workspace/types').RegisterArtifactRequest) => unwrap(await ctx.remote.knowledge.register(request)),
-      inspectArtifact: contextInjected().inspectArtifact,
-      readContext: contextInjected().readContext,
-      requestEvidenceHandoff: (sessionId: SessionId, artifact: import('@deepseek-ai/dsh-workspace/types').ArtifactRevision, workflow: import('@deepseek-ai/dsh-workspace/types').WorkflowProfile) => {
-        handoffTarget.set({ sessionId, workflow, sourceProjectId: artifact.projectId, evidence: [artifact] })
+  ctx.slots.inject('conversation.input.left', () =>
+    ctx.slots.register(
+      { name: 'conversation.input.left', id: 'project.context', locale: NS, inject: contextInjected },
+      UsingContext,
+    ),
+  )
+  ctx.slots.inject('sidebar.workflows', () =>
+    ctx.slots.register(
+      {
+        name: 'sidebar.workflows',
+        locale: NS,
+        store: workflowPresentation,
+        inject: () => ({
+          hooks: { selection: uiWorkspace.selection },
+          reveal: () => {
+            ctx.layout.selectPanel(null)
+          },
+        }),
       },
-      listFiles: async (sessionId: SessionId, path: string) => unwrap(await ctx.remote.workspaceFiles.list(sessionId, path)),
-      openPreview: (sessionId: SessionId, path: string) => {
-        ctx.sidebarRight.openResource(fileAddressFor(sessionId, sessions.list.getSnapshot().byId[sessionId]?.cwd, path))
+      WorkflowNavigation,
+    ),
+  )
+  ctx.slots.inject('conversation.workspace', () =>
+    ctx.slots.register(
+      {
+        name: 'conversation.workspace',
+        locale: NS,
+        inject: () => ({
+          hooks: {
+            presentation: workflowInstance,
+            documents: documents.state,
+            jobs: ctx.jobs.state,
+            filesVisible: ctx.sidebarRight.filesVisible,
+          },
+          changeResearch: (key: string, change: Partial<import('./workflows/surfaces.ts').ResearchPreference>) => {
+            workflowInstance.actions.researchView(key, change)
+          },
+          showResearchChat: (key: string, visible: boolean) => {
+            workflowInstance.actions.showResearchChat(key, visible)
+          },
+          searchArtifacts: async (request: import('@deepseek-ai/dsh-workspace/types').SearchArtifactsRequest) =>
+            unwrap(await ctx.remote.knowledge.search(request)),
+          cancelNotebook: async (session: SessionId, jobId: string) => {
+            unwrap(await ctx.jobs.kill(session, jobId as import('@deepseek-ai/dsh-api-job-controller/client').JobView['id']))
+          },
+          executeNotebook: async (
+            project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId,
+            id: string,
+            session: SessionId,
+          ) => unwrap(await ctx.remote.knowledge.executeNotebook(project, id, session)),
+          workflowRecords: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId) =>
+            unwrap(await ctx.remote.knowledge.workflowRecords(project)),
+          saveWorkflowRecord: async (request: import('@deepseek-ai/dsh-workspace/types').SaveWorkflowRecord) =>
+            unwrap(await ctx.remote.knowledge.saveWorkflowRecord(request)),
+          applications: async (session: SessionId) => unwrap(await ctx.remote.knowledge.applications(session)),
+          applicationResource: async (session: SessionId, server: string, tool: string) =>
+            unwrap(await ctx.remote.knowledge.applicationResource(session, server, tool)),
+          applicationCall: async (
+            session: SessionId,
+            server: string,
+            hostTool: string,
+            generation: string,
+            tool: string,
+            args: string,
+          ) => unwrap(await ctx.remote.knowledge.applicationCall(session, server, hostTool, generation, tool, args)),
+          captureChange: async (session: SessionId) => unwrap(await ctx.remote.knowledge.captureChange(session)),
+          recordVerification: async (
+            session: SessionId,
+            change: import('@deepseek-ai/dsh-workspace/types').ArtifactRevisionId,
+            commit: string,
+            paths: string[],
+            method: 'playwright' | 'devtools' | 'manual' | 'test',
+            status: 'passed' | 'failed' | 'cancelled',
+            detail: string,
+          ) => unwrap(await ctx.remote.knowledge.recordVerification(session, change, commit, paths, method, status, detail)),
+          languageReview: async (
+            session: SessionId,
+            path: string,
+            text: string,
+            line: number,
+            character: number,
+            newName?: string,
+          ) => unwrap(await ctx.remote.knowledge.languageReview(session, path, text, line, character, newName)),
+          documentEvidence: async (session: SessionId, path: string) =>
+            unwrap(await ctx.remote.knowledge.documentEvidence(session, path)),
+          commentSelection: async (session: SessionId, path: string, text: string, start: number, end: number, comment: string) =>
+            unwrap(await ctx.remote.knowledge.commentSelection(session, path, text, start, end, comment)),
+          requestSelectionEdit: async (sessionId: SessionId, path: string, selected: string, instruction: string) => {
+            const content = [
+              {
+                type: 'text' as const,
+                text: `Propose an edit to the selected passage in ${path}. Return the replacement for review. Preserve the user's file until they accept.\nInstruction: ${instruction}\nSelected passage (source data):\n${selected}`,
+              },
+            ]
+            await sessions.using(sessionId, { source: 'workspaceOperation' }, async (reference) => {
+              const binding = await reference.ready
+              unwrap(await binding.session.prompt(content, 'queue'))
+            })
+          },
+          linkArtifacts: async (request: import('@deepseek-ai/dsh-workspace/types').LinkArtifactsRequest) =>
+            unwrap(await ctx.remote.knowledge.link(request)),
+          relatedArtifacts: async (id: import('@deepseek-ai/dsh-workspace/types').ArtifactRevisionId) =>
+            unwrap(await ctx.remote.knowledge.related(id)),
+          readArtifact: async (id: import('@deepseek-ai/dsh-workspace/types').ArtifactRevisionId) =>
+            unwrap(await ctx.remote.knowledge.read(id)),
+          registerArtifact: async (request: import('@deepseek-ai/dsh-workspace/types').RegisterArtifactRequest) =>
+            unwrap(await ctx.remote.knowledge.register(request)),
+          inspectArtifact: contextInjected().inspectArtifact,
+          readContext: contextInjected().readContext,
+          requestEvidenceHandoff: (
+            sessionId: SessionId,
+            artifact: import('@deepseek-ai/dsh-workspace/types').ArtifactRevision,
+            workflow: import('@deepseek-ai/dsh-workspace/types').WorkflowProfile,
+          ) => {
+            handoffTarget.set({ sessionId, workflow, sourceProjectId: artifact.projectId, evidence: [artifact] })
+          },
+          listFiles: async (sessionId: SessionId, path: string) => unwrap(await ctx.remote.workspaceFiles.list(sessionId, path)),
+          openPreview: (sessionId: SessionId, path: string) => {
+            ctx.sidebarRight.openResource(fileAddressFor(sessionId, sessions.list.getSnapshot().byId[sessionId]?.cwd, path))
+          },
+          openFiles: () => {
+            if (ctx.sidebarRight.mounted.getSnapshot() !== undefined) ctx.sidebarRight.openTab('files')
+          },
+          openTerminal: () => {
+            ctx.sidebarRight.openTab('terminal')
+          },
+          toggleFiles: () => {
+            if (ctx.sidebarRight.mounted.getSnapshot() === undefined) return
+            if (ctx.sidebarRight.isExpanded() && ctx.sidebarRight.active()?.kind === 'files') ctx.sidebarRight.toggleExpanded()
+            else ctx.sidebarRight.openTab('files')
+          },
+          toggleTerminal: () => {
+            ctx.sidebarRight.toggleTerminal()
+          },
+          openSession,
+          watchRuns: (sessionId: SessionId) => ctx.jobs.watchRows(sessionId),
+          observeRun: (sessionId: SessionId, id: import('@deepseek-ai/dsh-api-job-controller/client').JobView['id']) =>
+            ctx.jobs.observe(sessionId, id),
+          arrange: (key: string, preset: import('./workflows/layout.ts').WorkspacePreset, swapped: boolean) => {
+            workflowInstance.actions.arrange(key, preset, swapped)
+          },
+          showEditor: (key: string, visible: boolean) => {
+            workflowInstance.actions.showEditor(key, visible)
+          },
+          restoreDocuments: (session: SessionId): void => {
+            if (restoredDocuments.has(session)) return
+            restoredDocuments.add(session)
+            const saved = workflowInstance.getSnapshot().documents?.[session]
+            if (saved === undefined) return
+            const paths = [
+              ...saved.paths.filter(path => path !== saved.active),
+              ...(saved.active === undefined ? [] : [saved.active]),
+            ]
+            void Promise.all(paths.map(path => documents.open(session, path)))
+          },
+          openDocument: async (session: SessionId, path: string) => {
+            await documents.open(session, path)
+            rememberDocument(session, path)
+          },
+          selectDocument: (session: SessionId, path: string) => {
+            documents.select(session, path)
+            rememberDocument(session, path)
+          },
+          closeDocument: async (session: SessionId, path: string) => {
+            if (await documents.close(session, path)) {
+              workflowInstance.actions.forgetDocument(session, path, documents.state.getSnapshot().sessions[session]?.active)
+            }
+          },
+          editDocument: (session: SessionId, path: string, text: string) => documents.edit(session, path, text),
+          saveDocument: (session: SessionId, path: string) => documents.save(session, path),
+          rebaseDocument: (session: SessionId, path: string) => documents.rebase(session, path),
+        }),
       },
-      openFiles: () => { if (ctx.sidebarRight.mounted.getSnapshot() !== undefined) ctx.sidebarRight.openTab('files') },
-      openTerminal: () => { ctx.sidebarRight.openTab('terminal') },
-      toggleFiles: () => {
-        if (ctx.sidebarRight.mounted.getSnapshot() === undefined) return
-        if (ctx.sidebarRight.isExpanded() && ctx.sidebarRight.active()?.kind === 'files') ctx.sidebarRight.toggleExpanded()
-        else ctx.sidebarRight.openTab('files')
-      },
-      toggleTerminal: () => { ctx.sidebarRight.toggleTerminal() },
-      openSession,
-      watchRuns: (sessionId: SessionId) => ctx.jobs.watchRows(sessionId),
-      observeRun: (sessionId: SessionId, id: import('@deepseek-ai/dsh-api-job-controller/client').JobView['id']) => ctx.jobs.observe(sessionId, id),
-      arrange: (key: string, preset: import('./workflows/layout.ts').WorkspacePreset, swapped: boolean) => { workflowInstance.actions.arrange(key, preset, swapped) },
-      showEditor: (key: string, visible: boolean) => { workflowInstance.actions.showEditor(key, visible) },
-      restoreDocuments: (session: SessionId): void => {
-        if (restoredDocuments.has(session)) return
-        restoredDocuments.add(session)
-        const saved = workflowInstance.getSnapshot().documents?.[session]
-        if (saved === undefined) return
-        const paths = [...saved.paths.filter(path => path !== saved.active), ...saved.active === undefined ? [] : [saved.active]]
-        void Promise.all(paths.map(path => documents.open(session, path)))
-      },
-      openDocument: async (session: SessionId, path: string) => { await documents.open(session, path); rememberDocument(session, path) },
-      selectDocument: (session: SessionId, path: string) => { documents.select(session, path); rememberDocument(session, path) },
-      closeDocument: async (session: SessionId, path: string) => {
-        if (await documents.close(session, path)) {
-          workflowInstance.actions.forgetDocument(session, path, documents.state.getSnapshot().sessions[session]?.active)
-        }
-      },
-      editDocument: (session: SessionId, path: string, text: string) => documents.edit(session, path, text),
-      saveDocument: (session: SessionId, path: string) => documents.save(session, path),
-      rebaseDocument: (session: SessionId, path: string) => documents.rebase(session, path),
-    }),
-  }, WorkflowWorkspace))
+      WorkflowWorkspace,
+    ),
+  )
   const pinInjected = (): PinSessionInjected => ({
     hooks: { pinned: pinnedSet, archived: archivedSet },
     // Pin failures surface as a notice: nothing else on the surface moves, so
     // a silent failure would read as a dead action.
     pinSession: (sessionId) => {
-      uiWorkspace.pinSession(sessionId).catch(() => { notify({ kind: 'pinFailed' }) })
+      uiWorkspace.pinSession(sessionId).catch(() => {
+        notify({ kind: 'pinFailed' })
+      })
     },
     unpinSession: (sessionId) => {
-      uiWorkspace.unpinSession(sessionId).catch(() => { notify({ kind: 'unpinFailed' }) })
+      uiWorkspace.unpinSession(sessionId).catch(() => {
+        notify({ kind: 'unpinFailed' })
+      })
     },
   })
   const archiveInjected = (): ArchiveSessionInjected => ({
@@ -355,24 +545,29 @@ export function apply(ctx: Context): void {
     // The Host's refusal for running work is the one case that asks first:
     // the confirmation names that work and offers to stop it.
     archiveSession: (sessionId) => {
-      uiWorkspace.archiveSession(sessionId).then(() => {
-        notify({ kind: 'archived', sessionId })
-      }).catch((reason: unknown) => {
-        const activity = activeSessionRefusal(reason)
-        if (activity === undefined) {
-          console.warn('session archive rejected:', reason)
-          return
-        }
-        const displayTitle = sessions.list.getSnapshot().byId[sessionId]?.displayTitle ?? sessionId
-        archiveRequest.set({ sessionId, displayTitle, activity })
-      })
+      uiWorkspace
+        .archiveSession(sessionId)
+        .then(() => {
+          notify({ kind: 'archived', sessionId })
+        })
+        .catch((reason: unknown) => {
+          const activity = activeSessionRefusal(reason)
+          if (activity === undefined) {
+            console.warn('session archive rejected:', reason)
+            return
+          }
+          const displayTitle = sessions.list.getSnapshot().byId[sessionId]?.displayTitle ?? sessionId
+          archiveRequest.set({ sessionId, displayTitle, activity })
+        })
     },
     unarchiveSession,
   })
   installWorkspaceShortcuts(ctx, uiWorkspace, shortcutControls, archiveInjected().archiveSession)
   const archiveConfirmInjected = (): SessionArchiveConfirmInjected => ({
     hooks: { archiveRequest },
-    settleSessionArchive: () => { archiveRequest.set(null) },
+    settleSessionArchive: () => {
+      archiveRequest.set(null)
+    },
     stopAndArchiveSession: async (sessionId) => {
       await uiWorkspace.archiveSession(sessionId, { stopActivity: true })
       notify({ kind: 'stoppedAndArchived', sessionId })
@@ -380,11 +575,15 @@ export function apply(ctx: Context): void {
   })
   const forkInjected = (): ForkSessionInjected => ({
     forkSession: (sessionId) => {
-      uiWorkspace.forkSession(sessionId, (childId) => {
-        ctx.get('productAnalytics')?.track('branch_session_click', { session_id: childId, parent_session_id: sessionId, click_position: 'sidebar' })
-      }).catch(() => {
-        // Fork or child-title failure leaves the list as it was.
-      })
+      uiWorkspace
+        .forkSession(sessionId, (childId) => {
+          ctx
+            .get('productAnalytics')
+            ?.track('branch_session_click', { session_id: childId, parent_session_id: sessionId, click_position: 'sidebar' })
+        })
+        .catch(() => {
+          // Fork or child-title failure leaves the list as it was.
+        })
     },
   })
   const renameInjected = (): RenameSessionInjected => ({ requestSessionRename })
@@ -395,32 +594,51 @@ export function apply(ctx: Context): void {
   })
   const rowToastInjected = (): RowToastInjected => ({
     hooks: { toast: rowToast },
-    dismissToast: () => { rowToast.set(null) },
+    dismissToast: () => {
+      rowToast.set(null)
+    },
     undoArchive: unarchiveSession,
-    showArchived: () => { viewInstance.actions.setArchivedFilter('show') },
+    showArchived: () => {
+      viewInstance.actions.setArchivedFilter('show')
+    },
   })
   const browserInjected = (): WorkspaceBrowserInjected => ({
     // Explicit group actions keep their target; unscoped New Session inherits
     // the current Session Workspace before the recent-Workspace fallback.
-    startSession: (workspaceId) => { uiWorkspace.startSession(workspaceId) },
+    startSession: (workspaceId) => {
+      uiWorkspace.startSession(workspaceId)
+    },
     open: openSession,
     searchSessions,
     searchResultLimit: sessions.searchResultLimit,
     requestSessionRename,
-    notifyArchivedNotOpenable: () => { notify({ kind: 'archivedNotOpenable' }) },
-    renameWorkspace: async (workspaceId, title) => { await workspaces.rename(workspaceId, title) },
-    deleteWorkspace: async (workspaceId) => { await workspaces.delete(workspaceId) },
+    notifyArchivedNotOpenable: () => {
+      notify({ kind: 'archivedNotOpenable' })
+    },
+    renameWorkspace: async (workspaceId, title) => {
+      await workspaces.rename(workspaceId, title)
+    },
+    deleteWorkspace: async (workspaceId) => {
+      await workspaces.delete(workspaceId)
+    },
     insertWorkspaceBefore: async (workspaceId, beforeWorkspaceId) => {
       await workspaces.insertBefore(workspaceId, beforeWorkspaceId)
     },
-    unarchiveSession: async (sessionId) => { await uiWorkspace.unarchiveSession(sessionId) },
+    unarchiveSession: async (sessionId) => {
+      await uiWorkspace.unarchiveSession(sessionId)
+    },
     createWorkspace: input => workspaces.create(input),
     requestSearch: shortcutControls.search,
     requestAddWorkspace: shortcutControls.add,
     closeAddWorkspace: shortcutControls.closeAdd,
     setDirectoryBusy: shortcutControls.directoryBusy,
     dismissForkError: shortcutControls.dismissForkError,
-    hooks: { directoryFlow: browserFlowSource, hostInfo, workspaceShortcuts: shortcutControls.state, shortcuts: ctx.shortcuts.catalog },
+    hooks: {
+      directoryFlow: browserFlowSource,
+      hostInfo,
+      workspaceShortcuts: shortcutControls.state,
+      shortcuts: ctx.shortcuts.catalog,
+    },
   })
   const pickerInjected = (): WorkspacePickerInjected => ({
     createWorkspace: input => workspaces.create(input),
@@ -428,67 +646,113 @@ export function apply(ctx: Context): void {
   })
   // Each registration declares its owned children in the same call; slot
   // injection follows both the owner and declaration HMR lifetimes.
-  ctx.slots.inject('sidebar.workspaces', () => ctx.slots.register(
-    {
-      name: 'sidebar.workspaces',
-      children: {
-        'sidebar.workspaces.directoryFlow': { kind: 'single', scope: 'root' },
-        // Every row entry reads the menu's open state through a hook bound
-        // from the row's render occurrence (the owner passes the state pair
-        // as hookContext).
-        'sidebar.workspaces.session.menu.item': {
-          kind: 'list', scope: 'root', inject: { hooks: { menuOpenState: menuOpenStateFactory, shortcuts: ctx.shortcuts.catalog } },
+  ctx.slots.inject('sidebar.workspaces', () =>
+    ctx.slots.register(
+      {
+        name: 'sidebar.workspaces',
+        children: {
+          'sidebar.workspaces.directoryFlow': { kind: 'single', scope: 'root' },
+          // Every row entry reads the menu's open state through a hook bound
+          // from the row's render occurrence (the owner passes the state pair
+          // as hookContext).
+          'sidebar.workspaces.session.menu.item': {
+            kind: 'list',
+            scope: 'root',
+            inject: { hooks: { menuOpenState: menuOpenStateFactory, shortcuts: ctx.shortcuts.catalog } },
+          },
+          'sidebar.workspaces.session.row.action': { kind: 'list', scope: 'root' },
+          'sidebar.session.row.leading': { kind: 'list', scope: 'root' },
+          'sidebar.session.row.hover': { kind: 'list', scope: 'root' },
         },
-        'sidebar.workspaces.session.row.action': { kind: 'list', scope: 'root' },
-        'sidebar.session.row.leading': { kind: 'list', scope: 'root' },
-        'sidebar.session.row.hover': { kind: 'list', scope: 'root' },
+        store: viewStore,
+        inject: browserInjected,
+        locale: NS,
       },
-      store: viewStore,
-      inject: browserInjected,
-      locale: NS,
-    },
-    WorkspaceBrowser,
-  ))
+      WorkspaceBrowser,
+    ),
+  )
   // The shipped row actions take the same route as a plugin's: `slots.inject`
   // waits for the browser registration above to declare each list, and the
   // entries leave with it. Orders step by 100 so a plugin entry can land
   // between them.
   ctx.slots.inject('sidebar.workspaces.session.menu.item', function* () {
-    yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'pin', order: 100, locale: NS, inject: pinInjected }, PinSessionMenuItem)
-    yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'rename', order: 200, locale: NS, inject: renameInjected }, RenameSessionMenuItem)
-    yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'handoff', order: 250, locale: NS, inject: () => ({ requestHandoff }) }, HandoffMenuItem)
-    yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'fork', order: 300, locale: NS, inject: forkInjected }, ForkSessionMenuItem)
-    yield ctx.slots.register({ name: 'sidebar.workspaces.session.menu.item', id: 'archive', order: 400, locale: NS, inject: archiveInjected }, ArchiveSessionMenuItem)
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.menu.item', id: 'pin', order: 100, locale: NS, inject: pinInjected },
+      PinSessionMenuItem,
+    )
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.menu.item', id: 'rename', order: 200, locale: NS, inject: renameInjected },
+      RenameSessionMenuItem,
+    )
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.menu.item', id: 'handoff', order: 250, locale: NS, inject: () => ({ requestHandoff }) },
+      HandoffMenuItem,
+    )
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.menu.item', id: 'fork', order: 300, locale: NS, inject: forkInjected },
+      ForkSessionMenuItem,
+    )
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.menu.item', id: 'archive', order: 400, locale: NS, inject: archiveInjected },
+      ArchiveSessionMenuItem,
+    )
   })
   ctx.slots.inject('sidebar.workspaces.session.row.action', function* () {
-    yield ctx.slots.register({ name: 'sidebar.workspaces.session.row.action', id: 'archive', order: 100, locale: NS, inject: archiveInjected }, ArchiveSessionRowButton)
-    yield ctx.slots.register({ name: 'sidebar.workspaces.session.row.action', id: 'pin', order: 200, locale: NS, inject: pinInjected }, PinSessionRowButton)
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.row.action', id: 'archive', order: 100, locale: NS, inject: archiveInjected },
+      ArchiveSessionRowButton,
+    )
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.row.action', id: 'pin', order: 200, locale: NS, inject: pinInjected },
+      PinSessionRowButton,
+    )
   })
   // The surfaces the actions raise live in the frame-wide layer: they must
   // outlive the row menu the action sat in.
   ctx.slots.inject('shell.overlay', function* () {
     yield ctx.slots.register({ name: 'shell.overlay', id: 'project.handoff', locale: NS, inject: handoffInjected }, HandoffDialog)
-    yield ctx.slots.register({
-      name: 'shell.overlay', id: 'workspace.session-rename', locale: NS, inject: renameDialogInjected,
-    }, SessionRenameDialog)
-    yield ctx.slots.register({
-      name: 'shell.overlay', id: 'workspace.session-archive', locale: NS, inject: archiveConfirmInjected,
-    }, SessionArchiveConfirmDialog)
+    yield ctx.slots.register(
+      {
+        name: 'shell.overlay',
+        id: 'workspace.session-rename',
+        locale: NS,
+        inject: renameDialogInjected,
+      },
+      SessionRenameDialog,
+    )
+    yield ctx.slots.register(
+      {
+        name: 'shell.overlay',
+        id: 'workspace.session-archive',
+        locale: NS,
+        inject: archiveConfirmInjected,
+      },
+      SessionArchiveConfirmDialog,
+    )
     // The toast shares the browser's viewing store: it reads the archived
     // filter to drop the archived notice's filter action once rows are visible.
-    yield ctx.slots.register({
-      name: 'shell.overlay', id: 'workspace.row-toast', locale: NS, store: viewStore, inject: rowToastInjected,
-    }, RowActionToast)
+    yield ctx.slots.register(
+      {
+        name: 'shell.overlay',
+        id: 'workspace.row-toast',
+        locale: NS,
+        store: viewStore,
+        inject: rowToastInjected,
+      },
+      RowActionToast,
+    )
   })
-  ctx.slots.inject('conversation.hero.workspace', () => ctx.slots.register(
-    {
-      name: 'conversation.hero.workspace',
-      children: { 'conversation.hero.workspace.directoryFlow': { kind: 'single', scope: 'root' } },
-      inject: pickerInjected,
-      locale: NS,
-    },
-    WorkspacePicker,
-  ))
+  ctx.slots.inject('conversation.hero.workspace', () =>
+    ctx.slots.register(
+      {
+        name: 'conversation.hero.workspace',
+        children: { 'conversation.hero.workspace.directoryFlow': { kind: 'single', scope: 'root' } },
+        inject: pickerInjected,
+        locale: NS,
+      },
+      WorkspacePicker,
+    ),
+  )
 }
 
 /**

@@ -156,6 +156,8 @@ export interface ArtifactRevision {
   readonly revision: string
   readonly text: string
   readonly capturedAt: string
+  /** Private workflow execution that produced this immutable output. */
+  readonly generatedBy?: string | undefined
   readonly origin?: SessionArtifactOrigin | undefined
 }
 /** Semantic evidence classification; a note never implicitly becomes an instruction. */
@@ -279,6 +281,8 @@ export interface LinkArtifactsRequest {
   readonly from: ArtifactRevisionId
   readonly to: ArtifactRevisionId
   readonly relation: 'cites' | 'supports' | 'conflicts' | 'implements' | 'supersedes'
+  /** UTF-16 offsets and exact quote in the immutable `to` revision. */
+  readonly passage?: { readonly start: number; readonly end: number; readonly quote: string } | undefined
   /** Required when the linked source belongs to another project. */
   readonly destinationProjectId?: WorkspaceId | undefined
 }
@@ -326,3 +330,5 @@ export interface CaptureSessionArtifactRequest {
   readonly sessionId: SessionId
   readonly title: string
 }
+
+export type { WorkflowPayload, WorkflowRecord, SaveWorkflowRecord } from './workflow-journal.ts'

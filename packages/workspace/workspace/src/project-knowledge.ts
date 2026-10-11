@@ -43,6 +43,7 @@ export type {
   PreparedHandoff,
 } from './types.ts'
 import type {} from './index.ts'
+import { WorkflowJournal, type SaveWorkflowRecord, type WorkflowRecord } from './workflow-journal.ts'
 
 const revisionSchema = z.object({
   id: z.string().transform(value => value as ArtifactRevisionId),
@@ -53,6 +54,7 @@ const revisionSchema = z.object({
   revision: z.string(),
   text: z.string(),
   capturedAt: z.string(),
+  generatedBy: z.string().optional(),
   origin: z
     .object({
       sessionId: z.string().transform(value => value as SessionId),
@@ -102,6 +104,7 @@ const relationSchema = z.object({
   from: z.string().transform(value => value as ArtifactRevisionId),
   to: z.string().transform(value => value as ArtifactRevisionId),
   relation: z.enum(['cites', 'supports', 'conflicts', 'implements', 'supersedes']),
+  passage: z.object({ start: z.number().int().nonnegative(), end: z.number().int().positive(), quote: z.string() }).optional(),
   destinationProjectId: z
     .string()
     .transform(value => value as WorkspaceId)
@@ -133,6 +136,7 @@ export class ProjectKnowledge extends Service {
       .default(64 * 1024),
     maxSearchResults: schema.natural().min(1).default(50),
   })
+  private readonly journal = new WorkflowJournal()
   private relations?: KvTable<ArtifactRelationId, ArtifactRelation>
   private revisions?: KvTable<ArtifactRevisionId, ArtifactRevision>
   private handoffs?: KvTable<HandoffId, PreparedHandoff>
@@ -148,11 +152,51 @@ export class ProjectKnowledge extends Service {
   }
   /** Open host-private indexing storage for this plugin lifetime. */
   protected async [Service.init](): Promise<void> {
+    const closeJournal = await this.journal.open(this.ctx.storageDomain)
+    this.ctx.effect(() => closeJournal, 'project-knowledge.workflow-journal')
     const domain = await this.ctx.storageDomain.open(knowledgeDomain)
     this.ctx.effect(() => () => domain.close(), 'project-knowledge.storage')
     this.relations = domain.table('relations')
     this.revisions = domain.table('revisions')
     this.handoffs = domain.table('handoffs')
+  }
+  /** Find a registered file's latest revision independently of search result limits. */
+  latestForPath(projectId: WorkspaceId, path: string): ArtifactRevision | undefined {
+    let latest: ArtifactRevision | undefined
+    for (const [, artifact] of this.table().entries()) {
+      if (artifact.projectId === projectId && artifact.path === path
+        && (latest === undefined || artifact.capturedAt >= latest.capturedAt)) latest = artifact
+    }
+    return latest === undefined ? undefined : structuredClone(latest)
+  }
+  /** @param projectId - Selected project. @returns Durable workflow records. */
+  workflowRecords(projectId: WorkspaceId): readonly WorkflowRecord[] {
+    if (this.ctx.workspaceRegistry.get(projectId) === undefined) throw new Error('Unknown project')
+    return this.journal.list(projectId)
+  }
+  /** @param request - Revision checked workflow content. @returns Persisted workflow record. */
+  saveWorkflowRecord(request: SaveWorkflowRecord): Promise<WorkflowRecord> {
+    if (this.ctx.workspaceRegistry.get(request.projectId) === undefined) throw new Error('Unknown project')
+    return this.journal.save(request, (payload) => {
+      const ids = payload.kind === 'writing' ? payload.sourceIds : payload.kind === 'analysis' ? [payload.notebook, ...payload.inputs, ...payload.outputs] : payload.kind === 'verification' ? [payload.change, ...payload.evidence] : payload.kind === 'comment' ? [payload.artifact] : payload.kind === 'qualification' ? payload.checks.flatMap(check => check.evidence) : []
+      for (const id of ids) if (this.read(id).projectId !== request.projectId) throw new Error('Workflow evidence belongs to another project')
+      if (payload.kind === 'app' && !this.ctx.workspaceRegistry.get(request.projectId)?.sessionIds.some(id => String(id) === payload.sessionId)) throw new Error('MCP app session belongs to another project')
+      if (payload.kind === 'analysis' && payload.outputs.some(id => this.read(id).generatedBy !== request.id)) throw new Error('Analysis output does not belong to this execution')
+      if (payload.kind === 'analysis' && payload.code !== this.read(payload.notebook).text) throw new Error('Analysis code must match its captured notebook')
+      if (payload.kind === 'comment' && (payload.end <= payload.start || payload.end > this.read(payload.artifact).text.length || this.read(payload.artifact).text.slice(payload.start, payload.end) !== payload.quote)) throw new Error('Comment passage does not match the captured revision')
+    })
+  }
+  /** Capture a generated analysis output as an immutable project revision.
+   * @param projectId - Owning project.
+   * @param recordId - Execution record.
+   * @param title - Human label.
+   * @param text - Complete executed notebook.
+   * @returns Captured output revision. */
+  async captureAnalysisOutput(projectId: WorkspaceId, recordId: string, title: string, text: string): Promise<ArtifactRevision> {
+    if (this.ctx.workspaceRegistry.get(projectId) === undefined || Buffer.byteLength(text, 'utf8') > this.limits.maxArtifactBytes) throw new Error('Generated analysis output is unavailable or exceeds artifact limit')
+    const id = digest(JSON.stringify([projectId, recordId, text])) as ArtifactRevisionId
+    const result: ArtifactRevision = { id, projectId, path: `analysis:${recordId}`, title, text, kind: 'note', revision: digest(text), capturedAt: new Date().toISOString(), generatedBy: recordId }
+    await this.table().put(id, result); return result
   }
   /** Capture a complete registered UTF-8 file without changing it.
    * @param request - Selected project source and evidence classification.
@@ -287,8 +331,16 @@ export class ProjectKnowledge extends Service {
     if (to.projectId !== from.projectId && request.destinationProjectId !== to.projectId) {
       throw new Error('cross-project relationship requires an explicit destination selection')
     }
+    if (request.passage !== undefined) {
+      const { start, end, quote } = request.passage
+      if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start
+        || end > to.text.length || to.text.slice(start, end) !== quote)
+        throw new Error('Passage does not match the captured source revision')
+    }
     const id = digest(
-      JSON.stringify([request.projectId, request.from, request.to, request.relation]),
+      JSON.stringify(request.passage === undefined
+        ? [request.projectId, request.from, request.to, request.relation]
+        : [request.projectId, request.from, request.to, request.relation, request.passage]),
     ) as ArtifactRelationId
     if (this.relations === undefined) throw new Error('project knowledge storage is unavailable')
     const existing = this.relations.get(id)
@@ -336,7 +388,7 @@ export class ProjectKnowledge extends Service {
    */
   async inspect(id: ArtifactRevisionId): Promise<ArtifactInspection> {
     const artifact = this.read(id)
-    if (artifact.origin !== undefined) return { artifact, status: 'captured' }
+    if (artifact.origin !== undefined || artifact.generatedBy !== undefined) return { artifact, status: 'captured' }
     if (this.ctx.workspaceRegistry.get(artifact.projectId) === undefined) return { artifact, status: 'missing' }
     try {
       const path = await this.sourcePath(artifact.projectId, artifact.path)

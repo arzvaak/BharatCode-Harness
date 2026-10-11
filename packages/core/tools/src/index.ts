@@ -221,6 +221,8 @@ export interface ToolOutputDefinition {
 
 /** A registered tool: its schema plus the execution function. */
 export interface ToolDefinition extends ToolSchema {
+  /** App-only registration: hidden from model schemas and denied to model/SDK dispatch. */
+  readonly audience?: 'app'
   /** Mandatory canonical output declaration. */
   readonly output: ToolOutputDefinition
   /**
@@ -324,6 +326,8 @@ export type ToolExecutionToken = symbol & { readonly [toolExecutionTokenBrand]: 
  * callers do not choose that token.
  */
 export interface ToolExecutionInput {
+  /** Host-minted MCP Apps caller; model arguments cannot set execution metadata. */
+  readonly audience?: 'app'
   readonly callId: ToolCallId
   /**
    * Root model-requested call owning this execution tree. Callers omit it for
@@ -1009,7 +1013,7 @@ export class ToolRuntime extends Service {
     const view = this.view(scope)
     const mode = this.modeFor(scope)
     if (mode === 'native') {
-      const schemas = [...view.visible.values()].map(definition => this.schemaOf(definition, false))
+      const schemas = [...view.visible.values()].filter(definition => definition.audience !== 'app').map(definition => this.schemaOf(definition, false))
       return { schemas, knownNames: [...view.knownNames] }
     }
     // Validate the runtime language BEFORE projecting schemas: schemaOf reads
@@ -1018,7 +1022,7 @@ export class ToolRuntime extends Service {
     // renderer-table rejection the canonical assembly-time error for a
     // language with no SDK renderer.
     this.requirePtcRuntime(mode)
-    const schemas = [...view.visible.values()].map(definition => this.schemaOf(definition, false))
+    const schemas = [...view.visible.values()].filter(definition => definition.audience !== 'app').map(definition => this.schemaOf(definition, false))
     if (mode === 'ptc') {
       return {
         schemas: schemas.filter(schema => schema.name === RUN_CODE_NAME),
@@ -1244,10 +1248,11 @@ export class ToolRuntime extends Service {
    * @param nested - whether the call is a transport sub-dispatch, not a model-direct call.
    * @returns the definition that may run, or undefined when the call must be rejected.
    */
-  private resolveExecution(name: string, scope: ScopeKey | undefined, nested: boolean): ToolDefinition | undefined {
+  private resolveExecution(name: string, scope: ScopeKey | undefined, nested: boolean, audience?: 'app'): ToolDefinition | undefined {
     const tool = this.get(name, scope)
     if (tool === undefined) return undefined
-    if (this.collapses(name, scope, nested)) return undefined
+    if (tool.audience === 'app' && audience !== 'app') return undefined
+    if (audience !== 'app' && this.collapses(name, scope, nested)) return undefined
     return tool
   }
 
@@ -1258,13 +1263,13 @@ export class ToolRuntime extends Service {
    * @returns one deep-cloned schema per visible tool.
    */
   schemas(scope?: ScopeKey): ToolSchema[] {
-    return [...this.view(scope).visible.values()].map(definition => this.schemaOf(definition, true))
+    return [...this.view(scope).visible.values()].filter(definition => definition.audience !== 'app').map(definition => this.schemaOf(definition, true))
   }
 
   /** Project visible callable tools onto the generated PTC mode SDK contract. */
   private sdkSchemas(scope?: ScopeKey): ToolSdkSchema[] {
     return [...this.view(scope).visible.values()]
-      .filter(definition => definition.name !== RUN_CODE_NAME)
+      .filter(definition => definition.name !== RUN_CODE_NAME && definition.audience !== 'app')
       .map((definition): ToolSdkSchema => {
         const output = snapshotJsonValue(definition.output.schema)
         /* v8 ignore next -- registration already validated and retained this schema as lossless JSON. */
@@ -1301,7 +1306,7 @@ export class ToolRuntime extends Service {
    * @returns the fail-closed scheduling mode.
    */
   executionMode(exec: ToolExecutionInput): ToolExecutionMode {
-    const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
+    const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined, exec.audience)
     if (!tool?.isConcurrencySafe) return { kind: 'exclusive' }
     try {
       const concurrencySafe: unknown = tool.isConcurrencySafe(exec.arguments)
@@ -1405,12 +1410,13 @@ export class ToolRuntime extends Service {
     // keeps the historical dispatch-stage `UNKNOWN_TOOL` path so policy
     // listeners still see every name that reaches the registry.
     const visible = this.get(name, agent)
-    const collapsed = visible !== undefined && this.collapses(name, agent, parent !== undefined)
+    const collapsed = visible !== undefined && ((visible.audience === 'app' && exec.audience !== 'app') || (exec.audience !== 'app' && this.collapses(name, agent, parent !== undefined)))
     const concludingExecutions = this.concludingExecutions
     const base = {
       token,
       callId,
       rootCallId,
+      ...exec.audience === 'app' ? { audience: 'app' as const } : {},
       name,
       signal,
       ...agent !== undefined ? { agent } : {},
@@ -1575,7 +1581,7 @@ export class ToolRuntime extends Service {
     }
     exec.signal = signal
     try {
-      const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
+      const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined, exec.audience)
       if (!tool) throw new ToolNotFoundError(exec.name)
       state.bodyInvoked = true
       const returned = await tool.execute(exec.arguments, exec)
@@ -1804,7 +1810,7 @@ export class ToolRuntime extends Service {
       if (result.isError) {
         throw new TypeError('tools/post-execute cannot replace the value of a failed result')
       }
-      const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
+      const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined, exec.audience)
       if (tool === undefined) throw new ToolNotFoundError(exec.name)
       const replaced = this.createSuccessResult(exec, tool, decision.value)
       return this.markCanonical(exec, {
@@ -1873,7 +1879,7 @@ export class ToolRuntime extends Service {
         ...result.additionalContexts !== undefined ? { additionalContexts: result.additionalContexts } : {},
       })
     }
-    const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined)
+    const tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== undefined, exec.audience)
     if (tool === undefined) throw new ToolNotFoundError(exec.name)
     const normalized = this.createSuccessResult(exec, tool, result.value)
     return this.markCanonical(exec, {

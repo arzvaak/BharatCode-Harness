@@ -1,6 +1,10 @@
 export const NS = 'bc.extension-store';
 
 export const en = {
+  'capability.ready': 'Ready',
+  'capability.needs-setup': 'Needs setup',
+  'capability.disabled': 'Disabled',
+  'capability.failed': 'Failed',
   nav: 'Extensions',
   unavailableRelease: 'This extension is not available for installation yet.',
   incompatibleVersion: 'This extension requires a different BharatCode version. Check its listed requirements.',
@@ -23,6 +27,10 @@ export const en = {
 };
 
 export const zh = {
+  'capability.ready': '可用',
+  'capability.needs-setup': '需要设置',
+  'capability.disabled': '已禁用',
+  'capability.failed': '失败',
   nav: '扩展',
   unavailableRelease: '此扩展尚不可安装。',
   incompatibleVersion: '此扩展需要不同版本的 BharatCode，请查看列出的要求。',

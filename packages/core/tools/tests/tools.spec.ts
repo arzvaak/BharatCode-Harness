@@ -52,6 +52,23 @@ const echoTool = defineTool({
 })
 
 describe('ToolRuntime', () => {
+  it('keeps app-only tools out of model and SDK schemas and subjects host app calls to policy', async () => {
+    const ctx = await setup()
+    try {
+      const body = async () => 'app result'
+      ctx.tools.register({ ...echoTool, name: 'app_only', audience: 'app', execute: body })
+      expect(ctx.tools.schemas()).toEqual([])
+      expect((await ctx.systemPrompt.assemble()).tools).toEqual([])
+      const call = { name: 'app_only', arguments: {}, signal: testToolSignal, callId: ToolCallId('app-audience') }
+      expect((await ctx.tools.execute(call)).isError).toBe(true)
+      expect((await ctx.tools.execute({ ...call, audience: 'app' })).isError).toBe(false)
+      ctx.on('tools/pre-execute', async (): Promise<PreToolDecision> => ({ kind: 'deny', reason: 'App policy rejection' }))
+      const rejected = await ctx.tools.execute({ ...call, audience: 'app' })
+      expect(rejected.isError).toBe(true)
+      expect(JSON.stringify(rejected)).toContain('App policy rejection')
+    } finally { await ctx.fiber.dispose() }
+  })
+
   it('preserves deferred loading through registry and prompt schema projection', async () => {
     const ctx = await setup()
     try {

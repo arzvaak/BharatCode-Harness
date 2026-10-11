@@ -10,7 +10,10 @@ import type { SessionActivity, WorkspaceId } from '@deepseek-ai/dsh-workspace/ty
 
 export type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 export type {
-  SessionActivity, SessionActivityItem, SessionActivityKind, SessionActivityKindMap,
+  SessionActivity,
+  SessionActivityItem,
+  SessionActivityKind,
+  SessionActivityKindMap,
 } from '@deepseek-ai/dsh-workspace/types'
 export type { DirectoryEntry, DirectoryListing } from '@deepseek-ai/dsh-host-directory-picker/types'
 
@@ -166,6 +169,21 @@ export type WorkspaceFollowIncrement =
   | { readonly type: 'pinned'; readonly pinnedSessionIds: readonly SessionId[] }
 
 /** Workspace state stream; every generation starts with exactly one baseline. */
-export type WorkspaceFollowFrame =
-  | { readonly type: 'baseline'; readonly value: WorkspaceBaseline }
-  | WorkspaceFollowIncrement
+export type WorkspaceFollowFrame = { readonly type: 'baseline'; readonly value: WorkspaceBaseline } | WorkspaceFollowIncrement
+
+export type { DocumentEvidence } from './document-review.ts'
+export type { LanguageReview, LanguageDiagnostic } from './language-review.ts'
+
+/** Session-scoped negotiated MCP application UI. */
+export interface WorkspaceApp {
+  server: string
+  tool: string
+  resourceUri: string
+  title: string
+  allowedTools: readonly string[]
+  generation: string
+}
+export interface WorkspaceAppResource {
+  app: WorkspaceApp
+  html: string
+}

@@ -1,0 +1,41 @@
+- region "Writing workspace":
+  - button "Project structure" [expanded]
+  - button "Export brief"
+  - text: Writing specialization
+  - combobox "Writing specialization":
+    - option "General writing"
+    - option "Novel" [selected]
+    - option "Short drama"
+    - option "Game"
+    - option "Video recap"
+  - text: Brief
+  - textbox "Brief": A researcher follows a disputed source.
+  - text: Style guidance
+  - textbox "Style guidance": Plain prose, precise source attribution.
+  - text: Outline
+  - textbox "Outline": Arrival Evidence Resolution
+  - text: Established canon
+  - textbox "Established canon": Mira is the archivist.
+  - text: Tentative ideas
+  - textbox "Tentative ideas": The missing page may be a decoy.
+  - text: Characters
+  - textbox "Characters": "Mira: archivist"
+  - text: Chronology
+  - textbox "Chronology": Arrival precedes the source review.
+  - text: Scenes and objectives
+  - textbox "Scenes and objectives": "Archive: establish the disputed claim"
+  - text: Source note paths (one per line)
+  - textbox "Source note paths (one per line)"
+  - button "Capture source revisions" [disabled]
+  - paragraph
+  - text: Scoped writing consultation
+  - combobox "Scoped writing consultation":
+    - option "Continuity" [selected]
+    - option "Structure"
+    - option "Style"
+  - button "Ask primary writer for suggestions"
+  - button "Save project structure"
+  - region "Document editor":
+    - strong: Document editor
+    - button "Hide document editor": ›
+    - text: Open a file to begin. Your edits are kept as private recovery drafts until you save.

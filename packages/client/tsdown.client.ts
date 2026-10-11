@@ -616,7 +616,7 @@ function clientConfig(id: string, entry: string, clientBanner?: (fileName: strin
         return browserSourcePath(source, mapPath)
       },
       banner: (chunk) => {
-        const registration = `window.__ModuleLoader__.load({ id: ${JSON.stringify(id)}, ${chunk.isEntry ? '' : `chunk: ${JSON.stringify(chunk.fileName)}, `}factory: (require) => {`
+        const registration = `window.__ModuleLoader__.load({ id: ${JSON.stringify(id)}, ${chunk.isEntry ? '' : `chunk: ${JSON.stringify(chunk.fileName)}, `}dependencies: ${JSON.stringify(chunk.imports.filter(name => /^client\.[A-Za-z0-9][A-Za-z0-9._-]*\.js$/.test(name.replace(/^\.\//, ''))).map(name => name.replace(/^\.\//, '')))}, factory: (require) => {`
         const prefix = clientBanner?.(chunk.fileName)
         return prefix === undefined ? registration : `${prefix}\n${registration}`
       },

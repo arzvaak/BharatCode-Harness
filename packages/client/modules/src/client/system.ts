@@ -94,7 +94,7 @@ export class ClientModuleSystem implements ClientModuleLoader {
   readonly loadCache = new Map<string, ClientModuleRecord>()
 
   private readonly seed: Map<string, unknown>
-  private readonly factories = new Map<string, { factory: ClientBundleRegistration['factory']; rev: string | undefined }>()
+  private readonly factories = new Map<string, { factory: ClientBundleRegistration['factory']; rev: string | undefined; dependencies: readonly string[] }>()
   private readonly bootstrapIds = new Set<string>()
   /** In-flight script transport per URL; every row in one batch shares it. */
   private readonly pendingArrival = new Map<string, Promise<void>>()
@@ -161,6 +161,7 @@ export class ClientModuleSystem implements ClientModuleLoader {
     if (registration.chunk !== undefined && !CLIENT_CHUNK.test(registration.chunk)) {
       throw new Error(`client-modules: invalid package-local chunk ${JSON.stringify(registration.chunk)}`)
     }
+    if (registration.dependencies?.some(name => !CLIENT_CHUNK.test(name)) === true) throw new Error('client-modules: invalid static chunk dependency')
     const id = registration.chunk === undefined ? ownerId : chunkId(ownerId, registration.chunk)
     if (this.bootstrapIds.has(id) || this.factories.has(id)) {
       const registrationName = registration.chunk === undefined ? registration.id : id
@@ -168,6 +169,7 @@ export class ClientModuleSystem implements ClientModuleLoader {
     }
     this.factories.set(id, {
       factory: registration.factory,
+      dependencies: [...registration.dependencies ?? []],
       rev: this.reloadTargets.get(ownerId)?.rev ?? this.graphRows.get(ownerId)?.rev,
     })
   }
@@ -270,6 +272,7 @@ export class ClientModuleSystem implements ClientModuleLoader {
       if (dependency !== undefined) await this.arriveDependency(row.id, dependency, [], visited)
     }
     await this.arrive(row)
+    await this.arriveStaticChunks(row.id, row.id)
   }
 
   /** Arrive one dependency, naming the consumer it failed for so a cascade reads as a chain, not as 44 unrelated failures. */
@@ -319,10 +322,10 @@ export class ClientModuleSystem implements ClientModuleLoader {
     const require = (spec: string): unknown => {
       edges.add(spec)
       if (this.seed.has(spec)) return this.seed.get(spec)
-      const id = stripClientSuffix(spec)
+      const id = spec.startsWith('./') ? chunkId(ownerId, spec.slice(2)) : stripClientSuffix(spec)
       const record = this.loadCache.get(id)
       if (record !== undefined) return record.exports
-      if (this.factories.has(id)) return this.materialize(id).exports
+      if (this.factories.has(id)) return this.materialize(id, spec.startsWith('./') ? ownerId : id).exports
       throw new Error(
         `client-modules: require("${spec}") missed the module table — not a platform seed word, not a materialized module, `
         + 'and no registered package factory (a build-time externals drift, or a dynamic dependency that did not arrive)',
@@ -341,7 +344,7 @@ export class ClientModuleSystem implements ClientModuleLoader {
   }
 
   /** Load, register, and materialize one package-local dynamic chunk. */
-  private async importChunk(ownerId: string, fileName: string): Promise<unknown> {
+  private async importChunk(ownerId: string, fileName: string, open: readonly string[] = []): Promise<unknown> {
     const id = chunkId(ownerId, fileName)
     const existing = this.loadCache.get(id)
     if (existing !== undefined) return existing.exports
@@ -367,7 +370,14 @@ export class ClientModuleSystem implements ClientModuleLoader {
         throw new Error(`client-modules: bundle ${url} loaded without registering "${id}" via __ModuleLoader__.load`)
       }
     }
+    await this.arriveStaticChunks(ownerId, id, open)
     return this.materialize(id, ownerId).exports
+  }
+
+  /** Prefetch static siblings without eagerly loading any dynamic editor. */
+  private async arriveStaticChunks(ownerId: string, id: string, open: readonly string[] = []): Promise<void> {
+    if (open.includes(id)) throw new Error(`client-modules: static chunk cycle ${[...open, id].join(' -> ')}`)
+    for (const dependency of this.factories.get(id)?.dependencies ?? []) await this.importChunk(ownerId, dependency, [...open, id])
   }
 
   async import(specifier: string): Promise<unknown> {

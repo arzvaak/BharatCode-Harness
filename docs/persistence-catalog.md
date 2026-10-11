@@ -712,7 +712,7 @@ Source: [`packages/plan/plan-mode/src/index.ts:53`](../packages/plan/plan-mode/s
 'project/handoff': HandoffAdmission
 ```
 
-Source: [`packages/workspace/workspace/src/types.ts:270`](../packages/workspace/workspace/src/types.ts)
+Source: [`packages/workspace/workspace/src/types.ts:272`](../packages/workspace/workspace/src/types.ts)
 
 ### `request/*`
 
@@ -1290,7 +1290,7 @@ Source: [`packages/web/web-search-deepseek/src/provider.ts:82`](../packages/web/
 'workflow/assignment': { readonly workflow: WorkflowProfile }
 ```
 
-Source: [`packages/workspace/workspace/src/types.ts:268`](../packages/workspace/workspace/src/types.ts)
+Source: [`packages/workspace/workspace/src/types.ts:270`](../packages/workspace/workspace/src/types.ts)
 
 ### `workspace/*`
 
@@ -3610,7 +3610,7 @@ Sources: [`packages/goal/goal/src/domain.ts:24`](../packages/goal/goal/src/domai
 
 SHA-256: `4c2cdc2bfc1613ddcd6dbac3923655ed8b9c9afd66c51c84c0e03a94de2b1a78`
 
-Sources: [`packages/workspace/workspace/src/types.ts:256`](../packages/workspace/workspace/src/types.ts)
+Sources: [`packages/workspace/workspace/src/types.ts:258`](../packages/workspace/workspace/src/types.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -5064,7 +5064,7 @@ Sources: [`packages/llm/llm/src/types.ts:127`](../packages/llm/llm/src/types.ts)
 
 SHA-256: `3cfc3a56502da1f8c6153c2c56657bab4b749056968634dd0991d325ec1c919f`
 
-Sources: [`packages/core/tools/src/index.ts:700`](../packages/core/tools/src/index.ts)
+Sources: [`packages/core/tools/src/index.ts:704`](../packages/core/tools/src/index.ts)
 
 | Property | Presence | Type |
 |---|---|---|
@@ -5292,7 +5292,7 @@ One of:
 
 SHA-256: `8152dee5fd02cb0807e0b80155eafd3baf412ad771af05aa748cb1b24a90c5a2`
 
-Sources: [`packages/workspace/workspace/src/types.ts:194`](../packages/workspace/workspace/src/types.ts)
+Sources: [`packages/workspace/workspace/src/types.ts:196`](../packages/workspace/workspace/src/types.ts)
 
 One of:
 
@@ -5480,7 +5480,7 @@ Array of `number`.
 
 SHA-256: `4cd48f3e5108bd6ebedf7301c3638839b8b2b9db8dbd493974177fbdeb91a01b`
 
-Sources: [`packages/api/session-controller/src/types.ts:398`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts) · [`packages/workspace/workspace/src/types.ts:147`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:16`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:213`](../packages/workspace/workspace/src/types.ts)
+Sources: [`packages/api/session-controller/src/types.ts:398`](../packages/api/session-controller/src/types.ts) · [`packages/attachment/attachment/src/brand.ts:6`](../packages/attachment/attachment/src/brand.ts) · [`packages/compaction/compaction/src/brand.ts:4`](../packages/compaction/compaction/src/brand.ts) · [`packages/core/session/src/types.ts:20`](../packages/core/session/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:20`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:32`](../packages/experimental/agent-team/src/types.ts) · [`packages/experimental/agent-team/src/types.ts:8`](../packages/experimental/agent-team/src/types.ts) · [`packages/feedback/message-feedback/src/types.ts:14`](../packages/feedback/message-feedback/src/types.ts) · [`packages/goal/goal/src/types.ts:17`](../packages/goal/goal/src/types.ts) · [`packages/interaction/commands/src/brand.ts:31`](../packages/interaction/commands/src/brand.ts) · [`packages/interaction/user-approval/src/types.ts:17`](../packages/interaction/user-approval/src/types.ts) · [`packages/llm/llm-retry/src/brand.ts:4`](../packages/llm/llm-retry/src/brand.ts) · [`packages/llm/llm/src/brand.ts:16`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:31`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:43`](../packages/llm/llm/src/brand.ts) · [`packages/llm/llm/src/brand.ts:67`](../packages/llm/llm/src/brand.ts) · [`packages/schedule/schedule/src/types.ts:14`](../packages/schedule/schedule/src/types.ts) · [`packages/session/session-title/src/index.ts:42`](../packages/session/session-title/src/index.ts) · [`packages/session/session-title/src/types.ts:17`](../packages/session/session-title/src/types.ts) · [`packages/webhook/webhook/src/brand.ts:12`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:6`](../packages/webhook/webhook/src/brand.ts) · [`packages/webhook/webhook/src/brand.ts:9`](../packages/webhook/webhook/src/brand.ts) · [`packages/workflow/workflow/src/types.ts:13`](../packages/workflow/workflow/src/types.ts) · [`packages/workspace/workspace/src/types.ts:147`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:16`](../packages/workspace/workspace/src/types.ts) · [`packages/workspace/workspace/src/types.ts:215`](../packages/workspace/workspace/src/types.ts)
 
 `string`
 
@@ -8964,7 +8964,7 @@ SHA-256: `e308ccf867a5398e316e0af8cb6ce238a8d33a63b9b384c8250a686786285f72`
 
 SHA-256: `443000524ce3bb379745cb41b4872b06764d6795abf986e68c09d1d416b4ef4c`
 
-Sources: [`packages/workspace/workspace/src/types.ts:268`](../packages/workspace/workspace/src/types.ts)
+Sources: [`packages/workspace/workspace/src/types.ts:270`](../packages/workspace/workspace/src/types.ts)
 
 | Property | Presence | Type |
 |---|---|---|

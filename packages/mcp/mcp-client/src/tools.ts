@@ -125,13 +125,17 @@ export async function syncTools(
     : await client.listTools(undefined, { cacheMode: 'refresh' })
   for (const tool of response.tools) {
     if (opts.allowedTools !== undefined && !opts.allowedTools.includes(tool.name)) continue
+    const ui = tool._meta?.['ui']
+    const visibility = ui !== null && typeof ui === 'object' && 'visibility' in ui ? ui.visibility : undefined
+    const appOnly = Array.isArray(visibility) && !visibility.includes('model')
+    if (appOnly && !visibility.includes('app')) continue
     const publicName = publicToolName(opts.serverName, tool.name)
     if (definitions.has(publicName)) {
       throw new Error(
         `mcp-client(${opts.serverName}): server listed tool "${tool.name}" more than once — invalid tool list`,
       )
     }
-    definitions.set(publicName, createMcpToolDefinition(ctx, {
+    definitions.set(publicName, { ...(appOnly ? { audience: 'app' as const } : {}), ...createMcpToolDefinition(ctx, {
       name: publicName,
       rawName: tool.name,
       description: tool.description ?? '',
@@ -142,7 +146,7 @@ export async function syncTools(
         { name: tool.name, arguments: args },
         { signal: execution.signal, timeout: opts.toolCallTimeoutMs, toolDefinition: tool },
       ),
-    }))
+    }) })
   }
 
   // Phase 2: swap generations.

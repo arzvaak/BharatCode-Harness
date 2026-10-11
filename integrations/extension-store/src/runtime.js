@@ -6,6 +6,7 @@ export class RuntimeManager {
     this.enabled = new Map();
     this.instances = new Map();
     this.pending = new Map();
+    this.failures = new Map();
     this.closed = false;
   }
   enable(workspace, entry) {
@@ -30,6 +31,7 @@ export class RuntimeManager {
     )
       throw Error("Extension has active work");
     this.enabled.delete(key);
+    for (const failureKey of this.failures.keys()) { const [w, , i] = JSON.parse(failureKey); if (w === workspace && i === id) this.failures.delete(failureKey); }
     for (const x of matches) {
       await this.closeInstance(x);
     }
@@ -77,13 +79,22 @@ export class RuntimeManager {
       }
       try {
         instance = await pending;
+        this.failures.delete(key);
+      } catch (reason) {
+        this.failures.set(key, reason instanceof Error ? reason.message : String(reason));
+        throw reason;
       } finally {
         if (this.pending.get(key) === pending) this.pending.delete(key);
       }
     }
     instance.active++;
     try {
-      return await instance.runtime.invoke(tool, args, signal);
+      const result = await instance.runtime.invoke(tool, args, signal);
+      this.failures.delete(key);
+      return result;
+    } catch (reason) {
+      this.failures.set(key, reason instanceof Error ? reason.message : String(reason));
+      throw reason;
     } finally {
       instance.active--;
       instance.lastUsed = Date.now();
@@ -155,6 +166,7 @@ export class RuntimeManager {
   async dispose() {
     this.closed = true;
     this.enabled.clear();
+    this.failures.clear();
     await Promise.allSettled([...this.pending.values()]);
     const items = [...this.instances.values()];
     await Promise.allSettled(items.map((x) => this.closeInstance(x)));
