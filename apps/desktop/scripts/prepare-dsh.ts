@@ -2,7 +2,7 @@
 
 import { packagingStep } from './packaging-step.mjs'
 import { spawn } from 'node:child_process'
-import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { closeSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { delimiter, join, relative, resolve } from 'node:path'
 import { desktopNodeEnvironment } from '../src/node-environment.ts'
@@ -41,7 +41,9 @@ const STORE_ROOT = join(BUILD_ROOT, 'store')
 const RUNTIME_ROOT = BUILD_PATHS.runtime
 const PNPM_BUILD_STATE = BUILD_PATHS.dshPnpm
 const PACKAGE_SET_ROOT = BUILD_PATHS.packageSet
-const NODE = process.platform === 'linux' ? join(RUNTIME_ROOT, 'primary-runtime/dependencies/node/bin/node')
+const TARGET = desktopTargetPlatform(resolveDesktopBuildTarget())
+const CROSS_WINDOWS = process.platform === 'linux' && TARGET.platform === 'win32'
+const NODE = CROSS_WINDOWS ? join(BUILD_PATHS.electron, 'electron.exe') : process.platform === 'linux' ? join(RUNTIME_ROOT, 'primary-runtime/dependencies/node/bin/node')
   : join(BUILD_PATHS.electron, process.platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
 const PNPM = join(RUNTIME_ROOT, 'pnpm', 'bin', 'pnpm.mjs')
 
@@ -76,6 +78,8 @@ function runPnpm(args: readonly string[]): Promise<void> {
     const userConfig = join(config, 'npmrc')
     mkdirSync(config, { recursive: true })
     writeFileSync(userConfig, '')
+    const wineLog = join(BUILD_ROOT, 'wine-pnpm.log')
+    const wineOutput = CROSS_WINDOWS ? openSync(wineLog, 'w') : undefined
     const child = spawn(NODE, [
       '--expose-internals',
       PNPM,
@@ -95,15 +99,18 @@ function runPnpm(args: readonly string[]): Promise<void> {
         NPM_CONFIG_STORE_DIR: STORE_ROOT,
         NPM_CONFIG_USERCONFIG: userConfig,
         ...desktopNodeEnvironment(NODE, join(RUNTIME_ROOT, 'bin'), {}),
-        PATH: `${join(RUNTIME_ROOT, 'bin')}${delimiter}${process.env.PATH ?? ''}`,
+        PATH: CROSS_WINDOWS ? process.env.PATH : `${join(RUNTIME_ROOT, 'bin')}${delimiter}${process.env.PATH ?? ''}`,
+        ...(CROSS_WINDOWS ? { WINEPATH: 'Z:' + join(RUNTIME_ROOT, 'bin').replaceAll('/', '\\'), PATHEXT: '.COM;.EXE;.BAT;.CMD', DSH_DESKTOP_NODE_EXECUTABLE: 'Z:' + NODE.replaceAll('/', '\\') } : {}),
         XDG_CACHE_HOME: join(PNPM_BUILD_STATE, 'cache'),
         XDG_CONFIG_HOME: config,
         XDG_STATE_HOME: join(PNPM_BUILD_STATE, 'state'),
       },
-      stdio: 'inherit',
+      stdio: wineOutput === undefined ? 'inherit' : ['ignore', wineOutput, wineOutput],
     })
+    if (wineOutput !== undefined) closeSync(wineOutput)
     child.once('error', reject)
     child.once('close', (code, signal) => {
+      if (CROSS_WINDOWS) process.stdout.write(readFileSync(wineLog, 'utf8'))
       if (code === 0) resolvePromise()
       else reject(new Error(`desktop runtime: pnpm exited with ${String(code ?? signal)}`))
     })
@@ -131,7 +138,7 @@ async function main(): Promise<void> {
     await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:install', () => runPnpm(['install', '--prod', '--frozen-lockfile', '--trust-lockfile']))
     const packageSet = readDesktopCorePackageSet(BUILD_ROOT, release.version)
     const targetName = resolveDesktopBuildTarget()
-    const target = { platform: process.platform, arch: desktopTargetPlatform(targetName).arch }
+    const target = desktopTargetPlatform(targetName)
     const modules = join(BUILD_ROOT, 'node_modules')
     const officeManifest = JSON.parse(readFileSync(join(modules, '@deepseek-ai/libreoffice-kit/package.json'), 'utf8'))
     const officeEngine = selectOfficeEngine(officeManifest, target)
@@ -163,7 +170,7 @@ async function main(): Promise<void> {
     await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:write-descriptor', async () => writeDesktopRuntime(DSH_OUTPUT_ROOT, release, packageSet.packages.map(entry => entry.name), target))
     const descriptor = await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:verify-before-smoke', () => verifyDesktopRuntime(DSH_OUTPUT_ROOT, release.version, target))
     if (!process.argv.includes('--defer-runtime-smoke')) {
-      await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:smoke', () => smokePreparedRuntime(DSH_OUTPUT_ROOT, NODE, RUNTIME_ROOT, descriptor))
+      if (!CROSS_WINDOWS) await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:smoke', () => smokePreparedRuntime(DSH_OUTPUT_ROOT, NODE, RUNTIME_ROOT, descriptor))
       await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'runtime:verify-after-smoke', () => verifyDesktopRuntime(DSH_OUTPUT_ROOT, release.version, target))
     }
   } catch (error) {

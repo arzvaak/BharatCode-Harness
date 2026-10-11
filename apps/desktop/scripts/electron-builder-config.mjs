@@ -28,6 +28,7 @@ import { installWindowsDirectoryInstaller } from './windows-directory-installer.
 import { preserveWindowsRuntimeSignature, signWindowsCode } from './windows-runtime-signature.mjs'
 import { prepareWindowsAsarUnpack, verifyWindowsAsarUnpack } from './windows-asar-unpack.mjs'
 import { recordPackagingEvent } from './packaging-run.mjs'
+import { prepareWindowsInstallerLocal } from './prepare-windows-installer-local.mjs'
 import {
   resolveMacOSAppUpdateFeed,
   verifyMacOSAppUpdateConfig,
@@ -125,7 +126,8 @@ export function createElectronBuilderConfig(
     electronFuses: { runAsNode: true },
     beforeBuild: async () => {
       if (resolvedPlatform !== 'win32') return true
-      await promisify(execFile)('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+      if (windowsPreview && process.platform === 'linux') prepareWindowsInstallerLocal(join(buildPaths.root, 'installer-ui'), env)
+      else await promisify(execFile)('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
         fileURLToPath(new URL('./prepare-windows-installer.ps1', import.meta.url)),
         '-OutputDirectory', join(buildPaths.root, 'installer-ui')], {
         env: scrubWindowsSigningEnvironment(env), windowsHide: true,

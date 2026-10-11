@@ -58,6 +58,7 @@ export function installWindowsDirectoryInstaller() {
   require('app-builder-lib')
   const { NsisTarget } = require('app-builder-lib/out/targets/nsis/NsisTarget.js')
   const { getPath7za } = require('app-builder-lib/out/toolsets/7zip.js')
+  const { downloadBuilderToolset } = require('app-builder-lib/out/util/electronGet.js')
   const prototype = NsisTarget.prototype
   if (prototype[patched]) return
   prototype[patched] = true
@@ -67,7 +68,11 @@ export function installWindowsDirectoryInstaller() {
     await mkdir(directory, { recursive: true })
     const section = join(directory, 'installSection.nsh')
     await writeFile(section, directoryInstallSection(await readFile(join(templates, 'installSection.nsh'), 'utf8')))
-    const sourceTool = await getPath7za()
+    const sourceTool = process.platform === 'win32' ? await getPath7za() : join(await downloadBuilderToolset({
+      releaseName: '7zip@1.0.0', filenameWithExt: '7zip-win-x64.tar.gz',
+      checksums: { '7zip-win-x64.tar.gz': 'be071f15bd6da2f78fe81c6ddef2009b0c4d8a51f36b780cb806c7e6df95e1b3' },
+      githubOrgRepo: 'electron-userland/electron-builder-binaries',
+    }), 'bin', '7za.exe')
     const tool = join(directory, '7za.exe')
     await copyFile(sourceTool, tool)
     await this.packager.signIf(tool)

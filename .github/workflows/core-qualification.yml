@@ -1,11 +1,6 @@
 name: Core and packed extensions
 on:
   workflow_dispatch:
-    inputs:
-      windows_preview:
-        description: Build the unsigned Windows x64 application preview
-        type: boolean
-        default: false
   workflow_call:
 permissions:
   contents: read
@@ -15,7 +10,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   native:
-    if: ${{ inputs.windows_preview != true }}
     strategy:
       fail-fast: false
       matrix:
@@ -87,7 +81,7 @@ jobs:
         if: runner.os == 'Windows'
         run: pnpm exec vitest run apps/desktop/tests/installer-packaging.spec.ts packages/boot/plugin-manager/tests packages/mcp/mcp-client/tests
   verdict:
-    if: ${{ always() && inputs.windows_preview != true }}
+    if: always()
     needs: native
     runs-on: ubuntu-latest
     steps:
@@ -95,47 +89,3 @@ jobs:
         env:
           RESULT: ${{ needs.native.result }}
         run: test "$RESULT" = success
-  windows-preview:
-    if: ${{ inputs.windows_preview == true }}
-    runs-on: windows-latest
-    timeout-minutes: 120
-    defaults:
-      run:
-        shell: pwsh
-    env:
-      DSH_TELEMETRY_DISABLED: '1'
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Package complete native Windows preview and verify assembled runtime
-        run: pnpm --dir apps/desktop run package:win:x64:preview
-      - name: Prepare pinned Electron for native graphics checks
-        run: node -e "require(require.resolve('electron/install.js', {paths:['./apps/desktop']}))"
-      - name: Native Windows graphics export and clipboard
-        run: node integrations/visuals/scripts/native-export.mjs
-      - name: Verify native installer behavior
-        run: node apps/desktop/scripts/test-windows-installer.mjs
-      - name: Install actual preview and verify desktop onboarding and restart
-        run: node scripts/extensions/smoke-windows-preview.mjs
-      - uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: bharatcode-windows-preview
-          path: |
-            apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/*.exe
-            apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/*.blockmap
-            apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/windows-preview-build.json
-            apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/windows-preview-smoke.json
-            apps/desktop/.desktop-build/targets/win-x64/unsigned-artifacts/*.png
-          retention-days: 14
-      - uses: actions/upload-artifact@v6
-        if: failure()
-        with:
-          name: windows-packaging-diagnostics
-          path: apps/desktop/.desktop-build/targets/win-x64/runs
-          retention-days: 7

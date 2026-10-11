@@ -2,9 +2,10 @@
 
 import { packagingStep } from './packaging-step.mjs'
 import { execFileSync } from 'node:child_process'
-import { chmodSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { parseArgs } from 'node:util'
 import { downloadArtifact } from '@electron/get'
 import extractZip from 'extract-zip'
@@ -39,9 +40,23 @@ async function main(): Promise<void> {
   rmSync(BUILD_PATHS.electron, { recursive: true, force: true })
   await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'extract:electron', () => extractZip(archive, { dir: BUILD_PATHS.electron }))
   const executable = join(BUILD_PATHS.electron, platform === 'win32' ? 'electron.exe' : platform === 'linux' ? 'electron' : 'Electron.app/Contents/MacOS/Electron')
-  const nodeVersion = execFileSync(executable, ['-p', 'process.versions.node'], {
-    encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-  }).trim()
+  const crossWindows = platform === 'win32' && process.platform === 'linux'
+  let nodeVersion: string
+  if (crossWindows) {
+    const probe = mkdtempSync(join(tmpdir(), 'bharatcode-wine-probe-'))
+    const output = join(probe, 'node-version.txt')
+    try {
+      // Wine cannot expose a Linux anonymous pipe as Windows Node stdout.
+      execFileSync(executable, ['-e', `require('node:fs').writeFileSync(${JSON.stringify('Z:' + output)}, process.versions.node)`], {
+        stdio: 'ignore', timeout: 60000, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+      })
+      nodeVersion = readFileSync(output, 'utf8').trim()
+    } finally { rmSync(probe, { recursive: true, force: true }) }
+  } else {
+    nodeVersion = execFileSync(executable, ['-p', 'process.versions.node'], {
+      encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+    }).trim()
+  }
   const macosMinimumVersion = platform === 'darwin' ? execFileSync('/usr/libexec/PlistBuddy',
     ['-c', 'Print LSMinimumSystemVersion', join(BUILD_PATHS.electron, 'Electron.app', 'Contents', 'Info.plist')], { encoding: 'utf8' }).trim() : undefined
   rmSync(RUNTIME_ROOT, { recursive: true, force: true })

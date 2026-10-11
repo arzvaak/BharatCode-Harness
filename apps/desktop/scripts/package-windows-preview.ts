@@ -13,8 +13,10 @@ const appRoot = resolve(import.meta.dirname, '..')
 const root = resolve(appRoot, '..', '..')
 
 async function main(): Promise<void> {
-  if (process.platform !== 'win32' || process.arch !== 'x64') throw new Error('Windows preview packaging requires a native Windows x64 host')
-  const { values } = parseArgs({ options: { dir: { type: 'boolean', default: false } } })
+  const { values } = parseArgs({ options: { dir: { type: 'boolean', default: false }, 'local-wine': { type: 'boolean', default: false } } })
+  const localWine = values['local-wine'] && process.platform === 'linux' && process.arch === 'x64'
+  if (!localWine && (process.platform !== 'win32' || process.arch !== 'x64')) throw new Error('Windows preview packaging requires native Windows x64 or Linux x64 with --local-wine')
+  if (localWine && (!process.env.WINEPREFIX || !process.env.BC_WINDOWS_TOOLCHAIN_ROOT)) throw new Error('Local Wine packaging requires an isolated WINEPREFIX and BC_WINDOWS_TOOLCHAIN_ROOT')
   const pnpm = process.env.npm_execpath
   if (!pnpm) throw new Error('Invoke through pnpm run package:win:x64:preview')
   const paths = desktopTargetBuildPaths('win-x64')
@@ -53,8 +55,8 @@ async function main(): Promise<void> {
     rmSync(paths.unsignedArtifacts, { recursive: true, force: true })
     mkdirSync(paths.unsignedArtifacts, { recursive: true })
     await execute('package-windows', ['exec', 'electron-builder', '--config', 'electron-builder.config.mjs', '--win', '--x64', '--publish', 'never', ...(values.dir ? ['--dir'] : [])], appRoot)
-    await execute('smoke-packaged-runtime', ['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts', '--unsigned'], appRoot)
-    writeFileSync(join(paths.unsignedArtifacts, 'windows-preview-build.json'), JSON.stringify({ schemaVersion: 1, target: 'win-x64', version, ...readDesktopBuildCommit(root), updateMode: 'manual', signed: false, updateRepository: 'arzvaak/BharatCode-Harness', updateChannel: 'rc', run: run.directory }, null, 2) + '\n')
+    if (!localWine) await execute('smoke-packaged-runtime', ['exec', 'tsx', 'scripts/smoke-packaged-runtime.ts', '--unsigned'], appRoot)
+    writeFileSync(join(paths.unsignedArtifacts, 'windows-preview-build.json'), JSON.stringify({ schemaVersion: 1, target: 'win-x64', version, ...readDesktopBuildCommit(root), updateMode: 'manual', signed: false, execution: localWine ? 'local-linux-wine' : 'native-windows', updateRepository: 'arzvaak/BharatCode-Harness', updateChannel: 'rc', run: run.directory }, null, 2) + '\n')
     success = true
     console.log(`Windows preview artifacts: ${paths.unsignedArtifacts}`)
   } finally { run.finish(success) }
