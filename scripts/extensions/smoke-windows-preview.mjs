@@ -71,18 +71,26 @@ try {
   const welcome = await findPage(first, page => page.url().includes('welcome.html'));
   await welcome.getByRole('button', { name: 'Get started', exact: true }).click();
   const page = await findPage(first, page => page.url().startsWith('dsh-app://app/'));
-  await page.getByText('Chat', { exact: true }).first().waitFor({ timeout: 90000 });
+  await page.getByRole('button', { name: 'Get started', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up later', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Open app', exact: true }).click();
+  await page.getByRole('button', { name: 'All chats', exact: true }).waitFor({ timeout: 90000 });
+  await page.getByRole('button', { name: 'Extensions', exact: true }).click();
+  await page.locator('.bc-store-card').first().waitFor();
+  await page.getByRole('button', { name: 'Skills', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search repository skills', exact: true }).waitFor();
   await page.screenshot({ path: join(artifacts, 'windows-onboarding.png') });
 } finally { await stop(first); }
 const second = await launch();
 try {
   const page = await findPage(second, page => page.url().startsWith('dsh-app://app/'));
-  await page.getByText('Chat', { exact: true }).first().waitFor({ timeout: 90000 });
+  await page.getByRole('button', { name: 'All chats', exact: true }).waitFor({ timeout: 90000 });
   assert.equal(second.browser.contexts().flatMap(context => context.pages()).some(page => page.url().includes('welcome.html')), false);
   await page.screenshot({ path: join(artifacts, 'windows-restart.png') });
 } finally { await stop(second); }
 await writeFile(join(artifacts, 'windows-preview-smoke.json'), JSON.stringify({ schemaVersion: 1,
   platform: 'win32', arch: 'x64', result: 'passed', installer: installers[0],
-  checks: ['actual-installer', 'native-welcome', 'workspace', 'persisted-onboarding-restart'],
+  checks: ['actual-installer', 'native-welcome', 'provider-setup-deferral', 'workspace', 'extensions', 'skills', 'persisted-onboarding-restart'],
   completedAt: new Date().toISOString() }, null, 2) + '\n');
 console.log('Windows preview installer, desktop onboarding and restart passed');
