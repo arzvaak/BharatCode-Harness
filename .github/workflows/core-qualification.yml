@@ -114,6 +114,8 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Package complete native Windows preview and verify assembled runtime
         run: pnpm --dir apps/desktop run package:win:x64:preview
+      - name: Prepare pinned Electron for native graphics checks
+        run: node -e "require(require.resolve('electron/install.js', {paths:['./apps/desktop']}))"
       - name: Native Windows graphics export and clipboard
         run: node integrations/visuals/scripts/native-export.mjs
       - name: Verify native installer behavior
