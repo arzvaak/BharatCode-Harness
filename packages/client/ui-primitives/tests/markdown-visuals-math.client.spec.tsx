@@ -4,7 +4,6 @@ import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MarkdownText } from './markdown-test-components.tsx'
 // Exercise the actual extension wrapper with the native math renderer.
-// @ts-expect-error The local JavaScript integration has no declaration file.
 import { makeAssistantWrapper } from '../../../../integrations/visuals/src/view.js'
 
 afterEach(cleanup)
@@ -58,7 +57,7 @@ it('aligns equivalent formulas and keeps units inside the native math box', () =
   const { container } = render(wrapped(source, 'settled'))
   const cell = container.querySelector('tbody td:nth-child(2)')!
   expect(cell.querySelectorAll('.katex')).toHaveLength(1)
-  const projected = cell.querySelector('annotation')!.textContent!
+  const projected = cell.querySelector('annotation')!.textContent
   expect(projected).toContain(String.raw`\begin{aligned}`)
   expect(projected).toContain(String.raw`\text{H/m} \\ & =0.4605`)
   expect(projected).toContain(String.raw`\text{mH/km}`)

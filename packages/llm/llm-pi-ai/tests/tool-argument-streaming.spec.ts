@@ -1,3 +1,6 @@
+import { Context } from '@deepseek-ai/cordis'
+import InvariantRegistry from '@deepseek-ai/dsh-invariants'
+import * as LlmInvariant from '@deepseek-ai/dsh-llm/invariant'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { AssistantMessageEvent, Model } from '@earendil-works/pi-ai'
 import { stream as streamCompletions } from '@earendil-works/pi-ai/api/openai-completions'
@@ -40,6 +43,15 @@ async function collect(events: AsyncIterable<AssistantMessageEvent>): Promise<{ 
 
 const context = normalizeContext({ messages: [{ role: 'user', content: 'hi', timestamp: 0 }] })
 
+async function* guarded(events: Parameters<typeof toStreamChunks>[0]) {
+  const ctx = new Context()
+  try {
+    await ctx.plugin(InvariantRegistry)
+    await ctx.plugin(LlmInvariant)
+    yield* ctx.waterfall(ctx as never, 'llm/stream', { provider: 'mock', model: 'mock', messages: [] }, () => toStreamChunks(events))
+  } finally { await ctx.fiber.dispose() }
+}
+
 describe('streamed tool-call arguments (patched pi-ai)', () => {
   it('still repairs complete malformed JSON without losing the supplied text', async () => {
     const raw = '{"depth":"book","text":"complete formula: r_B = sqrt(r*d)",}'
@@ -50,7 +62,7 @@ describe('streamed tool-call arguments (patched pi-ai)', () => {
     ] }])
     const assembler = new BlockAssembler()
     const events = streamCompletions(model('openai-completions', server.url), context, { apiKey: 'test-key' })
-    for await (const chunk of toStreamChunks(events)) assembler.push(chunk)
+    for await (const chunk of guarded(events)) assembler.push(chunk)
     expect(assembler.finish).toEqual({ kind: 'tool-calls' })
     expect(assembler.blocks()).toEqual([{ type: 'tool-call', id: 'call_repair', name: 'deepread', arguments: JSON.stringify({ depth: 'book', text: 'complete formula: r_B = sqrt(r*d)' }) }])
   })
@@ -67,7 +79,7 @@ describe('streamed tool-call arguments (patched pi-ai)', () => {
     ] }])
     const events = streamCompletions(model('openai-completions', server.url), context, { apiKey: 'test-key' })
     const assembler = new BlockAssembler()
-    for await (const chunk of toStreamChunks(events)) assembler.push(chunk)
+    for await (const chunk of guarded(events)) assembler.push(chunk)
     expect(assembler.finish).toEqual({ kind: 'max-tokens' })
     const blocks = assembler.blocks()
     expect(blocks.some(block => block.type === 'tool-call')).toBe(false)
@@ -84,7 +96,7 @@ describe('streamed tool-call arguments (patched pi-ai)', () => {
     ] }])
     const assembler = new BlockAssembler()
     const events = streamCompletions(model('openai-completions', server.url), context, { apiKey: 'test-key' })
-    for await (const chunk of toStreamChunks(events)) assembler.push(chunk)
+    for await (const chunk of guarded(events)) assembler.push(chunk)
     expect(assembler.finish).toEqual({ kind: 'max-tokens' })
     expect(assembler.blocks()).toEqual([{ type: 'text', text: expect.stringContaining(raw) as string }])
   })

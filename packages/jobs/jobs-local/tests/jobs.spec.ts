@@ -7,7 +7,7 @@ import { bindScopeParent, createScope, scopeOf } from '@deepseek-ai/dsh-scope'
 import type { ScopeKey } from '@deepseek-ai/dsh-scope'
 import { JobId } from '@deepseek-ai/dsh-jobs'
 import type {
-  JobEvent, JobEventFilter, JobHandle, JobHooks, JobKind, JobOutcome, JobOutputSource, JobSpec, JobView,
+  JobEvent, JobEventFilter, JobHandle, JobHooks, JobOutcome, JobOutputSource, JobSpec, JobView,
 } from '@deepseek-ai/dsh-jobs'
 import LocalJobRegistry, { type Config as JobsConfig } from '@deepseek-ai/dsh-jobs-local'
 import { unsupportedInbox } from '@deepseek-ai/dsh-agent-loop-testkit'
@@ -206,7 +206,7 @@ describe('LocalJobRegistry.start', () => {
 
   it('rejects an empty kind, empty label, and invalid output limit', async () => {
     const ctx = await harness()
-    expect(() => ctx.jobs.start(producer({ kind: '' as JobKind }).spec)).toThrow('invalid job kind')
+    expect(() => ctx.jobs.start(producer({ kind: '' }).spec)).toThrow('invalid job kind')
     expect(() => ctx.jobs.start(producer({ label: '' }).spec)).toThrow('invalid job label')
     expect(() => ctx.jobs.start(producer({ outputLimitBytes: 0 }).spec)).toThrow('outputLimitBytes')
   })

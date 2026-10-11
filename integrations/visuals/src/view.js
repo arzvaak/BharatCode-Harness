@@ -231,7 +231,8 @@ export function VisualFigure({ source, language = 'visual', t = defaultT }) {
     const observer = new ResizeObserver(entries => setWidth(Math.max(280, Math.min(720, entries[0].contentRect.width))));
     observer.observe(root.current); return () => observer.disconnect();
   }, []);
-  React.useEffect(() => { setEdited(null); setDraft(source); setError(''); setNotice(''); setEditing(false); }, [source]);
+  const generation = React.useRef(0);
+  React.useLayoutEffect(() => { ++generation.current; setEdited(null); setDraft(source); setError(''); setNotice(''); setEditing(false); setApplying(false); return () => { ++generation.current; }; }, [source, language]);
   const value = edited ?? source;
   const closeEditor = () => { setEditing(false); setError(''); sourceButton.current?.focus(); };
   React.useEffect(() => {
@@ -274,7 +275,7 @@ export function VisualFigure({ source, language = 'visual', t = defaultT }) {
       h('tbody', null, tables.rows.map((r, i) => h('tr', { key: i }, r.map((s, j) => h(j ? 'td' : 'th', { key: j, ...(j ? {} : { scope: 'row' }) }, s)))))))),
     editing && h('div', { className: 'dv-editor', id:id + '-editor', onKeyDown:e => {if (e.key === 'Escape' && !applying) {e.preventDefault(); closeEditor();}} }, h('label', { htmlFor: id + '-source' }, t('edit')), h('textarea', { id: id + '-source', value: draft, spellCheck: false, onChange: e => setDraft(e.target.value), rows: 9 }),
       h('p', null, t('preview')), error && h('p', { role: 'alert', className: 'dv-error' }, `${t('error')}: ${error}`),
-      h('div', { className: 'dv-editor-actions' }, h('button', {type:'button', disabled:applying, onClick: async () => { setApplying(true); try { const parsed = parseVisual(draft, language); if (parsed.kind === 'mermaid') await validateMermaid(draft); setEdited(draft); setNotice(''); closeEditor(); } catch (e) { setError(e.message); } finally {setApplying(false);} } }, applying ? t('save') : t('apply')),
+      h('div', { className: 'dv-editor-actions' }, h('button', {type:'button', disabled:applying, onClick: async () => { const epoch = generation.current; setApplying(true); try { const parsed = parseVisual(draft, language); if (parsed.kind === 'mermaid') await validateMermaid(draft); if (generation.current !== epoch) return; setEdited(draft); setNotice(''); closeEditor(); } catch (e) { if (generation.current === epoch) setError(e.message); } finally {if (generation.current === epoch) setApplying(false);} } }, applying ? t('save') : t('apply')),
         h('button', {type:'button', disabled:applying, onClick:closeEditor }, t('cancel')), edited !== null && h('button', {type:'button', disabled:applying, onClick: () => { setEdited(null); setDraft(source); closeEditor(); } }, t('reset')))),
     h('span', { className: 'dv-notice', role: 'status', 'aria-live':'polite' }, notice));
 }

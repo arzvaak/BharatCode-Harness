@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "@mermaid-js/mermaid-zenuml": "1.0.1",
+    "@types/react": "18.3.31",
     "dompurify": "3.4.16",
     "esbuild": "0.25.12",
     "jsdom": "26.1.0",
@@ -56,6 +57,5 @@
   },
   "overrides": {
     "katex": "0.18.2"
-  },
-  "peerDependencies": {}
+  }
 }

@@ -148,6 +148,7 @@ export async function* toStreamChunks(
   // pi-ai contentIndex ↔ our block index map 1:1 (both count blocks from 0
   // in stream order), but we track ids per index for tool calls.
   const toolIds = new Map<number, { id: string; name: string }>()
+  const toolChunks = new Map<number, StreamChunk[]>()
   const rawArguments = new Map<number, string>()
   const completedTools = new Map<number, { name: string; arguments: string }>()
   let lastIndex = -1
@@ -182,19 +183,21 @@ export async function* toStreamChunks(
         const id = partial?.type === 'toolCall' ? partial.id : ''
         const name = partial?.type === 'toolCall' ? partial.name : ''
         toolIds.set(event.contentIndex, { id, name })
-        yield { type: 'block-start', index: event.contentIndex, blockType: 'tool-call' }
+        // Delay tool chunks until their type is known: unfinished JSON becomes
+        // retained text, and an open stream block cannot change its type.
+        toolChunks.set(event.contentIndex, [{ type: 'block-start', index: event.contentIndex, blockType: 'tool-call' }])
         break
       }
       case 'toolcall_delta': {
         const known = toolIds.get(event.contentIndex)
         rawArguments.set(event.contentIndex, (rawArguments.get(event.contentIndex) ?? '') + event.delta)
-        yield {
+        toolChunks.get(event.contentIndex)?.push({
           type: 'tool-call-delta',
           index: event.contentIndex,
           id: brandString<ToolCallId>(known?.id ?? ''),
           ...known?.name !== undefined && known.name.length > 0 ? { name: known.name } : {},
           argumentsDelta: event.delta,
-        }
+        })
         break
       }
       case 'toolcall_end': {
@@ -208,17 +211,23 @@ export async function* toStreamChunks(
           }
           if (incomplete) {
             incompleteToolArguments = true
+            toolChunks.delete(event.contentIndex)
+            const text = `Incomplete tool call to ${event.toolCall.name}; it was not executed. The original arguments are retained below so the next response can complete the call:\n${raw}`
+            yield { type: 'block-start', index: event.contentIndex, blockType: 'text' }
+            yield { type: 'text-delta', index: event.contentIndex, text }
             yield {
               type: 'block-end',
               index: event.contentIndex,
               block: {
                 type: 'text',
-                text: `Incomplete tool call to ${event.toolCall.name}; it was not executed. The original arguments are retained below so the next response can complete the call:\n${raw}`,
+                text,
               },
             }
             break
           }
         }
+        yield* toolChunks.get(event.contentIndex) ?? []
+        toolChunks.delete(event.contentIndex)
         completedTools.set(event.contentIndex, {
           name: event.toolCall.name,
           arguments: raw ?? JSON.stringify(event.toolCall.arguments),
@@ -245,12 +254,15 @@ export async function* toStreamChunks(
         const retainCompletedTools = finishReason.kind === 'max-tokens' && completedTools.size > 0
         if (retainCompletedTools) {
           for (const tool of completedTools.values()) {
+            const text = `Tool call to ${tool.name} was not executed because the response was cut off. Original arguments for continuation:\n${tool.arguments}`
+            yield { type: 'block-start', index: ++lastIndex, blockType: 'text' }
+            yield { type: 'text-delta', index: lastIndex, text }
             yield {
               type: 'block-end',
-              index: ++lastIndex,
+              index: lastIndex,
               block: {
                 type: 'text',
-                text: `Tool call to ${tool.name} was not executed because the response was cut off. Original arguments for continuation:\n${tool.arguments}`,
+                text,
               },
             }
           }

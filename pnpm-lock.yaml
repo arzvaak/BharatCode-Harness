@@ -1401,6 +1401,9 @@ importers:
       '@mermaid-js/mermaid-zenuml':
         specifier: 1.0.1
         version: 1.0.1(@babel/core@7.29.7(supports-color@9.4.0))(@babel/template@7.29.7)(@types/react@18.3.31)(mermaid@12.1.0)(tailwindcss@4.3.3)
+      '@types/react':
+        specifier: 18.3.31
+        version: 18.3.31
       dompurify:
         specifier: 3.4.16
         version: 3.4.16
@@ -10670,6 +10673,9 @@ importers:
       '@deepseek-ai/dsh-http-proxy':
         specifier: workspace:*
         version: link:../../util/http-proxy
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:*
+        version: link:../../runtime-diagnostics/invariants
       '@deepseek-ai/dsh-launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
