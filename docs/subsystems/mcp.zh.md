@@ -151,7 +151,7 @@ async applications(agent: NonNullable<ToolExecution['agent']>, signal: AbortSign
 /**
  * Recheck the negotiated tool URI at every read, including after reconnect.
  * @param agent - Agent whose scope controls resource admission.
- * @param expectedGeneration - Optional generation that must still match the negotiated app.
+ * @param expectedGeneration - Generation that must still match the negotiated app.
  * @param server - Negotiated MCP server identity.
  * @param signal - Cancellation signal for the operation.
  * @param tool - Negotiated tool name.

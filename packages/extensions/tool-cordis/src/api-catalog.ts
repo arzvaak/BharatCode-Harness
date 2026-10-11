@@ -1546,7 +1546,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       {
         signature: 'async applicationResource( server: string, tool: string, agent: NonNullable<ToolExecution[\'agent\']>, signal: AbortSignal, expectedGeneration: string, ): Promise<JsonValue>',
         description: 'Recheck the negotiated tool URI at every read, including after reconnect.',
-        parameters: [{ name: 'agent', description: 'Agent whose scope controls resource admission.' }, { name: 'expectedGeneration', description: 'Optional generation that must still match the negotiated app.' }, { name: 'server', description: 'Negotiated MCP server identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'tool', description: 'Negotiated tool name.' }],
+        parameters: [{ name: 'agent', description: 'Agent whose scope controls resource admission.' }, { name: 'expectedGeneration', description: 'Generation that must still match the negotiated app.' }, { name: 'server', description: 'Negotiated MCP server identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'tool', description: 'Negotiated tool name.' }],
         returns: 'Authorized app resource content.',
       },
     ],
