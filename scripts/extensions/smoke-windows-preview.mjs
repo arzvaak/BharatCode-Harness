@@ -74,7 +74,7 @@ async function findPage(session, predicate) {
   }
   throw Error(`Expected desktop page did not open: ${session.log()}`);
 }
-const checks = ['actual-installer', 'native-welcome', 'workspace', 'extensions', 'skills', 'persisted-onboarding-restart'];
+const checks = ['actual-installer', 'native-welcome', 'workspace', 'extensions', 'skills', 'restart'];
 const first = await launch();
 try {
   const welcome = await findPage(first, page => page.url().includes('welcome.html'));
@@ -100,10 +100,13 @@ try {
 } finally { await stop(first); }
 const second = await launch();
 try {
+  // The native welcome intentionally returns when both account and API key setup were skipped.
+  const welcome = await findPage(second, page => page.url().includes('welcome.html'));
+  await welcome.getByRole('button', { name: 'Get started', exact: true }).click();
   const page = await findPage(second, page => page.url().startsWith('dsh-app://app/'));
   await page.setViewportSize({ width: 1280, height: 754 });
   await page.getByRole('button', { name: 'Chat', exact: true }).waitFor({ timeout: 90000 });
-  assert.equal(second.browser.contexts().flatMap(context => context.pages()).some(page => page.url().includes('welcome.html')), false);
+  assert.equal(await page.getByRole('button', { name: 'Get started', exact: true }).count(), 0);
   await page.screenshot({ path: join(artifacts, 'windows-restart.png') });
 } finally { await stop(second); }
 await writeFile(join(artifacts, 'windows-preview-smoke.json'), JSON.stringify({ schemaVersion: 1,
