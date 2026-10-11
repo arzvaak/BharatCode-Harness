@@ -53,7 +53,11 @@ export function createElectronBuilderConfig(
   const appId = resolveDesktopAppId(env)
   // Linux releases use the public BharatCode GitHub feed without an upstream policy service.
   const linuxPreview = (env.DSH_DESKTOP_TARGET_PLATFORM ?? hostPlatform) === 'linux'
-  const policy = linuxPreview ? undefined : resolveDesktopPolicyEnvironment(env)
+  const windowsPreview = env.DSH_DESKTOP_WINDOWS_PREVIEW === '1'
+  if (windowsPreview && ((env.DSH_DESKTOP_TARGET_PLATFORM ?? hostPlatform) !== 'win32' || env.DSH_DESKTOP_UNSIGNED !== '1')) {
+    throw new Error('desktop package: Windows preview requires an unsigned Windows target')
+  }
+  const policy = linuxPreview || windowsPreview ? undefined : resolveDesktopPolicyEnvironment(env)
   const targetPlatform = env.DSH_DESKTOP_TARGET_PLATFORM
   const resolvedPlatform = targetPlatform ?? hostPlatform
   const resolvedArch = env.DSH_DESKTOP_TARGET_ARCH ?? hostArch
