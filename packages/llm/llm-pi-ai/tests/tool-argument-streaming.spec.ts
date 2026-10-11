@@ -3,6 +3,8 @@ import type { AssistantMessageEvent, Model } from '@earendil-works/pi-ai'
 import { stream as streamCompletions } from '@earendil-works/pi-ai/api/openai-completions'
 import { stream as streamResponses } from '@earendil-works/pi-ai/api/openai-responses'
 import { normalizeContext } from '@earendil-works/pi-ai/utils/transcript'
+import { BlockAssembler } from '@deepseek-ai/dsh-llm'
+import { toStreamChunks } from '../src/stream.ts'
 import { closeMockServers, mockServer } from './mock-server.ts'
 
 afterEach(closeMockServers)
@@ -39,6 +41,54 @@ async function collect(events: AsyncIterable<AssistantMessageEvent>): Promise<{ 
 const context = normalizeContext({ messages: [{ role: 'user', content: 'hi', timestamp: 0 }] })
 
 describe('streamed tool-call arguments (patched pi-ai)', () => {
+  it('still repairs complete malformed JSON without losing the supplied text', async () => {
+    const raw = '{"depth":"book","text":"complete formula: r_B = sqrt(r*d)",}'
+    const server = await mockServer([{ events: [
+      JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'call_repair', type: 'function', function: { name: 'deepread', arguments: raw } }] }, index: 0, finish_reason: null }] }),
+      '{"choices":[{"delta":{},"index":0,"finish_reason":"tool_calls"}]}',
+      '[DONE]',
+    ] }])
+    const assembler = new BlockAssembler()
+    const events = streamCompletions(model('openai-completions', server.url), context, { apiKey: 'test-key' })
+    for await (const chunk of toStreamChunks(events)) assembler.push(chunk)
+    expect(assembler.finish).toEqual({ kind: 'tool-calls' })
+    expect(assembler.blocks()).toEqual([{ type: 'tool-call', id: 'call_repair', name: 'deepread', arguments: JSON.stringify({ depth: 'book', text: 'complete formula: r_B = sqrt(r*d)' }) }])
+  })
+
+  it.each(['tool_calls', 'length'])('retains unfinished arguments when the provider finishes with %s', async (finishReason) => {
+    const raw = '{"depth":"book","text":"GMR derivation ends at \\n formula: r_B = product_i'
+    const server = await mockServer([{ events: [
+      JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'call_cut', type: 'function', function: { name: 'deepread', arguments: raw } }] }, index: 0, finish_reason: null }] }),
+      JSON.stringify({
+        choices: [{ delta: {}, index: 0, finish_reason: finishReason }],
+        usage: { prompt_tokens: 30, completion_tokens: 32 },
+      }),
+      '[DONE]',
+    ] }])
+    const events = streamCompletions(model('openai-completions', server.url), context, { apiKey: 'test-key' })
+    const assembler = new BlockAssembler()
+    for await (const chunk of toStreamChunks(events)) assembler.push(chunk)
+    expect(assembler.finish).toEqual({ kind: 'max-tokens' })
+    const blocks = assembler.blocks()
+    expect(blocks.some(block => block.type === 'tool-call')).toBe(false)
+    expect(blocks).toEqual([{ type: 'text', text: expect.stringContaining(raw) as string }])
+    expect(assembler.replayState).toBeUndefined()
+  })
+
+  it('retains even complete arguments when the output cap prevents tool dispatch', async () => {
+    const raw = JSON.stringify({ text: 'Full context to reissue when the cap is reached.' })
+    const server = await mockServer([{ events: [
+      JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'call_cap', type: 'function', function: { name: 'echo', arguments: raw } }] }, index: 0, finish_reason: null }] }),
+      '{"choices":[{"delta":{},"index":0,"finish_reason":"length"}]}',
+      '[DONE]',
+    ] }])
+    const assembler = new BlockAssembler()
+    const events = streamCompletions(model('openai-completions', server.url), context, { apiKey: 'test-key' })
+    for await (const chunk of toStreamChunks(events)) assembler.push(chunk)
+    expect(assembler.finish).toEqual({ kind: 'max-tokens' })
+    expect(assembler.blocks()).toEqual([{ type: 'text', text: expect.stringContaining(raw) as string }])
+  })
+
   it('openai-completions parses arguments once, at the end of the call', async () => {
     const server = await mockServer([{ events: [
       JSON.stringify({ choices: [{

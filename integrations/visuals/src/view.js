@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { parseVisual, splitVisuals } from './model.js';
+import { prepareReadingText } from './reading.js';
 import { MermaidDiagram, validateMermaid } from './mermaid.js';
 const h = React.createElement;
 export const en = { source: 'Source', copy: 'Copy source', copied: 'Copied', export: 'Export SVG', data: 'View data', apply: 'Apply preview', cancel: 'Cancel', reset: 'Reset', edit: 'Edit visual source', preview: 'Edits affect this preview only. The conversation stays unchanged.', error: 'Could not apply this source', exportError: 'Export failed', copyError: 'Copy failed', label: 'Label', value: 'Value', note: 'Note', total: 'Total', point: 'Point', gallery: 'Visuals', galleryIntro: 'Charts and diagrams, right where the explanation needs them.', empty: 'Choose a visual to explore its design.' };
-Object.assign(en, { rendering: 'Drawing diagram…', diagramError: 'Check the diagram syntax below.', from: 'From', to: 'To', condition: 'Condition' });
+Object.assign(en, { save: 'Applying…', diagram: 'Diagram', rendering: 'Drawing diagram…', diagramError: 'Check the diagram syntax below.', from: 'From', to: 'To', condition: 'Condition' });
 export const zh = { ...en };
 const defaultT = key => en[key] || key;
 const palette = ['#3976e8', '#13998d', '#c68a22', '#8873ca', '#c86883', '#5b8b40'];
@@ -56,31 +57,34 @@ function Metrics({ model, width = 720 }) {
       r.trend.length > 1 && h('path', { d: spark(r.trend, cell - 30, 19), transform: `translate(${x + 17} ${y + heights[row] - 28})`, stroke: color(i), fill: 'none', strokeWidth: 2 }));
   }), 'Key figures. Exact values are available in the data table.');
 }
-function Bars({ model }) {
-  const W = 720, L = 192, R = 620, rowH = 58, H = model.rows.length * rowH + 34;
+function Bars({ model, width = 720 }) {
+  const W = Math.max(280, width), compact = W < 520, L = compact ? 0 : Math.min(192, W * .3), R = W - (compact ? 0 : 84);
+  const layouts = model.rows.map(r => ({ label: words(r.label, compact ? Math.floor((W - 82) / 7) : Math.floor((L - 14) / 7)), note: words(r.note, Math.floor((R - L) / 6)) }));
+  const heights = layouts.map(l => Math.max(58, (compact ? l.label.length * 17 + 36 : l.label.length * 17 + 16) + l.note.length * 16));
+  const offsets = heights.map((_, i) => heights.slice(0, i).reduce((a, b) => a + b, 0)), H = heights.reduce((a, b) => a + b, 0) + 34;
   const min = Math.min(0, ...model.rows.map(r => r.value)), max = Math.max(0, ...model.rows.map(r => r.value));
   const span = max - min || 1, x = v => L + (v - min) / span * (R - L), zero = x(0);
   return svgRoot(model.title, W, H, [
     h('line', { key: 'zero', x1: zero, x2: zero, y1: 4, y2: H - 27, className: 'dv-axis' }),
     ...model.rows.map((r, i) => {
-      const y = i * rowH + 12, endpoint = x(r.value);
-      return h('g', { key: i }, textLines(r.label, 0, y + 14, 24, { fontSize: 13, fontWeight: 500 }),
-        h('rect', { x: L, y: y + 1, width: R - L, height: 24, rx: 4, className: 'dv-track' }),
-        h('rect', { x: Math.min(zero, endpoint), y: y + 1, width: Math.max(1, Math.abs(endpoint - zero)), height: 24, rx: 4, fill: color(i) }, h('title', null, `${r.label}: ${fmt(r.value)} ${model.unit}`)),
+      const y = offsets[i] + 12, endpoint = x(r.value), barY = compact ? y + layouts[i].label.length * 17 + 4 : y + 1;
+      return h('g', { key: i }, textLines(r.label, 0, y + 14, compact ? Math.floor((W - 82) / 7) : Math.floor((L - 14) / 7), { fontSize: 13, fontWeight: 500 }),
+        h('rect', { x: L, y: barY, width: R - L, height: 24, rx: 4, className: 'dv-track' }),
+        h('rect', { x: Math.min(zero, endpoint), y: barY, width: Math.max(1, Math.abs(endpoint - zero)), height: 24, rx: 4, fill: color(i), className:'dv-bar-fill', style:{transformOrigin:`${zero}px ${barY}px`, transformBox:'view-box'} }, h('title', null, `${r.label}: ${fmt(r.value)} ${model.unit}`)),
         h('text', { x: W - 2, y: y + 18, textAnchor: 'end', fontSize: 13, fontWeight: 600 }, fmt(r.value)),
-        r.note && h('text', { x: L, y: y + 44, fontSize: 11, className: 'dv-muted' }, r.note.slice(0, 64)));
+        r.note && textLines(r.note, L, barY + 41, Math.floor((R - L) / 6), { fontSize: 11, className: 'dv-muted' }));
     }), h('text', { key: 'min', x: L, y: H - 4, fontSize: 11, className: 'dv-muted' }, `${fmt(min)} ${model.unit}`),
     h('text', { key: 'max', x: R, y: H - 4, textAnchor: 'end', fontSize: 11, className: 'dv-muted' }, `${fmt(max)} ${model.unit}`),
   ], 'Values compared on a shared scale, including negative values.');
 }
-function Lines({ model }) {
+function Lines({ model, width = 720 }) {
   const [active, setActive] = React.useState(null);
-  const W = 720, H = 330, L = 55, R = 700, T = 18, B = 245;
+  const W = Math.max(280, width), H = W < 480 ? 290 : 310, L = 55, R = W - 20, T = 18, B = H - 65;
   const all = model.series.flatMap(s => s.values), low = Math.min(0, ...all), high = Math.max(0, ...all);
   const range = high - low || 1, min = low === high ? low - 0.5 : (low === 0 ? 0 : low - range * .08), max = low === high ? high + .5 : high + range * .08;
   const x = i => model.labels.length === 1 ? (L + R) / 2 : L + i / (model.labels.length - 1) * (R - L);
   const y = v => B - (v - min) / (max - min) * (B - T);
-  const step = Math.max(1, Math.ceil(model.labels.length / 8));
+  const step = Math.max(1, Math.ceil(model.labels.length / Math.max(2, Math.floor((R - L) / 74))));
   const labels = Array.from({ length: 5 }, (_, i) => min + i / 4 * (max - min));
   return h('div', null, svgRoot(model.title, W, H, [
     ...labels.map((v, i) => h('g', { key: `grid-${i}` },
@@ -125,7 +129,7 @@ function Flow({ model, id }) {
   const positions = new Map();
   for (const [r, group] of grouped) group.forEach((n, i) => positions.set(n.id, { x: LR ? 30 + r * rankGap : 30 + i * breadthGap + (breadth - group.length) * breadthGap / 2,
     y: LR ? 50 + i * breadthGap + (breadth - group.length) * breadthGap / 2 : 35 + r * rankGap }));
-  return h('div', { className: 'dv-flow-scroll' }, svgRoot(model.title, W, H, [
+  return h('div', { className: 'dv-flow-scroll', style:{'--dv-flow-width':`${Math.max(280, W)}px`} }, svgRoot(model.title, W, H, [
     h('defs', { key: 'defs' }, h('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }, h('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: '#8090a5' }))),
     ...model.edges.map((e, i) => {
       const a = positions.get(e.from), b = positions.get(e.to);
@@ -145,40 +149,55 @@ function Flow({ model, id }) {
     }),
   ], 'Directed process. Arrows indicate the direction; labelled connections describe decisions.'));
 }
-function Timeline({ model }) {
-  const heights = model.rows.map(r => Math.max(78, words(r.note, 67).length * 17 + words(r.label, 52).length * 17 + 36));
+function Timeline({ model, width = 720 }) {
+  const W = Math.max(280, width), compact = W < 520, spine = compact ? 8 : 137, X = spine + 22;
+  const labelWidth = Math.max(16, Math.floor((W - X - 8) / 8)), noteWidth = Math.max(18, Math.floor((W - X - 8) / 6.4));
   let cursor = 20;
-  const points = model.rows.map((r, i) => { const y = cursor; cursor += heights[i]; return { ...r, y }; });
-  return svgRoot(model.title, 720, cursor, [h('line', { key: 'spine', x1: 147, x2: 147, y1: 19, y2: points.at(-1).y + 10, className: 'dv-axis' }),
-    ...points.map((r, i) => h('g', { key: i }, h('circle', { cx: 147, cy: r.y + 8, r: 5, fill: color(i) }),
-      h('text', { x: 123, y: r.y + 13, textAnchor: 'end', fontSize: 12, className: 'dv-muted' }, r.raw.slice(0, 16)),
-      textLines(r.label, 169, r.y + 13, 52, { fontSize: 15, fontWeight: 600 }),
-      textLines(r.note, 169, r.y + 39 + (words(r.label, 52).length - 1) * 17, 67, { fontSize: 12, className: 'dv-muted' }))),
+  const points = model.rows.map(r => {
+    const y = cursor, label = words(r.label, labelWidth), note = words(r.note, noteWidth);
+    cursor += Math.max(80, (label.length + note.length) * 17 + (compact ? 52 : 35));
+    return { ...r, y, labelLines:label };
+  });
+  return svgRoot(model.title, W, cursor, [h('line', { key: 'spine', x1: spine, x2: spine, y1: 19, y2: points.at(-1).y + 10, className: 'dv-axis' }),
+    ...points.map((r, i) => h('g', { key: i }, h('circle', { cx: spine, cy: r.y + 8, r: 5, fill: color(i) }),
+      h('text', { x: compact ? X : spine - 20, y: r.y + 13, textAnchor: compact ? 'start' : 'end', fontSize: 12, className: 'dv-muted' }, r.raw.slice(0, 16)),
+      textLines(r.label, X, r.y + (compact ? 36 : 13), labelWidth, { fontSize: 15, fontWeight: 600 }),
+      textLines(r.note, X, r.y + (compact ? 62 : 39) + (r.labelLines.length - 1) * 17, noteWidth, { fontSize: 12, className: 'dv-muted' }))),
   ], 'Milestones in the order shown, with their dates and descriptions.');
 }
-function Steps({ model }) {
+function Steps({ model, width = 720 }) {
+  const W = Math.max(280, width), compact = W < 520;
+  const labelWidth = Math.max(16, Math.floor((W - 55 - (compact ? 0 : 100)) / 8)), noteWidth = Math.max(18, Math.floor((W - 55) / 6.4));
   let y = 12;
-  const rows = model.rows.map((r, i) => { const p = { ...r, y, i }; y += Math.max(82, words(r.label, 58).length * 17 + words(r.note, 65).length * 17 + 45); return p; });
-  return svgRoot(model.title, 720, y, rows.map(r => h('g', { key: r.i },
+  const rows = model.rows.map((r, i) => {
+    const label = words(r.label, labelWidth), note = words(r.note, noteWidth), p = { ...r, y, i, labelLines:label };
+    y += Math.max(82, label.length * 17 + note.length * 17 + (compact ? 58 : 45)); return p;
+  });
+  return svgRoot(model.title, W, y, rows.map(r => h('g', { key: r.i },
     h('circle', { cx: 18, cy: r.y + 14, r: 16, className: 'dv-step-disc' }), h('text', { x: 18, y: r.y + 19, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: color(r.i) }, r.i + 1),
-    textLines(r.label, 50, r.y + 19, 58, { fontSize: 15, fontWeight: 600 }),
-    h('text', { x: 710, y: r.y + 18, textAnchor: 'end', fontSize: 11, className: 'dv-muted' }, r.raw.slice(0, 14)),
-    textLines(r.note, 50, r.y + 44 + (words(r.label, 58).length - 1) * 17, 65, { fontSize: 12, className: 'dv-muted' }),
+    textLines(r.label, 50, r.y + 19, labelWidth, { fontSize: 15, fontWeight: 600 }),
+    h('text', { x: compact ? 50 : W - 8, y: compact ? r.y + 23 + r.labelLines.length * 17 : r.y + 18, textAnchor: compact ? 'start' : 'end', fontSize: 11, className: 'dv-muted' }, r.raw.slice(0, 14)),
+    textLines(r.note, 50, r.y + (compact ? 62 : 44) + (r.labelLines.length - 1) * 17, noteWidth, { fontSize: 12, className: 'dv-muted' }),
   )), 'An ordered procedure with time estimates and details.');
 }
-function Donut({ model, t }) {
-  const total = model.rows.reduce((s, r) => s + r.value, 0), radius = 81, circumference = 2 * Math.PI * radius;
-  let offset = 0;
-  return svgRoot(model.title, 720, Math.max(260, model.rows.length * 35 + 25), [
-    ...model.rows.map((r, i) => { const start = offset; offset += r.value / total * circumference; return h('circle', { key: i, cx: 135, cy: 130, r: radius,
-      fill: 'none', stroke: color(i), strokeWidth: 24, strokeDasharray: `${Math.max(0, r.value / total * circumference - (model.rows.length > 1 ? 2 : 0))} ${circumference}`, strokeDashoffset: -start,
-      transform: 'rotate(-90 135 130)' }, h('title', null, `${r.label}: ${fmt(r.value)} (${fmt(r.value / total * 100)}%)`)); }),
-    h('text', { key: 'total', x: 135, y: 126, textAnchor: 'middle', fontSize: 29, fontWeight: 600 }, fmt(total)),
-    h('text', { key: 'unit', x: 135, y: 150, textAnchor: 'middle', fontSize: 12, className: 'dv-muted' }, model.unit || t('total')),
-    ...model.rows.map((r, i) => h('g', { key: `label-${i}` }, h('circle', { cx: 292, cy: 27 + i * 35, r: 4, fill: color(i) }),
-      h('text', { x: 307, y: 31 + i * 35, fontSize: 13 }, r.label.slice(0, 32)),
-      h('text', { x: 617, y: 31 + i * 35, textAnchor: 'end', fontSize: 13, fontWeight: 600 }, fmt(r.value)),
-      h('text', { x: 714, y: 31 + i * 35, textAnchor: 'end', fontSize: 12, className: 'dv-muted' }, `${fmt(r.value / total * 100)}%`))),
+function Donut({ model, t, width = 720 }) {
+  const W = Math.max(280, width), compact = W < 560, cx = compact ? W / 2 : 125;
+  const total = model.rows.reduce((s, r) => s + r.value, 0), radius = 76, circumference = 2 * Math.PI * radius;
+  let offset = 0, cursor = compact ? 255 : 26;
+  const labelX = compact ? 16 : 257, valueX = W - 67;
+  const labelWidth = Math.max(12, Math.floor((valueX - labelX - 60) / 7));
+  const rows = model.rows.map(r => { const y = cursor, label = words(r.label, labelWidth); cursor += Math.max(37, label.length * 17 + 15); return {...r, y}; });
+  return svgRoot(model.title, W, Math.max(250, cursor + 8), [
+    h('circle', {key:'track', cx, cy:120, r:radius, fill:'none', stroke:'var(--dv-wash)', strokeWidth:22}),
+    ...model.rows.map((r, i) => { const start = offset; offset += r.value / total * circumference; return h('circle', { key: i, cx, cy: 120, r: radius,
+      fill: 'none', stroke: color(i), strokeWidth: 22, strokeDasharray: `${Math.max(0, r.value / total * circumference - (model.rows.length > 1 ? 2 : 0))} ${circumference}`, strokeDashoffset: -start,
+      transform: `rotate(-90 ${cx} 120)` }, h('title', null, `${r.label}: ${fmt(r.value)} (${fmt(r.value / total * 100)}%)`)); }),
+    h('text', { key: 'total', x: cx, y: 116, textAnchor: 'middle', fontSize: total > 1e6 ? 23 : 29, fontWeight: 600 }, fmt(total)),
+    h('text', { key: 'unit', x: cx, y: 140, textAnchor: 'middle', fontSize: 12, className: 'dv-muted' }, model.unit || t('total')),
+    ...rows.map((r, i) => h('g', { key: `label-${i}` }, h('circle', { cx: labelX - 10, cy: r.y - 4, r: 4, fill: color(i) }),
+      textLines(r.label, labelX, r.y, labelWidth, {fontSize:13}),
+      h('text', { x: valueX, y: r.y, textAnchor: 'end', fontSize: 13, fontWeight: 600 }, fmt(r.value)),
+      h('text', { x: W - 2, y: r.y, textAnchor: 'end', fontSize: 12, className: 'dv-muted' }, `${fmt(r.value / total * 100)}%`))),
   ], 'Parts of a whole. Labels give exact amounts and percentages.');
 }
 function tableData(model) {
@@ -205,15 +224,31 @@ export function exportSVG(svg) {
 /** A self-contained graphic with local editing, accessible data and export. */
 export function VisualFigure({ source, language = 'visual', t = defaultT }) {
   const [edited, setEdited] = React.useState(null), [draft, setDraft] = React.useState(source), [editing, setEditing] = React.useState(false), [error, setError] = React.useState(''), [notice, setNotice] = React.useState('');
-  const root = React.useRef(null), id = 'dv-' + React.useId().replace(/:/g, '');
-  const [width, setWidth] = React.useState(720);
+  const root = React.useRef(null), sourceButton = React.useRef(null), id = 'dv-' + React.useId().replace(/:/g, '');
+  const [width, setWidth] = React.useState(720), [applying, setApplying] = React.useState(false), [diagramReady, setDiagramReady] = React.useState(false);
   React.useEffect(() => {
     if (typeof ResizeObserver === 'undefined' || !root.current) return;
-    const observer = new ResizeObserver(entries => setWidth(Math.min(720, entries[0].contentRect.width)));
+    const observer = new ResizeObserver(entries => setWidth(Math.max(280, Math.min(720, entries[0].contentRect.width))));
     observer.observe(root.current); return () => observer.disconnect();
   }, []);
-  React.useEffect(() => { setEdited(null); setDraft(source); setError(''); }, [source]);
+  React.useEffect(() => { setEdited(null); setDraft(source); setError(''); setNotice(''); setEditing(false); }, [source]);
   const value = edited ?? source;
+  const closeEditor = () => { setEditing(false); setError(''); sourceButton.current?.focus(); };
+  React.useEffect(() => {
+    if (editing) root.current?.querySelector('textarea')?.focus();
+  }, [editing]);
+  React.useEffect(() => {
+    const canvas = root.current?.querySelector('.dv-canvas');
+    if (!canvas || !globalThis.matchMedia?.('(prefers-reduced-motion: no-preference)').matches || !canvas.animate) return;
+    let animation, observer, revealed = false; const barAnimations = [];
+    const reveal = () => { if (revealed) return; revealed = true; animation = canvas.animate([{opacity:.35, clipPath:'inset(0 0 12px 0)'}, {opacity:1, clipPath:'inset(0)'}], {duration:280, easing:'cubic-bezier(.2,.7,.2,1)'}); observer?.disconnect(); canvas.querySelectorAll('.dv-bar-fill').forEach((bar, i) => {if(bar.animate) barAnimations.push(bar.animate([{transform:'scaleX(.02)'},{transform:'scaleX(1)'}], {duration:420, delay:Math.min(i * 35, 245), easing:'cubic-bezier(.16,1,.3,1)'}));}); };
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting)) reveal(); }, {threshold:.12});
+      observer.observe(canvas);
+    } else reveal();
+    return () => {observer?.disconnect(); animation?.cancel(); barAnimations.forEach(item => item.cancel());};
+  }, [value]);
+  const onDiagramReady = React.useCallback(ready => setDiagramReady(ready), []);
   let model;
   try { model = parseVisual(value, language); } catch (cause) { return h('pre', { className: 'dv-fallback' }, value); }
   const tables = model.kind === 'mermaid' ? null : tableData(model);
@@ -228,20 +263,20 @@ export function VisualFigure({ source, language = 'visual', t = defaultT }) {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch { setNotice(t('exportError')); }
   };
-  return h('figure', { ref: root, className: 'dv-figure', 'data-visual-kind': model.kind },
-    h('div', { className: 'dv-heading' }, h('figcaption', null, model.title || model.kind), h('div', { className: 'dv-actions' },
-      h('button', { type: 'button', onClick: () => { setDraft(value); setEditing(!editing); setError(''); } }, t('source')),
-      h('button', { type: 'button', onClick: copy }, t('copy')), h('button', { type: 'button', onClick: download }, t('export')))),
-    h('div', { className: 'dv-canvas' }, h(charts[model.kind], { model, id, t, width })),
+  return h('figure', { ref: root, className: 'dv-figure', 'data-visual-kind': model.kind, 'aria-labelledby': id + '-title' },
+    h('div', { className: 'dv-heading' }, h('figcaption', {id: id + '-title'}, null, model.title || ({metrics:'Key figures', bars:'Comparison', line:'Trend', flowchart:'Process', timeline:'Timeline', steps:'Steps', donut:'Distribution', mermaid:t('diagram')})[model.kind]), h('div', { className: 'dv-actions' },
+      h('button', { ref:sourceButton, type: 'button', 'aria-expanded':editing, 'aria-controls':id + '-editor', onClick: () => { setDraft(value); setEditing(!editing); setError(''); } }, t('source')),
+      h('button', { type: 'button', onClick: copy }, t('copy')), h('button', { type: 'button', disabled:model.kind === 'mermaid' && !diagramReady, onClick: download }, t('export')))),
+    h('div', { className: 'dv-canvas' }, h(charts[model.kind], { model, id, t, width, onReady:onDiagramReady })),
     model.caption && h('p', { className: 'dv-caption' }, model.caption),
     tables && h('details', { className: 'dv-data' }, h('summary', null, t('data')), h('div', { className: 'dv-table-scroll' }, h('table', null,
       h('thead', null, h('tr', null, tables.headers.map((s, i) => h('th', { key: i, scope: 'col' }, ({ Label: t('label'), Value: t('value'), Note: t('note'), Point: t('point'), From: t('from'), To: t('to'), Condition: t('condition') })[s] || s)))),
       h('tbody', null, tables.rows.map((r, i) => h('tr', { key: i }, r.map((s, j) => h(j ? 'td' : 'th', { key: j, ...(j ? {} : { scope: 'row' }) }, s)))))))),
-    editing && h('div', { className: 'dv-editor' }, h('label', { htmlFor: id + '-source' }, t('edit')), h('textarea', { id: id + '-source', value: draft, spellCheck: false, onChange: e => setDraft(e.target.value), rows: 9 }),
+    editing && h('div', { className: 'dv-editor', id:id + '-editor', onKeyDown:e => {if (e.key === 'Escape' && !applying) {e.preventDefault(); closeEditor();}} }, h('label', { htmlFor: id + '-source' }, t('edit')), h('textarea', { id: id + '-source', value: draft, spellCheck: false, onChange: e => setDraft(e.target.value), rows: 9 }),
       h('p', null, t('preview')), error && h('p', { role: 'alert', className: 'dv-error' }, `${t('error')}: ${error}`),
-      h('div', { className: 'dv-editor-actions' }, h('button', { onClick: async () => { try { const parsed = parseVisual(draft, language); if (parsed.kind === 'mermaid') await validateMermaid(draft); setEdited(draft); setEditing(false); setError(''); } catch (e) { setError(e.message); } } }, t('apply')),
-        h('button', { onClick: () => setEditing(false) }, t('cancel')), edited !== null && h('button', { onClick: () => { setEdited(null); setDraft(source); setEditing(false); } }, t('reset')))),
-    h('span', { className: 'dv-notice', role: 'status' }, notice));
+      h('div', { className: 'dv-editor-actions' }, h('button', {type:'button', disabled:applying, onClick: async () => { setApplying(true); try { const parsed = parseVisual(draft, language); if (parsed.kind === 'mermaid') await validateMermaid(draft); setEdited(draft); setNotice(''); closeEditor(); } catch (e) { setError(e.message); } finally {setApplying(false);} } }, applying ? t('save') : t('apply')),
+        h('button', {type:'button', disabled:applying, onClick:closeEditor }, t('cancel')), edited !== null && h('button', {type:'button', disabled:applying, onClick: () => { setEdited(null); setDraft(source); closeEditor(); } }, t('reset')))),
+    h('span', { className: 'dv-notice', role: 'status', 'aria-live':'polite' }, notice));
 }
 
 /** Preserve native UI behaviour while placing visuals between native prose segments. */
@@ -250,9 +285,11 @@ export function makeAssistantWrapper(Native, useTranslate = () => defaultT) {
     const t = useTranslate();
     const { data } = props.node;
     if (props.groupPart === 'reasoning') return h(Native, props);
+    const blocks = data.status === 'running' ? data.blocks : data.blocks.map(block => block.kind === 'text' ? { ...block, text: prepareReadingText(block.text) } : block);
+    const readingProps = { ...props, node: { ...props.node, data: { ...data, blocks } } };
     const pieces = []; let pending = [], index = 0, hasVisual = false;
     const flush = () => { if (pending.length) { pieces.push({ type: 'native', blocks: pending, key: `native-${index++}` }); pending = []; } };
-    for (const block of data.blocks) {
+    for (const block of blocks) {
       if (block.kind !== 'text') { pending.push(block); continue; }
       for (const part of splitVisuals(block.text, data.status === 'running')) {
         if (part.type === 'prose') pending.push({ ...block, text: part.text });
@@ -260,7 +297,7 @@ export function makeAssistantWrapper(Native, useTranslate = () => defaultT) {
       }
     }
     flush();
-    if (!hasVisual) return h('div', { className: 'dv-answer' }, h(Native, { ...props, key: 'native-0' }));
+    if (!hasVisual) return h('div', { className: 'dv-answer' }, h(Native, { ...readingProps, key: 'native-0' }));
     // An interrupted reply ending in a graphic still gets the native stopped marker once.
     if (data.status === 'interrupted' && pieces.at(-1)?.type !== 'native') pieces.push({ type: 'native', blocks: [], key: 'terminal' });
     return h('div', { className: 'dv-answer' }, pieces.map((piece, i) => piece.type === 'visual'

@@ -38,3 +38,23 @@ The in-app browser did not report a download event from either SVG export attemp
 No Harness source files, running agent state or live profile metadata were changed. No GitHub repository or marketplace listing was published.
 
 The physical module split was exercised on native Linux with the prebuilt factories: chart startup requested zero diagram modules, and the first diagram requested one bundled local module. SVG download and native clipboard assertions passed for both. Sixteen unit fixtures pass, including failed local-engine loading and retry. Native Windows qualification remains pending.
+
+## 2026-10-11 refinement
+
+Visuals 0.1.1: production client build and all 19 tests passed, including source-disclosure keyboard focus, 320px chart geometry, reduced-motion behavior, no reveal replay on controls, and disposal cleanup. Real YAML Loader/SlotCore composition passed. The browser gallery rendered all 28 custom/Mermaid examples with zero errors and zero pending diagrams after settling. At a 390px viewport all simple chart canvases fit their panels; dense flow geometry scrolls at readable size. Light and dark themes, rejected BOXED source, and applying a valid signed-bar edit were inspected.
+
+SVG serialization retains final geometry, resolved colors and background in the automated check. Browser download-event delivery and clipboard delivery could not be confirmed in the Codex in-app browser; no success claim is made for them.
+
+A local AppImage was built from the previously installed EPIPE-fixed binary, replacing only the Visuals package. The previous binary and launcher backups are retained. Live mounted package/archive parity and session-file digests are checked after activation. This is a local installation, not a published release. The user's original BOXED reply was not present in the local sessions examined, so the updated authoring guidance is preventive rather than a reproduced provider-backed fix.
+
+## LaTeX clarification (0.1.2)
+
+The reported issue concerns LaTeX, and no original failing reply was available. Corrected the earlier formatting guidance: legitimate \boxed{...}, fractions, aligned environments and native math delimiters are explicitly supported. The extension does not render prose equations itself. Two integration regressions exercise the actual Visuals wrapper with native MarkdownText: inline and multiline boxed equations on either side of a graphic retain exact TeX and render both boxes; incomplete streamed math stays literal and typesets on settlement without errors. The existing native Markdown and incremental suites also pass (67 tests). A browser check using the native KaTeX version and existing display overflow rules rendered boxed quadratic, aligned fluid equations and a wide summation identity; wide formulas scroll from their left edge. No reproduced renderer defect is claimed.
+
+## Formula-sheet layout (0.1.3)
+
+Rendered the user's persisted transmission-line answer through the actual native Markdown/KaTeX component with the extension stylesheet in Chromium at 1000px, 560px, and 390px viewport widths. All eight formula rows retain their original TeX annotations, have no KaTeX errors, and produce no page or formula-cell overflow. Formula notation is 19.72px at the default font setting; labels are above the expressions. Narrow screens wrap the equivalent forms naturally. Styling changes only the outer KaTeX box, preserving its internal metrics. Light and dark color schemes use separate heading and equation-surface colors.
+
+## Heading hierarchy and display math (0.1.4)
+
+Rechecked the original transmission-line answer in dark mode with larger section headings (32px) and colored formula titles (20px). Equations use neutral ink at 24px on desktop and 21.6px in narrow containers. Formula-table products use display metrics, and equivalent expressions are aligned on separate lines with units attached. The presentation projection uses mdast source ranges, skips source code and link URLs, and preserves the stored answer. Tests cover original expression preservation, idempotence, escaped dollars, unfinished math, native streaming, and settled product limits.

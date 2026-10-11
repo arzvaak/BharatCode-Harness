@@ -15,8 +15,8 @@
       "id": "visuals",
       "directory": "integrations/visuals",
       "enabled": true,
-      "artifact": "integrations/artifacts/local-dsh-visuals-0.1.0.tgz",
-      "sha256": "10815868bd6e4d443ee9438d896b6a9d20f289336a8d4834c05b040aebe6d5f8"
+      "artifact": "integrations/artifacts/local-dsh-visuals-0.1.4.tgz",
+      "sha256": "b0e5a098f41da8f96e09d46b9051ee978eb4a7f0564a21733241a91e21576fde"
     },
     {
       "id": "tool-call-guard",

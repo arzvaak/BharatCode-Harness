@@ -9,3 +9,11 @@ The visual language is an annotation sheet: small left-aligned titles, generous 
 Inline visuals have source/copy/SVG controls. A gallery in the installed plugin panel lets the user inspect the design without spending model tokens. A standalone preview uses the same components for browser verification.
 
 Validation covers finite values and negative/zero ranges, hostile text, incomplete fences, unsupported blocks, slot late registration and disposal, source validation, export, light/dark and narrow viewports, and a real Loader composition. No remote fonts, scripts, media or runtime dependencies are fetched by the browser.
+
+## Refinement — 2026-10-11
+
+Simple charts use the panel's measured content width. Narrow bars put labels above their shared scale; timelines, steps and donut legends reflow vertically. Dense flow diagrams preserve their scrollable geometry. The surface follows native host colors, with a small title, quiet controls and a separated data disclosure.
+
+A visible chart reveals once in 280 ms. Bar fills grow from the shared zero baseline over 420 ms, with short staggered delays. Streaming updates, focus and source disclosure do not replay the reveal. Opening source has a short opacity transition; loading Mermaid has a small spinner. All motion respects reduced-motion preferences, and active Web Animations are canceled on disposal. SVG exports retain final geometry even during a reveal.
+
+Source controls expose expanded state, focus the editor and restore focus on Escape, Cancel and Apply. Mermaid export is disabled until sanitized SVG is ready. The model guide preserves native LaTeX, including \boxed{...}, and keeps equations in Markdown math delimiters outside visual fences. Existing saved conversations are not rewritten.

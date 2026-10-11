@@ -1,4 +1,7 @@
 import { EventEmitter } from 'node:events'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppUpdater } from 'electron-updater'
 import { DESKTOP_HOST_PROTOCOL_VERSION } from '../src/host-protocol.ts'
@@ -13,6 +16,36 @@ vi.mock('electron-updater', () => ({
 }))
 
 const { DesktopUpdateCoordinator } = await import('../src/update-coordinator.ts')
+const { app } = await import('electron')
+
+describe('packaged updater eligibility', () => {
+  it.each([
+    ['linux', undefined, false],
+    ['linux', '/opt/BharatCode.AppImage', true],
+    ['win32', undefined, true],
+    ['darwin', undefined, true],
+  ] as const)('checks %s metadata only when its installed format is supported (%s)', async (platform, appImage, supported) => {
+    const resourcesPath = mkdtempSync(join(tmpdir(), 'bc-update-format-'))
+    writeFileSync(join(resourcesPath, 'app-update.yml'), 'provider: github\n')
+    vi.stubGlobal('process', { ...process, platform, resourcesPath, env: { APPIMAGE: appImage } })
+    const previousPackaged = app.isPackaged
+    Object.assign(app, { isPackaged: true })
+    const f = fixture()
+    const coordinator = new DesktopUpdateCoordinator(
+      state => state, f.beforeRestart, f.updater, undefined, () => '1.1.0-alpha.1',
+    )
+    try {
+      const result = await coordinator.check()
+      expect(result.phase).toBe(supported ? 'available' : 'error')
+      expect(f.checkForUpdates).toHaveBeenCalledTimes(supported ? 1 : 0)
+    } finally {
+      coordinator.dispose()
+      Object.assign(app, { isPackaged: previousPackaged })
+      vi.unstubAllGlobals()
+      rmSync(resourcesPath, { recursive: true, force: true })
+    }
+  })
+})
 
 describe('desktop release metadata', () => {
   it('accepts one exact release identity for Electron and dsh', () => {

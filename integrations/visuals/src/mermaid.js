@@ -43,7 +43,7 @@ export function sanitizeSVG(purify, source) {
   }
   return doc.documentElement;
 }
-export function MermaidDiagram({ model, t }) {
+export function MermaidDiagram({ model, t, onReady }) {
   const root = React.useRef(null), [error, setError] = React.useState(''), [ready, setReady] = React.useState(false), [theme, setTheme] = React.useState(0);
   React.useEffect(() => {
     const observer = new MutationObserver(() => setTheme(v => v + 1));
@@ -53,7 +53,7 @@ export function MermaidDiagram({ model, t }) {
   }, []);
   React.useEffect(() => {
     let disposed = false;
-    setReady(false); setError('');
+    setReady(false); setError(''); onReady?.(false);
     const host = root.current;
     const style = getComputedStyle(host.closest('.dv-figure'));
     const ink = hex(style.color, '#243044'), paper = hex(style.backgroundColor, '#ffffff');
@@ -79,13 +79,13 @@ export function MermaidDiagram({ model, t }) {
         const element = sanitizeSVG(purify, svg);
         element.setAttribute('role', 'img'); element.setAttribute('aria-label', model.title || 'Diagram');
         host.replaceChildren(document.importNode(element, true));
-        setReady(true);
+        setReady(true); onReady?.(true);
       } catch (cause) { if (!disposed) { host.replaceChildren(); setError(String(cause.message || cause).slice(0, 1600)); } }
     };
     renderQueue = renderQueue.then(work, work);
     return () => { disposed = true; };
-  }, [model.source, theme]);
-  return h('div', { className: 'dv-mermaid' }, h('div', { ref: root }),
+  }, [model.source, theme, onReady]);
+  return h('div', { className: 'dv-mermaid', 'aria-busy': !ready && !error }, h('div', { ref: root }),
     !ready && !error && h('p', { role: 'status' }, t('rendering')),
     error && h('div', { className: 'dv-mermaid-error', role: 'alert' }, h('p', null, t('diagramError')), h('pre', null, error), h('details', null, h('summary', null, t('source')), h('pre', null, model.source))));
 }

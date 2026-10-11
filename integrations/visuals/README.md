@@ -8,6 +8,7 @@ Polished inline charts and diagrams for BharatCode Harness. Graphics appear besi
 
 - Seven original designs: metrics with sparklines, signed bars, multi-series lines, compact flowcharts, timelines, step-by-step procedures and donuts.
 - The full Mermaid 12.1 engine, plus ZenUML. The gallery exercises 21 Mermaid families, including database relationships, sequences, classes, states, mind maps, Gantt schedules, architecture, Sankey, radar and treemaps. Other engine-supported families are forwarded to Mermaid as well.
+- Responsive charts with a one-time reveal, bars that grow from zero, reduced-motion support, and keyboard-friendly source editing.
 - Source preview editing, copy source and portable SVG export. Edits affect the current preview only; the stored conversation stays unchanged.
 - A plugin settings gallery and English controls for every locale. The model can author diagrams in the user's language.
 - Native chat rendering for prose, reasoning, images, tools and other content. The wrapper uses the published slot API and restores the original renderer on unload.
@@ -19,7 +20,7 @@ This is an original design inspired by the idea of rich visuals in conversation.
 Requires Harness 0.2.0-rc.2 or newer with the current assistant chat slot and client module loader. Use the installation's own `dsh` CLI and `DSH_HOME`; Desktop keeps a separate `desktop` profile. Wait for running agents and package operations to finish before changing it.
 
 ```bash
-DSH_HOME=/path/to/installation/home dsh plugin --profile desktop add /absolute/path/to/local-dsh-visuals-0.1.0.tgz
+DSH_HOME=/path/to/installation/home dsh plugin --profile desktop add /absolute/path/to/local-dsh-visuals-0.1.4.tgz
 ```
 
 The normal Harness package manager discovers `dsh.bundle.patch` and adds the bundle. Restart the idle app and open its plugin settings to find the Visuals gallery. Start a conversation and ask, for example:
@@ -88,3 +89,7 @@ Only top-level visual fences are intercepted. Fences inside lists or block quote
 See `VALIDATION.md` for what has been verified and what still requires live activation.
 
 Charts are immediately available from the standard core client. The diagram engine is shipped in `lib/client.mermaid.js` and loaded through BC’s package-local module loader on the first diagram request. This is a local bundled asset: no network service, extra installation, or enable switch is required. Licence inventories cover both modules.
+
+Native answers use a larger reading font and restrained heading colors. Two-column tables containing formulas put each label above its equation so notation has the full reading width. Wide expressions scroll within their cell; KaTeX internals and the original answer are preserved.
+
+Section and formula titles use distinct blue, violet, teal, and amber tones with a subtle background. Body text and equations retain the native ink. Settled formula tables project display-style math and align equivalent expressions with attached units; persisted messages and live streaming content stay unchanged.

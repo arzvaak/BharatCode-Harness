@@ -1969,6 +1969,15 @@ __export(client_exports, {
   inject: () => inject
 });
 module.exports = __toCommonJS(client_exports);
+
+// src/capability-state.js
+function capabilityState({ installed, enabled, qualified, dependencies = [], credential = true, failure }) {
+  if (failure) return { status: "failed", requirements: [failure] };
+  const requirements = [!installed && "Install the extension", !qualified && "Extension qualification is incomplete", ...dependencies.filter((d) => !d.available).map((d) => `${d.title}: ${d.reason ?? "runtime required"}`), !credential && "Connect the required account"].filter(Boolean);
+  return { status: !enabled ? "disabled" : requirements.length ? "needs-setup" : "ready", requirements };
+}
+
+// src/client.jsx
 var import_semver2 = __toESM(require_semver2(), 1);
 
 // src/eligibility.js
@@ -2025,6 +2034,10 @@ function validateOperation(input) {
 // src/locales.js
 var NS = "bc.extension-store";
 var en = {
+  "capability.ready": "Ready",
+  "capability.needs-setup": "Needs setup",
+  "capability.disabled": "Disabled",
+  "capability.failed": "Failed",
   nav: "Extensions",
   unavailableRelease: "This extension is not available for installation yet.",
   incompatibleVersion: "This extension requires a different BharatCode version. Check its listed requirements.",
@@ -2046,6 +2059,10 @@ var en = {
   dependencyLocalOnly: "Local version inspection only. No qualified managed runtime release is available."
 };
 var zh = {
+  "capability.ready": "\u53EF\u7528",
+  "capability.needs-setup": "\u9700\u8981\u8BBE\u7F6E",
+  "capability.disabled": "\u5DF2\u7981\u7528",
+  "capability.failed": "\u5931\u8D25",
   nav: "\u6269\u5C55",
   unavailableRelease: "\u6B64\u6269\u5C55\u5C1A\u4E0D\u53EF\u5B89\u88C5\u3002",
   incompatibleVersion: "\u6B64\u6269\u5C55\u9700\u8981\u4E0D\u540C\u7248\u672C\u7684 BharatCode\uFF0C\u8BF7\u67E5\u770B\u5217\u51FA\u7684\u8981\u6C42\u3002",
@@ -2142,9 +2159,12 @@ function Store({ t = (key) => key } = {}) {
   const rows = (list) => list.map((e) => {
     const record = installed.find((x) => x.id === e.id);
     const blocked = installationBlock(e, view);
+    const capability = capabilityState({ installed: Boolean(record), qualified: !blocked, enabled: e.scope === "profile" ? Boolean(record?.enabled) : view.workspaceEnabled.some(([w, id]) => w === workspace && id === e.id), dependencies: (e.dependencyIds ?? []).map((id) => dependencyResults[e.id]?.find((result) => result.id === id) ?? { title: id, available: false, reason: e.dependencyRanges?.[id] ?? "Inspect the runtime version" }), credential: !e.credentialReference || view.connectedCapabilities?.some(([id, connected]) => id === e.id && connected), failure: view.capabilityFailures?.find((value) => value.identity[0] === workspace && value.identity[2] === e.id)?.reason });
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "bc-store-card", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: e.name }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: e.description }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: t(`capability.${capability.status}`) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { children: capability.requirements.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: value }, index)) }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: e.status.replaceAll("-", " ") }),
         " \xB7 ",

@@ -148,8 +148,13 @@ export async function* toStreamChunks(
   // pi-ai contentIndex ↔ our block index map 1:1 (both count blocks from 0
   // in stream order), but we track ids per index for tool calls.
   const toolIds = new Map<number, { id: string; name: string }>()
+  const rawArguments = new Map<number, string>()
+  const completedTools = new Map<number, { name: string; arguments: string }>()
+  let lastIndex = -1
+  let incompleteToolArguments = false
 
   for await (const event of events) {
+    if ('contentIndex' in event) lastIndex = Math.max(lastIndex, event.contentIndex)
     switch (event.type) {
       case 'start':
         break
@@ -182,6 +187,7 @@ export async function* toStreamChunks(
       }
       case 'toolcall_delta': {
         const known = toolIds.get(event.contentIndex)
+        rawArguments.set(event.contentIndex, (rawArguments.get(event.contentIndex) ?? '') + event.delta)
         yield {
           type: 'tool-call-delta',
           index: event.contentIndex,
@@ -191,7 +197,32 @@ export async function* toStreamChunks(
         }
         break
       }
-      case 'toolcall_end':
+      case 'toolcall_end': {
+        const raw = rawArguments.get(event.contentIndex)
+        if (raw !== undefined) {
+          let incomplete = false
+          try { JSON.parse(raw) } catch (_error) {
+            // pi-ai repairs unfinished JSON; executing that repaired value loses
+            // the omitted arguments and hides the cut from auto-continuation.
+            incomplete = hasUnclosedJson(raw)
+          }
+          if (incomplete) {
+            incompleteToolArguments = true
+            yield {
+              type: 'block-end',
+              index: event.contentIndex,
+              block: {
+                type: 'text',
+                text: `Incomplete tool call to ${event.toolCall.name}; it was not executed. The original arguments are retained below so the next response can complete the call:\n${raw}`,
+              },
+            }
+            break
+          }
+        }
+        completedTools.set(event.contentIndex, {
+          name: event.toolCall.name,
+          arguments: raw ?? JSON.stringify(event.toolCall.arguments),
+        })
         yield {
           type: 'block-end',
           index: event.contentIndex,
@@ -205,14 +236,35 @@ export async function* toStreamChunks(
           },
         }
         break
-      case 'done':
+      }
+      case 'done': {
+        const reason = mapStopReason(event.message, contextWindow)
+        const needsContinuation = incompleteToolArguments
+          && (reason.kind === 'stop' || reason.kind === 'tool-calls' || reason.kind === 'max-tokens')
+        const finishReason: FinishReason = needsContinuation ? { kind: 'max-tokens' } : reason
+        const retainCompletedTools = finishReason.kind === 'max-tokens' && completedTools.size > 0
+        if (retainCompletedTools) {
+          for (const tool of completedTools.values()) {
+            yield {
+              type: 'block-end',
+              index: ++lastIndex,
+              block: {
+                type: 'text',
+                text: `Tool call to ${tool.name} was not executed because the response was cut off. Original arguments for continuation:\n${tool.arguments}`,
+              },
+            }
+          }
+        }
         yield { type: 'usage', usage: mapUsage(event.message.usage) }
         yield {
           type: 'finish',
-          reason: mapStopReason(event.message, contextWindow),
-          replayState: toPiReplayState(event.message, requestedModel),
+          reason: finishReason,
+          // The SDK's repaired tool-call replay no longer describes our retained
+          // text. Let the next request use the complete neutral history instead.
+          ...incompleteToolArguments || retainCompletedTools ? {} : { replayState: toPiReplayState(event.message, requestedModel) },
         }
         return
+      }
       case 'error':
         // In-stream error delivery (pi-ai's style) → error finish chunk
         // (the harness's other sanctioned error path besides throwing).
@@ -231,4 +283,21 @@ export async function* toStreamChunks(
     }
   }
   throw new LlmError('pi-ai event stream ended without done/error', 'STREAM_CLOSED')
+}
+
+/** Unclosed strings or containers indicate missing content, rather than repairable JSON punctuation. */
+function hasUnclosedJson(raw: string): boolean {
+  let inString = false
+  let escaped = false
+  let containers = 0
+  for (const char of raw) {
+    if (inString) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '"') inString = false
+    } else if (char === '"') inString = true
+    else if (char === '{' || char === '[') containers += 1
+    else if (char === '}' || char === ']') containers -= 1
+  }
+  return inString || containers > 0
 }
