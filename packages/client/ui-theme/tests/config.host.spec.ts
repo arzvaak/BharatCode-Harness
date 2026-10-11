@@ -27,7 +27,7 @@ describe('ui-theme host', () => {
     const ctx = new Context()
     await ctx.plugin({ Config, apply }).await()
     const settings = { describe: () => [{ ns: 'ui-theme', user: { preference } }] }
-    const getter = vi.spyOn(ctx, 'get').mockReturnValue(settings as never)
+    const getter = vi.spyOn(ctx, 'get').mockReturnValue(settings)
     try {
       expect(rowText(collect(ctx)[1])).toContain('if (false)')
     } finally {
