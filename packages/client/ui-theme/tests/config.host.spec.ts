@@ -1,5 +1,5 @@
 import { Context } from '@deepseek-ai/cordis'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { IndexInjection } from '@deepseek-ai/dsh-host-webserver'
 import * as HostPlugin from '../src/index.ts'
 import { liveConfig, omitsGeneratedPage } from '../../../settings/settings/tests/live-config.ts'
@@ -23,6 +23,18 @@ function rowText(row: IndexInjection | undefined): string {
 }
 
 describe('ui-theme host', () => {
+  it.each(['light', 'system'] as const)('disables legacy bootstrap when Host explicitly stores %s', async (preference) => {
+    const ctx = new Context()
+    await ctx.plugin({ Config, apply }).await()
+    const settings = { describe: () => [{ ns: 'ui-theme', user: { preference } }] }
+    const getter = vi.spyOn(ctx, 'get').mockReturnValue(settings as never)
+    try {
+      expect(rowText(collect(ctx)[1])).toContain('if (false)')
+    } finally {
+      getter.mockRestore()
+      await ctx.fiber.dispose()
+    }
+  })
   it('registers, validates, and disposes the durable theme namespace with its fiber', async () => {
     const ctx = new Context()
     const configuration = await liveConfig(ctx, { Config, apply })

@@ -127,6 +127,16 @@
 .workspaceHeader { flex-wrap: wrap; }
 .workspaceHeader select, .workspaceHeader button { flex: none; max-width: 100%; }
 .workspaceHeader button[aria-expanded='true'] { color: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); }
+.workspaceHeader button, .workspaceHeader select {
+  min-height: 30px;
+  cursor: pointer;
+  transition: background-color var(--bc-motion-control, 120ms), border-color var(--bc-motion-control, 120ms), color var(--bc-motion-control, 120ms);
+}
+.workspaceHeader button:hover:not(:disabled), .workspaceHeader select:hover:not(:disabled) { background: var(--dsw-alias-bg-layer-3); }
+.workspaceHeader button:focus-visible, .workspaceHeader select:focus-visible { outline: 2px solid var(--dsw-focus-ring-color); outline-offset: 2px; }
+.workspaceHeader button:disabled, .workspaceHeader select:disabled { opacity: .45; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .workspaceHeader button, .workspaceHeader select { transition: none; } }
+@media (pointer: coarse) { .workspaceHeader button, .workspaceHeader select { min-height: 44px; } }
 .workspaceBody { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); }
 .chatPane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .documentPane { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }

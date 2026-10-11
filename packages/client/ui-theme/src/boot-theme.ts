@@ -21,14 +21,24 @@ function bootThemeStyle(preference: ThemePreference): string {
 }
 
 /** Build the body script that installs the palette selector and content size. */
-function bootThemeBodyScript(preference: ThemePreference, fontSize: number): string {
+function bootThemeBodyScript(preference: ThemePreference, fontSize: number, allowLegacy: boolean): string {
   return `(() => {
   const preference = ${JSON.stringify(preference)}
-  const systemDark = preference === 'system'
+  let selected = preference
+  if (${JSON.stringify(allowLegacy)}) {
+    try {
+      const legacy = localStorage.getItem('dsh.theme')
+      if (legacy === 'light' || legacy === 'dark' || legacy === 'system') selected = legacy
+    } catch {}
+  }
+  const systemDark = selected === 'system'
     && typeof matchMedia !== 'undefined'
     && matchMedia('(prefers-color-scheme: dark)').matches
-  const dark = preference === 'dark' || systemDark
-  document.documentElement.dataset.dsThemeSource = preference
+  const dark = selected === 'dark' || systemDark
+  document.documentElement.dataset.dsThemeSource = selected
+  document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+  document.body.style.setProperty('--dsh-boot-bg', dark ? ${JSON.stringify(DARK_BACKGROUND)} : ${JSON.stringify(LIGHT_BACKGROUND)})
+  document.body.style.backgroundColor = 'var(--dsw-alias-bg-base, var(--dsh-boot-bg))'
   document.body.toggleAttribute('data-ds-dark-theme', dark)
   document.body.style.setProperty('--dsh-content-font-size', ${JSON.stringify(`${fontSize}px`)})
 })()`
@@ -40,14 +50,16 @@ function bootThemeBodyScript(preference: ThemePreference, fontSize: number): str
  * size before the shell mount and module script.
  * @param preference - Current Host-backed built-in preference.
  * @param fontSize - Current Host-backed content font size in px.
+ * @param allowLegacy - Whether no explicit Host preference supersedes browser storage.
  * @returns head and body script rows in execution order.
  */
 export function bootThemeInjections(
   preference: ThemePreference = DEFAULT_PREFERENCE,
   fontSize: number = DEFAULT_FONT_SIZE,
+  allowLegacy = false,
 ): IndexInjection[] {
   return [
     { kind: 'style', text: bootThemeStyle(preference) },
-    { kind: 'script', placement: 'body', text: bootThemeBodyScript(preference, fontSize) },
+    { kind: 'script', placement: 'body', text: bootThemeBodyScript(preference, fontSize, allowLegacy) },
   ]
 }

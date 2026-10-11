@@ -23,9 +23,31 @@ afterEach(() => {
   delete document.documentElement.dataset.dsThemeSource
   document.body.removeAttribute(DARK_ATTRIBUTE)
   document.body.style.removeProperty('--dsh-content-font-size')
+  document.body.style.removeProperty('--dsh-boot-bg')
+  document.body.style.removeProperty('background-color')
+  document.documentElement.style.removeProperty('color-scheme')
+  localStorage.clear()
 })
 
 describe('theme bootstrap row', () => {
+  it('preserves legacy dark before the client mounts, while an explicit Host choice wins', () => {
+    mockSystemDark(false)
+    localStorage.setItem('dsh.theme', 'dark')
+    const execute = (allowLegacy: boolean): void => {
+      const row = bootThemeInjections('system', 14, allowLegacy)[1]
+      if (row?.kind !== 'script') throw new Error('expected body bootstrap')
+      runInNewContext(row.text, { document, matchMedia: globalThis.matchMedia, localStorage })
+    }
+    execute(true)
+    expect(document.documentElement.dataset.dsThemeSource).toBe('dark')
+    expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(true)
+    execute(false)
+    expect(document.documentElement.dataset.dsThemeSource).toBe('system')
+    expect(document.body.hasAttribute(DARK_ATTRIBUTE)).toBe(false)
+    localStorage.setItem('dsh.theme', 'invalid')
+    execute(true)
+    expect(document.documentElement.dataset.dsThemeSource).toBe('system')
+  })
   it('colors the body with head CSS before applying body state', () => {
     mockSystemDark(false)
     const [head, body] = bootThemeInjections('dark')

@@ -168,6 +168,7 @@ export class ThemeRuntime {
   /** Override layers by source; seq (monotonic) is the stacking order. */
   private readonly overrides = new Map<string, { seq: number; tokens: ThemeTokenOverrides }>()
   private overrideSeq = 0
+  private legacyMigrationStarted = false
 
   /**
    * @param ctx - owning context (change events are emitted on it; the
@@ -177,7 +178,8 @@ export class ThemeRuntime {
   constructor(ctx: ClientContext, host: ConfigForm<ThemeSettings>) {
     this.ctx = ctx
     this.host = host
-    this.preference = DEFAULT_PREFERENCE
+    const bootPreference = typeof document === 'undefined' ? undefined : document.documentElement.dataset.dsThemeSource
+    this.preference = isThemePreference(bootPreference) ? bootPreference : DEFAULT_PREFERENCE
     // Non-browser runs (node e2e booting the client tree) have no matchMedia.
     this.media = typeof matchMedia === 'undefined' ? undefined : matchMedia('(prefers-color-scheme: dark)')
     this.snapshot = this.buildSnapshot()
@@ -233,6 +235,7 @@ export class ThemeRuntime {
     if (id !== 'system' && !this.themes.some(t => t.id === id)) {
       throw new Error(`theme "${id}" is not registered`)
     }
+    this.legacyMigrationStarted = true
     if (this.preference === id) return
     this.preference = id as ThemePreference
     if (isThemePreference(id)) void this.host.set(THEME_PREFERENCE_FIELD, id)
@@ -257,8 +260,28 @@ export class ThemeRuntime {
 
   /** Adopt the scope's accepted durable preference without writing it back. */
   private adopt(): void {
-    const section = this.host.getSnapshot().value
+    const snapshot = this.host.getSnapshot()
+    const section = snapshot.value
     if (section === undefined) return
+    // Earlier desktop builds stored Appearance in browser storage. Migrate
+    // only after the Host has proved that no newer explicit choice exists.
+    if (!this.legacyMigrationStarted && snapshot.status === 'ready' && snapshot.writable && snapshot.revision !== undefined) {
+      this.legacyMigrationStarted = true
+      const user = snapshot.user
+      const explicit = typeof user === 'object' && user !== null && Object.hasOwn(user, THEME_PREFERENCE_FIELD)
+      let legacy: unknown
+      try { legacy = localStorage.getItem('dsh.theme') } catch { /* Storage can be disabled. */ }
+      if (!explicit && isThemePreference(legacy)) {
+        this.preference = legacy
+        this.fontSize = section.fontSize
+        this.publish()
+        void this.host.mutate([{ op: 'set', path: [THEME_PREFERENCE_FIELD], value: legacy }], snapshot.revision).then((accepted) => {
+          if (!accepted) { this.adopt(); return }
+          try { localStorage.removeItem('dsh.theme') } catch { /* Host persistence remains authoritative. */ }
+        }, () => { this.adopt() })
+        return
+      }
+    }
     if (this.preference === section.preference && this.fontSize === section.fontSize) return
     this.preference = section.preference
     this.fontSize = section.fontSize

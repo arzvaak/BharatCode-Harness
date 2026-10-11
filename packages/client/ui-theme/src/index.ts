@@ -10,6 +10,7 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 import { bootThemeInjections } from './boot-theme.ts'
 import {
   DEFAULT_FONT_SIZE, DEFAULT_PREFERENCE, FONT_SIZE_MIN, FONT_SIZE_MAX, THEME_PREFERENCES,
+  THEME_SETTINGS_NAMESPACE,
 } from './theme-settings.ts'
 
 export {
@@ -39,6 +40,8 @@ export const Config = z.object({
 export function apply(ctx: Context, config: Config): void {
   ctx.inject(['settings'], (child) => { child.effect(() => child.settings.configure({ auto: false }, ctx.fiber)) })
   ctx.on('webserver/index-inject', (table) => {
-    table.push(...bootThemeInjections(config.preference.get(), config.fontSize.get()))
+    const user = ctx.get('settings')?.describe().find(row => row.ns === THEME_SETTINGS_NAMESPACE)?.user
+    const explicit = typeof user === 'object' && user !== null && Object.hasOwn(user, 'preference')
+    table.push(...bootThemeInjections(config.preference.get(), config.fontSize.get(), !explicit))
   }, { prepend: true })
 }

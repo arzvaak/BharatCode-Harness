@@ -38,14 +38,20 @@ export function CodeEditor({
           ? 'python'
           : 'plaintext'
     const model = monaco.editor.createModel(text, language)
+    const palette = (): string => document.body.hasAttribute('data-ds-dark-theme') ? 'vs-dark' : 'vs'
     const editor = monaco.editor.create(root.current, {
       model,
+      theme: palette(),
       automaticLayout: true,
       ariaLabel: label,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
     })
     instance.current = editor
+    const themeObserver = new MutationObserver(() => {
+      monaco.editor.setTheme(palette())
+    })
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
     let external = false
     const selections = editor.onDidChangeCursorSelection((event) => {
       const range = event.selection
@@ -68,6 +74,7 @@ export function CodeEditor({
       latest.current.onSave()
     })
     return () => {
+      themeObserver.disconnect()
       selections.dispose()
       changes.dispose()
       editor.dispose()

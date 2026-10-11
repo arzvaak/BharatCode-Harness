@@ -4,6 +4,32 @@
 .surface button, .explorer button { cursor: pointer; color: inherit; }
 .surface button:disabled, .explorer button:disabled { opacity: .45; cursor: default; }
 .surface button:focus-visible, .surface select:focus-visible, .surface input:focus-visible, .explorer input:focus-visible { outline: 2px solid var(--dsw-focus-ring-color); outline-offset: 2px; }
+.surface > details {
+  flex: none;
+  max-height: 38%;
+  overflow: auto;
+  padding: 0 14px;
+  border-bottom: .5px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-1);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.surface > details > summary { padding: 10px 0; cursor: pointer; color: var(--dsw-alias-label-secondary); font-weight: 500; }
+.surface > details > summary:focus-visible { outline: 2px solid var(--dsw-focus-ring-color); outline-offset: -2px; }
+.surface > details[open] { padding-bottom: 14px; }
+.surface > details button, .surface > details input, .surface > details select, .surface > details textarea {
+  max-width: 100%;
+  padding: 6px 9px;
+  margin: 4px 6px 4px 0;
+  border: .5px solid var(--dsw-alias-border-l2);
+  border-radius: var(--dsw-radius-md);
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+}
+.surface > details label { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-right: 12px; }
+.surface > details input[type='number'] { width: 72px; }
+.surface > details button:hover:not(:disabled) { border-color: var(--dsw-alias-brand-primary); background: var(--dsw-alias-bg-layer-2); }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); font-size: 12px; }
 .toolbar button, .pageHeading button, .empty button, .notice button, .captureForm button { padding: 6px 10px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-2); font-size: 12px; }
 .toolbar button[aria-expanded='true'] { color: var(--dsw-alias-brand-primary); }
