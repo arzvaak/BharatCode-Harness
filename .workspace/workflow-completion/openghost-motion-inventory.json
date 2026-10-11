@@ -1,0 +1,454 @@
+{
+  "upstreamCommit": "2646bb9b8ae526a8bdc6646cc70cba36f6a551d2",
+  "method": "Static source markers, not number of animations or runtime coverage",
+  "modules": [
+    {
+      "file": "approval-card.js",
+      "line": 15,
+      "waapi": 3,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "ask-card.js",
+      "line": 27,
+      "waapi": 16,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "attachments.js",
+      "line": 23,
+      "waapi": 3,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "browser-panel.js",
+      "line": 17,
+      "waapi": 2,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "browser-toggle.js",
+      "line": 22,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 1,
+      "reduced": true
+    },
+    {
+      "file": "chat-list.js",
+      "line": 15,
+      "waapi": 6,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "chat.js",
+      "line": 239,
+      "waapi": 4,
+      "raf": 6,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "clear-button.js",
+      "line": 16,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": false
+    },
+    {
+      "file": "composer-text.js",
+      "line": 30,
+      "waapi": 1,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "desktop.js",
+      "line": 19,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "diagram.js",
+      "line": 138,
+      "waapi": 4,
+      "raf": 4,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "dock.js",
+      "line": 69,
+      "waapi": 14,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "dust.js",
+      "line": 33,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "effort-morph.js",
+      "line": 22,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "effort-paint.js",
+      "line": 32,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "effort-slider.js",
+      "line": 28,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "effort-stage.js",
+      "line": 27,
+      "waapi": 8,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "folder-pill.js",
+      "line": 10,
+      "waapi": 1,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "ghost-thinking.js",
+      "line": 63,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "icon-button.js",
+      "line": 7,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "link-chip.js",
+      "line": 16,
+      "waapi": 1,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "lock-ui.js",
+      "line": 50,
+      "waapi": 36,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "media-embed.js",
+      "line": 30,
+      "waapi": 1,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "media-slider.js",
+      "line": 20,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "memory.js",
+      "line": 166,
+      "waapi": 7,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "message-fold.js",
+      "line": 13,
+      "waapi": 1,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "mini-chat.js",
+      "line": 19,
+      "waapi": 1,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "mode-picker.js",
+      "line": 16,
+      "waapi": 3,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "model-button.js",
+      "line": 16,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "model-stage.js",
+      "line": 42,
+      "waapi": 23,
+      "raf": 3,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "notepad.js",
+      "line": 51,
+      "waapi": 18,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "photo-viewer.js",
+      "line": 24,
+      "waapi": 10,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "queued-ring.js",
+      "line": 26,
+      "waapi": 6,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "quick-chat.js",
+      "line": 57,
+      "waapi": 10,
+      "raf": 4,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "quick-photo.css",
+      "line": 50,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "row-glide.js",
+      "line": 37,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": false
+    },
+    {
+      "file": "row-menu.js",
+      "line": 29,
+      "waapi": 2,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "scrollbar.js",
+      "line": 14,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "selection-focus.js",
+      "line": 14,
+      "waapi": 2,
+      "raf": 1,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "selection-menu.js",
+      "line": 66,
+      "waapi": 0,
+      "raf": 1,
+      "keyframes": 0,
+      "reduced": false
+    },
+    {
+      "file": "settings-appearance.js",
+      "line": 216,
+      "waapi": 2,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "settings-button.js",
+      "line": 32,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": false
+    },
+    {
+      "file": "settings-general.js",
+      "line": 14,
+      "waapi": 2,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "settings-language.js",
+      "line": 17,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "settings-memory.js",
+      "line": 12,
+      "waapi": 3,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "settings-usage.js",
+      "line": 26,
+      "waapi": 0,
+      "raf": 4,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "settings.js",
+      "line": 28,
+      "waapi": 2,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "smooth-height.js",
+      "line": 6,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "splash.js",
+      "line": 135,
+      "waapi": 12,
+      "raf": 4,
+      "keyframes": 0,
+      "reduced": false
+    },
+    {
+      "file": "spotlight.js",
+      "line": 25,
+      "waapi": 3,
+      "raf": 1,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "stats-card.js",
+      "line": 23,
+      "waapi": 9,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "stream-view.js",
+      "line": 11,
+      "waapi": 0,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "styles.css",
+      "line": 597,
+      "waapi": 0,
+      "raf": 0,
+      "keyframes": 56,
+      "reduced": true
+    },
+    {
+      "file": "theme.js",
+      "line": 16,
+      "waapi": 1,
+      "raf": 0,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "usage-peek.js",
+      "line": 63,
+      "waapi": 4,
+      "raf": 1,
+      "keyframes": 0,
+      "reduced": true
+    },
+    {
+      "file": "welcome-ghost.js",
+      "line": 16,
+      "waapi": 5,
+      "raf": 2,
+      "keyframes": 0,
+      "reduced": true
+    }
+  ]
+}

@@ -16,6 +16,7 @@ import { AppsPanel } from './AppsPanel.tsx'
 import { AnalysisPanel } from './AnalysisPanel.tsx'
 import { DocumentPanel } from './DocumentPanel.tsx'
 import type { ResearchPreference, ResearchSection, WorkspaceSurfaceActions } from './surfaces.ts'
+import { useWorkflowMotion } from './motion.ts'
 import css from './surfaces.module.css'
 
 export type ResearchWorkspaceProps = DocumentPanelProps &
@@ -62,6 +63,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
   const [selectedJob, setSelectedJob] = useState<{ sessionId: SessionId; id: JobView['id'] }>()
   const jobs = props.jobs ?? []
   const jobId = selectedJob?.sessionId === sessionId && jobs.some(job => job.id === selectedJob.id) ? selectedJob.id : undefined
+  const motion = useWorkflowMotion<HTMLElement>(`${project?.workspaceId ?? ''}/${sessionId ?? ''}`, `${selected?.id ?? ''}/${passage?.start ?? ''}/${passage?.end ?? ''}`)
   const readerGeneration = useRef(0)
   const generation = useRef(0)
   const section = preference.section
@@ -197,7 +199,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
   const current = props.view?.active === undefined ? undefined : props.view.documents[props.view.active]
   const filtered = section === 'evidence' ? hits.filter(hit => evidenceKinds.includes(hit.kind)) : hits
   return (
-    <section className={css.surface} aria-label={t('research.workspace')} data-complexity={preference.complexity}>
+    <section ref={motion} className={css.surface} aria-label={t('research.workspace')} data-complexity={preference.complexity}>
       <div className={css.researchHeading}>
         <div>
           <span className={css.eyebrow}>{t('workflow.research')}</span>
@@ -517,7 +519,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
                     )}
                   </div>
                   {selected !== undefined && (
-                    <article className={css.reader} aria-label={t('research.reader')}>
+                    <article data-workflow-motion={selected.id} className={css.reader} aria-label={t('research.reader')}>
                       <header>
                         <h3>{selected.title}</h3>
                         <button
@@ -563,7 +565,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
                         )}
                       </pre>
                       {passage !== undefined && props.linkArtifacts !== undefined && (
-                        <form
+                        <form data-workflow-motion={`passage/${passage.start}/${passage.end}`}
                           onSubmit={(event) => {
                             event.preventDefault()
                             if (target !== undefined)

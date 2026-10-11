@@ -5,6 +5,7 @@ import type { WorkspaceId, WorkflowRecord, WorkflowPayload } from '@deepseek-ai/
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { WorkspaceSurfaceActions } from './surfaces.ts'
+import { useWorkflowMotion } from './motion.ts'
 import css from './surfaces.module.css'
 export function AnalysisPanel(
   props: PropsLocale<'workspace'> &
@@ -17,6 +18,7 @@ export function AnalysisPanel(
   const [parameters, setParameters] = useState('{}')
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
+  const motion = useWorkflowMotion<HTMLDivElement>(String(props.projectId), records)
   const generation = useRef(0)
   const reload = (): void => {
     const epoch = generation.current
@@ -89,7 +91,7 @@ export function AnalysisPanel(
       })
   }
   return (
-    <div className={css.analysis}>
+    <div ref={motion} className={css.analysis}>
       <details>
         <summary>{props.t('analysis.prepare')}</summary>
         <form
@@ -148,9 +150,9 @@ export function AnalysisPanel(
       {records.map(
         record =>
           record.payload.kind === 'analysis' && (
-            <article key={record.id}>
+            <article key={record.id} data-workflow-motion={`${record.id}/${record.payload.status}`}>
               <strong>{record.title}</strong>
-              <span>{props.t(`analysis.${record.payload.status}`)}</span>
+              <span className={css.runStatus} data-status={record.payload.status} role="status">{props.t(`analysis.${record.payload.status}`)}</span>
               <details>
                 <summary>{props.t('analysis.identity')}</summary>
                 <pre>{record.payload.environment}</pre>

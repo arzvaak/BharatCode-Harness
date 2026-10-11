@@ -4,6 +4,7 @@ import type { WorkspaceView } from '@deepseek-ai/dsh-api-workspace-controller/cl
 import type { WorkflowPayload, WorkflowRecord } from '@deepseek-ai/dsh-workspace/types'
 import { DocumentPanel, type DocumentPanelProps } from './DocumentPanel.tsx'
 import type { WorkspaceSurfaceActions } from './surfaces.ts'
+import { useWorkflowMotion } from './motion.ts'
 import css from './surfaces.module.css'
 type Writing = Extract<WorkflowPayload, { kind: 'writing' }>
 const empty: Writing = {
@@ -28,6 +29,7 @@ export function WritingWorkspace(props: DocumentPanelProps & WorkspaceSurfaceAct
   const [sourcePaths, setSourcePaths] = useState('')
   const [consultation, setConsultation] = useState('continuity')
   const [structure, setStructure] = useState(false)
+  const motion = useWorkflowMotion<HTMLElement>(String(props.project?.workspaceId ?? ''), structure)
   useLayoutEffect(() => {
     ++generation.current
     let active = true
@@ -90,7 +92,7 @@ export function WritingWorkspace(props: DocumentPanelProps & WorkspaceSurfaceAct
     }, 1000)
   }
   return (
-    <section className={css.surface} aria-label={props.t('writing.workspace')}>
+    <section ref={motion} className={css.surface} aria-label={props.t('writing.workspace')}>
       <div className={css.toolbar}>
         <button
           type="button"
@@ -106,77 +108,79 @@ export function WritingWorkspace(props: DocumentPanelProps & WorkspaceSurfaceAct
         </button>
       </div>
       {structure && (
-        <div className={css.writingBrief}>
+        <div className={css.writingBrief} data-workflow-motion="structure">
           {error !== undefined && <p role="alert">{error}</p>}
-          <label>
-            {props.t('writing.specialization')}
-            <select
-              aria-label={props.t('writing.specialization')}
-              value={draft.specialization}
-              onChange={(event) => {
-                setDraft({ ...draft, specialization: event.target.value as Writing['specialization'] })
-              }}
-            >
-              {(['general', 'novel', 'drama', 'game', 'recap'] as const).map(value => (
-                <option key={value} value={value}>
-                  {props.t(`writing.${value}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          {(['brief', 'style'] as const).map(field => (
-            <label key={field}>
-              {props.t(`writing.${field}`)}
-              <textarea
-                aria-label={props.t(`writing.${field}`)}
-                value={draft[field]}
-                onChange={(event) => {
-                  setDraft({ ...draft, [field]: event.target.value })
-                }}
-              />
-            </label>
-          ))}
-          {(
-            ['outline', ...(draft.specialization === 'general' ? [] : ['canon', 'tentative', 'characters', 'chronology'])] as (
-              | 'outline'
-              | 'canon'
-              | 'tentative'
-              | 'characters'
-              | 'chronology'
-            )[]
-          ).map(field => (
-            <label key={field}>
-              {props.t(`writing.${field}`)}
-              <textarea
-                aria-label={props.t(`writing.${field}`)}
-                value={draft[field].join('\n')}
-                onChange={(event) => {
-                  setDraft({ ...draft, [field]: event.target.value.split('\n') })
-                }}
-              />
-            </label>
-          ))}
-          {draft.specialization !== 'general' && (
+          <div className={css.writingFields}>
             <label>
-              {props.t('writing.scenes')}
-              <textarea
-                aria-label={props.t('writing.scenes')}
-                value={draft.scenes.map(value => `${value.title}: ${value.objective}`).join('\n')}
+              {props.t('writing.specialization')}
+              <select
+                aria-label={props.t('writing.specialization')}
+                value={draft.specialization}
                 onChange={(event) => {
-                  setDraft({
-                    ...draft,
-                    scenes: event.target.value.split('\n').map((value) => {
-                      const index = value.indexOf(':')
-                      return {
-                        title: index < 0 ? value : value.slice(0, index),
-                        objective: index < 0 ? '' : value.slice(index + 1).trim(),
-                      }
-                    }),
-                  })
+                  setDraft({ ...draft, specialization: event.target.value as Writing['specialization'] })
                 }}
-              />
+              >
+                {(['general', 'novel', 'drama', 'game', 'recap'] as const).map(value => (
+                  <option key={value} value={value}>
+                    {props.t(`writing.${value}`)}
+                  </option>
+                ))}
+              </select>
             </label>
-          )}
+            {(['brief', 'style'] as const).map(field => (
+              <label key={field}>
+                {props.t(`writing.${field}`)}
+                <textarea
+                  aria-label={props.t(`writing.${field}`)}
+                  value={draft[field]}
+                  onChange={(event) => {
+                    setDraft({ ...draft, [field]: event.target.value })
+                  }}
+                />
+              </label>
+            ))}
+            {(
+              ['outline', ...(draft.specialization === 'general' ? [] : ['canon', 'tentative', 'characters', 'chronology'])] as (
+                | 'outline'
+                | 'canon'
+                | 'tentative'
+                | 'characters'
+                | 'chronology'
+              )[]
+            ).map(field => (
+              <label key={field}>
+                {props.t(`writing.${field}`)}
+                <textarea
+                  aria-label={props.t(`writing.${field}`)}
+                  value={draft[field].join('\n')}
+                  onChange={(event) => {
+                    setDraft({ ...draft, [field]: event.target.value.split('\n') })
+                  }}
+                />
+              </label>
+            ))}
+            {draft.specialization !== 'general' && (
+              <label>
+                {props.t('writing.scenes')}
+                <textarea
+                  aria-label={props.t('writing.scenes')}
+                  value={draft.scenes.map(value => `${value.title}: ${value.objective}`).join('\n')}
+                  onChange={(event) => {
+                    setDraft({
+                      ...draft,
+                      scenes: event.target.value.split('\n').map((value) => {
+                        const index = value.indexOf(':')
+                        return {
+                          title: index < 0 ? value : value.slice(0, index),
+                          objective: index < 0 ? '' : value.slice(index + 1).trim(),
+                        }
+                      }),
+                    })
+                  }}
+                />
+              </label>
+            )}
+          </div>
           <label>
             {props.t('writing.sourceNotes')}
             <textarea
@@ -260,7 +264,9 @@ export function WritingWorkspace(props: DocumentPanelProps & WorkspaceSurfaceAct
           </button>
         </div>
       )}
-      <DocumentPanel {...props} hideFiles profile="writing" />
+      <div className={css.writingDocument}>
+        <DocumentPanel {...props} hideFiles profile="writing" />
+      </div>
     </section>
   )
 }

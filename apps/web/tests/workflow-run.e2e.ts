@@ -245,6 +245,20 @@ describe.skipIf(MODE === 'record')('web e2e: durable workflow run in Chat', () =
     await page.getByRole('region', { name: 'Writing', exact: true }).getByRole('button', { name: 'Project structure', exact: true }).click()
     await expect.poll(() => page.getByLabel('Established canon', { exact: true }).inputValue()).toBe('Mira is the archivist.')
     expect(await page.getByLabel('Tentative ideas', { exact: true }).inputValue()).toBe('The missing page may be a decoy.')
+    const brief = page.getByLabel('Brief', { exact: true })
+    const controls = await brief.evaluate(element => ({
+      border: getComputedStyle(element).borderTopWidth,
+      background: getComputedStyle(element).backgroundColor,
+    }))
+    expect(controls.border).toBe('1px')
+    expect(controls.background).not.toBe('rgba(0, 0, 0, 0)')
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const structure = page.getByRole('region', { name: 'Writing', exact: true }).getByRole('button', { name: 'Project structure', exact: true })
+    await structure.click()
+    await structure.click()
+    expect(await brief.inputValue()).toBe('A researcher follows a disputed source.')
+    expect(await page.locator('[data-workflow-motion]').evaluateAll(nodes => nodes.reduce((count, node) => count + node.getAnimations().length, 0))).toBe(0)
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
     const snapshot = await captureStableAria(page, '[aria-label="Writing workspace"]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(join(SNAPSHOT_DIR, 'writing.expected.md'), snapshot, MODE)
   }, 60_000)

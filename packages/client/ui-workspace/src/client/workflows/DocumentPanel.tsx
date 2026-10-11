@@ -5,6 +5,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { WorkspaceKey } from '../locales.ts'
 import type { EditorSession } from './documents.ts'
+import { useWorkflowMotion } from './motion.ts'
 import css from './documents.module.css'
 import { acceptEdit, proposeEdit, documentOutline, type EditProposal, type SelectedText } from './editor-review.ts'
 const CodeEditor = lazy(() => import('./CodeEditor.tsx').then(value => ({ default: value.CodeEditor })))
@@ -94,6 +95,7 @@ export function DocumentPanel({
       active = false
     }
   }, [sessionId, document?.path, evidenceReload, actions.documentEvidence])
+  const motion = useWorkflowMotion<HTMLElement>(`${sessionId ?? ''}/${document?.path ?? ''}`, `${selection?.start ?? ''}/${selection?.end ?? ''}/${proposal !== undefined}`)
   const richSupported =
     document !== undefined && /\.(md|markdown)$/.test(document.path) && !/```|~~~|<[^>]+>|^\|/m.test(document.text)
   const select = (value: SelectedText): void => {
@@ -121,7 +123,7 @@ export function DocumentPanel({
     }
   }
   return (
-    <section className={css.panel} aria-label={t(titleKey)} data-profile={profile}>
+    <section ref={motion} className={css.panel} aria-label={t(titleKey)} data-profile={profile}>
       <div className={css.heading}>
         <strong title={document?.path}>{hideFiles ? t(titleKey) : (document?.path.split(/[\\/]/).at(-1) ?? t(titleKey))}</strong>
         <button type="button" onClick={collapseEditor} aria-label={t('editor.collapse')} title={t('editor.collapse')}>
@@ -275,7 +277,7 @@ export function DocumentPanel({
           </div>
           {reviewError !== undefined && <p role="alert">{reviewError}</p>}
           {selection !== undefined && (
-            <details className={css.review} open>
+            <details className={css.review} data-workflow-motion={`selection/${selection.start}/${selection.end}`} open>
               <summary>{t('editor.reviewSelection')}</summary>
               <blockquote>{selection.text}</blockquote>
               {actions.commentSelection !== undefined && (
@@ -388,7 +390,7 @@ export function DocumentPanel({
             </details>
           )}
           {evidence !== undefined && (evidence.comments.length > 0 || evidence.sources.length > 0) && (
-            <details className={css.review} open>
+            <details className={css.review} data-workflow-motion="proposal" open>
               <summary>{t('editor.evidence')}</summary>
               {evidence.artifact?.text !== document.text && <p>{t('editor.evidenceStale')}</p>}
               {evidence.comments.map(
