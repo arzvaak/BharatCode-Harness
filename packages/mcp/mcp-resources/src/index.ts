@@ -145,7 +145,12 @@ export class McpResourceRuntime extends Service {
     )
   }
 
-  /** List UI resources from the caller-visible connection scope only. */
+  /**
+   * List UI resources from the caller-visible connection scope only.
+   * @param agent - Agent whose scope controls resource admission.
+   * @param signal - Cancellation signal for the operation.
+   * @returns Apps negotiated within the active session scope.
+   */
   async applications(agent: NonNullable<ToolExecution['agent']>, signal: AbortSignal): Promise<readonly McpAppDescriptor[]> {
     const providers = this.layers.merge(agent, layer => layer.servers)
     const values = await Promise.all(
@@ -155,7 +160,15 @@ export class McpResourceRuntime extends Service {
     )
     return values.flat()
   }
-  /** Recheck the negotiated tool URI at every read, including after reconnect. */
+  /**
+   * Recheck the negotiated tool URI at every read, including after reconnect.
+   * @param agent - Agent whose scope controls resource admission.
+   * @param expectedGeneration - Optional generation that must still match the negotiated app.
+   * @param server - Negotiated MCP server identity.
+   * @param signal - Cancellation signal for the operation.
+   * @param tool - Negotiated tool name.
+   * @returns Authorized app resource content.
+   */
   async applicationResource(
     server: string,
     tool: string,

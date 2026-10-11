@@ -1,4 +1,8 @@
-/** A trusted outer relay blocks navigation as well as subresource network access. */
+/**
+ * Wrap app HTML in the sandbox bootstrap document with a restrictive resource policy.
+ * @param html - Admitted MCP app HTML resource.
+ * @returns Sandbox document containing the bootstrap and resource policy.
+ */
 export function sandboxDocument(html: string): string {
   const policy =
     "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob:; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"

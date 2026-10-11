@@ -1,5 +1,9 @@
 /** Worker lifetime belongs to the plugin, including Monaco's shared worker clients. */
 import workerSource from './monaco-worker.ts?raw'
+/**
+ * Install plugin-owned Monaco workers and track their object URLs.
+ * @returns Disposer that terminates workers and restores the previous environment.
+ */
 export function configureMonacoWorkers(): () => void {
   const previous = globalThis.MonacoEnvironment
   const workers = new Set<Worker>()

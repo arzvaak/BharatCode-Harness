@@ -2,7 +2,7 @@
 
 Inspected on 11 October 2026. This is a source audit and design proposal, not a
 claim that every effect was exercised or that aesthetic quality was measured.
-BharatCode implementation baseline: `75dd6ae257`.
+BharatCode implementation baseline: the connected workflow implementation on `implementation/workflow-completion`.
 
 The earlier delivery verified functionality, recovery, ownership, and security.
 It did not deliver or verify a complete OpenGhost-level visual/motion treatment.

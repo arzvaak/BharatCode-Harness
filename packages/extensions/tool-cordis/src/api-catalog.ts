@@ -1537,6 +1537,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'server', description: 'configured server name, unique in this scope.' }, { name: 'provider', description: 'connection-owned resource operations.' }],
         returns: 'the effect disposer for this exact registration.',
       },
+      {
+        signature: 'async applications(agent: NonNullable<ToolExecution[\'agent\']>, signal: AbortSignal): Promise<readonly McpAppDescriptor[]>',
+        description: 'List UI resources from the caller-visible connection scope only.',
+        parameters: [{ name: 'agent', description: 'Agent whose scope controls resource admission.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }],
+        returns: 'Apps negotiated within the active session scope.',
+      },
+      {
+        signature: 'async applicationResource( server: string, tool: string, agent: NonNullable<ToolExecution[\'agent\']>, signal: AbortSignal, expectedGeneration: string, ): Promise<JsonValue>',
+        description: 'Recheck the negotiated tool URI at every read, including after reconnect.',
+        parameters: [{ name: 'agent', description: 'Agent whose scope controls resource admission.' }, { name: 'expectedGeneration', description: 'Optional generation that must still match the negotiated app.' }, { name: 'server', description: 'Negotiated MCP server identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'tool', description: 'Negotiated tool name.' }],
+        returns: 'Authorized app resource content.',
+      },
     ],
   },
   {
@@ -1840,6 +1852,30 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Durable project evidence service independent of optional memory/search integrations.',
     methods: [
       {
+        signature: 'latestForPath(projectId: WorkspaceId, path: string): ArtifactRevision | undefined',
+        description: 'Find a registered file\'s latest revision independently of search result limits.',
+        parameters: [{ name: 'path', description: 'Project-owned file path.' }, { name: 'projectId', description: 'Registered project identity.' }],
+        returns: 'Latest captured revision, or undefined when the file is unregistered.',
+      },
+      {
+        signature: 'workflowRecords(projectId: WorkspaceId): readonly WorkflowRecord[]',
+        description: 'Read the durable workflow journal for a registered project.',
+        parameters: [{ name: 'projectId', description: 'Selected project.' }],
+        returns: 'Durable workflow records for the project.',
+      },
+      {
+        signature: 'saveWorkflowRecord(request: SaveWorkflowRecord): Promise<WorkflowRecord>',
+        description: 'Persist a revision-checked workflow record and validate its project evidence.',
+        parameters: [{ name: 'request', description: 'Revision checked workflow content.' }],
+        returns: 'Persisted workflow record with its new revision.',
+      },
+      {
+        signature: 'async captureAnalysisOutput(projectId: WorkspaceId, recordId: string, title: string, text: string): Promise<ArtifactRevision>',
+        description: 'Capture a generated analysis output as an immutable project revision.',
+        parameters: [{ name: 'projectId', description: 'Owning project.' }, { name: 'recordId', description: 'Execution record.' }, { name: 'title', description: 'Human label.' }, { name: 'text', description: 'Complete executed notebook.' }],
+        returns: 'Captured output revision.',
+      },
+      {
         signature: 'async register(request: RegisterArtifactRequest): Promise<ArtifactRevision>',
         description: 'Capture a complete registered UTF-8 file without changing it.',
         parameters: [{ name: 'request', description: 'Selected project source and evidence classification.' }],
@@ -1924,6 +1960,90 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     summary: 'Generated `knowledge` Remote owner, independent of optional integrations.',
     description: 'Generated `knowledge` Remote owner, independent of optional integrations.',
     methods: [
+      {
+        signature: '@Remote(\'requestSnapshot\') async requestSnapshot(sessionId: SessionId, turn: number, step: number): Promise<string>',
+        description: 'Internal, read-only request reconstruction; no additional product panel.',
+        parameters: [{ name: 'sessionId', description: 'Owning session identity.' }, { name: 'step', description: 'Logged request step index.' }, { name: 'turn', description: 'Logged turn index.' }],
+        returns: 'Serialized captured request.',
+      },
+      {
+        signature: '@Remote(\'requestDiff\') async requestDiff( sessionId: SessionId, beforeTurn: number, beforeStep: number, afterTurn: number, afterStep: number, ): Promise<string>',
+        description: 'Compare two logged requests without a model call.',
+        parameters: [{ name: 'afterStep', description: 'Comparison request step index.' }, { name: 'afterTurn', description: 'Comparison turn index.' }, { name: 'beforeStep', description: 'Baseline request step index.' }, { name: 'beforeTurn', description: 'Baseline turn index.' }, { name: 'sessionId', description: 'Owning session identity.' }],
+        returns: 'Serialized difference between the captured requests.',
+      },
+      {
+        signature: '@Remote(\'replayRequest\') async replayRequest( sessionId: SessionId, turn: number, step: number, consent: string, removeTools: string[], signal: AbortSignal, ): Promise<ArtifactRevision>',
+        description: 'Explicit paid sensitivity replay. Tool calls are returned as evidence, never dispatched.',
+        parameters: [{ name: 'consent', description: 'Explicit consent to replay the captured model request.' }, { name: 'removeTools', description: 'Tool names to omit from the captured request.' }, { name: 'sessionId', description: 'Owning session identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'step', description: 'Logged request step index.' }, { name: 'turn', description: 'Logged turn index.' }],
+        returns: 'Immutable captured replay result.',
+      },
+      {
+        signature: '@Remote(\'applications\') async applications(sessionId: SessionId, signal: AbortSignal): Promise<readonly WorkspaceApp[]>',
+        description: 'List only negotiated MCP Apps visible to the active session scope.',
+        parameters: [{ name: 'sessionId', description: 'Owning session identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }],
+        returns: 'Apps negotiated within the active session scope.',
+      },
+      {
+        signature: '@Remote(\'applicationResource\') async applicationResource( sessionId: SessionId, server: string, tool: string, signal: AbortSignal, ): Promise<WorkspaceAppResource>',
+        description: 'Read only the negotiated UI resource; arbitrary resource URIs are not accepted.',
+        parameters: [{ name: 'server', description: 'Negotiated MCP server identity.' }, { name: 'sessionId', description: 'Owning session identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'tool', description: 'Negotiated tool name.' }],
+        returns: 'Authorized app resource content.',
+      },
+      {
+        signature: '@Remote(\'applicationCall\') async applicationCall( sessionId: SessionId, server: string, hostTool: string, generation: string, tool: string, argumentsJson: string, signal: AbortSignal, ): Promise<string>',
+        description: 'App calls pass through the ordinary tool policy pipeline and remain in its owning project journal.',
+        parameters: [{ name: 'argumentsJson', description: 'JSON arguments passed to the authorized tool.' }, { name: 'generation', description: 'App generation authorized for this call.' }, { name: 'hostTool', description: 'Tool whose UI resource owns the app.' }, { name: 'server', description: 'Negotiated MCP server identity.' }, { name: 'sessionId', description: 'Owning session identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'tool', description: 'Negotiated tool name.' }],
+        returns: 'Serialized authorized tool result.',
+      },
+      {
+        signature: '@Remote(\'captureChange\') async captureChange(sessionId: SessionId, signal: AbortSignal): Promise<{ commit: string; artifact: ArtifactRevision }>',
+        description: 'Capture the complete tracked and untracked Git change at the owning project.',
+        parameters: [{ name: 'sessionId', description: 'Owning session identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }],
+        returns: 'Current Git commit and captured change revision.',
+      },
+      {
+        signature: '@Remote(\'recordVerification\') async recordVerification( sessionId: SessionId, changeId: ArtifactRevisionId, commit: string, paths: string[], method: \'playwright\' | \'devtools\' | \'manual\' | \'test\', status: \'passed\' | \'failed\' | \'cancelled\', detail: string, signal: AbortSignal, ): Promise<WorkflowRecord>',
+        description: 'Attach declared verification evidence only while its exact Git change is still current.',
+        parameters: [{ name: 'changeId', description: 'Captured Git change revision.' }, { name: 'commit', description: 'Git commit bound to the captured change.' }, { name: 'detail', description: 'Human-readable verification evidence.' }, { name: 'method', description: 'Verification method used.' }, { name: 'paths', description: 'Project evidence paths to capture.' }, { name: 'sessionId', description: 'Owning session identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'status', description: 'Declared verification outcome.' }],
+        returns: 'Persisted verification journal record.',
+      },
+      {
+        signature: '@Remote(\'languageReview\') async languageReview( sessionId: SessionId, path: string, text: string, line: number, character: number, newName: string | undefined, signal: AbortSignal, ): Promise<LanguageReview>',
+        description: 'Fetch diagnostics and preview code actions/rename for the exact saved revision.',
+        parameters: [{ name: 'character', description: 'Zero-based cursor character.' }, { name: 'line', description: 'Zero-based cursor line.' }, { name: 'newName', description: 'Optional rename target to preview.' }, { name: 'path', description: 'Project-owned file path.' }, { name: 'sessionId', description: 'Owning session identity.' }, { name: 'signal', description: 'Cancellation signal for the operation.' }, { name: 'text', description: 'Complete saved file content to check.' }],
+        returns: 'Diagnostics and proposed edits for the checked revision.',
+      },
+      {
+        signature: '@Remote(\'documentEvidence\') async documentEvidence(sessionId: SessionId, path: string): Promise<DocumentEvidence>',
+        description: 'Read captured evidence for a project-owned file without model work.',
+        parameters: [{ name: 'path', description: 'Project-owned file path.' }, { name: 'sessionId', description: 'Owning session identity.' }],
+        returns: 'Captured source relations and anchored comments.',
+      },
+      {
+        signature: '@Remote(\'commentSelection\') async commentSelection( sessionId: SessionId, path: string, text: string, start: number, end: number, comment: string, ): Promise<WorkflowRecord>',
+        description: 'Anchor a comment only when the full saved file matches the selected draft.',
+        parameters: [{ name: 'comment', description: 'Comment anchored to the selected passage.' }, { name: 'end', description: 'Exclusive selection offset.' }, { name: 'path', description: 'Project-owned file path.' }, { name: 'sessionId', description: 'Owning session identity.' }, { name: 'start', description: 'Inclusive selection offset.' }, { name: 'text', description: 'Complete saved file content to check.' }],
+        returns: 'Persisted anchored comment record.',
+      },
+      {
+        signature: '@Remote(\'executeNotebook\') async executeNotebook(projectId: WorkspaceId, id: string, sessionId: SessionId): Promise<string>',
+        description: 'Execute a prepared run.',
+        parameters: [{ name: 'projectId', description: 'Selected project.' }, { name: 'id', description: 'Prepared analysis.' }, { name: 'sessionId', description: 'Owning live Session.' }],
+        returns: 'Registered job identity.',
+      },
+      {
+        signature: '@Remote(\'workflowRecords\') workflowRecords(projectId: WorkspaceId): readonly WorkflowRecord[]',
+        description: 'Read the durable workflow journal for a registered project.',
+        parameters: [{ name: 'projectId', description: 'Selected project.' }],
+        returns: 'Durable workflow records for the project.',
+      },
+      {
+        signature: '@Remote(\'saveWorkflowRecord\') saveWorkflowRecord(request: SaveWorkflowRecord): Promise<WorkflowRecord>',
+        description: 'Persist a revision-checked workflow record and validate its project evidence.',
+        parameters: [{ name: 'request', description: 'Revision checked workflow record.' }],
+        returns: 'Persisted workflow record with its new revision.',
+      },
       {
         signature: '@Remote(\'register\') register(request: RegisterArtifactRequest): Promise<ArtifactRevision>',
         description: 'Register immutable project evidence.',
@@ -4809,7 +4929,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ArtifactRevision',
-    declaration: 'export interface ArtifactRevision {\n    readonly id: ArtifactRevisionId;\n    readonly projectId: WorkspaceId;\n    readonly path: string;\n    readonly title: string;\n    readonly kind: \'source\' | \'note\' | \'hypothesis\' | \'finding\' | \'decision\' | \'requirement\' | \'manuscript\';\n    readonly revision: string;\n    readonly text: string;\n    readonly capturedAt: string;\n    readonly origin?: SessionArtifactOrigin | undefined;\n}',
+    declaration: 'export interface ArtifactRevision {\n    readonly id: ArtifactRevisionId;\n    readonly projectId: WorkspaceId;\n    readonly path: string;\n    readonly title: string;\n    readonly kind: \'source\' | \'note\' | \'hypothesis\' | \'finding\' | \'decision\' | \'requirement\' | \'manuscript\';\n    readonly revision: string;\n    readonly text: string;\n    readonly capturedAt: string;\n    readonly generatedBy?: string | undefined;\n    readonly origin?: SessionArtifactOrigin | undefined;\n}',
   },
   {
     name: 'ArtifactRevisionId',
@@ -5356,6 +5476,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface DirectoryRegistrationHandle {\n    (): void;\n    replace(entries: readonly LlmConfigurableProvider[]): void;\n}',
   },
   {
+    name: 'DocumentEvidence',
+    declaration: 'export interface DocumentEvidence {\n    artifact?: ArtifactRevision;\n    comments: readonly WorkflowRecord[];\n    sources: readonly {\n        relation: ArtifactRelation;\n        artifact: ArtifactRevision;\n        status: \'current\' | \'stale\' | \'missing\' | \'captured\';\n    }[];\n}',
+  },
+  {
     name: 'DocumentRecoveryDraft',
     declaration: 'export interface DocumentRecoveryDraft {\n    readonly sessionId: SessionId;\n    readonly path: string;\n    readonly baseVersion: string;\n    readonly text: string;\n    readonly revision: string;\n    readonly updatedAt: string;\n}',
   },
@@ -5872,8 +5996,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface KvUnitDescriptor {\n    readonly name: string;\n    readonly version: number;\n    readonly tables: readonly string[];\n    readonly hasGlobal: boolean;\n    readonly layout?: \'single\' | \'per-record\';\n    readonly compatibleVersions?: readonly number[];\n}',
   },
   {
+    name: 'LanguageDiagnostic',
+    declaration: 'export interface LanguageDiagnostic {\n    severity: number;\n    message: string;\n    range: {\n        start: {\n            line: number;\n            character: number;\n        };\n        end: {\n            line: number;\n            character: number;\n        };\n    };\n    source?: string;\n    code?: string | number;\n}',
+  },
+  {
+    name: 'LanguageReview',
+    declaration: 'export interface LanguageReview {\n    path: string;\n    base: string;\n    diagnostics: readonly LanguageDiagnostic[];\n    proposals: readonly {\n        title: string;\n        files: readonly {\n            path: string;\n            before: string;\n            after: string;\n        }[];\n    }[];\n}',
+  },
+  {
     name: 'LinkArtifactsRequest',
-    declaration: 'export interface LinkArtifactsRequest {\n    readonly projectId: WorkspaceId;\n    readonly from: ArtifactRevisionId;\n    readonly to: ArtifactRevisionId;\n    readonly relation: \'cites\' | \'supports\' | \'conflicts\' | \'implements\' | \'supersedes\';\n    readonly destinationProjectId?: WorkspaceId | undefined;\n}',
+    declaration: 'export interface LinkArtifactsRequest {\n    readonly projectId: WorkspaceId;\n    readonly from: ArtifactRevisionId;\n    readonly to: ArtifactRevisionId;\n    readonly relation: \'cites\' | \'supports\' | \'conflicts\' | \'implements\' | \'supersedes\';\n    readonly passage?: {\n        readonly start: number;\n        readonly end: number;\n        readonly quote: string;\n    } | undefined;\n    readonly destinationProjectId?: WorkspaceId | undefined;\n}',
   },
   {
     name: 'LlmAdapter',
@@ -6000,8 +6132,12 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ManualCompactAgentContext extends CompactionAgentContext {\n    runMaintenance<T>(task: (signal: AbortSignal) => Promise<T>): Promise<T>;\n}',
   },
   {
+    name: 'McpAppDescriptor',
+    declaration: 'export interface McpAppDescriptor {\n    server: string;\n    tool: string;\n    resourceUri: string;\n    title: string;\n    allowedTools: readonly string[];\n    generation: string;\n}',
+  },
+  {
     name: 'McpResourceProvider',
-    declaration: 'export interface McpResourceProvider {\n    request(request: McpResourceRequest, exec: ToolExecution): Promise<JsonValue>;\n}',
+    declaration: 'export interface McpResourceProvider {\n    applications?(signal: AbortSignal): Promise<readonly Omit<McpAppDescriptor, \'server\'>[]>;\n    applicationResource?(uri: string, signal: AbortSignal, expectedGeneration: string): Promise<JsonValue>;\n    request(request: McpResourceRequest, exec: ToolExecution): Promise<JsonValue>;\n}',
   },
   {
     name: 'McpResourceRequest',
@@ -6626,6 +6762,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SaveTextSpill',
     declaration: 'export interface SaveTextSpill {\n    owner: SpillOwner;\n    source: SpillSource;\n    suggestedName: string;\n    content: string;\n}',
+  },
+  {
+    name: 'SaveWorkflowRecord',
+    declaration: 'export interface SaveWorkflowRecord {\n    id: string;\n    projectId: WorkspaceId;\n    title: string;\n    expectedRevision: string | null;\n    payload: WorkflowPayload;\n}',
   },
   {
     name: 'SaveWorkspaceDocumentRequest',
@@ -7945,7 +8085,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolDefinition',
-    declaration: 'export interface ToolDefinition extends ToolSchema {\n    readonly output: ToolOutputDefinition;\n    execute(args: unknown, exec: ToolRunContext): Promise<unknown>;\n    projectContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    timeoutMs?: number;\n    isConcurrencySafe?(args: unknown): boolean;\n    presentCall?(args: unknown): ToolCallView | undefined;\n    presentResult?(args: unknown, result: ToolResult): ToolResultView | undefined;\n}',
+    declaration: 'export interface ToolDefinition extends ToolSchema {\n    readonly audience?: \'app\';\n    readonly output: ToolOutputDefinition;\n    execute(args: unknown, exec: ToolRunContext): Promise<unknown>;\n    projectContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    finalizeContent?(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>): ContentBlock[] | undefined;\n    timeoutMs?: number;\n    isConcurrencySafe?(args: unknown): boolean;\n    presentCall?(args: unknown): ToolCallView | undefined;\n    presentResult?(args: unknown, result: ToolResult): ToolResultView | undefined;\n}',
   },
   {
     name: 'ToolDispatchExecution',
@@ -7965,7 +8105,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolExecutionInput',
-    declaration: 'export interface ToolExecutionInput {\n    readonly callId: ToolCallId;\n    readonly rootCallId?: ToolCallId;\n    readonly name: string;\n    readonly schema?: ToolSchema;\n    readonly arguments: unknown;\n    readonly agent?: Agent;\n    readonly parent?: ToolExecutionToken;\n    readonly signal: AbortSignal;\n}',
+    declaration: 'export interface ToolExecutionInput {\n    readonly audience?: \'app\';\n    readonly callId: ToolCallId;\n    readonly rootCallId?: ToolCallId;\n    readonly name: string;\n    readonly schema?: ToolSchema;\n    readonly arguments: unknown;\n    readonly agent?: Agent;\n    readonly parent?: ToolExecutionToken;\n    readonly signal: AbortSignal;\n}',
   },
   {
     name: 'ToolExecutionMode',
@@ -8328,12 +8468,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface WorkflowMeta {\n    name: string;\n    description: string;\n    whenToUse?: string;\n    phases?: WorkflowPhase[];\n}',
   },
   {
+    name: 'WorkflowPayload',
+    declaration: 'export type WorkflowPayload = z.infer<typeof workflowPayloadSchema>;',
+  },
+  {
     name: 'WorkflowPhase',
     declaration: 'export interface WorkflowPhase {\n    title: string;\n    detail?: string;\n    provider?: string;\n    model?: string;\n}',
   },
   {
     name: 'WorkflowProfile',
     declaration: 'export type WorkflowProfile = \'writing\' | \'research\' | \'coding\';',
+  },
+  {
+    name: 'WorkflowRecord',
+    declaration: 'export interface WorkflowRecord {\n    id: string;\n    projectId: WorkspaceId;\n    title: string;\n    revision: string;\n    updatedAt: string;\n    payload: WorkflowPayload;\n}',
   },
   {
     name: 'WorkflowResult',
@@ -8366,6 +8514,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'Workspace',
     declaration: 'export interface Workspace {\n    readonly id: WorkspaceId;\n    readonly path: string;\n    readonly title: string;\n    readonly createdAt: string;\n    readonly updatedAt: string;\n    readonly sessionIds: readonly SessionId[];\n    setTitle(title: string): Promise<void>;\n    attachSession(sessionId: SessionId): Promise<void>;\n    insertSessionBefore(sessionId: SessionId, beforeSessionId?: SessionId): Promise<void>;\n    detachSession(sessionId: SessionId): Promise<void>;\n    status(): Promise<\'ok\' | \'missing-dir\'>;\n}',
+  },
+  {
+    name: 'WorkspaceApp',
+    declaration: 'export interface WorkspaceApp {\n    server: string;\n    tool: string;\n    resourceUri: string;\n    title: string;\n    allowedTools: readonly string[];\n    generation: string;\n}',
+  },
+  {
+    name: 'WorkspaceAppResource',
+    declaration: 'export interface WorkspaceAppResource {\n    app: WorkspaceApp;\n    html: string;\n}',
   },
   {
     name: 'WorkspaceArchiveSessionRequest',

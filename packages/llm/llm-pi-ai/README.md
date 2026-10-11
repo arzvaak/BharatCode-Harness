@@ -198,9 +198,7 @@ Conversion preserves logical request order, while image handles and offload plac
 
 #### What the model sees
 
-pi-ai events become harness reasoning, text, tool-call, usage, and finish chunks. The adapter passes parsed tool arguments to the harness as raw JSON strings.
-
-Complete malformed argument JSON still uses pi-ai's repair parser. Unclosed strings or containers retain the original argument bytes as assistant context instead of executing a shortened repaired call; even a provider `tool_calls` finish then maps to `max-tokens` so the auto-continuation bundle can resend the full history. Calls withheld by an explicit output-limit finish also retain their arguments for reissue. Projected recovery text omits native tool-call replay metadata. With `@local/max-tokens-continue` enabled, continuation appends to the same turn; its configured limit and cancellation still apply.
+pi-ai events become harness reasoning, text, tool-call, usage, and finish chunks. The adapter passes parsed tool arguments to the harness as raw JSON strings. Complete malformed argument JSON still uses pi-ai's repair parser. Unclosed strings or containers retain the original argument bytes as assistant context instead of executing a shortened repaired call; even a provider `tool_calls` finish then maps to `max-tokens` so the auto-continuation bundle can resend the full history. Calls withheld by an explicit output-limit finish also retain their arguments for reissue. Projected recovery text omits native tool-call replay metadata. With `@local/max-tokens-continue` enabled, continuation appends to the same turn; its configured limit and cancellation still apply.
 
 #### Token effect
 

@@ -160,7 +160,12 @@ export class ProjectKnowledge extends Service {
     this.revisions = domain.table('revisions')
     this.handoffs = domain.table('handoffs')
   }
-  /** Find a registered file's latest revision independently of search result limits. */
+  /**
+   * Find a registered file's latest revision independently of search result limits.
+   * @param path - Project-owned file path.
+   * @param projectId - Registered project identity.
+   * @returns Latest captured revision, or undefined when the file is unregistered.
+   */
   latestForPath(projectId: WorkspaceId, path: string): ArtifactRevision | undefined {
     let latest: ArtifactRevision | undefined
     for (const [, artifact] of this.table().entries()) {
@@ -169,12 +174,20 @@ export class ProjectKnowledge extends Service {
     }
     return latest === undefined ? undefined : structuredClone(latest)
   }
-  /** @param projectId - Selected project. @returns Durable workflow records. */
+  /**
+   * Read the durable workflow journal for a registered project.
+   * @param projectId - Selected project.
+   * @returns Durable workflow records for the project.
+   */
   workflowRecords(projectId: WorkspaceId): readonly WorkflowRecord[] {
     if (this.ctx.workspaceRegistry.get(projectId) === undefined) throw new Error('Unknown project')
     return this.journal.list(projectId)
   }
-  /** @param request - Revision checked workflow content. @returns Persisted workflow record. */
+  /**
+   * Persist a revision-checked workflow record and validate its project evidence.
+   * @param request - Revision checked workflow content.
+   * @returns Persisted workflow record with its new revision.
+   */
   saveWorkflowRecord(request: SaveWorkflowRecord): Promise<WorkflowRecord> {
     if (this.ctx.workspaceRegistry.get(request.projectId) === undefined) throw new Error('Unknown project')
     return this.journal.save(request, (payload) => {

@@ -2,6 +2,14 @@
 import { Session, foldRequestHeader } from '@deepseek-ai/dsh-session'
 import type { SessionId, SessionEvent } from '@deepseek-ai/dsh-session/types'
 import type { GenerateOptions } from '@deepseek-ai/dsh-llm'
+/**
+ * Reconstruct a settled model request from its preceding durable session events.
+ * @param sessionId - Owning session identity.
+ * @param events - Ordered durable session events.
+ * @param turn - Settled turn index.
+ * @param step - Settled request step index.
+ * @returns Captured request without a live cancellation signal.
+ */
 export function reconstructRequest(
   sessionId: SessionId,
   events: readonly SessionEvent[],
@@ -26,7 +34,24 @@ export function reconstructRequest(
     ...(header.tools === undefined ? {} : { tools: header.tools }),
   }
 }
-export function diffRequests(before: Omit<GenerateOptions, 'signal'>, after: Omit<GenerateOptions, 'signal'>) {
+/**
+ * Compare request content and schemas without making a model call.
+ * @param before - Baseline captured request.
+ * @param after - Comparison captured request.
+ * @returns Shared message prefix, message and tool changes, and byte counts.
+ */
+export function diffRequests(before: Omit<GenerateOptions, 'signal'>, after: Omit<GenerateOptions, 'signal'>): {
+  schemaBytes: { before: number; after: number }
+  requestBytes: { before: number; after: number }
+  sharedMessages: number
+  removedMessages: GenerateOptions['messages']
+  addedMessages: GenerateOptions['messages']
+  addedTools: string[]
+  removedTools: string[]
+  changedTools: string[]
+  configChanged: boolean
+  notice: string
+} {
   let sharedMessages = 0
   while (
     sharedMessages < Math.min(before.messages.length, after.messages.length) &&
@@ -54,7 +79,12 @@ export function diffRequests(before: Omit<GenerateOptions, 'signal'>, after: Omi
   }
 }
 
-/** Remove tool definitions without changing the request's declaration-series identity. */
+/**
+ * Remove named tools while preserving declaration-series identity.
+ * @param original - Original reconstructed request.
+ * @param names - Tool names to omit from schemas and tool history.
+ * @returns Detached request with the selected tools omitted.
+ */
 export function replayWithoutTools(
   original: Omit<GenerateOptions, 'signal'>,
   names: readonly string[],

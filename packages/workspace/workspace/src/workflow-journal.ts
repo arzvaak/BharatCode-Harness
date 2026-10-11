@@ -80,8 +80,17 @@ const app = z.object({
       }
     }),
 })
+/**
+ * Validate the supported writing, analysis, verification, comment, qualification, and app records.
+ */
 export const workflowPayloadSchema = z.discriminatedUnion('kind', [writing, analysis, verification, comment, qualification, app])
+/**
+ * Validated workflow content discriminated by its record kind.
+ */
 export type WorkflowPayload = z.infer<typeof workflowPayloadSchema>
+/**
+ * Persisted project workflow content with a revision and update timestamp.
+ */
 export interface WorkflowRecord {
   id: string
   projectId: WorkspaceId
@@ -90,6 +99,9 @@ export interface WorkflowRecord {
   updatedAt: string
   payload: WorkflowPayload
 }
+/**
+ * Workflow save request with the expected revision for conflict detection.
+ */
 export interface SaveWorkflowRecord {
   id: string
   projectId: WorkspaceId
@@ -110,9 +122,17 @@ const domainSpec = defineDomain({
   version: 1,
   tables: { records: domainTable<string, WorkflowRecord>(recordSchema) },
 })
+/**
+ * Durable serialized project workflow journal with revision-checked writes.
+ */
 export class WorkflowJournal {
   private table?: KvTable<string, WorkflowRecord>
   private tail: Promise<void> = Promise.resolve()
+  /**
+   * Open journal storage and mark interrupted analysis executions as failed.
+   * @param storage - Host-private domain storage facility.
+   * @returns Asynchronous disposer for the opened storage domain.
+   */
   async open(storage: DomainFacility): Promise<() => Promise<void>> {
     const domain = await storage.open(domainSpec)
     this.table = domain.table('records')
@@ -134,12 +154,23 @@ export class WorkflowJournal {
     if (this.table === undefined) throw new Error('Workflow journal is unavailable')
     return this.table
   }
+  /**
+   * Read detached workflow records for the selected project.
+   * @param projectId - Registered project identity.
+   * @returns Detached workflow records owned by the project.
+   */
   list(projectId: WorkspaceId): readonly WorkflowRecord[] {
     return [...this.records().entries()]
       .map(([, value]) => value)
       .filter(value => value.projectId === projectId)
       .map(value => structuredClone(value))
   }
+  /**
+   * Validate and persist a workflow record only when its expected revision matches.
+   * @param request - Detached workflow content and expected revision.
+   * @param validate - Owner validation of captured evidence and project scope.
+   * @returns Persisted workflow record with its new revision.
+   */
   save(request: SaveWorkflowRecord, validate: (payload: WorkflowPayload) => void): Promise<WorkflowRecord> {
     const detached = structuredClone(request)
     const operation = this.tail.then(async () => {

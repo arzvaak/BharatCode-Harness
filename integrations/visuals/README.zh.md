@@ -8,6 +8,7 @@
 
 - 七种原创设计：带迷你趋势图的指标、正负条形图、多序列折线图、紧凑流程图、时间线、分步流程及环形图。
 - 完整 Mermaid 12.1 引擎以及 ZenUML。图库验证 21 类 Mermaid 图形，包括数据库关系、时序、类、状态、思维导图、甘特计划、架构、桑基、雷达和矩形树图。引擎支持的其他图形类型也会转发给 Mermaid。
+- 响应式图表支持一次性揭示、从零增长的条形、减少动态效果偏好及键盘源内容编辑。
 - 源内容预览编辑、复制源内容及可移植 SVG 导出。编辑只影响当前预览；已保存对话保持不变。
 - 插件设置图库以及所有语言下的英文控件。模型可以用用户语言编写图表。
 - 对正文、推理、图片、工具及其他内容保留原生聊天渲染。包装层使用已发布的 slot API，卸载时恢复原始渲染器。
@@ -19,7 +20,7 @@
 需要 Harness 0.2.0-rc.2 或更新版本，具备当前 assistant 聊天 slot 和客户端模块 loader。使用该安装自身的 `dsh` CLI（命令行界面）和 `DSH_HOME`；Desktop 保留独立 `desktop` profile。更改前等待正在运行的 agent（智能体）和包操作结束。
 
 ```bash
-DSH_HOME=/path/to/installation/home dsh plugin --profile desktop add /absolute/path/to/local-dsh-visuals-0.1.0.tgz
+DSH_HOME=/path/to/installation/home dsh plugin --profile desktop add /absolute/path/to/local-dsh-visuals-0.1.4.tgz
 ```
 
 常规 Harness 包管理器会发现 `dsh.bundle.patch` 并添加组合包。应用空闲时重启，打开插件设置查看 Visuals 图库。开始对话并提出请求，例如：
@@ -88,3 +89,7 @@ npm run preview
 已验证内容及仍需实时激活的内容见 `VALIDATION.md`。
 
 标准核心客户端立即提供图表。图表引擎随 `lib/client.mermaid.js` 交付，首次请求图表时通过 BC 的包内模块 loader 加载。它是本地打包资产：无需网络服务、额外安装或启用开关。许可证清单覆盖两个模块。
+
+原生回答采用更大的阅读字号和克制的标题颜色。包含公式的双列表格将标签置于公式上方，让符号使用完整阅读宽度。宽表达式在单元格内滚动；KaTeX 内部结构与原始回答保持不变。
+
+章节和公式标题使用不同的蓝、紫、青绿及琥珀色调，并带有淡色背景。正文和公式保留原生文字颜色。已完成的公式表格使用展示样式数学并对齐等价表达式及单位；持久化消息和实时流式内容保持不变。

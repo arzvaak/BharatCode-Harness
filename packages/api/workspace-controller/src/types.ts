@@ -183,6 +183,9 @@ export interface WorkspaceApp {
   allowedTools: readonly string[]
   generation: string
 }
+/**
+ * Negotiated MCP app descriptor and its admitted HTML resource.
+ */
 export interface WorkspaceAppResource {
   app: WorkspaceApp
   html: string

@@ -1,7 +1,14 @@
 /** Short, disposable motion for changed workflow surfaces; source/editor nodes stay mounted. */
+import type { RefObject } from 'react'
 import { useLayoutEffect, useRef } from 'react'
 
-export function useWorkflowMotion<T extends HTMLElement>(owner: string, revision: unknown) {
+/**
+ * Animate newly admitted workflow elements while honoring reduced motion and owner lifetime.
+ * @param owner - Identity whose changes reset animation ownership.
+ * @param revision - Render revision used to find newly admitted elements.
+ * @returns Root ref for the workflow container.
+ */
+export function useWorkflowMotion<T extends HTMLElement>(owner: string, revision: unknown): RefObject<T> {
   const root = useRef<T>(null)
   const previous = useRef(new Map<Element, string>())
   const animations = useRef<Animation[]>([])

@@ -1,7 +1,7 @@
 # Workflow completion
 
 Source: codex://threads/01a128fe-42df-7560-bc2d-30d8ead06ff1
-Baseline: 091701ca5a, isolated implementation/workflow-completion.
+Baseline: Linux preview v0.2.0-rc.2.20261010.1791660533, isolated implementation/workflow-completion.
 
 ## Design
 Keep Cordis composition, one primary agent, durable project revision IDs, explicit saves and the existing inbox/handoff owner. Implement recommendations as connected native workflow features and qualified optional adapters. No provider secrets enter project storage. Optional connectors retain explicit setup and qualification states.

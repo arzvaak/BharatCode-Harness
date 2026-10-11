@@ -1,5 +1,12 @@
 /** Read-only, bounded Git change snapshots. No staging, reset, commit or shell expansion. */
 import type { Context } from '@deepseek-ai/cordis'
+/**
+ * Capture the complete bounded Git diff, including untracked additions.
+ * @param ctx - Context with the local subprocess provider.
+ * @param cwd - Owning Git working directory.
+ * @param signal - Optional cancellation signal.
+ * @returns Base commit and complete captured diff.
+ */
 export async function gitChange(ctx: Context, cwd: string, signal?: AbortSignal): Promise<{ commit: string; text: string }> {
   const subprocess = ctx.get('subprocess')
   if (subprocess === undefined) throw new Error('Git review needs the local subprocess provider')

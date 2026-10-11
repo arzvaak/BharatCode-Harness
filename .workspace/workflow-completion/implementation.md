@@ -2,7 +2,7 @@
 
 Source chat: codex://threads/01a128fe-42df-7560-bc2d-30d8ead06ff1
 Branch: implementation/workflow-completion
-Baseline: 091701ca5a621697bf357a7eb654d699468c6200
+Baseline: Linux preview v0.2.0-rc.2.20261010.1791660533
 
 ## Connected workflows
 
@@ -36,7 +36,7 @@ Markdown.
 Analysis captures notebook/code and project inputs before execution. It executes
 captured UTF-8 inputs and scalar parameters in a fresh directory with a Python
 Jupyter kernel. Durable Runs retain identity, real runner/kernel environment,
-outputs and generated-by provenance, failure/cancellation, and restart interruption.
+outputs and the generating run identity, failure/cancellation, and restart interruption.
 Cancellation during output capture retains the captured revision on the cancelled Run.
 Starting the final outcome commit is the completion boundary; later cancellation
 does not rewrite an outcome already being committed.

@@ -32,6 +32,13 @@ for output in nb.cells[0].get('outputs',[]):
   if line.startswith('__BC_KERNEL_ENV__'): observed=json.loads(line[len('__BC_KERNEL_ENV__'):])
 print(json.dumps({'notebook':nbformat.writes(nb),'environment':json.dumps({'runner':{'python':sys.executable,'version':platform.python_version(),'nbclient':nbclient.__version__,'nbformat':nbformat.__version__},'kernel':{'name':r['kernel'],'language':spec.language,'displayName':spec.display_name,'observed':observed}}),'status':status,'detail':detail}))
 `
+/**
+ * Execute captured notebook inputs and parameters in a fresh Python kernel directory.
+ * @param ctx - Context with the local subprocess provider.
+ * @param request - Captured notebook, inputs, kernel, parameters, and execution limits.
+ * @param signal - Cancellation signal forwarded to the subprocess.
+ * @returns Executed notebook, runner and kernel environment, and outcome.
+ */
 export async function executeCapturedNotebook(
   ctx: Context,
   request: {

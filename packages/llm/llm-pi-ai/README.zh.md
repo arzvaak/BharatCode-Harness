@@ -198,7 +198,7 @@ Config 更新严格验证发生变化的 provider。初始加载将已存储的�
 
 #### 模型看到什么
 
-pi-ai 事件变成 harness 的推理、文本、工具调用、用量与 finish 分片。适配器把解析后的工具参数以原始 JSON 字符串传给 harness。
+pi-ai 事件变成 harness 的推理、文本、工具调用、用量与 finish 分片。适配器把解析后的工具参数以原始 JSON 字符串传给 harness。完整但格式错误的参数 JSON 仍使用 pi-ai 的修复解析器。未闭合的字符串或容器会把原始参数保留为 assistant 上下文，而不执行被缩短的修复调用；即使提供方返回 `tool_calls`，也会映射为 `max-tokens`，使自动续写组合包重新发送完整历史。因明确输出上限而未执行的调用也会保留参数以便重新发起。恢复文本不携带原生工具调用重放元数据。启用 `@local/max-tokens-continue` 后，续写会附加到同一 turn；配置的限制和取消仍然生效。
 
 #### Token 影响
 

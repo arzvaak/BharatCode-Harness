@@ -83,6 +83,8 @@ type McpResourceRequest =
 ```ts type-equiv
 /** One configured server's resource access, owned by its MCP connection plugin. */
 interface McpResourceProvider {
+  applications?(signal: AbortSignal): Promise<readonly Omit<McpAppDescriptor, 'server'>[]>
+  applicationResource?(uri: string, signal: AbortSignal, expectedGeneration: string): Promise<JsonValue>
   /**
    * Run an operation against one live connection generation.
    * @param request - MCP resource method and parameters.
@@ -111,6 +113,10 @@ MCP prompt templates, human-input elicitation, task-based execution, and resourc
 - [Third-party memory servers](../user/guide/mcp-memory.md) — product configuration guide.
 - [Protocol negotiation decision](../../.agents/notes/implemented/feature/2026-09-12-mcp-sdk-protocol-negotiation.md) — SDK ownership and compatibility decisions.
 
+## Negotiated apps
+
+`McpAppDescriptor` identifies a server-negotiated UI resource by server, host tool, resource URI, title, allowed app tools, and generation. Resource reads and app calls are admitted only in the caller's server scope; a stale generation is rejected. App-only tools stay outside model schemas. The [resource service source](../../packages/mcp/mcp-resources/src/index.ts) owns this contract.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -133,7 +139,28 @@ Scoped resource access plus three tools shared by configured MCP servers.
  * @returns the effect disposer for this exact registration.
  */
 register(server: string, provider: McpResourceProvider): () => void
+
+/**
+ * List UI resources from the caller-visible connection scope only.
+ * @param agent - Agent whose scope controls resource admission.
+ * @param signal - Cancellation signal for the operation.
+ * @returns Apps negotiated within the active session scope.
+ */
+async applications(agent: NonNullable<ToolExecution['agent']>, signal: AbortSignal): Promise<readonly McpAppDescriptor[]>
+
+/**
+ * Recheck the negotiated tool URI at every read, including after reconnect.
+ * @param agent - Agent whose scope controls resource admission.
+ * @param expectedGeneration - Optional generation that must still match the negotiated app.
+ * @param server - Negotiated MCP server identity.
+ * @param signal - Cancellation signal for the operation.
+ * @param tool - Negotiated tool name.
+ * @returns Authorized app resource content.
+ */
+async applicationResource( server: string, tool: string, agent: NonNullable<ToolExecution['agent']>, signal: AbortSignal, expectedGeneration: string, ): Promise<JsonValue>
 ```
+
+Types: [ToolExecution](tools.md)
 
 Source: [`packages/mcp/mcp-resources/src/index.ts`](../../packages/mcp/mcp-resources/src/index.ts)
 <!-- END GENERATED cordis-surface -->

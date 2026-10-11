@@ -58,13 +58,27 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     this.notebookConfig = ProjectKnowledgeController.Config(config)
   }
 
-  /** Internal, read-only request reconstruction; no additional product panel. */
+  /**
+   * Internal, read-only request reconstruction; no additional product panel.
+   * @param sessionId - Owning session identity.
+   * @param step - Logged request step index.
+   * @param turn - Logged turn index.
+   * @returns Serialized captured request.
+   */
   @Remote('requestSnapshot')
   async requestSnapshot(sessionId: SessionId, turn: number, step: number): Promise<string> {
     const log = await this.ctx.sessionQuery.readSession(sessionId)
     return JSON.stringify(reconstructRequest(sessionId, log.events, turn, step))
   }
-  /** Compare two logged requests without a model call. */
+  /**
+   * Compare two logged requests without a model call.
+   * @param afterStep - Comparison request step index.
+   * @param afterTurn - Comparison turn index.
+   * @param beforeStep - Baseline request step index.
+   * @param beforeTurn - Baseline turn index.
+   * @param sessionId - Owning session identity.
+   * @returns Serialized difference between the captured requests.
+   */
   @Remote('requestDiff')
   async requestDiff(
     sessionId: SessionId,
@@ -81,7 +95,16 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       ),
     )
   }
-  /** Explicit paid sensitivity replay. Tool calls are returned as evidence, never dispatched. */
+  /**
+   * Explicit paid sensitivity replay. Tool calls are returned as evidence, never dispatched.
+   * @param consent - Explicit consent to replay the captured model request.
+   * @param removeTools - Tool names to omit from the captured request.
+   * @param sessionId - Owning session identity.
+   * @param signal - Cancellation signal for the operation.
+   * @param step - Logged request step index.
+   * @param turn - Logged turn index.
+   * @returns Immutable captured replay result.
+   */
   @Remote('replayRequest')
   async replayRequest(
     sessionId: SessionId,
@@ -121,7 +144,12 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       }),
     )
   }
-  /** List only negotiated MCP Apps visible to the active session scope. */
+  /**
+   * List only negotiated MCP Apps visible to the active session scope.
+   * @param sessionId - Owning session identity.
+   * @param signal - Cancellation signal for the operation.
+   * @returns Apps negotiated within the active session scope.
+   */
   @Remote('applications')
   async applications(sessionId: SessionId, signal: AbortSignal): Promise<readonly WorkspaceApp[]> {
     const agent = this.ctx.agents.get(sessionId)
@@ -130,7 +158,14 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       throw new Error('MCP Apps need an active session and a configured MCP resource provider')
     return await resources.applications(agent, signal)
   }
-  /** Read only the negotiated UI resource; arbitrary resource URIs are not accepted. */
+  /**
+   * Read only the negotiated UI resource; arbitrary resource URIs are not accepted.
+   * @param server - Negotiated MCP server identity.
+   * @param sessionId - Owning session identity.
+   * @param signal - Cancellation signal for the operation.
+   * @param tool - Negotiated tool name.
+   * @returns Authorized app resource content.
+   */
   @Remote('applicationResource')
   async applicationResource(
     sessionId: SessionId,
@@ -153,7 +188,17 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       throw new Error('MCP app HTML is missing or exceeds the complete resource limit')
     return { app, html: content.text }
   }
-  /** App calls pass through the ordinary tool policy pipeline and remain in its owning project journal. */
+  /**
+   * App calls pass through the ordinary tool policy pipeline and remain in its owning project journal.
+   * @param argumentsJson - JSON arguments passed to the authorized tool.
+   * @param generation - App generation authorized for this call.
+   * @param hostTool - Tool whose UI resource owns the app.
+   * @param server - Negotiated MCP server identity.
+   * @param sessionId - Owning session identity.
+   * @param signal - Cancellation signal for the operation.
+   * @param tool - Negotiated tool name.
+   * @returns Serialized authorized tool result.
+   */
   @Remote('applicationCall')
   async applicationCall(
     sessionId: SessionId,
@@ -233,7 +278,12 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     })
     return json
   }
-  /** Capture the complete tracked and untracked Git change at the owning project. */
+  /**
+   * Capture the complete tracked and untracked Git change at the owning project.
+   * @param sessionId - Owning session identity.
+   * @param signal - Cancellation signal for the operation.
+   * @returns Current Git commit and captured change revision.
+   */
   @Remote('captureChange')
   async captureChange(sessionId: SessionId, signal: AbortSignal): Promise<{ commit: string; artifact: ArtifactRevision }> {
     const project = this.ctx.workspaceRegistry.list().find(value => value.sessionIds.includes(sessionId))
@@ -247,7 +297,18 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     )
     return { commit: change.commit, artifact }
   }
-  /** Attach declared verification evidence only while its exact Git change is still current. */
+  /**
+   * Attach declared verification evidence only while its exact Git change is still current.
+   * @param changeId - Captured Git change revision.
+   * @param commit - Git commit bound to the captured change.
+   * @param detail - Human-readable verification evidence.
+   * @param method - Verification method used.
+   * @param paths - Project evidence paths to capture.
+   * @param sessionId - Owning session identity.
+   * @param signal - Cancellation signal for the operation.
+   * @param status - Declared verification outcome.
+   * @returns Persisted verification journal record.
+   */
   @Remote('recordVerification')
   async recordVerification(
     sessionId: SessionId,
@@ -289,7 +350,17 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       },
     })
   }
-  /** Fetch diagnostics and preview code actions/rename for the exact saved revision. */
+  /**
+   * Fetch diagnostics and preview code actions/rename for the exact saved revision.
+   * @param character - Zero-based cursor character.
+   * @param line - Zero-based cursor line.
+   * @param newName - Optional rename target to preview.
+   * @param path - Project-owned file path.
+   * @param sessionId - Owning session identity.
+   * @param signal - Cancellation signal for the operation.
+   * @param text - Complete saved file content to check.
+   * @returns Diagnostics and proposed edits for the checked revision.
+   */
   @Remote('languageReview')
   async languageReview(
     sessionId: SessionId,
@@ -312,7 +383,12 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       signal,
     )
   }
-  /** Read captured evidence for a project-owned file without model work. */
+  /**
+   * Read captured evidence for a project-owned file without model work.
+   * @param path - Project-owned file path.
+   * @param sessionId - Owning session identity.
+   * @returns Captured source relations and anchored comments.
+   */
   @Remote('documentEvidence')
   async documentEvidence(sessionId: SessionId, path: string): Promise<DocumentEvidence> {
     const project = this.ctx.workspaceRegistry.list().find(value => value.sessionIds.includes(sessionId))
@@ -335,7 +411,16 @@ export class ProjectKnowledgeController extends TypertRemoteService {
         .filter(value => value.payload.kind === 'comment' && value.payload.artifact === artifact.id),
     }
   }
-  /** Anchor a comment only when the full saved file matches the selected draft. */
+  /**
+   * Anchor a comment only when the full saved file matches the selected draft.
+   * @param comment - Comment anchored to the selected passage.
+   * @param end - Exclusive selection offset.
+   * @param path - Project-owned file path.
+   * @param sessionId - Owning session identity.
+   * @param start - Inclusive selection offset.
+   * @param text - Complete saved file content to check.
+   * @returns Persisted anchored comment record.
+   */
   @Remote('commentSelection')
   async commentSelection(
     sessionId: SessionId,
@@ -475,12 +560,20 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       throw reason
     }
   }
-  /** @param projectId - Selected project. @returns Durable workflow journal. */
+  /**
+   * Read the durable workflow journal for a registered project.
+   * @param projectId - Selected project.
+   * @returns Durable workflow records for the project.
+   */
   @Remote('workflowRecords')
   workflowRecords(projectId: WorkspaceId): readonly WorkflowRecord[] {
     return this.ctx.projectKnowledge.workflowRecords(projectId)
   }
-  /** @param request - Revision checked workflow record. @returns Durable updated record. */
+  /**
+   * Persist a revision-checked workflow record and validate its project evidence.
+   * @param request - Revision checked workflow record.
+   * @returns Persisted workflow record with its new revision.
+   */
   @Remote('saveWorkflowRecord')
   saveWorkflowRecord(request: SaveWorkflowRecord): Promise<WorkflowRecord> {
     if (request.payload.kind === 'analysis' && request.payload.status !== 'prepared')

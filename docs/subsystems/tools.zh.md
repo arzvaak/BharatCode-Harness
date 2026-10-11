@@ -25,6 +25,8 @@ interface ToolOutputDefinition {
 ```ts type-equiv
 /** A registered tool: its schema plus the execution function. */
 interface ToolDefinition extends ToolSchema {
+  /** App-only registration: hidden from model schemas and denied to model/SDK dispatch. */
+  readonly audience?: 'app'
   /** Mandatory canonical output declaration. */
   readonly output: ToolOutputDefinition
   /**
@@ -193,6 +195,8 @@ type ToolExecutionToken = symbol & { readonly [toolExecutionTokenBrand]: true }
  * callers do not choose that token.
  */
 interface ToolExecutionInput {
+  /** Host-minted MCP Apps caller; model arguments cannot set execution metadata. */
+  readonly audience?: 'app'
   readonly callId: ToolCallId
   /**
    * Root model-requested call owning this execution tree. Callers omit it for

@@ -167,6 +167,7 @@ export const SERVICE_PAGE: Record<string, string> = {
  * to a model as `cordis_runtime_inspect what:"client"`).
  */
 export const SERVICE_WALK_EXEMPTIONS: Record<string, string> = {
+  workspaceLanguage: 'optional language-server interface installed by dsh-lsp-actions; packages/api/workspace-controller/src/language-review.ts owns the checked-source proposal contract',
   invocation: 'not a service: per-call accessor (RemoteInvocation | undefined) the Gateway derives for each Remote call — packages/api/gateway/README.md owns the contract',
   webTerminals: 'client-side terminal view models — packages/api/terminal-controller/README.md owns the API',
   appReady: 'not a service: launcher-provided successful-startup signal — packages/boot/cmdline/README.md owns the launcher contract',
@@ -791,6 +792,13 @@ export const LINK_MAP: Readonly<Record<string, string>> = {
   SearchArtifactsResult: 'workspace.md',
   SubmitHandoffRequest: 'workspace.md',
   WorkflowProfile: 'workspace.md',
+  WorkflowRecord: 'workspace.md',
+  SaveWorkflowRecord: 'workspace.md',
+  WorkspaceApp: 'workspace.md',
+  WorkspaceAppResource: 'workspace.md',
+  LanguageReview: 'workspace.md',
+  DocumentEvidence: 'workspace.md',
+  McpAppDescriptor: 'mcp.md',
 
   ArchiveSessionOptions: 'workspace.md',
   SessionActivity: 'workspace.md',
