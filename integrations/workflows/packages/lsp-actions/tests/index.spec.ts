@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, realpath, rm, writeFile, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { PassThrough } from 'node:stream'
@@ -130,6 +130,34 @@ describe('lsp-actions apply', () => {
     const value = await tool.execute({ file_path: 'a.ts', line: 1, character: 1 }, fakeExec(workspace)) as { kind: string }
     expect(value.kind).toBe('completion')
     await Promise.all(fake.disposers.map(disposer => disposer()))
+  })
+
+  it('registers checked-source review previews and supports explicit fixture cleanup', async () => {
+    await apply(fake.ctx as never, {
+      ...baseConfig,
+      servers: { fixture: serverEntry(process.execPath, { '.ts': 'typescript' }, { args: [FIXTURE, '--push-diag'], diagnosticsSettleMs: 30 }) },
+    })
+    const get = fake.ctx.get as (name: string) => unknown
+    const provider = get('workspaceLanguage') as {
+      review(request: { root: string; path: string; text: string; position: { line: number; character: number } }): Promise<{
+        base: string; diagnostics: readonly unknown[]; proposals: readonly { files: readonly {before: string; after: string}[] }[]
+      }>
+    }
+    expect(provider).toBeDefined()
+    const path = join(workspace, 'a.ts')
+    const text = await readFile(path, 'utf8')
+    const request = {root: workspace, path, text, position: {line: 0, character: 0}}
+    await expect(provider.review({...request, text: 'unsaved draft'})).rejects.toThrow('Save the current revision')
+    const review = await provider.review(request)
+    expect(review.base).toBe(text)
+    expect(review.diagnostics.length).toBeGreaterThan(0)
+    expect(review.proposals.length).toBeGreaterThan(0)
+    expect(review.proposals[0]?.files[0]?.before).toBe(text)
+    expect(review.proposals[0]?.files[0]?.after).not.toBe(text)
+    expect(await readFile(path, 'utf8')).toBe(text)
+    expect(fake.writeIntents).toHaveLength(0)
+    await Promise.all(fake.disposers.map(dispose => dispose()))
+    expect(get('workspaceLanguage')).toBeUndefined()
   })
 
   it('fails at load when a configured command does not exist', async () => {

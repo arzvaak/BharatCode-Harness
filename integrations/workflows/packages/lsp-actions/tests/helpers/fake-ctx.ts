@@ -50,7 +50,7 @@ export interface FakeContext {
   readonly writeIntents: Array<{ target: FsTarget; actor: object | undefined }>
   /** The fake filesystem. */
   readonly fs: FakeFs
-  /** Disposers returned by `ctx.effect` callbacks, for explicit teardown in tests. */
+  /** Disposers returned by `ctx.effect` and `ctx.reflect.provide` callbacks, for explicit teardown in tests. */
   readonly disposers: Array<() => Promise<unknown>>
 }
 
@@ -71,6 +71,7 @@ export async function createFakeContext(opts: {
   const observed: ObservedRecord[] = []
   const writeIntents: Array<{ target: FsTarget; actor: object | undefined }> = []
   const disposers: Array<() => Promise<unknown>> = []
+  const provided = new Map<string, unknown>()
   const handlers = new Map<string, Set<(...args: unknown[]) => void>>()
   const ctx: Record<string, unknown> = {
     tools: {
@@ -99,7 +100,16 @@ export async function createFakeContext(opts: {
       // Mirror the real event bus: subscribers observe the same emissions the recorder sees.
       for (const handler of handlers.get(name) ?? []) handler(...args)
     },
-    get: (name: string): unknown => opts.services?.[name as keyof FakeServices],
+    reflect: {
+      provide(name: string, value: unknown): () => Promise<void> {
+        if (provided.has(name)) throw new Error(`Service already registered: ${name}`)
+        provided.set(name, value)
+        const dispose = async (): Promise<void> => { if (provided.get(name) === value) provided.delete(name) }
+        disposers.push(dispose)
+        return dispose
+      },
+    },
+    get: (name: string): unknown => provided.get(name) ?? opts.services?.[name as keyof FakeServices],
     on: (name: string, handler: (...args: unknown[]) => void): (() => void) => {
       let set = handlers.get(name)
       if (set === undefined) {
