@@ -147,7 +147,7 @@ describe('llm-pi-ai real dormant composition', () => {
     expect(server.headers[0]?.['user-agent']).toBe(userAgent())
   })
 
-  it('continues natively after max-token assembly drops a tool call, with pruned replay metadata', async () => {
+  it('continues natively with retained incomplete tool arguments and no repaired replay metadata', async () => {
     vi.stubEnv('PI_COMPOSITION_KEY', '')
     const server = await mockServer([
       { events: truncatedToolCallEvents },
@@ -173,23 +173,13 @@ describe('llm-pi-ai real dormant composition', () => {
       messages: [],
     })
     expect(truncated.finish).toEqual({ kind: 'max-tokens' })
-    expect(truncated.message.content).toEqual([{ type: 'text', text: 'partial' }])
-    expect(truncated.message.source).toEqual({
-      kind: 'model',
-      provider: 'deepseek',
-      model: 'deepseek-flash',
-      replayState: {
-        response: {
-          kind: 'pi-ai',
-          version: 2,
-          api: 'openai-completions',
-          provider: 'deepseek',
-          model: 'deepseek-flash',
-          stopReason: 'length',
-        },
-        blocks: [{ type: 'text' }],
-      },
-    })
+    expect(truncated.message.content).toHaveLength(2)
+    expect(truncated.message.content[0]).toEqual({ type: 'text', text: 'partial' })
+    const retained = truncated.message.content[1]
+    expect(retained?.type).toBe('text')
+    if (retained?.type !== 'text') throw new Error('Original tool arguments must be retained as text')
+    expect(retained.text).toContain('{"text":')
+    expect(truncated.message.source).toEqual({ kind: 'model', provider: 'deepseek', model: 'deepseek-flash' })
 
     const continued = await assemble(ctx, {
       provider: 'deepseek',
@@ -201,13 +191,12 @@ describe('llm-pi-ai real dormant composition', () => {
     })
     expect(continued.message.content).toEqual([{ type: 'text', text: 'hello' }])
     expect(server.requests).toHaveLength(2)
-    expect(server.requests[1]).toMatchObject({
-      messages: [
-        { role: 'assistant', content: 'partial' },
-        { role: 'user', content: 'continue' },
-      ],
-    })
-    const followup = server.requests[1] as { messages?: unknown[] }
+    const followup = server.requests[1] as { messages?: { role: string; content: string }[] }
+    expect(followup.messages).toHaveLength(2)
+    expect(followup.messages?.[0]?.role).toBe('assistant')
+    expect(followup.messages?.[0]?.content).toContain('partial')
+    expect(followup.messages?.[0]?.content).toContain('{"text":')
+    expect(followup.messages?.[1]).toMatchObject({ role: 'user', content: 'continue' })
     expect(followup.messages?.[0]).not.toHaveProperty('tool_calls')
   })
 

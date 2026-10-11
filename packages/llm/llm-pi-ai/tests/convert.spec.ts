@@ -819,9 +819,13 @@ describe('toStreamChunks', () => {
     const chunks = await collect(toStreamChunks(feed(
       { type: 'toolcall_start', contentIndex: 0, partial: assistant() },
       { type: 'toolcall_delta', contentIndex: 0, delta: '{}', partial: assistant() },
-      { type: 'done', reason: 'stop', message: assistant() },
+      { type: 'toolcall_end', contentIndex: 0, partial: assistant(), toolCall: { type: 'toolCall', id: 'x', name: 'echo', arguments: {} } },
+      { type: 'done', reason: 'toolUse', message: assistant({ content: [{ type: 'toolCall', id: 'x', name: 'echo', arguments: {} }], stopReason: 'toolUse' }) },
     )))
     expect(chunks[1]).toEqual({ type: 'tool-call-delta', index: 0, id: '', argumentsDelta: '{}' })
+    expect(chunks[0]).toEqual({ type: 'block-start', index: 0, blockType: 'tool-call' })
+    expect(chunks[2]).toEqual({ type: 'block-end', index: 0, block: { type: 'tool-call', id: 'x', name: 'echo', arguments: '{}' } })
+    expect(chunks.at(-1)).toMatchObject({ type: 'finish', reason: { kind: 'tool-calls' } })
   })
 
   it('maps error events to error finish chunks (in-stream error style)', async () => {
@@ -1006,18 +1010,23 @@ describe('toStreamChunks edge branches', () => {
     const chunks = await collect(toStreamChunks(feed(
       { type: 'toolcall_start', contentIndex: 0, partial: blank },
       { type: 'toolcall_delta', contentIndex: 0, delta: '{}', partial: blank },
-      { type: 'done', reason: 'stop', message: assistant() },
+      { type: 'toolcall_end', contentIndex: 0, partial: assistant(), toolCall: { type: 'toolCall', id: 'x', name: 'echo', arguments: {} } },
+      { type: 'done', reason: 'toolUse', message: assistant({ content: [{ type: 'toolCall', id: 'x', name: 'echo', arguments: {} }], stopReason: 'toolUse' }) },
     )))
     expect(chunks[1]).toEqual({ type: 'tool-call-delta', index: 0, id: 'x', argumentsDelta: '{}' })
+    expect(chunks[0]).toEqual({ type: 'block-start', index: 0, blockType: 'tool-call' })
+    expect(chunks[2]).toEqual({ type: 'block-end', index: 0, block: { type: 'tool-call', id: 'x', name: 'echo', arguments: '{}' } })
+    expect(chunks.at(-1)).toMatchObject({ type: 'finish', reason: { kind: 'tool-calls' } })
   })
 })
 
 describe('toStreamChunks defensive branches', () => {
-  it('tolerates a toolcall_delta with no preceding toolcall_start', async () => {
+  it('withholds an orphaned toolcall_delta and reports the empty completion', async () => {
     const chunks = await collect(toStreamChunks(feed(
       { type: 'toolcall_delta', contentIndex: 0, delta: '{}', partial: assistant() },
       { type: 'done', reason: 'stop', message: assistant() },
     )))
-    expect(chunks[0]).toEqual({ type: 'tool-call-delta', index: 0, id: '', argumentsDelta: '{}' })
+    expect(chunks.map(chunk => chunk.type)).toEqual(['usage', 'finish'])
+    expect(chunks.at(-1)).toMatchObject({ type: 'finish', reason: { kind: 'error', failure: { code: EMPTY_RESPONSE_CODE } } })
   })
 })

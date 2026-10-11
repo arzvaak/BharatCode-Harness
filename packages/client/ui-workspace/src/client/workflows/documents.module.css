@@ -79,7 +79,7 @@
 .prose { flex: 1; min-height: 180px; overflow: auto; padding: 24px; font-family: Georgia, serif; line-height: 1.8; outline: none; }
 .prose p { margin: 0 0 1em; }
 .prose strong { font-weight: 700; }
-.review { flex: none; max-height: 45%; overflow: auto; padding: 12px; border-bottom: 1px solid var(--dsw-alias-border-l2); }
+.review { flex: none; max-height: 45%; overflow: auto; padding: 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); }
 .review textarea { box-sizing: border-box; width: 100%; min-height: 80px; }
 .review ins, .review del { display: block; white-space: pre-wrap; }
 .toolbar { flex-wrap: wrap; }
@@ -92,7 +92,7 @@
 .prose > * { max-width: 72ch; margin-left: auto; margin-right: auto; }
 .review { padding: 16px 20px; background: var(--dsw-alias-bg-layer-1); border-left: 3px solid var(--dsw-alias-brand-primary); font-size: 13px; line-height: 1.6; }
 .review summary { font-weight: 500; cursor: pointer; margin-bottom: 12px; }
-.review textarea { padding: 10px 12px; border: 1px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; line-height: 1.6; resize: vertical; }
+.review textarea { padding: 10px 12px; border: 0.5px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; line-height: 1.6; resize: vertical; }
 .review button { margin: 8px 6px 0 0; }
 .review pre, .review blockquote { white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px 12px; margin: 8px 0; background: var(--dsw-alias-bg-base); }
 .review ins, .review del { padding: 10px 12px; text-decoration-thickness: 1px; overflow-wrap: anywhere; }

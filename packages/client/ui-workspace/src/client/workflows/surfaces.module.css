@@ -102,26 +102,26 @@
 .writingBrief label { display: flex; flex-direction: column; margin-bottom: 12px; gap: 6px; }
 .writingBrief textarea { min-height: 80px; resize: vertical; }
 
-.analysis { padding: 12px; border-bottom: 1px solid var(--dsw-alias-border-l2); }
+.analysis { padding: 12px; border-bottom: 0.5px solid var(--dsw-alias-border-l2); }
 .analysis label { display: flex; flex-direction: column; margin: 10px 0; }
-.analysis article { padding: 12px 0; border-top: 1px solid var(--dsw-alias-border-l2); }
+.analysis article { padding: 12px 0; border-top: 0.5px solid var(--dsw-alias-border-l2); }
 .analysis pre { max-height: 220px; overflow: auto; white-space: pre-wrap; }
 
 /* Shared workflow controls follow the shell's warm palette and compact rhythm. */
 .surface textarea { font: inherit; }
 .surface textarea:focus-visible { outline: 2px solid var(--dsw-focus-ring-color); outline-offset: 2px; }
 .writingBrief, .analysis { font-size: 13px; line-height: 1.6; }
-.writingBrief { padding: 20px 24px; background: var(--dsw-alias-bg-layer-1); border-bottom: 1px solid var(--dsw-alias-border-l2); }
+.writingBrief { padding: 20px 24px; background: var(--dsw-alias-bg-layer-1); border-bottom: 0.5px solid var(--dsw-alias-border-l2); }
 .writingBrief label, .analysis label { gap: 7px; color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 500; }
 .writingBrief input, .writingBrief textarea, .writingBrief select,
 .analysis input, .analysis textarea, .analysis select, .reader input, .reader select, .reader textarea {
-  width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--dsw-alias-border-l2);
+  width: 100%; min-width: 0; padding: 10px 12px; border: 0.5px solid var(--dsw-alias-border-l2);
   border-radius: var(--dsw-radius-md); color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-base);
   font: inherit; font-weight: 400; line-height: 1.6; transition: border-color var(--bc-motion-control, 120ms);
 }
 .writingBrief textarea { min-height: 96px; }
 .writingBrief > button, .analysis button, .reader button:not(header button) {
-  padding: 7px 12px; margin: 4px 6px 4px 0; border: 1px solid var(--dsw-alias-border-l2);
+  padding: 7px 12px; margin: 4px 6px 4px 0; border: 0.5px solid var(--dsw-alias-border-l2);
   border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit;
 }
 .writingBrief > button:last-child { background: var(--dsw-alias-brand-primary); color: var(--dsw-alias-bg-base); border-color: transparent; }
