@@ -11,9 +11,12 @@ import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { createWorkflowPresentationStore, WorkflowView } from './presentation.ts'
 import css from './workflows.module.css'
+import { useRef } from 'react'
+import { useControlMotion } from './control-motion.ts'
 
 export interface WorkflowNavigationInjected {
   hooks: { selection: HostObservable<{ readonly sessionId?: SessionId }> }
+  navigate: (profile: WorkflowView) => void
   reveal: () => void
 }
 export type WorkflowNavigationProps = PropsRuntime<'sidebar.workflows'> &
@@ -32,12 +35,15 @@ export function WorkflowIcon({ profile }: { profile: WorkflowView }) {
   const Icon = icons[profile]
   return <Icon size={19} />
 }
-export function WorkflowNavigation({ wide, useSelection, useStore, usePanelInfo, actions, reveal, t }: WorkflowNavigationProps) {
+export function WorkflowNavigation({ wide, useSelection, useStore, usePanelInfo, navigate, reveal, t }: WorkflowNavigationProps) {
+  const controls = useRef<HTMLElement>(null)
+  useControlMotion(controls)
   const session = useSelection(value => value.sessionId) ?? 'new'
   const workflowVisible = usePanelInfo(info => info.activePanelId === null)
+  const pending = useStore(value => value.navigating)
   const selected = useStore(value => value.profiles[session] ?? 'chat')
   return (
-    <nav className={css.navigation} data-wide={wide} aria-label={t('workflow.label')}>
+    <nav ref={controls} className={css.navigation} data-wide={wide} aria-label={t('workflow.label')}>
       {wide && <div className={css.sectionLabel}>{t('workflow.label')}</div>}
       {(['chat', 'coding', 'research', 'writing'] as const).map(profile => (
         <button
@@ -47,9 +53,11 @@ export function WorkflowNavigation({ wide, useSelection, useStore, usePanelInfo,
           title={wide ? undefined : t(`workflow.${profile}`)}
           aria-current={workflowVisible && selected === profile ? 'page' : undefined}
           className={css.workflowChoice}
+          data-workflow={profile}
+          aria-busy={pending === profile}
           onClick={() => {
-            actions.choose(session, profile)
             reveal()
+            navigate(profile)
           }}
         >
           <span className={css.workflowIcon}>

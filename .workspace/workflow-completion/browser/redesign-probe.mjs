@@ -1,0 +1,28 @@
+import {createRequire} from 'node:module'
+import assert from 'node:assert/strict'
+const {chromium}=createRequire(new URL('../../../apps/web/package.json',import.meta.url))('playwright')
+const browser=await chromium.launch({headless:true})
+const context=await browser.newContext({viewport:{width:1440,height:900},recordVideo:{dir:'.workspace/workflow-completion/browser/redesign-video'}})
+const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message))
+try{
+await page.goto('http://127.0.0.1:5193/redesign.html');await page.getByRole('textbox',{name:'Message'}).fill('Keep my Chat draft')
+await page.getByRole('button',{name:'Coding',exact:true}).click();await page.getByRole('tab',{name:'Editor',exact:true}).waitFor()
+assert.equal(await page.getByRole('textbox',{name:'Message'}).inputValue(),'')
+assert.ok(await page.getByText('Your code belongs here').isVisible())
+await page.getByRole('button',{name:'Files',exact:true}).first().click();await page.getByRole('button',{name:'src/greeting.ts',exact:true}).click();await page.locator('.monaco-editor').waitFor();await page.waitForTimeout(300)
+await page.locator('.monaco-editor').evaluate(el=>{globalThis.editorBefore=el})
+const tab=page.getByRole('tab',{name:'Editor',exact:true});const box=await tab.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.waitForTimeout(120);assert.ok((await tab.evaluate(el=>el.style.transform)).includes('scale('));await page.mouse.up();await page.waitForTimeout(700);assert.equal(await tab.evaluate(el=>el.style.transform),'')
+await page.screenshot({path:'.workspace/workflow-completion/redesign-editor-dark.png'})
+await page.getByRole('tab',{name:'Changes',exact:true}).click();assert.equal(await page.locator('[role=tabpanel]:not([hidden])').evaluate(el=>el.getAnimations().length),1)
+await page.getByRole('button',{name:'Capture current diff'}).click();await page.getByRole('status').waitFor();await page.waitForTimeout(300)
+assert.equal(await page.locator('[data-kind=added]').count(),1);assert.equal(await page.locator('[data-kind=removed]').count(),1)
+await page.screenshot({path:'.workspace/workflow-completion/redesign-changes-dark.png'})
+await page.getByRole('tab',{name:'Checks',exact:true}).click();assert.ok(await page.getByRole('button',{name:'Get diagnostics and code actions'}).isVisible())
+await page.getByRole('tab',{name:'Editor',exact:true}).click();assert.equal(await page.locator('.monaco-editor').evaluate(el=>el===globalThis.editorBefore),true)
+await page.getByRole('tab',{name:'Editor',exact:true}).focus();await page.keyboard.press('ArrowRight');assert.equal(await page.getByRole('tab',{name:'Changes',exact:true}).getAttribute('aria-selected'),'true')
+await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('tab',{name:'Editor',exact:true}).click();assert.equal(await page.locator('[role=tabpanel]:not([hidden])').evaluate(el=>el.getAnimations().length),0)
+await page.getByRole('textbox',{name:'Message'}).fill('Keep my Coding draft');await page.getByRole('button',{name:'Chat',exact:true}).click();assert.equal(await page.getByRole('textbox',{name:'Message'}).inputValue(),'Keep my Chat draft');await page.getByRole('button',{name:'Coding',exact:true}).click();assert.equal(await page.getByRole('textbox',{name:'Message'}).inputValue(),'Keep my Coding draft')
+await page.evaluate(()=>document.body.removeAttribute('data-ds-dark-theme'));await page.waitForTimeout(250);await page.screenshot({path:'.workspace/workflow-completion/redesign-editor-light.png'})
+await page.setViewportSize({width:960,height:800});await page.waitForTimeout(300);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'.workspace/workflow-completion/redesign-narrow.png'})
+assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,checks:['independent Chat/Coding conversations and drafts','editor opens on Coding entry','stable Monaco through tool switches','semantic diff colours','keyboard tabs','tool opening motion','spring press and release','reduced motion','light/dark','960px no overflow'],errors}))
+}finally{await context.close();await browser.close()}

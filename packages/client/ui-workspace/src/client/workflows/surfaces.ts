@@ -54,6 +54,7 @@ export interface WorkspaceSurfaceActions {
   toggleFiles?(this: void): void
   toggleTerminal?(this: void): void
   openTerminal(this: void): void
+  openProject?(this: void, profile: WorkflowProfile): void
   searchArtifacts(this: void, request: SearchArtifactsRequest): Promise<SearchArtifactsResult>
   cancelNotebook?(this: void, session: SessionId, jobId: string): Promise<void>
   executeNotebook?(this: void, project: WorkspaceId, id: string, session: SessionId): Promise<string>

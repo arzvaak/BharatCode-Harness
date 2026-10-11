@@ -5,6 +5,7 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ArtifactRevision, WorkflowRecord } from '@deepseek-ai/dsh-workspace/types'
 import type { DocumentPanelActions } from './DocumentPanel.tsx'
 import type { WorkspaceSurfaceActions } from './surfaces.ts'
+import css from './surfaces.module.css'
 export function GitReviewPanel(
   props: PropsLocale<'workspace'> & WorkspaceSurfaceActions & DocumentPanelActions & { sessionId: SessionId | null },
 ) {
@@ -17,12 +18,14 @@ export function GitReviewPanel(
   const [status, setStatus] = useState<'passed' | 'failed' | 'cancelled'>('passed')
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
+  const [capturing, setCapturing] = useState(false)
   useLayoutEffect(() => {
     ++generation.current
     setChange(undefined)
     setRecord(undefined)
     setError(undefined)
     setBusy(false)
+    setCapturing(false)
     return () => {
       ++generation.current
     }
@@ -36,20 +39,22 @@ export function GitReviewPanel(
         if (generation.current === epoch) setError(String(reason))
       })
       .finally(() => {
-        if (generation.current === epoch) setBusy(false)
+        if (generation.current === epoch) { setBusy(false); setCapturing(false) }
       })
   }
   return (
-    <details>
-      <summary>{props.t('coding.gitReview')}</summary>
+    <section className={css.changeReview} aria-busy={busy}>
+      <header className={css.toolHeading}><span className={css.toolEyebrow}>{props.t('coding.changes')}</span><h2>{props.t('coding.gitReview')}</h2><p>{props.t('coding.changesHint')}</p></header>
       {error !== undefined && <p role="alert">{error}</p>}
       <button
         type="button"
-        disabled={busy || props.sessionId === null}
+        className={css.primaryAction}
+        disabled={busy || props.sessionId === null || props.captureChange === undefined}
         onClick={() => {
           const epoch = generation.current
           const session = props.sessionId
-          if (session !== null)
+          if (session !== null) {
+            setCapturing(true)
             perform(async () => {
               const value = await props.captureChange?.(session)
               if (generation.current === epoch) {
@@ -57,16 +62,18 @@ export function GitReviewPanel(
                 setRecord(undefined)
               }
             })
+          }
         }}
       >
-        {props.t('coding.captureChange')}
+        {props.t(capturing ? 'coding.capturing' : 'coding.captureChange')}
       </button>
+      {change === undefined && !busy && <div className={css.changeEmpty}><svg width="36" height="36" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 3v10a3 3 0 0 0 3 3h7M5 7h7a3 3 0 0 0 3-3" stroke="currentColor" strokeWidth="1.3"/></svg><h3>{props.t('coding.noCapture')}</h3><p>{props.t('coding.captureHint')}</p></div>}
       {change !== undefined && (
         <>
-          <code>{change.commit}</code>
-          <pre>{change.artifact.text}</pre>
+          <div className={css.captureStatus} role="status">{props.t('coding.captured')} <code title={change.commit}>{change.commit.slice(0, 8)}</code></div>
+          <pre className={css.diff}>{change.artifact.text.split('\n').map((line, index) => <span key={index} data-kind={line.startsWith('+') && !line.startsWith('+++') ? 'added' : line.startsWith('-') && !line.startsWith('---') ? 'removed' : 'context'}>{line}{'\n'}</span>)}</pre>
           <p>
-            {props.t('coding.verificationOwner')} {props.sessionId}
+            {props.t('coding.verificationScope')}
           </p>
           <button
             type="button"
@@ -86,83 +93,85 @@ export function GitReviewPanel(
           >
             {props.t('coding.requestVerification')}
           </button>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              const session = props.sessionId
-              const epoch = generation.current
-              if (session !== null)
-                perform(async () => {
-                  const value = await props.recordVerification?.(
-                    session,
-                    change.artifact.id,
-                    change.commit,
-                    paths
-                      .split('\n')
-                      .map(path => path.trim())
-                      .filter(Boolean),
-                    method,
-                    status,
-                    detail,
-                  )
-                  if (generation.current === epoch) setRecord(value)
-                })
-            }}
-          >
-            <p>{props.t('coding.declaredEvidence')}</p>
-            <label>
-              {props.t('coding.method')}
-              <select
-                value={method}
-                onChange={(event) => {
-                  setMethod(event.target.value as typeof method)
-                }}
-              >
-                {(['test', 'manual', 'playwright', 'devtools'] as const).map(value => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {props.t('coding.outcome')}
-              <select
-                value={status}
-                onChange={(event) => {
-                  setStatus(event.target.value as typeof status)
-                }}
-              >
-                {(['passed', 'failed', 'cancelled'] as const).map(value => (
-                  <option key={value} value={value}>
-                    {props.t(`analysis.${value === 'passed' ? 'completed' : value}`)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {props.t('coding.evidencePaths')}
-              <textarea
-                value={paths}
-                onChange={(event) => {
-                  setPaths(event.target.value)
-                }}
-              />
-            </label>
-            <label>
-              {props.t('coding.verificationDetail')}
-              <textarea
-                value={detail}
-                onChange={(event) => {
-                  setDetail(event.target.value)
-                }}
-                required
-              />
-            </label>
-            <button disabled={busy || props.recordVerification === undefined || detail.trim() === ''}>
-              {props.t('coding.attachEvidence')}
-            </button>
-          </form>
+          <details className={css.evidenceDisclosure}><summary>{props.t('coding.recordEvidence')}</summary>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                const session = props.sessionId
+                const epoch = generation.current
+                if (session !== null)
+                  perform(async () => {
+                    const value = await props.recordVerification?.(
+                      session,
+                      change.artifact.id,
+                      change.commit,
+                      paths
+                        .split('\n')
+                        .map(path => path.trim())
+                        .filter(Boolean),
+                      method,
+                      status,
+                      detail,
+                    )
+                    if (generation.current === epoch) setRecord(value)
+                  })
+              }}
+            >
+              <p>{props.t('coding.declaredEvidence')}</p>
+              <label>
+                {props.t('coding.method')}
+                <select
+                  value={method}
+                  onChange={(event) => {
+                    setMethod(event.target.value as typeof method)
+                  }}
+                >
+                  {(['test', 'manual', 'playwright', 'devtools'] as const).map(value => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {props.t('coding.outcome')}
+                <select
+                  value={status}
+                  onChange={(event) => {
+                    setStatus(event.target.value as typeof status)
+                  }}
+                >
+                  {(['passed', 'failed', 'cancelled'] as const).map(value => (
+                    <option key={value} value={value}>
+                      {props.t(`analysis.${value === 'passed' ? 'completed' : value}`)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {props.t('coding.evidencePaths')}
+                <textarea
+                  value={paths}
+                  onChange={(event) => {
+                    setPaths(event.target.value)
+                  }}
+                />
+              </label>
+              <label>
+                {props.t('coding.verificationDetail')}
+                <textarea
+                  value={detail}
+                  onChange={(event) => {
+                    setDetail(event.target.value)
+                  }}
+                  required
+                />
+              </label>
+              <button disabled={busy || props.recordVerification === undefined || detail.trim() === ''}>
+                {props.t('coding.attachEvidence')}
+              </button>
+            </form>
+          </details>
           {record !== undefined && (
             <p>
               {props.t('coding.evidenceSaved')} {record.revision}
@@ -170,6 +179,6 @@ export function GitReviewPanel(
           )}
         </>
       )}
-    </details>
+    </section>
   )
 }

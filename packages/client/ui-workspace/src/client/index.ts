@@ -81,7 +81,8 @@ import {
 } from './handoffs.tsx'
 import { en, zh, type WorkspaceKey } from './locales.ts'
 import { createWorkflowPresentationStore } from './workflows/presentation.ts'
-import { WorkflowNavigation } from './workflows/WorkflowNavigation.tsx'
+import { WorkflowDestinations } from './workflows/destinations.ts'
+import { WorkflowNavigation, type WorkflowNavigationInjected } from './workflows/WorkflowNavigation.tsx'
 import { WorkspaceDocuments } from './workflows/documents.ts'
 import { configureMonacoWorkers } from './workflows/monaco-runtime.ts'
 import { WorkflowWorkspace } from './workflows/WorkflowWorkspace.tsx'
@@ -231,6 +232,36 @@ export function apply(ctx: Context): void {
     rowToast.set({ ...toast, seq: ++toastSeq })
   }
   const uiWorkspace = new UiWorkspaceService(ctx, ctx.remote.directoryPicker, workspaces, sessions, viewInstance.actions, notify)
+  const destinationContext = (session: SessionId | undefined): string => workspaces.list.getSnapshot().items.find(
+    item => session !== undefined && item.sessionIds.includes(session),
+  )?.workspaceId ?? 'ungrouped'
+  const destinations = new WorkflowDestinations({
+    selection: () => uiWorkspace.selection.getSnapshot().sessionId,
+    snapshot: () => workflowInstance.getSnapshot(),
+    available: session => sessions.list.getSnapshot().byId[session] !== undefined
+      && !workspaces.list.getSnapshot().archivedSessionIds.includes(session),
+    context: destinationContext,
+    navigation: () => ctx.layout.beginNavigation(),
+    visible: () => ctx.layout.panelInfo.getSnapshot().activePanelId === null,
+    remember: (session, profile, bookmark) => {
+      workflowInstance.actions.rememberDestination(session, profile, destinationContext(session), bookmark)
+    },
+    create: async (source) => {
+      const project = workspaces.list.getSnapshot().items.find(item => source !== undefined && item.sessionIds.includes(source))
+      return sessions.create(project === undefined ? {} : { workspaceId: project.workspaceId })
+    },
+    open: (session) => {
+      if (ctx.sidebarRight.isExpanded()) ctx.sidebarRight.toggleExpanded()
+      uiWorkspace.openSession(session)
+    },
+    pending: (profile) =>{  workflowInstance.actions.navigating(profile) },
+    failed: (reason) =>{  notify({ kind: 'createFailed', message: reason instanceof Error ? reason.message : String(reason) }) },
+  })
+  ctx.effect(() => {
+    destinations.observe()
+    const stop = uiWorkspace.selection.subscribe(() =>{  destinations.observe() })
+    return () => { stop(); destinations.dispose() }
+  }, 'workspace.destinations')
   ctx.slots.provideRoot({ hooks: { workspaces: workspaces.list } })
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-workspace: dictionaries')
   const shortcutControls = createWorkspaceShortcutControls()
@@ -359,8 +390,9 @@ export function apply(ctx: Context): void {
         name: 'sidebar.workflows',
         locale: NS,
         store: workflowPresentation,
-        inject: () => ({
+        inject: (): WorkflowNavigationInjected => ({
           hooks: { selection: uiWorkspace.selection },
+          navigate: (profile) => { void destinations.navigate(profile) },
           reveal: () => {
             ctx.layout.selectPanel(null)
           },
@@ -469,6 +501,23 @@ export function apply(ctx: Context): void {
           },
           openFiles: () => {
             if (ctx.sidebarRight.mounted.getSnapshot() !== undefined) ctx.sidebarRight.openTab('files')
+          },
+          openProject: (profile: import('@deepseek-ai/dsh-workspace/types').WorkflowProfile) => {
+            const navigation = ctx.layout.beginNavigation()
+            const cancelled = () => navigation.aborted
+            void (async () => {
+              const path = await uiWorkspace.pickDirectory()
+              if (path === null || cancelled()) return
+              const project = await workspaces.create({ path })
+              if (cancelled()) return
+              const session = await sessions.create({ workspaceId: project.workspaceId })
+              if (cancelled()) return
+              workflowInstance.actions.rememberDestination(session, profile, project.workspaceId)
+              if (ctx.sidebarRight.isExpanded()) ctx.sidebarRight.toggleExpanded()
+              uiWorkspace.openSession(session)
+            })().catch((reason: unknown) => {
+              if (!cancelled()) notify({ kind: 'createFailed', message: reason instanceof Error ? reason.message : String(reason) })
+            })
           },
           openTerminal: () => {
             ctx.sidebarRight.openTab('terminal')

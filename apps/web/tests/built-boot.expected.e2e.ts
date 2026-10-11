@@ -25,12 +25,12 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
   expect(document.querySelector('svg[viewBox="0 0 512 512"]')).not.toBeNull()
   expect(screen.getAllByText('BharatCode').length).toBeGreaterThan(0)
   expect(screen.queryByText('DSH Local Build')).toBeNull()
-  // The compact layout dropped group session counts; the fixture workspace
-  // group row renders immediately with its sessions beneath it.
+  // Workspace groups begin folded; expand the fixture before selecting history.
   const fixtureGroup = (await within(tree).findAllByText('fixture'))
     .map(el => el.closest<HTMLElement>('[role="treeitem"]'))
     .find(el => el?.getAttribute('aria-expanded') !== null)
-  if (fixtureGroup === undefined) throw new Error('fixture Workspace group missing')
+  if (fixtureGroup == null) throw new Error('fixture Workspace group missing')
+  if (fixtureGroup.getAttribute('aria-expanded') === 'false') fireEvent.click(fixtureGroup)
 
   // The resident fixture has both a question and an approval; composer routing
   // exposes the question first, and the assembled workspace plugin mirrors that
@@ -114,30 +114,26 @@ it('boots the built plugin graph and renders a fixture session end to end', asyn
     expect(webSearchRow.querySelector('[data-web]')).not.toBeNull()
   }, { timeout: 10_000 })
 
-  // Workspace navigation is presentation-only and the context disclosure has
-  // its own close action in the actual built composition.
+  // Destinations resolve independent conversations; each working surface opens
+  // immediately, while the context disclosure retains its explicit close action.
   fireEvent.click(screen.getByRole('button', { name: 'Research' }))
-  expect(screen.getByRole('region', { name: 'Research' })).toBeTruthy()
-  expect(screen.queryByRole('region', { name: 'Research workspace' })).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'Workspace' }))
-  const research = screen.getByRole('region', { name: 'Research workspace' })
+  const research = await screen.findByRole('region', { name: 'Research workspace' }, { timeout: 10_000 })
   expect(within(research).getByRole('combobox', { name: 'Research presentation' })).toHaveProperty('value', 'full')
   expect(within(research).getByRole('button', { name: 'Execution' })).toBeTruthy()
   fireEvent.change(within(research).getByRole('combobox', { name: 'Research presentation' }), { target: { value: 'simple' } })
   expect(within(research).queryByRole('button', { name: 'Execution' })).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Coding' }))
-  expect(screen.queryByRole('region', { name: 'Coding workspace' })).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'Code editor' }))
-  expect(screen.getByRole('region', { name: 'Coding workspace' })).toBeTruthy()
+  expect(await screen.findByRole('region', { name: 'Coding workspace' }, { timeout: 10_000 })).toBeTruthy()
   expect(screen.getByRole('region', { name: 'Code editor' })).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Files' })).toBeTruthy()
+  expect(screen.getAllByRole('button', { name: 'Files' }).length).toBeGreaterThan(0)
+  fireEvent.click(screen.getByText('Workspace layout', { selector: 'summary' }))
   fireEvent.change(screen.getByRole('combobox', { name: 'Workspace layout' }), { target: { value: 'chat-focus' } })
   expect(screen.getByRole<HTMLSelectElement>('combobox', { name: 'Workspace layout' }).value).toBe('chat-focus')
   fireEvent.click(screen.getByRole('button', { name: 'Swap sides' }))
   fireEvent.click(screen.getByRole('button', { name: 'Reset layout' }))
-  expect(screen.getByLabelText<HTMLSelectElement>('Workspace layout').value).toBe('chat-focus')
+  expect(screen.getByLabelText<HTMLSelectElement>('Workspace layout').value).toBe('document-focus')
   fireEvent.click(screen.getByRole('button', { name: 'Chat' }))
-  const usingContext = screen.getByRole('button', { name: /^Using context \(\d+\)$/ })
+  const usingContext = await screen.findByRole('button', { name: /^Using context \(\d+\)$/ })
   fireEvent.click(usingContext)
   const evidencePanel = await screen.findByRole('dialog', { name: 'Using context' })
   fireEvent.click(within(evidencePanel).getByRole('button', { name: 'Close context' }))
@@ -158,6 +154,10 @@ it('boots without ui-chat and does not select another conversation view implicit
   const tree = await screen.findByRole('tree', { name: 'Sessions' }, { timeout: 10_000 })
   const boot = Reflect.get(window, '__DSH_BOOT__') as { entries: Array<{ id: string }> } | undefined
   expect(boot?.entries.some(entry => entry.id === '@deepseek-ai/dsh-client-ui-chat')).toBe(false)
+  const fixtureGroup = (await within(tree).findAllByText('fixture'))
+    .map(el => el.closest<HTMLElement>('[role="treeitem"]'))
+    .find(el => el?.getAttribute('aria-expanded') !== null)
+  if (fixtureGroup?.getAttribute('aria-expanded') === 'false') fireEvent.click(fixtureGroup)
   const sessionTitle = await within(tree).findByText('Fixture 历史会话')
   fireEvent.click(sessionTitle)
   await waitFor(() => {

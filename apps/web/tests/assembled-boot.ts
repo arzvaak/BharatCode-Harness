@@ -163,6 +163,13 @@ function bundleTable(graph: WebBootGraph, plugins: readonly AssembledPlugin[]): 
     plugin.url,
     readFileSync(plugin.bundlePath, 'utf8'),
   ]))
+  // Shared CSS and lazy editors are separate registered chunks in the real Host.
+  for (const plugin of plugins) {
+    const directory = dirname(plugin.bundlePath)
+    for (const name of globSync('client.*.js', { cwd: directory })) {
+      bundles.set(`plugins/${plugin.id}/${name}?rev=fx`, readFileSync(join(directory, name), 'utf8'))
+    }
+  }
   for (const batch of graph.batches) {
     bundles.set(batch.url, batch.entries.map((id) => {
       const plugin = plugins.find(candidate => candidate.id === id)

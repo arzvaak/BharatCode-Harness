@@ -28,6 +28,9 @@ export type DocumentPanelProps = PropsLocale<'workspace'> &
   DocumentPanelActions & {
     diagnostics?: readonly LanguageDiagnostic[] | undefined
     hideFiles?: boolean
+    openFiles?: (() => void) | undefined
+    previewDocument?: (() => void) | undefined
+    chooseProject?: (() => void) | undefined
     titleKey?: WorkspaceKey
     sourceKey?: WorkspaceKey
     collapseEditor: () => void
@@ -50,6 +53,9 @@ export function DocumentPanel({
   sourceKey = 'editor.source',
   hideFiles = false,
   diagnostics,
+  openFiles,
+  previewDocument,
+  chooseProject,
   ...actions
 }: DocumentPanelProps) {
   const generation = useRef(0)
@@ -125,7 +131,7 @@ export function DocumentPanel({
   return (
     <section ref={motion} className={css.panel} aria-label={t(titleKey)} data-profile={profile}>
       <div className={css.heading}>
-        <strong title={document?.path}>{hideFiles ? t(titleKey) : (document?.path.split(/[\\/]/).at(-1) ?? t(titleKey))}</strong>
+        <strong title={document?.path}>{document?.path.split(/[\\/]/).at(-1) ?? t(titleKey)}</strong>
         <button type="button" onClick={collapseEditor} aria-label={t('editor.collapse')} title={t('editor.collapse')}>
           ›
         </button>
@@ -201,7 +207,7 @@ export function DocumentPanel({
         </p>
       )}
       {document === undefined ? (
-        <div className={css.empty}>{t(sessionId === null ? 'editor.noSession' : 'editor.empty')}</div>
+        <div className={css.empty}><h3>{t(profile === 'coding' ? 'coding.openFile' : 'editor.empty')}</h3><p>{t(sessionId === null ? 'editor.noSession' : profile === 'coding' ? 'coding.editorHint' : 'editor.empty')}</p>{chooseProject !== undefined && <button type="button" onClick={chooseProject}>{t('coding.openProject')}</button>}{openFiles !== undefined && sessionId !== null && <button type="button" onClick={openFiles}>{t('editor.files')}</button>}</div>
       ) : (
         <>
           <div className={css.status}>
@@ -241,40 +247,44 @@ export function DocumentPanel({
               </button>
             </div>
           )}
-          <div className={css.toolbar}>
-            <button
-              type="button"
-              aria-pressed={mode === 'source'}
-              onClick={() => {
-                setMode(mode === 'source' ? 'formatted' : 'source')
-              }}
-            >
-              {t(mode === 'source' ? 'editor.formatted' : 'editor.sourceMode')}
-            </button>
-            <details>
-              <summary>{t('editor.outline')}</summary>
-              {documentOutline(document.text).map(item => (
-                <button
-                  key={item.offset}
-                  type="button"
-                  onClick={() => {
-                    setMode('source')
-                    requestAnimationFrame(() => {
-                      sourceRef.current?.focus()
-                      sourceRef.current?.setSelectionRange(item.offset, item.offset + item.title.length + item.level + 1)
-                    })
-                  }}
-                >
-                  {item.title}
-                </button>
-              ))}
-            </details>
-            <details>
-              <summary>{t('editor.revisions')}</summary>
-              <pre>{document.base.text}</pre>
-              <pre>{document.text}</pre>
-            </details>
-          </div>
+          <details className={css.documentOptions}>
+            <summary>{t('coding.documentOptions')}</summary>
+            <div className={css.toolbar}>
+              <button
+                type="button"
+                aria-pressed={mode === 'source'}
+                onClick={() => {
+                  setMode(mode === 'source' ? 'formatted' : 'source')
+                }}
+              >
+                {t(mode === 'source' ? 'editor.formatted' : 'editor.sourceMode')}
+              </button>
+              {previewDocument !== undefined && <button type="button" onClick={previewDocument}>{t('coding.preview')}</button>}
+              <details>
+                <summary>{t('editor.outline')}</summary>
+                {documentOutline(document.text).map(item => (
+                  <button
+                    key={item.offset}
+                    type="button"
+                    onClick={() => {
+                      setMode('source')
+                      requestAnimationFrame(() => {
+                        sourceRef.current?.focus()
+                        sourceRef.current?.setSelectionRange(item.offset, item.offset + item.title.length + item.level + 1)
+                      })
+                    }}
+                  >
+                    {item.title}
+                  </button>
+                ))}
+              </details>
+              <details>
+                <summary>{t('editor.revisions')}</summary>
+                <pre>{document.base.text}</pre>
+                <pre>{document.text}</pre>
+              </details>
+            </div>
+          </details>
           {reviewError !== undefined && <p role="alert">{reviewError}</p>}
           {selection !== undefined && (
             <details className={css.review} data-workflow-motion={`selection/${selection.start}/${selection.end}`} open>

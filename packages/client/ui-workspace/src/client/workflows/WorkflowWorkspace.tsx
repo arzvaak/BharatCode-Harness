@@ -21,6 +21,7 @@ import type { WorkspacePreset } from './layout.ts'
 import type { WorkflowPresentationState } from './presentation.ts'
 import { WorkflowIcon } from './WorkflowNavigation.tsx'
 import css from './workflows.module.css'
+import { useControlMotion } from './control-motion.ts'
 
 export type WorkflowWorkspaceProps = PropsRuntime<'conversation.workspace'> &
   PropsLocale<'workspace'> &
@@ -65,15 +66,17 @@ export function WorkflowWorkspace({
   useFilesVisible,
   ...documents
 }: WorkflowWorkspaceProps) {
+  const controls = useRef<HTMLElement>(null)
+  useControlMotion(controls)
   const filesVisible = useFilesVisible(value => value)
   const profile = usePresentation(value => value.profiles[sessionId ?? 'new'] ?? 'chat')
   const layoutKey = JSON.stringify([sessionId ?? 'new', profile])
   const layout = usePresentation(value => value.layouts?.[layoutKey])
-  const preset = layout?.preset ?? 'chat-focus'
-  const swapped = layout?.swapped ?? false
+  const preset = layout?.preset ?? (profile === 'chat' ? 'chat-focus' : 'document-focus')
+  const swapped = layout?.swapped ?? (profile !== 'chat')
   const view = useDocuments(value => (sessionId === undefined ? undefined : value.sessions[sessionId]))
   const editorPreference = usePresentation(value => value.surfaceVisibility?.[layoutKey])
-  const editorVisible = profile !== 'chat' && (editorPreference ?? false)
+  const editorVisible = profile !== 'chat' && (editorPreference ?? true)
   const researchPreference: ResearchPreference = usePresentation(value => value.research?.[sessionId ?? 'new']) ?? {
     complexity: 'full',
     section: 'overview',
@@ -97,110 +100,40 @@ export function WorkflowWorkspace({
   const documentsToggle = useRef<HTMLButtonElement>(null)
   const body = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const element = body.current
-    if (element === null || typeof element.animate !== 'function') return
-    const animation = element.animate(
-      [
-        { opacity: 0.72, transform: 'translateY(5px)' },
-        { opacity: 1, transform: 'translateY(0)' },
-      ],
-      { duration: 200, easing: 'cubic-bezier(.2,.75,.2,1)' },
-    )
-    return () => {
-      animation.cancel()
-    }
-  }, [profile])
+    const media = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : undefined
+    const pane = body.current?.querySelector<HTMLElement>(`.${css.documentPane}`)
+    if (media?.matches || pane === undefined || pane === null || !editorVisible || typeof pane.animate !== 'function') return
+    const animation = pane.animate([{ opacity: .5, transform: 'translateX(-10px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 280, easing: 'cubic-bezier(.16,1,.3,1)' })
+    const cancel = () =>{  animation.cancel() }
+    if (media !== undefined && typeof media.addEventListener === 'function') media.addEventListener('change', cancel)
+    return () => { cancel(); if (media !== undefined && typeof media.removeEventListener === 'function') media.removeEventListener('change', cancel) }
+  }, [profile, editorVisible])
   return (
-    <section className={css.workspace} aria-label={t(`workflow.${profile}`)}>
+    <section ref={controls} className={css.workspace} data-profile={profile} aria-label={t(`workflow.${profile}`)}>
       <div className={css.workspaceHeader} hidden={profile === 'chat'}>
         <span className={css.profileBadge}>
           <WorkflowIcon profile={profile} />
           {t(`workflow.${profile}`)}
         </span>
         <span className={css.workspaceCaption}>{t(`workflow.${profile}.detail`)}</span>
-        <button
-          ref={documentsToggle}
-          type="button"
-          aria-expanded={editorVisible}
-          onClick={() => {
-            showEditor(layoutKey, !editorVisible)
-          }}
-        >
-          {t(toggleKey)}
-        </button>
-        {profile !== 'chat' && (
-          <button
-            type="button"
-            aria-expanded={filesVisible}
-            aria-pressed={filesVisible}
-            onClick={() => {
-              toggleFiles?.()
-            }}
-          >
-            {t('editor.files')}
-          </button>
-        )}
-        <select
-          disabled={!editorVisible}
-          aria-label={t('layout.label')}
-          value={preset}
-          onChange={(event) => {
-            arrange(layoutKey, event.target.value as WorkspacePreset, swapped)
-          }}
-        >
-          {(['balanced', 'chat-focus', 'document-focus', ...(profile === 'research' ? [] : ['focus'])] as WorkspacePreset[]).map(
-            value => (
-              <option key={value} value={value}>
-                {t(`layout.${value}`)}
-              </option>
-            ),
-          )}
-        </select>
-        <button
-          type="button"
-          disabled={!editorVisible}
-          onClick={() => {
-            arrange(layoutKey, preset, !swapped)
-          }}
-        >
-          {t('layout.swap')}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            arrange(layoutKey, 'chat-focus', false)
-            showEditor(layoutKey, true)
-          }}
-        >
-          {t('layout.reset')}
-        </button>
-        <button
-          type="button"
-          aria-label={t('layout.toggleBottom')}
-          title={t('layout.toggleBottom')}
-          onClick={() => {
-            toggleTerminal?.()
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" />
-            <path d="M2 10h12" stroke="currentColor" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          aria-label={t('layout.toggleRight')}
-          title={t('layout.toggleRight')}
-          onClick={() => {
-            toggleFiles?.()
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" />
-            <path d="M10 2v12" stroke="currentColor" />
-          </svg>
-        </button>
+        <button ref={documentsToggle} type="button" aria-expanded={editorVisible}
+          onClick={() =>{  showEditor(layoutKey, !editorVisible) }}>{t(toggleKey)}</button>
+        {profile !== 'coding' && <button type="button" aria-expanded={filesVisible} aria-pressed={filesVisible}
+          onClick={() => toggleFiles?.()}>{t('editor.files')}</button>}
+        <details className={css.layoutMenu}>
+          <summary>{t('layout.label')}</summary>
+          <div>
+            <label>{t('layout.label')}<select disabled={!editorVisible} aria-label={t('layout.label')} value={preset}
+              onChange={(event) =>{  arrange(layoutKey, event.target.value as WorkspacePreset, swapped) }}>
+              {(['balanced', 'chat-focus', 'document-focus', ...(profile === 'research' ? [] : ['focus'])] as WorkspacePreset[]).map(value =>
+                <option key={value} value={value}>{t(`layout.${value}`)}</option>)}
+            </select></label>
+            <button type="button" disabled={!editorVisible} onClick={() =>{  arrange(layoutKey, preset, !swapped) }}>{t('layout.swap')}</button>
+            <button type="button" onClick={() => { arrange(layoutKey, 'document-focus', true); showEditor(layoutKey, true) }}>{t('layout.reset')}</button>
+            <button type="button" onClick={() => toggleTerminal?.()}>{t('layout.toggleBottom')}</button>
+          </div>
+        </details>
       </div>
       <div
         ref={body}
@@ -245,6 +178,8 @@ export function WorkflowWorkspace({
             ) : profile === 'coding' ? (
               <CodingWorkspace
                 {...documents}
+                {...toggleFiles === undefined ? {} : { toggleFiles }}
+                filesVisible={filesVisible}
                 sessionId={sessionId ?? null}
                 profile="coding"
                 t={t}

@@ -39,6 +39,10 @@ it('keeps general chats independent and toggles Files with visible state', async
     expect(workspace.sessionIds).toHaveLength(1)
 
     await page.getByRole('button', { name: /^Research/ }).click()
+    await expect.poll(() => scaffold.ctx.agents.list().length).toBe(count + 2)
+    const research = scaffold.ctx.agents.list().find(agent =>
+      agent.id !== newest.id && agent.id !== first.id && !workspace.sessionIds.includes(agent.id))!
+    expect(research.session.header.cwd).not.toBe(newest.session.header.cwd)
     const files = page.getByRole('button', { name: 'Files', exact: true })
     await files.waitFor()
     await files.click()
@@ -49,10 +53,12 @@ it('keeps general chats independent and toggles Files with visible state', async
     const savedFolder = newest.session.header.cwd
     await scaffold.ctx.sessionController.create({ sessionId: newest.id })
     expect(newest.session.header.cwd).toBe(savedFolder)
+    await page.getByRole('button', { name: /^Chat/ }).click()
+    await page.locator(`[data-row-key="session:${newest.id}"][aria-selected="true"]`).waitFor()
     await page.reload({ waitUntil: 'load' })
     await page.locator(`[data-row-key="session:${newest.id}"][aria-selected="true"]`).waitFor()
     expect(newest.session.header.cwd).toBe(savedFolder)
-    expect(scaffold.ctx.agents.list()).toHaveLength(count + 1)
+    expect(scaffold.ctx.agents.list()).toHaveLength(count + 2)
     expect(tripwire.pageErrors).toEqual([])
   } finally {
     await browser.close()

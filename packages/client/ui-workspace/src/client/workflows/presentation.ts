@@ -1,4 +1,5 @@
 /** Presentation preferences only; no task or permission mutations. */
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { defineStore } from '@deepseek-ai/dsh-client-store'
 import type { ResearchPreference } from './surfaces.ts'
 import type { WorkspacePreset } from './layout.ts'
@@ -11,6 +12,9 @@ export interface WorkflowPresentationState {
   research?: Record<string, ResearchPreference>
   researchChat?: Record<string, boolean>
   profiles: Record<string, WorkflowView>
+  owners?: Record<string, WorkflowView>
+  destinations?: Record<string, SessionId>
+  navigating?: WorkflowView | undefined
   documents?: Record<string, { paths: string[]; active?: string | undefined }>
   surfaceVisibility?: Record<string, boolean>
   editorVisibility?: Record<string, boolean>
@@ -58,6 +62,14 @@ function defineWorkflowPresentationStore() {
       arrange: (draft, key: string, preset: WorkspacePreset, swapped: boolean) => {
         draft.layouts ??= {}
         draft.layouts[key] = { preset, swapped }
+      },
+      navigating: (draft, profile: WorkflowView | undefined) => { draft.navigating = profile },
+      rememberDestination: (draft, session: SessionId, profile: WorkflowView, context: string, bookmark = true) => {
+        draft.owners ??= {}
+        draft.destinations ??= {}
+        draft.owners[session] = profile
+        if (bookmark) draft.destinations[JSON.stringify([context, profile])] = session
+        draft.profiles[session] = profile
       },
       choose: (draft, session: string, profile: WorkflowView) => {
         draft.profiles[session] = profile
