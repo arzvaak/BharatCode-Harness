@@ -20,7 +20,8 @@ it.each(['brand', 'brand-2x', 'brand-dark', 'brand-dark-2x', 'uninstaller-sideba
   const { data, info } = await sharp(readFileSync(new URL(`../installer/assets/${name}.png`, import.meta.url))).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   let orange = 0
   for (let i = 0; i < data.length; i += info.channels) {
-    if (data[i] > 230 && data[i + 1] > 70 && data[i + 1] < 140 && data[i + 2] < 90 && data[i + 3] > 200) orange++
+    if (data.readUInt8(i) > 230 && data.readUInt8(i + 1) > 70 && data.readUInt8(i + 1) < 140
+      && data.readUInt8(i + 2) < 90 && data.readUInt8(i + 3) > 200) orange++
   }
   expect(orange).toBeGreaterThan(info.width * info.height * 0.01)
 })
