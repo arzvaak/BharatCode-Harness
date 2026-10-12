@@ -15,6 +15,7 @@ import { WorkspaceEntity } from './entity.ts'
 import type { WorkspaceEntityHost } from './entity.ts'
 
 export { ProjectKnowledge } from './project-knowledge.ts'
+export { workflowPayloadSchema } from './workflow-journal.ts'
 export { DocumentDrafts } from './document-drafts.ts'
 
 export { WorkspaceMoveInvalidError } from './entity.ts'

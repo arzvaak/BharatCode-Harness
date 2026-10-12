@@ -26,6 +26,7 @@ export interface DocumentPanelActions {
 /** Source editor state and callbacks, with workspace-owned localized copy. */
 export type DocumentPanelProps = PropsLocale<'workspace'> &
   DocumentPanelActions & {
+    knowledgeRevision?: number | undefined
     diagnostics?: readonly LanguageDiagnostic[] | undefined
     hideFiles?: boolean
     openFiles?: (() => void) | undefined
@@ -100,7 +101,7 @@ export function DocumentPanel({
     return () => {
       active = false
     }
-  }, [sessionId, document?.path, evidenceReload, actions.documentEvidence])
+  }, [sessionId, document?.path, evidenceReload, actions.knowledgeRevision, actions.documentEvidence])
   const motion = useWorkflowMotion<HTMLElement>(`${sessionId ?? ''}/${document?.path ?? ''}`, `${selection?.start ?? ''}/${selection?.end ?? ''}/${proposal !== undefined}`)
   const richSupported =
     document !== undefined && /\.(md|markdown)$/.test(document.path) && !/```|~~~|<[^>]+>|^\|/m.test(document.text)

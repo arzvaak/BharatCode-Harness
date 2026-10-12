@@ -1,7 +1,7 @@
 import type { ArtifactRevision } from '@deepseek-ai/dsh-workspace/types'
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ResearchWorkspace, type ResearchWorkspaceProps } from '../src/client/workflows/ResearchWorkspace.tsx'
 import { en } from '../src/client/locales.ts'
 import type { WorkspaceKey } from '../src/client/locales.ts'
@@ -89,4 +89,50 @@ it('opens a recent source reader after navigating out of Overview', async () => 
   await waitFor(() => { expect(p.readArtifact).toHaveBeenCalledWith('recent') })
   resolveRead(artifact)
   expect(await screen.findByText('Captured recent source', { selector: 'pre' })).toBeTruthy()
+})
+it('updates captured sources on host invalidation without requiring Refresh', async () => {
+  const p = props()
+  let changed!: () => void
+  const stop = vi.fn()
+  p.watchKnowledge = vi.fn((_project, onChange) => { changed = onChange; return stop })
+  let hits: import('@deepseek-ai/dsh-workspace/types').ArtifactSearchHit[] = []
+  p.searchArtifacts = vi.fn(async () => ({ hits, hasMore: false }))
+  const v = render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'sources' }} />)
+  await waitFor(() => { expect(p.searchArtifacts).toHaveBeenCalled() })
+  const artifact = { id: 'auto' as never, projectId: 'p' as never, path: 'source:https://example.org', title: 'Automatically retained source', kind: 'source' as const, revision: 'r', capturedAt: '2026-10-12', excerpt: 'Observed evidence' }
+  hits = [artifact]
+  act(changed)
+  expect(await screen.findByRole('button', { name: 'Automatically retained source' })).toBeTruthy()
+  v.unmount()
+  expect(stop).toHaveBeenCalled()
+})
+
+it('preserves the open immutable reader and highlighted passage during background capture', async () => {
+  const p = props()
+  const artifact = { id: 'reader' as never, projectId: 'p' as never, path: 'source:https://example.org', title: 'Read source', kind: 'source' as const, revision: '1', capturedAt: '', text: 'Retained passage evidence' }
+  p.readArtifact = vi.fn(async () => artifact)
+  p.inspectArtifact = vi.fn(async () => ({ artifact, status: 'captured' as const }))
+  let changed!: () => void
+  p.watchKnowledge = (_project, callback) => { changed = callback; return () => {} }
+  render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'sources', sourceRevision: artifact.id, sourcePassage: { start: 0, end: 8, quote: 'Retained' } }} />)
+  await waitFor(() => expect(document.querySelector('mark')?.textContent).toBe('Retained'))
+  act(changed)
+  await waitFor(() => expect(p.searchArtifacts).toHaveBeenCalledTimes(2))
+  expect(document.querySelector('mark')?.textContent).toBe('Retained')
+  expect(p.readArtifact).toHaveBeenCalledTimes(1)
+})
+
+it('finishes a pending source read after a background knowledge update', async () => {
+  const p = props()
+  const artifact = { id: 'pending' as never, projectId: 'p' as never, path: 'paper.md', title: 'Pending source', kind: 'source' as const, revision: '1', capturedAt: '', text: 'Pending reader evidence' }
+  let finish!: (value: ArtifactRevision) => void
+  let changed!: () => void
+  p.readArtifact = vi.fn(() => new Promise<ArtifactRevision>((resolve) => { finish = resolve }))
+  p.inspectArtifact = vi.fn(async () => ({ artifact, status: 'current' as const }))
+  p.watchKnowledge = (_project, callback) => { changed = callback; return () => {} }
+  render(<ResearchWorkspace {...p} preference={{ complexity: 'full', section: 'sources', sourceRevision: artifact.id }} />)
+  await waitFor(() => { expect(p.readArtifact).toHaveBeenCalled() })
+  act(changed)
+  act(() => { finish(artifact) })
+  expect(await screen.findByText('Pending reader evidence', { selector: 'pre' })).toBeTruthy()
 })

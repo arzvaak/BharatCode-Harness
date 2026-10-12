@@ -311,3 +311,31 @@ it('retains the latest file lookup beyond the search budget and validates commen
   const value = await h.knowledge.saveWorkflowRecord({ ...request, payload: { ...request.payload, end: older.text.length } })
   expect(value.payload).toMatchObject({ quote: older.text })
 })
+
+it('deduplicates virtual source captures and restores exact evidence after reopening storage', async () => {
+  const h = await harness()
+  const request = { projectId: h.workspace.id, identity: 'https://example.org/paper', title: 'Paper excerpt', text: 'Immutable web evidence', kind: 'source' as const }
+  const source = await h.knowledge.captureText(request)
+  expect((await h.knowledge.captureText(request)).id).toBe(source.id)
+  expect(await h.knowledge.inspect(source.id)).toMatchObject({ status: 'captured' })
+  await expect(h.knowledge.captureText({ ...request, text: 'x'.repeat(5000) })).rejects.toThrow()
+  await h.dispose()
+  const reopened = await harness(h.pool, h.root)
+  expect(reopened.knowledge.read(source.id).text).toBe('Immutable web evidence')
+})
+
+it('records a new immutable capture when source content reverts to an earlier revision', async () => {
+  const h = await harness()
+  const request = { projectId: h.workspace.id, path: 'paper.md', kind: 'source' as const }
+  await writeFile(join(h.root, request.path), 'A')
+  const first = await h.knowledge.register(request)
+  await writeFile(join(h.root, request.path), 'B')
+  const second = await h.knowledge.register(request)
+  await writeFile(join(h.root, request.path), 'A')
+  const reverted = await h.knowledge.register(request)
+  expect(reverted.id).not.toBe(first.id)
+  expect(reverted.revision).toBe(first.revision)
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '' }).hits[0]?.id).toBe(reverted.id)
+  expect((await h.knowledge.register(request)).id).toBe(reverted.id)
+  expect(h.knowledge.read(second.id).text).toBe('B')
+})

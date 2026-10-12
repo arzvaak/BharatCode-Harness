@@ -20,6 +20,7 @@ import type {
 
 /** Files and captured evidence are read through their owning remote services. */
 export interface WorkspaceSurfaceActions {
+  watchKnowledge?(this: void, project: WorkspaceId, changed: () => void, failed: (reason: unknown) => void): () => void
   applications?(session: SessionId): Promise<readonly WorkspaceApp[]>
   applicationResource?(session: SessionId, server: string, tool: string): Promise<WorkspaceAppResource>
   applicationCall?(

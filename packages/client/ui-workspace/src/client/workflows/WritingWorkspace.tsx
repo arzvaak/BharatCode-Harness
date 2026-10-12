@@ -22,39 +22,53 @@ const empty: Writing = {
 }
 export function WritingWorkspace(props: DocumentPanelProps & WorkspaceSurfaceActions & { project?: WorkspaceView | undefined }) {
   const generation = useRef(0)
+  const [knowledgeRevision, setKnowledgeRevision] = useState(0)
   const [record, setRecord] = useState<WorkflowRecord>()
+  const [incoming, setIncoming] = useState<{ value: WorkflowRecord | undefined }>()
+  const [backup, setBackup] = useState<Writing>()
   const [draft, setDraft] = useState<Writing>(empty)
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
   const [sourcePaths, setSourcePaths] = useState('')
   const [consultation, setConsultation] = useState('continuity')
   const [structure, setStructure] = useState(false)
+  const latest = useRef({ record, draft, busy })
+  latest.current = { record, draft, busy }
   const motion = useWorkflowMotion<HTMLElement>(String(props.project?.workspaceId ?? ''), structure)
   useLayoutEffect(() => {
     ++generation.current
     let active = true
     setRecord(undefined)
     setDraft(empty)
+    setIncoming(undefined)
+    setBackup(undefined)
     setError(undefined)
     setBusy(false)
-    if (props.project !== undefined)
+    let request = 0
+    const load = (initial: boolean): void => {
+      const currentRequest = ++request
+      if (props.project === undefined) return
       void props.workflowRecords?.(props.project.workspaceId).then(
         (records) => {
-          if (active) {
-            const value = records.find(value => value.id === 'writing-project')
-            setRecord(value)
-            if (value?.payload.kind === 'writing') setDraft(value.payload)
+          if (!active || request !== currentRequest) return
+          const value = records.find(value => value.id === 'writing-project')
+          const dirty = JSON.stringify(latest.current.draft) !== JSON.stringify(latest.current.record?.payload ?? empty)
+          if (!initial && (latest.current.busy || dirty)) {
+            if (value?.revision !== latest.current.record?.revision) { setIncoming({ value }); setError(props.t('writing.externalChange')) }
+            return
           }
+          setIncoming(undefined)
+          setRecord(value)
+          if (value?.payload.kind === 'writing') setDraft(value.payload)
         },
-        (reason: unknown) => {
-          if (active) setError(String(reason))
-        },
+        (reason: unknown) => { if (active && request === currentRequest) setError(String(reason)) },
       )
-    return () => {
-      active = false
-      ++generation.current
     }
-  }, [props.project?.workspaceId, props.workflowRecords])
+    load(true)
+    const stop = props.project === undefined ? undefined : props.watchKnowledge?.(props.project.workspaceId,
+      () => { setKnowledgeRevision(value => value + 1); load(false) }, (reason) => { if (active) setError(String(reason)) })
+    return () => { active = false; stop?.(); ++generation.current }
+  }, [props.project?.workspaceId, props.workflowRecords, props.watchKnowledge])
   const save = (): void => {
     if (props.project === undefined || props.saveWorkflowRecord === undefined) return
     const epoch = generation.current
@@ -110,6 +124,21 @@ export function WritingWorkspace(props: DocumentPanelProps & WorkspaceSurfaceAct
       {structure && (
         <div className={css.writingBrief} data-workflow-motion="structure">
           {error !== undefined && <p role="alert">{error}</p>}
+          {incoming !== undefined && (
+            <button type="button" disabled={busy} onClick={() => {
+              setBackup(draft)
+              setRecord(incoming.value)
+              setDraft(incoming.value?.payload.kind === 'writing' ? incoming.value.payload : empty)
+              setIncoming(undefined)
+              setError(undefined)
+            }}>{props.t('writing.loadLatest')}</button>
+          )}
+          {backup !== undefined && (
+            <button type="button" disabled={busy} onClick={() => {
+              setDraft(backup)
+              setBackup(undefined)
+            }}>{props.t('writing.restoreDraft')}</button>
+          )}
           <div className={css.writingFields}>
             <label>
               {props.t('writing.specialization')}
@@ -265,7 +294,7 @@ export function WritingWorkspace(props: DocumentPanelProps & WorkspaceSurfaceAct
         </div>
       )}
       <div className={css.writingDocument}>
-        <DocumentPanel {...props} hideFiles profile="writing" />
+        <DocumentPanel {...props} knowledgeRevision={knowledgeRevision} hideFiles profile="writing" />
       </div>
     </section>
   )

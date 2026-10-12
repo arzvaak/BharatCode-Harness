@@ -44,6 +44,11 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
   const { t, project, sessionId, preference, changePreference } = props
   const [query, setQuery] = useState('')
   const [reload, setReload] = useState(0)
+  useEffect(() => {
+    if (props.project !== undefined) return props.watchKnowledge?.(props.project.workspaceId,
+      () => { setReload(value => value + 1) }, (reason) => { setError(reason instanceof Error ? reason.message : String(reason)) })
+    return undefined
+  }, [props.project?.workspaceId, props.watchKnowledge])
   const [hits, setHits] = useState<readonly ArtifactSearchHit[]>([])
   const [hasMore, setHasMore] = useState(false)
   const [evidenceSummary, setEvidenceSummary] = useState({ count: 0, hasMore: false })
@@ -66,6 +71,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
   const motion = useWorkflowMotion<HTMLElement>(`${project?.workspaceId ?? ''}/${sessionId ?? ''}`, `${selected?.id ?? ''}/${passage?.start ?? ''}/${passage?.end ?? ''}`)
   const readerGeneration = useRef(0)
   const generation = useRef(0)
+  const searchGeneration = useRef(0)
   const section = preference.section
   const searchQuery = section === 'sources' || section === 'evidence' ? query : ''
   const evidenceOnly = section === 'evidence'
@@ -76,17 +82,20 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
     ) ?? 'research'
   useLayoutEffect(() => {
     ++readerGeneration.current
-    const epoch = ++generation.current
+    ++generation.current
     setRelations([])
     setPassage(undefined)
     setTarget(undefined)
     setFocusPassage(undefined)
     setSelected(undefined)
     setSourceStatus(undefined)
+    setBusy(false)
+  }, [project?.workspaceId, searchQuery, evidenceOnly, overview])
+  useLayoutEffect(() => {
+    const epoch = ++searchGeneration.current
     setHits([])
     setHasMore(false)
     setError(undefined)
-    setBusy(false)
     setEvidenceSummary({ count: 0, hasMore: false })
     setLoading(project !== undefined)
     if (project !== undefined && overview)
@@ -98,10 +107,10 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
         })
         .then(
           (result) => {
-            if (generation.current === epoch) setEvidenceSummary({ count: result.hits.length, hasMore: result.hasMore })
+            if (searchGeneration.current === epoch) setEvidenceSummary({ count: result.hits.length, hasMore: result.hasMore })
           },
           (reason: unknown) => {
-            if (generation.current === epoch) setError(reason instanceof Error ? reason.message : String(reason))
+            if (searchGeneration.current === epoch) setError(reason instanceof Error ? reason.message : String(reason))
           },
         )
     if (project !== undefined)
@@ -113,20 +122,21 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
         })
         .then(
           (result) => {
-            if (generation.current === epoch) {
+            if (searchGeneration.current === epoch) {
               setHits([...result.hits].sort((a, b) => b.capturedAt.localeCompare(a.capturedAt)))
               setHasMore(result.hasMore)
+              if (result.captureIssues !== undefined) setError(result.captureIssues.join('\n'))
             }
           },
           (reason: unknown) => {
-            if (generation.current === epoch) setError(reason instanceof Error ? reason.message : String(reason))
+            if (searchGeneration.current === epoch) setError(reason instanceof Error ? reason.message : String(reason))
           },
         )
         .finally(() => {
-          if (generation.current === epoch) setLoading(false)
+          if (searchGeneration.current === epoch) setLoading(false)
         })
     return () => {
-      ++generation.current
+      ++searchGeneration.current
     }
   }, [project?.workspaceId, searchQuery, evidenceOnly, overview, reload, props.searchArtifacts])
   useEffect(() => {
@@ -191,7 +201,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
   useEffect(() => {
     if ((section === 'sources' || section === 'evidence') && preference.sourceRevision !== undefined)
       inspect(preference.sourceRevision)
-  }, [section, preference.sourceRevision, preference.sourcePassage, project?.workspaceId, searchQuery, reload])
+  }, [section, preference.sourceRevision, preference.sourcePassage, project?.workspaceId, searchQuery])
   const navigate = (value: ResearchSection): void => {
     changePreference({ section: value })
     setError(undefined)
@@ -638,7 +648,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
                       <div className={css.toolbar}>
                         <button
                           type="button"
-                          disabled={sessionId === null || selected.origin !== undefined}
+                          disabled={sessionId === null || selected.origin !== undefined || selected.generatedBy !== undefined}
                           onClick={() => {
                             if (sessionId !== null) props.openPreview(sessionId, selected.path)
                           }}
@@ -692,6 +702,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
                   </button>
                 </div>
                 <DocumentPanel
+                  knowledgeRevision={reload}
                   {...props}
                   hideFiles
                   titleKey={section === 'manuscript' ? 'research.manuscriptEditor' : 'research.notesEditor'}

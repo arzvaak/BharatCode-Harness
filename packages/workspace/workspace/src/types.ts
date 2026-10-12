@@ -305,6 +305,8 @@ export interface ArtifactSearchHit {
 }
 /** Complete bounded retrieval page, including an explicit omission signal. */
 export interface SearchArtifactsResult {
+  /** Discovery failures or limits; existing immutable matches remain readable. */
+  readonly captureIssues?: readonly string[]
   readonly hits: readonly ArtifactSearchHit[]
   readonly hasMore: boolean
 }

@@ -20,14 +20,16 @@ export function AnalysisPanel(
   const [busy, setBusy] = useState(false)
   const motion = useWorkflowMotion<HTMLDivElement>(String(props.projectId), records)
   const generation = useRef(0)
+  const requests = useRef(0)
   const reload = (): void => {
+    const request = ++requests.current
     const epoch = generation.current
     void props.workflowRecords?.(props.projectId).then(
       (value) => {
-        if (generation.current === epoch) setRecords(value.filter(record => record.payload.kind === 'analysis'))
+        if (generation.current === epoch && requests.current === request) setRecords(value.filter(record => record.payload.kind === 'analysis'))
       },
       (reason: unknown) => {
-        if (generation.current === epoch) setError(String(reason))
+        if (generation.current === epoch && requests.current === request) setError(String(reason))
       },
     )
   }
@@ -37,10 +39,12 @@ export function AnalysisPanel(
     setError(undefined)
     setBusy(false)
     reload()
+    const stop = props.watchKnowledge?.(props.projectId, reload, (reason) => { setError(String(reason)) })
     return () => {
+      stop?.()
       ++generation.current
     }
-  }, [props.projectId, props.refresh, props.workflowRecords])
+  }, [props.projectId, props.refresh, props.workflowRecords, props.watchKnowledge])
   const prepare = (): void => {
     const epoch = generation.current
     setBusy(true)

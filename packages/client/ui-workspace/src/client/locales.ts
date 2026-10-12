@@ -55,6 +55,9 @@ export const zh = {
   'writing.characters': '角色',
   'writing.chronology': '时间线',
   'writing.scenes': '场景及目标',
+  'writing.loadLatest': 'Load latest brief',
+  'writing.restoreDraft': 'Restore my local draft',
+  'writing.externalChange': 'The saved brief changed. Your unsaved edits are preserved. Load the latest brief to review it; you can restore your local draft afterwards.',
   'writing.saveBrief': '保存项目结构',
 
   'research.attachFinding': '关联研究发现或论断',
@@ -455,6 +458,9 @@ export const en = {
   'writing.characters': 'Characters',
   'writing.chronology': 'Chronology',
   'writing.scenes': 'Scenes and objectives',
+  'writing.loadLatest': 'Load latest brief',
+  'writing.restoreDraft': 'Restore my local draft',
+  'writing.externalChange': 'The saved brief changed. Your unsaved edits are preserved. Load the latest brief to review it; you can restore your local draft afterwards.',
   'writing.saveBrief': 'Save project structure',
 
   'research.attachFinding': 'Attach to a finding or claim',

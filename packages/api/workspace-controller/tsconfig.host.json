@@ -19,7 +19,9 @@
     "src/document-review.ts",
     "src/language-review.ts",
     "src/git-review.ts",
-    "src/request-review.ts"
+    "src/request-review.ts",
+    "src/workspace-tools.ts",
+    "src/source-capture.ts"
   ],
   "references": [
     {
@@ -72,6 +74,12 @@
     },
     {
       "path": "../../core/tools"
+    },
+    {
+      "path": "../../core/system-prompt"
+    },
+    {
+      "path": "../../util/values"
     }
   ]
 }

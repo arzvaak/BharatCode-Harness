@@ -6,6 +6,8 @@ import type {} from '@deepseek-ai/dsh-tools'
 import type { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { WorkspaceApp, WorkspaceAppResource } from './types.ts'
 import { z } from 'zod'
+import { discoverProjectSources } from './source-capture.ts'
+import * as WorkspaceTools from './workspace-tools.ts'
 import { createHash, randomUUID } from 'node:crypto'
 import { reconstructRequest, diffRequests, replayWithoutTools } from './request-review.ts'
 import { gitChange } from './git-review.ts'
@@ -45,7 +47,7 @@ import type {
 
 /** Generated `knowledge` Remote owner, independent of optional integrations. */
 export class ProjectKnowledgeController extends TypertRemoteService {
-  static inject = ['projectKnowledge', 'sessionController', 'sessionQuery', 'sessions']
+  static inject = ['projectKnowledge', 'workspaceRegistry', 'sessionController', 'sessionQuery', 'sessions']
   static Config = schema.object({
     notebookPython: schema.string().default('python3'),
     notebookCellTimeoutSeconds: schema.natural().min(1).default(120),
@@ -56,6 +58,38 @@ export class ProjectKnowledgeController extends TypertRemoteService {
   constructor(ctx: Context, config: { notebookPython?: string; notebookCellTimeoutSeconds?: number } = {}) {
     super(ctx, 'projectKnowledgeController', { namespace: 'knowledge' })
     this.notebookConfig = ProjectKnowledgeController.Config(config)
+    ctx.plugin(WorkspaceTools)
+  }
+
+  /** Observe project evidence/journal commits, beginning with a reload anchor.
+   * @param projectId - Registered project to observe.
+   * @param signal - Viewing lifetime.
+   * @returns Coalesced invalidations after durable commits.
+   */
+  @Remote({ mode: 'stream' })
+  async *watch(projectId: WorkspaceId, signal: AbortSignal): AsyncIterable<number> {
+    if (this.ctx.workspaceRegistry.get(projectId) === undefined) throw new Error('unknown source project')
+    let revision = 0
+    let observed = -1
+    let wake: (() => void) | undefined
+    const stop = this.ctx.on('domain/changed', (change) => {
+      if (!['project_knowledge', 'project_workflow_journal'].includes(change.domain) || change.operation !== 'put') return
+      const value = change.value as { projectId?: unknown; sourceProjectId?: unknown; destinationProjectId?: unknown }
+      if (![value.projectId, value.sourceProjectId, value.destinationProjectId].includes(projectId)) return
+      ++revision
+      wake?.()
+    })
+    try {
+      while (!signal.aborted) {
+        if (observed !== revision) { observed = revision; yield observed; continue }
+        await new Promise<void>((resolve) => {
+          const done = (): void => { signal.removeEventListener('abort', done); wake = undefined; resolve() }
+          wake = done
+          signal.addEventListener('abort', done, { once: true })
+          if (signal.aborted || observed !== revision) done()
+        })
+      }
+    } finally { stop(); wake?.() }
   }
 
   /**
@@ -595,8 +629,11 @@ export class ProjectKnowledgeController extends TypertRemoteService {
    * @returns Registered source matches.
    */
   @Remote('search')
-  search(request: SearchArtifactsRequest): SearchArtifactsResult {
-    return this.ctx.projectKnowledge.search(request)
+  async search(request: SearchArtifactsRequest): Promise<SearchArtifactsResult> {
+    const discovery = await discoverProjectSources(this.ctx, request.projectId)
+    const issues = discovery.receipts.flatMap(value => value.error === undefined ? [] : [`${value.path}: ${value.error}`])
+    if (discovery.truncated) issues.push('Source discovery limit reached. Register remaining sources explicitly with project_sources.')
+    return { ...this.ctx.projectKnowledge.search(request), ...(issues.length === 0 ? {} : { captureIssues: issues }) }
   }
   /**
    * Capture bounded conversation evidence from the selected project session.

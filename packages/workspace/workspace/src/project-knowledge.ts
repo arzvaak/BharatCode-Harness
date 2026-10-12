@@ -211,6 +211,24 @@ export class ProjectKnowledge extends Service {
     const result: ArtifactRevision = { id, projectId, path: `analysis:${recordId}`, title, text, kind: 'note', revision: digest(text), capturedAt: new Date().toISOString(), generatedBy: recordId }
     await this.table().put(id, result); return result
   }
+  /** Retain returned research evidence without inventing a local file origin.
+   * @param request - Project, provenance identity and complete returned text.
+   * @returns Immutable, retry-stable captured source revision.
+   */
+  async captureText(request: { projectId: WorkspaceId; identity: string; title: string; text: string; kind: ArtifactRevision['kind'] }): Promise<ArtifactRevision> {
+    if (this.ctx.workspaceRegistry.get(request.projectId) === undefined) throw new Error('unknown source project')
+    if (request.identity.trim() === '' || request.title.trim() === '' || request.text.trim() === '') throw new Error('source identity, title and text are required')
+    if (Buffer.byteLength(request.text, 'utf8') > this.limits.maxArtifactBytes) throw new Error('source capture exceeds artifact byte limit')
+    const revision = digest(request.text)
+    const path = `source:${request.identity}`
+    const latest = this.latestForPath(request.projectId, path)
+    if (latest?.revision === revision && latest.kind === request.kind && latest.title === request.title) return Object.freeze({ ...latest })
+    let id = digest(JSON.stringify([request.projectId, path, revision, request.kind, request.title])) as ArtifactRevisionId
+    if (this.table().get(id) !== undefined) id = digest(JSON.stringify([id, latest?.id])) as ArtifactRevisionId
+    const artifact: ArtifactRevision = { id, projectId: request.projectId, path, title: request.title, kind: request.kind, text: request.text, revision, capturedAt: new Date().toISOString(), generatedBy: 'source-capture' }
+    await this.table().put(id, artifact)
+    return Object.freeze({ ...artifact })
+  }
   /** Capture a complete registered UTF-8 file without changing it.
    * @param request - Selected project source and evidence classification.
    * @returns An immutable revision; repeat registration is idempotent.
@@ -243,11 +261,13 @@ export class ProjectKnowledge extends Service {
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
     if (text.includes('\0')) throw new Error('project source requires text extraction before registration')
     const revision = digest(text)
-    const id = digest(
+    const latest = this.latestForPath(request.projectId, request.path)
+    if (latest?.revision === revision && latest.kind === request.kind && latest.title === (request.title ?? request.path))
+      return Object.freeze({ ...latest })
+    let id = digest(
       JSON.stringify([request.projectId, path, revision, request.kind, request.title ?? request.path]),
     ) as ArtifactRevisionId
-    const existing = this.table().get(id)
-    if (existing !== undefined) return Object.freeze({ ...existing })
+    if (this.table().get(id) !== undefined) id = digest(JSON.stringify([id, latest?.id])) as ArtifactRevisionId
     const artifact: ArtifactRevision = {
       id,
       projectId: request.projectId,

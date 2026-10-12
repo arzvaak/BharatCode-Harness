@@ -431,6 +431,26 @@ export function apply(ctx: Context): void {
           ) => unwrap(await ctx.remote.knowledge.executeNotebook(project, id, session)),
           workflowRecords: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId) =>
             unwrap(await ctx.remote.knowledge.workflowRecords(project)),
+          watchKnowledge: (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, changed: () => void, failed: (reason: unknown) => void) => {
+            const stopped = (): boolean => disposed
+            let disposed = false
+            const stream = ctx.remote.$stream<number>({
+              name: `project knowledge ${project}`,
+              open: signal => ctx.remote.knowledge.watch(project, signal),
+              ended: () => new Error(`Project knowledge watch ended: ${project}`),
+            })
+            void (async () => {
+              try {
+                for await (const item of stream) {
+                  if (stopped()) break
+                  changed()
+                  item.accept()
+                }
+              } catch (reason) { if (!stopped()) failed(reason) }
+              finally { await stream.dispose() }
+            })()
+            return () => { disposed = true; void stream.dispose() }
+          },
           saveWorkflowRecord: async (request: import('@deepseek-ai/dsh-workspace/types').SaveWorkflowRecord) =>
             unwrap(await ctx.remote.knowledge.saveWorkflowRecord(request)),
           applications: async (session: SessionId) => unwrap(await ctx.remote.knowledge.applications(session)),
