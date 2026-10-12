@@ -14,7 +14,7 @@ export interface DesktopElectronBuilderConfig {
     readonly output: string
   }
   readonly files: readonly (string | { readonly from: string; readonly to: string; readonly filter: readonly string[] })[]
-  readonly extraMetadata: { readonly dshDesktopAppId: string; readonly dshMandatoryUpdatePolicy: unknown }
+  readonly extraMetadata: { readonly productName: 'BharatCode'; readonly description: string; readonly author: { readonly name: 'BharatCode'; readonly email: string }; readonly dshDesktopAppId: string; readonly dshMandatoryUpdatePolicy: unknown }
   readonly asar: boolean
   readonly asarUnpack: readonly string[]
   readonly extraResources: readonly { readonly from: string; readonly to: string }[]
@@ -32,6 +32,7 @@ export interface DesktopElectronBuilderConfig {
     readonly writeUpdateInfo: boolean
   }
   readonly win: {
+    readonly executableName: 'BharatCode'
     readonly forceCodeSigning: boolean
     readonly signtoolOptions: {
       readonly publisherName: string | undefined
@@ -40,6 +41,8 @@ export interface DesktopElectronBuilderConfig {
     }
   }
   readonly nsis: {
+    readonly shortcutName: 'BharatCode'
+    readonly uninstallDisplayName: string
     readonly include: string
     readonly oneClick: false
     readonly perMachine: false

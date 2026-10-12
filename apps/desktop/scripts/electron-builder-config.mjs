@@ -108,6 +108,9 @@ export function createElectronBuilderConfig(
     appId,
     protocols: [{ name: 'BharatCode', schemes: ['dsh'] }],
     extraMetadata: {
+      productName: 'BharatCode',
+      description: 'BharatCode: chat, code, research, and write in one desktop workspace.',
+      author: { name: 'BharatCode', email: 'arzvaak@users.noreply.github.com' },
       dshDesktopAppId: appId,
       dshMandatoryUpdatePolicy: policy,
       ...linuxPreview ? { desktopName: 'bharatcode-harness.desktop',
@@ -235,6 +238,7 @@ export function createElectronBuilderConfig(
       )
     },
     win: {
+      executableName: 'BharatCode',
       icon: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)),
       forceCodeSigning: !unsigned,
       signtoolOptions: {
@@ -256,6 +260,8 @@ export function createElectronBuilderConfig(
     deb: { packageName: 'bharatcode-harness', depends: ['libgtk-3-0', 'libnotify4', 'libnss3', 'libxss1', 'libxtst6', 'xdg-utils', 'libatspi2.0-0', 'libuuid1', 'libsecret-1-0', 'libasound2t64 | libasound2', 'libgbm1', 'pkexec'] },
     rpm: { packageName: 'bharatcode-harness', depends: ['gtk3', 'libnotify', 'nss', 'libXScrnSaver', '(libXtst or libXtst6)', 'xdg-utils', 'at-spi2-core', '(libuuid or libuuid1)', 'alsa-lib', 'mesa-libgbm', 'libsecret', 'polkit'] },
     nsis: {
+      shortcutName: 'BharatCode',
+      uninstallDisplayName: 'BharatCode ${version}',
       installerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
       uninstallerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
       include: fileURLToPath(new URL('./installer.nsh', import.meta.url)),
