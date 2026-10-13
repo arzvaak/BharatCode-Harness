@@ -156,6 +156,7 @@ try {
       if (!page) await new Promise(resolve => setTimeout(resolve, 100));
     }
     if (!page) throw Error('Restarted workspace missing');
+    await page.setViewportSize({ width: 1280, height: 754 });
     await page.getByRole('button', { name: 'Account menu', exact: true }).waitFor({ timeout: 60000 });
     if (await page.locator('[data-desktop-onboarding]').count()) throw Error('Completed onboarding reappeared');
     await page.locator('summary[aria-label="Tools & workflows"]').waitFor({ timeout: 90000 });
