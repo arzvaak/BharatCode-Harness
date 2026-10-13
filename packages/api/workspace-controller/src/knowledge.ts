@@ -14,6 +14,7 @@ import { gitChange } from './git-review.ts'
 import type { LanguageReview } from './language-review.ts'
 import type { DocumentEvidence } from './document-review.ts'
 import schema from '@deepseek-ai/schemastery'
+import { ResearchOperations } from './research.ts'
 import { executeCapturedNotebook } from './notebook-runner.ts'
 import type {} from '@deepseek-ai/dsh-jobs'
 import { Context } from '@deepseek-ai/cordis'
@@ -23,6 +24,10 @@ import type { SessionRequestId } from '@deepseek-ai/dsh-api-session-controller/t
 import { SessionQueryError } from '@deepseek-ai/dsh-session-query'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type {
+  ResearchResolution,
+  ResearchList,
+  ResearchInspection,
+  ResearchExport,
   WorkflowRecord,
   SaveWorkflowRecord,
   WorkspaceId,
@@ -613,6 +618,49 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     if (request.payload.kind === 'analysis' && request.payload.status !== 'prepared')
       throw new Error('Execution states are owned by the notebook job controller')
     return this.ctx.projectKnowledge.saveWorkflowRecord(request)
+  }
+  /** Browse Markdown notes; discovery does not admit model context. */
+  @Remote('researchList')
+  researchList(projectId: WorkspaceId, query?: string, cursor?: string): Promise<ResearchList> {
+    return new ResearchOperations(this.ctx).list(projectId, query ?? '', cursor)
+  }
+  /** Read a note, links and backlinks from the selected project. */
+  @Remote('researchInspect')
+  researchInspect(projectId: WorkspaceId, path: string): Promise<ResearchInspection> {
+    return new ResearchOperations(this.ctx).inspect(projectId, path)
+  }
+  /** Explicit exclusive Markdown note creation. */
+  @Remote('researchCreate')
+  researchCreate(projectId: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }> {
+    return new ResearchOperations(this.ctx).create(projectId, path, title)
+  }
+  /** Prepare a citation proposal without modifying the saved note. */
+  @Remote('researchPrepareCitation')
+  researchPrepareCitation(projectId: WorkspaceId, path: string, expectedText: string,
+    sourceId: ArtifactRevisionId, start: number, end: number): Promise<{ path: string; proposedText: string }> {
+    return new ResearchOperations(this.ctx).prepareCitation(projectId, path, expectedText, sourceId, start, end)
+  }
+  /** Capture only the exact saved note version; citation errors are retryable receipts. */
+  @Remote('researchCaptureCitations')
+  researchCaptureCitations(
+    projectId: WorkspaceId, path: string, expectedText: string,
+  ): Promise<{ artifact: ArtifactRevision; linked: number; issues: string[] }> {
+    return new ResearchOperations(this.ctx).captureCitations(projectId, path, expectedText)
+  }
+  /** Resolve knowledge links independently of library search pagination. */
+  @Remote('researchResolve')
+  researchResolve(projectId: WorkspaceId, from: string, target: string, wiki: boolean): Promise<ResearchResolution> {
+    return new ResearchOperations(this.ctx).resolveLink(projectId, from, target, wiki)
+  }
+  /** Read a contained image for the native research reader. */
+  @Remote('researchResource')
+  researchResource(projectId: WorkspaceId, path: string): Promise<{ base64: string; mime: string }> {
+    return new ResearchOperations(this.ctx).resource(projectId, path)
+  }
+  /** Download a portable vault ZIP without modifying any existing vault. */
+  @Remote('researchExport')
+  researchExport(projectId: WorkspaceId): Promise<ResearchExport> {
+    return new ResearchOperations(this.ctx).export(projectId)
   }
   /**
    * Register immutable project evidence.

@@ -21,7 +21,8 @@
     "src/git-review.ts",
     "src/request-review.ts",
     "src/workspace-tools.ts",
-    "src/source-capture.ts"
+    "src/source-capture.ts",
+    "src/research.ts"
   ],
   "references": [
     {
