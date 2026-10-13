@@ -334,3 +334,5 @@ export interface CaptureSessionArtifactRequest {
 }
 
 export type { WorkflowPayload, WorkflowRecord, SaveWorkflowRecord } from './workflow-journal.ts'
+
+export type * from './research-types.ts'

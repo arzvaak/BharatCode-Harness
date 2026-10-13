@@ -14,6 +14,7 @@ import type { DomainGlobal, KvTable } from '@deepseek-ai/dsh-storage-domain'
 import { WorkspaceEntity } from './entity.ts'
 import type { WorkspaceEntityHost } from './entity.ts'
 
+export { ResearchLibrary } from './research-library.ts'
 export { ProjectKnowledge } from './project-knowledge.ts'
 export { workflowPayloadSchema } from './workflow-journal.ts'
 export { DocumentDrafts } from './document-drafts.ts'

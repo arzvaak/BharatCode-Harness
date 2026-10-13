@@ -1,7 +1,7 @@
 # Native research knowledge workspace
 
 Date: 2026-10-13
-Status: proposed specification, awaiting user review
+Status: approved for implementation by the user on 2026-10-13
 Branch: implementation/research-knowledge-workspace
 
 ## Purpose and approved direction
@@ -10,7 +10,8 @@ Research supports sustained inquiry into a topic through connected notes, source
 citations, and findings. Computational notebooks remain available in the same
 project. The user approved a native workspace with linked Markdown notes,
 source citations, and Obsidian compatibility. This document specifies that
-implementation; no product changes have been made yet.
+implementation. The user subsequently requested in-app reading and export to
+Obsidian, and explicitly directed implementation.
 
 Success means a person can collect sources, write and link notes, revisit their
 evidence, edit the same files in Obsidian, and run a notebook without changing
@@ -47,6 +48,13 @@ external-edit handling. It does not promise Obsidian plugins, themes, databases,
 Canvas, or full block-reference rendering. A graph view, semantic embeddings,
 cloud sync, automatic literature monitoring, and new binary-document OCR are
 outside this implementation. Existing document readers remain available.
+
+In-app reading uses the existing safe Markdown renderer for tables, footnotes,
+code, math, and figures. No new graphics engine is required. Export produces a
+downloadable ZIP containing a vault folder of ordinary Markdown and referenced
+local attachments/notebooks, plus portable copies of cited captured evidence.
+The export reports missing resources and byte limits. It never overwrites an
+existing vault or includes credentials, app-private storage, or `.obsidian/`.
 
 ## Files and identity
 
