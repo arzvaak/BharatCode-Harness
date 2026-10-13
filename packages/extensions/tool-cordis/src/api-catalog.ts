@@ -2057,6 +2057,54 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Persisted workflow record with its new revision.',
       },
       {
+        signature: '@Remote(\'researchList\') researchList(projectId: WorkspaceId, query?: string, cursor?: string): Promise<ResearchList>',
+        description: 'Browse Markdown notes; discovery does not admit model context.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }, { name: 'query', description: 'Optional literal note search.' }, { name: 'cursor', description: 'Optional continuation from the previous bounded page.' }],
+        returns: 'Matching notes, continuation and explicit discovery issues.',
+      },
+      {
+        signature: '@Remote(\'researchInspect\') researchInspect(projectId: WorkspaceId, path: string): Promise<ResearchInspection>',
+        description: 'Read a note, links and backlinks from the selected project.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }, { name: 'path', description: 'Project-relative Markdown note path.' }],
+        returns: 'Saved note content, metadata, resolved links and backlinks.',
+      },
+      {
+        signature: '@Remote(\'researchCreate\') researchCreate(projectId: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }>',
+        description: 'Explicit exclusive Markdown note creation.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }, { name: 'path', description: 'Portable project-relative path for a new note.' }, { name: 'title', description: 'Single-line title for the initial heading.' }],
+        returns: 'Created note path and any evidence capture issues.',
+      },
+      {
+        signature: '@Remote(\'researchPrepareCitation\') researchPrepareCitation(projectId: WorkspaceId, path: string, expectedText: string, sourceId: ArtifactRevisionId, start: number, end: number): Promise<{ path: string; proposedText: string }>',
+        description: 'Prepare a citation proposal without modifying the saved note.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }, { name: 'path', description: 'Project-relative path of the existing Markdown note.' }, { name: 'expectedText', description: 'Exact saved content against which to prepare the proposal.' }, { name: 'sourceId', description: 'Immutable captured source revision belonging to this project.' }, { name: 'start', description: 'Inclusive character offset of the source passage.' }, { name: 'end', description: 'Exclusive character offset of the source passage.' }],
+        returns: 'Canonical note path and proposed Markdown with an exact-source footnote.',
+      },
+      {
+        signature: '@Remote(\'researchCaptureCitations\') researchCaptureCitations( projectId: WorkspaceId, path: string, expectedText: string, ): Promise<{ artifact: ArtifactRevision; linked: number; issues: string[] }>',
+        description: 'Capture only the exact saved note version; citation errors are retryable receipts.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }, { name: 'path', description: 'Project-relative Markdown note path.' }, { name: 'expectedText', description: 'Exact saved content to capture and validate.' }],
+        returns: 'Captured note revision, validated citation count and incomplete evidence issues.',
+      },
+      {
+        signature: '@Remote(\'researchResolve\') researchResolve(projectId: WorkspaceId, from: string, target: string, wiki: boolean): Promise<ResearchResolution>',
+        description: 'Resolve knowledge links independently of library search pagination.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }, { name: 'from', description: 'Project-relative path of the originating note.' }, { name: 'target', description: 'Authored link target, including any heading fragment.' }, { name: 'wiki', description: 'Whether to apply wikilink basename and alias resolution.' }],
+        returns: 'Resolved path or explicit ambiguous, external, missing or invalid result.',
+      },
+      {
+        signature: '@Remote(\'researchResource\') researchResource(projectId: WorkspaceId, path: string): Promise<{ base64: string; mime: string }>',
+        description: 'Read a contained image for the native research reader.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }, { name: 'path', description: 'Project-relative supported image path.' }],
+        returns: 'Bounded image bytes encoded as base64 and their MIME type.',
+      },
+      {
+        signature: '@Remote(\'researchExport\') researchExport(projectId: WorkspaceId): Promise<ResearchExport>',
+        description: 'Download a portable vault ZIP without modifying any existing vault.',
+        parameters: [{ name: 'projectId', description: 'Registered research project.' }],
+        returns: 'Named base64 ZIP, included paths and explicit export omissions.',
+      },
+      {
         signature: '@Remote(\'register\') register(request: RegisterArtifactRequest): Promise<ArtifactRevision>',
         description: 'Register immutable project evidence.',
         parameters: [{ name: 'request', description: 'Explicit source registration.' }],
@@ -6694,6 +6742,34 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RequestUserInput',
     declaration: 'export interface RequestUserInput {\n    readonly role: \'user\';\n    readonly content: UserMessage[\'content\'];\n    readonly id?: never;\n    readonly source?: never;\n}',
+  },
+  {
+    name: 'ResearchExport',
+    declaration: 'export interface ResearchExport {\n    filename: string;\n    base64: string;\n    files: string[];\n    issues: string[];\n}',
+  },
+  {
+    name: 'ResearchInspection',
+    declaration: 'export interface ResearchInspection {\n    note: ResearchNote;\n    text: string;\n    outgoing: {\n        link: ResearchLink;\n        resolution: ResearchResolution;\n    }[];\n    backlinks: {\n        path: string;\n        title: string;\n        excerpt: string;\n    }[];\n    issues: string[];\n}',
+  },
+  {
+    name: 'ResearchLink',
+    declaration: 'export interface ResearchLink {\n    target: string;\n    label: string;\n    labelMarkdown?: string | undefined;\n    wiki: boolean;\n    embed: boolean;\n    start: number;\n    end: number;\n}',
+  },
+  {
+    name: 'ResearchList',
+    declaration: 'export interface ResearchList {\n    notes: ResearchNote[];\n    total: number;\n    cursor?: string | undefined;\n    issues: string[];\n}',
+  },
+  {
+    name: 'ResearchMarkdown',
+    declaration: 'export interface ResearchMarkdown {\n    title: string;\n    aliases: string[];\n    tags: string[];\n    headings: string[];\n    links: ResearchLink[];\n}',
+  },
+  {
+    name: 'ResearchNote',
+    declaration: 'export interface ResearchNote extends ResearchMarkdown {\n    path: string;\n    version: string;\n    excerpt: string;\n}',
+  },
+  {
+    name: 'ResearchResolution',
+    declaration: 'export type ResearchResolution = {\n    status: \'resolved\';\n    path: string;\n    heading?: string | undefined;\n} | {\n    status: \'ambiguous\';\n    candidates: string[];\n} | {\n    status: \'external\';\n    url: string;\n} | {\n    status: \'missing\';\n    path: string;\n} | {\n    status: \'invalid\';\n};',
   },
   {
     name: 'ResolvedAlwaysRetryPolicy',

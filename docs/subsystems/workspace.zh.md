@@ -166,6 +166,24 @@ interface SessionActivity {
 
 [`dsh-workspace-controller`](../../packages/api/workspace-controller) 经 `ctx.workspaceRegistry` 向 GUI 客户端提供工作区 CRUD，[`dsh-session-controller`](../../packages/api/session-controller) 执行上文「先建会话再 attach」的流程。[dsh-agent-instructions](../../packages/context/agent-instructions) 尽管名字如此，却**不是**消费方：它在 agent 自己的 cwd 下发现 AGENTS.md 风格的指令文件，从不触碰 `ctx.workspaceRegistry`——两者共用的这个词指的是用户的工作目录，而非本注册表的实体。
 
+## 研究知识契约
+
+Research 阅读器和模型工具共用项目中的普通 Markdown 文件与不可变来源修订。
+发现笔记不会将整个知识库加入模型上下文。`research_notes.store` 以独占方式创建
+完整的新笔记，验证选定的来源片段，保存引用证据并重新读取已保存文件。
+模型操作流程见[研究工具指南](../research-knowledge-tools.md)。
+
+| 契约 | 含义 |
+| --- | --- |
+| `ResearchList` | 有界笔记元数据、总数、可选续页游标与发现问题。 |
+| `ResearchInspection` | 精确保存的文本及版本、外链解析结果、反向链接与问题。 |
+| `ResearchResolution` | 已解析路径及可选标题、歧义候选、外部 URL、缺失路径或无效目标。 |
+| `ResearchExport` | 知识库 ZIP 文件名及 base64 数据、包含的路径与明确的省略项。 |
+
+来源 ID 与精确字符范围形成可移植的 Markdown 脚注和证据关系。
+导出包含引用的来源副本，保留已有知识库元数据。已有笔记仍通过经审核且检查版本
+的文件发布流程修改。计算工作保留在关联的 notebook 中。
+
 ## 项目工作流记录
 
 项目知识服务保存已捕获证据和经过修订检查的工作流记录，不依赖可选搜索或记忆扩展。写入日志前会检查会话成员关系和项目所有权。
@@ -579,6 +597,78 @@ Generated `knowledge` Remote owner, independent of optional integrations.
  * @returns Persisted workflow record with its new revision.
  */
 @Remote('saveWorkflowRecord') saveWorkflowRecord(request: SaveWorkflowRecord): Promise<WorkflowRecord>
+
+/**
+ * Browse Markdown notes; discovery does not admit model context.
+ * @param projectId - Registered research project.
+ * @param query - Optional literal note search.
+ * @param cursor - Optional continuation from the previous bounded page.
+ * @returns Matching notes, continuation and explicit discovery issues.
+ */
+@Remote('researchList') researchList(projectId: WorkspaceId, query?: string, cursor?: string): Promise<ResearchList>
+
+/**
+ * Read a note, links and backlinks from the selected project.
+ * @param projectId - Registered research project.
+ * @param path - Project-relative Markdown note path.
+ * @returns Saved note content, metadata, resolved links and backlinks.
+ */
+@Remote('researchInspect') researchInspect(projectId: WorkspaceId, path: string): Promise<ResearchInspection>
+
+/**
+ * Explicit exclusive Markdown note creation.
+ * @param projectId - Registered research project.
+ * @param path - Portable project-relative path for a new note.
+ * @param title - Single-line title for the initial heading.
+ * @returns Created note path and any evidence capture issues.
+ */
+@Remote('researchCreate') researchCreate(projectId: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }>
+
+/**
+ * Prepare a citation proposal without modifying the saved note.
+ * @param projectId - Registered research project.
+ * @param path - Project-relative path of the existing Markdown note.
+ * @param expectedText - Exact saved content against which to prepare the proposal.
+ * @param sourceId - Immutable captured source revision belonging to this project.
+ * @param start - Inclusive character offset of the source passage.
+ * @param end - Exclusive character offset of the source passage.
+ * @returns Canonical note path and proposed Markdown with an exact-source footnote.
+ */
+@Remote('researchPrepareCitation') researchPrepareCitation(projectId: WorkspaceId, path: string, expectedText: string, sourceId: ArtifactRevisionId, start: number, end: number): Promise<{ path: string; proposedText: string }>
+
+/**
+ * Capture only the exact saved note version; citation errors are retryable receipts.
+ * @param projectId - Registered research project.
+ * @param path - Project-relative Markdown note path.
+ * @param expectedText - Exact saved content to capture and validate.
+ * @returns Captured note revision, validated citation count and incomplete evidence issues.
+ */
+@Remote('researchCaptureCitations') researchCaptureCitations( projectId: WorkspaceId, path: string, expectedText: string, ): Promise<{ artifact: ArtifactRevision; linked: number; issues: string[] }>
+
+/**
+ * Resolve knowledge links independently of library search pagination.
+ * @param projectId - Registered research project.
+ * @param from - Project-relative path of the originating note.
+ * @param target - Authored link target, including any heading fragment.
+ * @param wiki - Whether to apply wikilink basename and alias resolution.
+ * @returns Resolved path or explicit ambiguous, external, missing or invalid result.
+ */
+@Remote('researchResolve') researchResolve(projectId: WorkspaceId, from: string, target: string, wiki: boolean): Promise<ResearchResolution>
+
+/**
+ * Read a contained image for the native research reader.
+ * @param projectId - Registered research project.
+ * @param path - Project-relative supported image path.
+ * @returns Bounded image bytes encoded as base64 and their MIME type.
+ */
+@Remote('researchResource') researchResource(projectId: WorkspaceId, path: string): Promise<{ base64: string; mime: string }>
+
+/**
+ * Download a portable vault ZIP without modifying any existing vault.
+ * @param projectId - Registered research project.
+ * @returns Named base64 ZIP, included paths and explicit export omissions.
+ */
+@Remote('researchExport') researchExport(projectId: WorkspaceId): Promise<ResearchExport>
 
 /**
  * Register immutable project evidence.

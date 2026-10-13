@@ -619,45 +619,93 @@ export class ProjectKnowledgeController extends TypertRemoteService {
       throw new Error('Execution states are owned by the notebook job controller')
     return this.ctx.projectKnowledge.saveWorkflowRecord(request)
   }
-  /** Browse Markdown notes; discovery does not admit model context. */
+  /**
+   * Browse Markdown notes; discovery does not admit model context.
+   * @param projectId - Registered research project.
+   * @param query - Optional literal note search.
+   * @param cursor - Optional continuation from the previous bounded page.
+   * @returns Matching notes, continuation and explicit discovery issues.
+   */
   @Remote('researchList')
   researchList(projectId: WorkspaceId, query?: string, cursor?: string): Promise<ResearchList> {
     return new ResearchOperations(this.ctx).list(projectId, query ?? '', cursor)
   }
-  /** Read a note, links and backlinks from the selected project. */
+  /**
+   * Read a note, links and backlinks from the selected project.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative Markdown note path.
+   * @returns Saved note content, metadata, resolved links and backlinks.
+   */
   @Remote('researchInspect')
   researchInspect(projectId: WorkspaceId, path: string): Promise<ResearchInspection> {
     return new ResearchOperations(this.ctx).inspect(projectId, path)
   }
-  /** Explicit exclusive Markdown note creation. */
+  /**
+   * Explicit exclusive Markdown note creation.
+   * @param projectId - Registered research project.
+   * @param path - Portable project-relative path for a new note.
+   * @param title - Single-line title for the initial heading.
+   * @returns Created note path and any evidence capture issues.
+   */
   @Remote('researchCreate')
   researchCreate(projectId: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }> {
     return new ResearchOperations(this.ctx).create(projectId, path, title)
   }
-  /** Prepare a citation proposal without modifying the saved note. */
+  /**
+   * Prepare a citation proposal without modifying the saved note.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative path of the existing Markdown note.
+   * @param expectedText - Exact saved content against which to prepare the proposal.
+   * @param sourceId - Immutable captured source revision belonging to this project.
+   * @param start - Inclusive character offset of the source passage.
+   * @param end - Exclusive character offset of the source passage.
+   * @returns Canonical note path and proposed Markdown with an exact-source footnote.
+   */
   @Remote('researchPrepareCitation')
   researchPrepareCitation(projectId: WorkspaceId, path: string, expectedText: string,
     sourceId: ArtifactRevisionId, start: number, end: number): Promise<{ path: string; proposedText: string }> {
     return new ResearchOperations(this.ctx).prepareCitation(projectId, path, expectedText, sourceId, start, end)
   }
-  /** Capture only the exact saved note version; citation errors are retryable receipts. */
+  /**
+   * Capture only the exact saved note version; citation errors are retryable receipts.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative Markdown note path.
+   * @param expectedText - Exact saved content to capture and validate.
+   * @returns Captured note revision, validated citation count and incomplete evidence issues.
+   */
   @Remote('researchCaptureCitations')
   researchCaptureCitations(
     projectId: WorkspaceId, path: string, expectedText: string,
   ): Promise<{ artifact: ArtifactRevision; linked: number; issues: string[] }> {
     return new ResearchOperations(this.ctx).captureCitations(projectId, path, expectedText)
   }
-  /** Resolve knowledge links independently of library search pagination. */
+  /**
+   * Resolve knowledge links independently of library search pagination.
+   * @param projectId - Registered research project.
+   * @param from - Project-relative path of the originating note.
+   * @param target - Authored link target, including any heading fragment.
+   * @param wiki - Whether to apply wikilink basename and alias resolution.
+   * @returns Resolved path or explicit ambiguous, external, missing or invalid result.
+   */
   @Remote('researchResolve')
   researchResolve(projectId: WorkspaceId, from: string, target: string, wiki: boolean): Promise<ResearchResolution> {
     return new ResearchOperations(this.ctx).resolveLink(projectId, from, target, wiki)
   }
-  /** Read a contained image for the native research reader. */
+  /**
+   * Read a contained image for the native research reader.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative supported image path.
+   * @returns Bounded image bytes encoded as base64 and their MIME type.
+   */
   @Remote('researchResource')
   researchResource(projectId: WorkspaceId, path: string): Promise<{ base64: string; mime: string }> {
     return new ResearchOperations(this.ctx).resource(projectId, path)
   }
-  /** Download a portable vault ZIP without modifying any existing vault. */
+  /**
+   * Download a portable vault ZIP without modifying any existing vault.
+   * @param projectId - Registered research project.
+   * @returns Named base64 ZIP, included paths and explicit export omissions.
+   */
   @Remote('researchExport')
   researchExport(projectId: WorkspaceId): Promise<ResearchExport> {
     return new ResearchOperations(this.ctx).export(projectId)
