@@ -1,0 +1,23 @@
+.action {
+  position: fixed;
+  z-index: 1000;
+  max-width: calc(100vw - 16px);
+  padding: 8px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--dsw-alias-label-primary);
+  outline-offset: 2px;
+}

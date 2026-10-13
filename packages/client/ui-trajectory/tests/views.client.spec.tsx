@@ -417,6 +417,7 @@ function mount(fixture: Awaited<ReturnType<typeof bench>>) {
         useStore={bindSnapshotSelector(conversation)}
         actions={conversation.actions}
         renderSlot={renderSlot}
+        t={tConversation}
         bindDraftMirror={() => () => {}}
         openView={conversation.actions.openView}
         useInspectCall={selector => selector(undefined)}

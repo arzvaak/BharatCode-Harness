@@ -124,6 +124,8 @@ function mount(
   workspaceRows: WorkspaceView[] = [{ ...workspace('one'), sessionIds: [SID] }],
   retargetWorkspace = vi.fn(async (_workspaceId: WorkspaceId) => {}),
   options: {
+    /** Assistant output used by selection-to-composer interaction checks. */
+    assistantText?: string
     /** Explicit undefined exercises the shell before a Session is selected. */
     sessionId?: SessionId | undefined
     /** When true, mimic overlay:true chain siblings (hidden fallback + takeover). */
@@ -258,6 +260,7 @@ function mount(
           useStore={bindSnapshotSelector(store)}
           actions={store.actions}
           renderSlot={renderSlot as never}
+          t={t}
           bindDraftMirror={write => wiring.bindMirror(write)}
           openView={(view, focus) => { store.actions.openView(view, focus) }}
         />
@@ -306,7 +309,9 @@ function mount(
         />
       )
     }
-    return <div data-testid={`view-${opts?.only ?? key}`} />
+    return <div data-testid={`view-${opts?.only ?? key}`}>
+      {key === 'conversation.view' && options.assistantText !== undefined && <p data-assistant-output="">{options.assistantText}</p>}
+    </div>
   }) as ConversationContentProps['renderSlot']
   const renderSlotChain = ((_key, _owner, opts) => (
     options.overlayTakeover === true
@@ -479,6 +484,25 @@ describe('ConversationRoot resident composer', () => {
     expect(b.view.queryByRole('button', { name: 'Child' })).toBeNull()
     expect(b.view.getByText('Child').tagName).toBe('SPAN')
     expect(b.view.queryByText('Root')).toBeNull()
+  })
+
+  it('quotes only selected output into the live composer, preserving its draft and waiting for Send', () => {
+    const b = mount(sessionSnapshotOf(), undefined, undefined, { assistantText: 'Explain this specific passage' })
+    const output = b.view.getByText('Explain this specific passage')
+    const range = document.createRange()
+    range.setStart(output.firstChild!, 13)
+    range.setEnd(output.firstChild!, 29)
+    const selection = document.getSelection()!
+    selection.removeAllRanges()
+    selection.addRange(range)
+    fireEvent(document, new Event('selectionchange'))
+    const button = b.view.getByRole('button', { name: zh['selection.ask'] })
+    fireEvent.mouseDown(button)
+    fireEvent.click(button)
+    expect(b.wiring.snapshot.draft).toBe('ordinary draft\n\n> specific passage\n\n')
+    expect(b.store.store.getSnapshot().draft).toBe(b.wiring.snapshot.draft)
+    expect(b.sink).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(b.view.getByRole('textbox'))
   })
 
   it('shows hierarchy only for subagents and opens their ordinary owner', () => {

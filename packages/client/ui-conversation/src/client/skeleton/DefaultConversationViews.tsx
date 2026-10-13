@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ConversationSessionSlotProps } from '../contract/slots.ts'
 import { conversationPhase } from '../contract/snapshot.ts'
 import { resolveActiveView } from '../view-selection.ts'
 import css from './ConversationRoot.module.css'
+import { QuoteSelection } from './QuoteSelection.tsx'
 
 /**
  * Renders the active Session view inside the resident scrollport and keeps
@@ -12,8 +13,9 @@ import css from './ConversationRoot.module.css'
  */
 export function DefaultConversationViews({
   view, useSession, useConversation, useConversationViews, useInput, inputActions, useStore, actions,
-  renderSlot, bindDraftMirror, openView, useInspectCall,
+  renderSlot, bindDraftMirror, openView, useInspectCall, t,
 }: ConversationSessionSlotProps) {
+  const root = useRef<HTMLDivElement>(null)
   const tabs = useConversationViews(value => value)
   const inspectCall = useInspectCall(value => value)
   const selectedId = useStore(s => s.view)
@@ -35,7 +37,12 @@ export function DefaultConversationViews({
   if (session.blank && conversationPhase(session, conversation) === 'blank') return null
   const viewId = view ?? active?.id
   return (
-    <div className={css.viewArea}>
+    <div ref={root} className={css.viewArea}>
+      <QuoteSelection root={root} enabled={inputState.phase === 'plain'} label={t('selection.ask')}
+        onQuote={(text) => {
+          const span = inputActions.captureInsertion()
+          return inputActions.insertText(text, { ...span, start: span.end })
+        }} />
       {viewId !== undefined && renderSlot('conversation.view', {
         inspectCall,
         viewRequest,
