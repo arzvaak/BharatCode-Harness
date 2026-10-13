@@ -1876,6 +1876,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Captured output revision.',
       },
       {
+        signature: 'async captureText(request: { projectId: WorkspaceId; identity: string; title: string; text: string; kind: ArtifactRevision[\'kind\'] }): Promise<ArtifactRevision>',
+        description: 'Retain returned research evidence without inventing a local file origin.',
+        parameters: [{ name: 'request', description: 'Project, source history identity and complete returned text.' }],
+        returns: 'Immutable, retry-stable captured source revision.',
+      },
+      {
         signature: 'async register(request: RegisterArtifactRequest): Promise<ArtifactRevision>',
         description: 'Capture a complete registered UTF-8 file without changing it.',
         parameters: [{ name: 'request', description: 'Selected project source and evidence classification.' }],
@@ -1960,6 +1966,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     summary: 'Generated `knowledge` Remote owner, independent of optional integrations.',
     description: 'Generated `knowledge` Remote owner, independent of optional integrations.',
     methods: [
+      {
+        signature: '@Remote({ mode: \'stream\' }) async *watch(projectId: WorkspaceId, signal: AbortSignal): AsyncIterable<number>',
+        description: 'Observe project evidence/journal commits, beginning with a reload anchor.',
+        parameters: [{ name: 'projectId', description: 'Registered project to observe.' }, { name: 'signal', description: 'Viewing lifetime.' }],
+        returns: 'Coalesced invalidations after durable commits.',
+      },
       {
         signature: '@Remote(\'requestSnapshot\') async requestSnapshot(sessionId: SessionId, turn: number, step: number): Promise<string>',
         description: 'Internal, read-only request reconstruction; no additional product panel.',
@@ -2051,7 +2063,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Captured immutable source revision.',
       },
       {
-        signature: '@Remote(\'search\') search(request: SearchArtifactsRequest): SearchArtifactsResult',
+        signature: '@Remote(\'search\') async search(request: SearchArtifactsRequest): Promise<SearchArtifactsResult>',
         description: 'Search registered project sources without initiating model work.',
         parameters: [{ name: 'request', description: 'Selected project and literal query.' }],
         returns: 'Registered source matches.',
@@ -6865,7 +6877,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SearchArtifactsResult',
-    declaration: 'export interface SearchArtifactsResult {\n    readonly hits: readonly ArtifactSearchHit[];\n    readonly hasMore: boolean;\n}',
+    declaration: 'export interface SearchArtifactsResult {\n    readonly captureIssues?: readonly string[];\n    readonly hits: readonly ArtifactSearchHit[];\n    readonly hasMore: boolean;\n}',
   },
   {
     name: 'SearchFileMatches',

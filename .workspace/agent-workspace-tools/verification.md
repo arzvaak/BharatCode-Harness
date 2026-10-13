@@ -1,6 +1,6 @@
 # Verification
 
-Implementation commit: 9b7bfc87c8. Scope: model-operable workspace tools and automatic research retention; Linux local installation, without publishing a release.
+Implementation: workspace model tools and automatic source retention. Scope: model-operable workspace tools and automatic research retention; Linux local installation, without publishing a release.
 
 - Scoped suites: 723 passed, 3 skipped in 46 files (45 passed, one skipped). Command: `vitest run packages/api/workspace-controller/tests packages/workspace/workspace/tests packages/client/ui-workspace/tests packages/web/tool-web/tests`.
 - Final focused regressions: 46 passed in four files. Includes policy replacement/blocking, actual WorkspaceController composition, actual web-fetch tool, canonical session ownership, draft isolation, persisted virtual source reopening, existing/shell source recovery, extraction warnings, A-B-A file reversion, live panel refresh, pending reader preservation, and writing conflict recovery.

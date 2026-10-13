@@ -212,7 +212,7 @@ export class ProjectKnowledge extends Service {
     await this.table().put(id, result); return result
   }
   /** Retain returned research evidence without inventing a local file origin.
-   * @param request - Project, provenance identity and complete returned text.
+   * @param request - Project, source history identity and complete returned text.
    * @returns Immutable, retry-stable captured source revision.
    */
   async captureText(request: { projectId: WorkspaceId; identity: string; title: string; text: string; kind: ArtifactRevision['kind'] }): Promise<ArtifactRevision> {

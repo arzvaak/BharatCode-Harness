@@ -340,6 +340,12 @@ saveWorkflowRecord(request: SaveWorkflowRecord): Promise<WorkflowRecord>
  * @returns Captured output revision. */
 async captureAnalysisOutput(projectId: WorkspaceId, recordId: string, title: string, text: string): Promise<ArtifactRevision>
 
+/** Retain returned research evidence without inventing a local file origin.
+ * @param request - Project, source history identity and complete returned text.
+ * @returns Immutable, retry-stable captured source revision.
+ */
+async captureText(request: { projectId: WorkspaceId; identity: string; title: string; text: string; kind: ArtifactRevision['kind'] }): Promise<ArtifactRevision>
+
 /** Capture a complete registered UTF-8 file without changing it.
  * @param request - Selected project source and evidence classification.
  * @returns An immutable revision; repeat registration is idempotent.
@@ -428,6 +434,13 @@ Source: [`packages/workspace/workspace/src/project-knowledge.ts`](../../packages
 Generated `knowledge` Remote owner, independent of optional integrations.
 
 ```ts cordis-catalog
+/** Observe project evidence/journal commits, beginning with a reload anchor.
+ * @param projectId - Registered project to observe.
+ * @param signal - Viewing lifetime.
+ * @returns Coalesced invalidations after durable commits.
+ */
+@Remote({ mode: 'stream' }) async *watch(projectId: WorkspaceId, signal: AbortSignal): AsyncIterable<number>
+
 /**
  * Internal, read-only request reconstruction; no additional product panel.
  * @param sessionId - Owning session identity.
@@ -579,7 +592,7 @@ Generated `knowledge` Remote owner, independent of optional integrations.
  * @param request - Selected project and literal query.
  * @returns Registered source matches.
  */
-@Remote('search') search(request: SearchArtifactsRequest): SearchArtifactsResult
+@Remote('search') async search(request: SearchArtifactsRequest): Promise<SearchArtifactsResult>
 
 /**
  * Capture bounded conversation evidence from the selected project session.
