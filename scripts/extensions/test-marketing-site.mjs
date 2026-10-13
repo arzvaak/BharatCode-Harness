@@ -12,6 +12,7 @@ await cp(join(root, 'integrations/extension-store/site'), directory, { recursive
 const version = '0.2.0-rc.2.20261010.1';
 const tag = `v${version}`;
 const packages = Object.fromEntries(['rpm', 'deb', 'AppImage'].map(kind => { const name = `bharatcode-${version}-linux-x86_64.${kind}`; return [kind, { name, url: `https://github.com/arzvaak/BharatCode-Harness/releases/download/${tag}/${name}` }]; }));
+packages.exe = { name: `bharatcode-${version}-win-x64-unsigned.exe`, url: `https://github.com/arzvaak/BharatCode-Harness/releases/download/${tag}/bharatcode-${version}-win-x64-unsigned.exe`, bytes: 295000000 };
 await writeFile(join(directory, 'release.json'), JSON.stringify({ version, url: `https://github.com/arzvaak/BharatCode-Harness/releases/tag/${tag}`, packages }));
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = createServer(async (request, response) => {
@@ -30,6 +31,7 @@ try {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   await page.getByText(`Preview ${version}`, { exact: true }).waitFor();
+  assert.equal(await page.locator('[data-package="exe"]').getAttribute('href'), packages.exe.url);
   for (const mode of ['Chat', 'Coding', 'Research', 'Writing']) {
     const tab = page.getByRole('tab').filter({ hasText: mode }); await tab.click();
     assert.equal(await tab.getAttribute('aria-selected'), 'true');

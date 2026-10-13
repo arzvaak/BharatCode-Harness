@@ -57,6 +57,13 @@ async function loadRelease() {
       const asset = release.packages?.[kind];
       if (!asset || !/^[A-Za-z0-9._-]+$/.test(asset.name) || !asset.name.endsWith(`.${kind}`) || asset.url !== `${expected}download/v${release.version}/${asset.name}`) throw Error('Invalid package download');
     }
+    const windows = release.packages?.exe;
+    if (windows) {
+      if (!/^[A-Za-z0-9._-]+\.exe$/.test(windows.name) || windows.url !== `${expected}download/v${release.version}/${windows.name}`) throw Error('Invalid Windows download');
+      const download = document.querySelector('[data-package="exe"]');
+      download.href = windows.url;
+      download.parentElement.querySelector('.installer-note').textContent = `Unsigned preview · ${Math.round(windows.bytes / 1000000)} MB. Windows may show “Unknown publisher”.`;
+    }
     document.getElementById('release-version').textContent = `Preview ${release.version}`;
     document.getElementById('release-notes').href = release.url;
     for (const kind of ['rpm', 'deb', 'AppImage']) {
