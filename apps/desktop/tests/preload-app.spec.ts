@@ -261,8 +261,10 @@ it('delivers pending private chat links and removes the native listener on clean
   await import('../src/preload-app.ts')
   const api = electron.contextBridge.exposeInMainWorld.mock.calls.find(([name]) => name === 'dshDesktop')?.[1] as DshDesktopProductApi
   electron.ipcRenderer.invoke.mockResolvedValueOnce('dsh://sessions/source')
-  await expect(api.chats.takePending()).resolves.toBe('dsh://sessions/source')
+  await expect(api.chats.peekPending()).resolves.toBe('dsh://sessions/source')
   expect(electron.ipcRenderer.invoke).toHaveBeenCalledWith(DESKTOP_IPC.chatLinkPending)
+  await api.chats.acknowledge('dsh://sessions/source')
+  expect(electron.ipcRenderer.invoke).toHaveBeenCalledWith(DESKTOP_IPC.chatLinkHandled, 'dsh://sessions/source')
   const listener = vi.fn()
   const dispose = api.chats.subscribe(listener)
   const handler = electron.ipcRenderer.on.mock.calls.find(([channel]) => channel === DESKTOP_IPC.chatLinkRequested)?.[1] as () => void

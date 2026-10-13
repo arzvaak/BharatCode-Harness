@@ -13,6 +13,7 @@ export const DESKTOP_IPC = {
   shortcutsChanged: 'dsh-desktop:shortcuts-changed',
   shortcutsRecording: 'dsh-desktop:shortcuts-recording',
   chatLinkPending: 'dsh-desktop:chat-link-pending',
+  chatLinkHandled: 'dsh-desktop:chat-link-handled',
   chatLinkRequested: 'dsh-desktop:chat-link-requested',
   boot: 'dsh-desktop:boot',
   enterWorkspace: 'dsh-desktop:enter-workspace',
@@ -73,7 +74,11 @@ export interface DesktopUpdatePresentation {
 /** Product documents cannot supply update versions, package URLs, or installation authorization. */
 export interface DshDesktopProductApi {
   readonly protocolVersion: 1
-  readonly chats: { takePending(): Promise<string | undefined>; subscribe(listener: () => void): () => void }
+  readonly chats: {
+    peekPending(): Promise<string | undefined>
+    acknowledge(link: string): Promise<void>
+    subscribe(listener: () => void): () => void
+  }
   readonly browser: DesktopBrowserBridge
   readonly keyboard: DesktopKeyboardApi
   readonly shortcuts: DesktopShortcutsApi

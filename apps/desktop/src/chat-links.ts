@@ -20,13 +20,11 @@ export class DesktopChatLinks {
    * @param listener - Signal that the authenticated product should read the queue.
    */
   listen(listener: () => void): void { this.notify = listener }
+  /** @returns Latest private request without consuming it during client startup. */
+  peek(): string | undefined { return this.pending }
   /**
-   * Consume the latest request after the product has connected.
-   * @returns Pending private chat link, if any.
+   * Clear only the request that this product client has handled.
+   * @param link - Opened, unavailable, or explicitly canceled request.
    */
-  take(): string | undefined {
-    const value = this.pending
-    this.pending = undefined
-    return value
-  }
+  acknowledge(link: string): void { if (this.pending === link) this.pending = undefined }
 }

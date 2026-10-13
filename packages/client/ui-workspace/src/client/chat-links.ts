@@ -2,7 +2,8 @@
 import { parseChatLink } from '@deepseek-ai/dsh-util-workspace-path'
 /** Origin-scoped native link delivery exposed by the product preload. */
 export interface ChatLinkBridge {
-  takePending(): Promise<string | undefined>
+  peekPending(): Promise<string | undefined>
+  acknowledge(link: string): Promise<void>
   subscribe(listener: () => void): () => void
 }
 /** Metadata and navigation operations that never create or resume a session. */
@@ -24,16 +25,20 @@ export function installChatLinkNavigation(bridge: ChatLinkBridge, port: ChatLink
   let disposed = false
   let reading = false
   let again = false
-  let pending: { id: string; signal: AbortSignal } | undefined
+  let pending: { id: string; link: string; signal: AbortSignal } | undefined
   const isDisposed = (): boolean => disposed
   const requestedAgain = (): boolean => again
+  const acknowledge = (link: string): void => {
+    void bridge.acknowledge(link).catch(() => { if (!isDisposed()) port.unavailable() })
+  }
   const flush = (): void => {
     if (isDisposed() || reading || !port.ready() || pending === undefined) return
     const value = pending
     pending = undefined
-    if (value.signal.aborted) return
+    if (value.signal.aborted) { acknowledge(value.link); return }
     if (port.available(value.id)) port.open(value.id)
     else port.unavailable()
+    acknowledge(value.link)
   }
   const poll = async (): Promise<void> => {
     if (isDisposed()) return
@@ -43,12 +48,13 @@ export function installChatLinkNavigation(bridge: ChatLinkBridge, port: ChatLink
     try {
       do {
         again = false
-        const link = await bridge.takePending()
-        if (isDisposed() || signal.aborted) return
+        const link = await bridge.peekPending()
+        if (isDisposed()) return
+        if (signal.aborted) { if (link !== undefined) acknowledge(link); return }
         if (link !== undefined) {
           const id = parseChatLink(link)
-          if (id === undefined) { pending = undefined; port.unavailable() }
-          else pending = { id, signal }
+          if (id === undefined) { pending = undefined; port.unavailable(); acknowledge(link) }
+          else pending = { id, link, signal }
         }
       } while (requestedAgain())
     } catch {

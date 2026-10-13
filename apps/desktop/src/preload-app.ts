@@ -15,7 +15,8 @@ function createProductApi(): DshDesktopProductApi {
     protocolVersion: 1,
     browser: createDesktopBrowserBridge(),
     chats: {
-      takePending: () => ipcRenderer.invoke(DESKTOP_IPC.chatLinkPending) as Promise<string | undefined>,
+      acknowledge: link => ipcRenderer.invoke(DESKTOP_IPC.chatLinkHandled, link) as Promise<void>,
+      peekPending: () => ipcRenderer.invoke(DESKTOP_IPC.chatLinkPending) as Promise<string | undefined>,
       subscribe(listener) {
         const handle = (): void => { listener() }
         ipcRenderer.on(DESKTOP_IPC.chatLinkRequested, handle)

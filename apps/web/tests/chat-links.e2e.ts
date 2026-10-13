@@ -86,12 +86,15 @@ it('opens a queued native chat link after real client startup and metadata loadi
     cwd: '{{cwd}}', isSeeded: false, delegationDepth: 0 }), ...source.snapshotEvents().map(event => JSON.stringify(event)), ''].join('\n')
   try {
     await seedSession(scaffold, fixture, id)
+    await seedSession(scaffold, fixture, SessionId('native-restored-target'))
     const page = await newEnglishPage(browser)
     const errors = watchConsole(page)
     await page.addInitScript((link) => {
+      localStorage.setItem('dsh.sessions.current', JSON.stringify({ sessionId: 'native-restored-target' }))
       let pending: string | undefined = link
       Object.assign(window, { dshDesktop: { chats: {
-        takePending: async () => { const value = pending; pending = undefined; return value },
+        peekPending: async () => { await new Promise(resolve => setTimeout(resolve, 100)); return pending },
+        acknowledge: async (handled: string) => { if (pending === handled) pending = undefined },
         subscribe: () => () => {},
       } } })
     }, formatChatLink(id))

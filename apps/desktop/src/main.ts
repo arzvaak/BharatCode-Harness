@@ -741,7 +741,12 @@ async function main(): Promise<void> {
     catch { event.returnValue = null }
   })
   chatLinks.listen(() => { mainWindow?.webContents.send(DESKTOP_IPC.chatLinkRequested) })
-  ipcMain.handle(DESKTOP_IPC.chatLinkPending, (event) => { assertMainApplication(event); return chatLinks.take() })
+  ipcMain.handle(DESKTOP_IPC.chatLinkPending, (event) => { assertMainApplication(event); return chatLinks.peek() })
+  ipcMain.handle(DESKTOP_IPC.chatLinkHandled, (event, link: unknown) => {
+    assertMainApplication(event)
+    if (typeof link !== 'string') throw new Error('Invalid chat link acknowledgement')
+    chatLinks.acknowledge(link)
+  })
 
   ipcMain.handle(PLATFORM_IPC.open, (event, page: unknown, bounds: unknown) => {
     const owner = assertMainApplication(event)
