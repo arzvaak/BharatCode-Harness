@@ -135,3 +135,11 @@ it('renders wikilinks and images without rewriting authored code or running HTML
   expect(screen.getByRole('img', { name: 'Figure' }).getAttribute('src')).toBe('blob:figure')
   expect(document.querySelector('script')).toBeNull()
 })
+it('uses exact-source editing for vault metadata and wikilinks', async () => {
+  const p = props()
+  const text = '---\naliases: [Heat]\ncustom: keep\n---\n# Temperature\n\n[[Charging]]'
+  p.view = { active: 'notes/A.md', documents: { 'notes/A.md': { path: 'notes/A.md', base: { absolutePath: '/project/notes/A.md', version: '1', text }, text, busy: false } } }
+  render(<ResearchKnowledgePanel {...p} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+  await waitFor(() => expect(screen.getByRole('textbox', { name: 'Document source' })).toHaveProperty('value', text))
+})

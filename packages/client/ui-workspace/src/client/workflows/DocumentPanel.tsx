@@ -106,6 +106,7 @@ export function DocumentPanel({
   const motion = useWorkflowMotion<HTMLElement>(`${sessionId ?? ''}/${document?.path ?? ''}`, `${selection?.start ?? ''}/${selection?.end ?? ''}/${proposal !== undefined}`)
   const richSupported =
     document !== undefined && /\.(md|markdown)$/.test(document.path) && !/```|~~~|<[^>]+>|^\|/m.test(document.text)
+    && !(profile === 'research' && /^(?:\uFEFF)?---\r?\n|\[\[|\[\^/m.test(document.text))
   const select = (value: SelectedText): void => {
     setSelection(value)
     setProposal(undefined)
