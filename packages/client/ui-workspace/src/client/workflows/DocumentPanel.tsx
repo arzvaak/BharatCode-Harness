@@ -13,6 +13,7 @@ const ProseEditor = lazy(() => import('./ProseEditor.tsx').then(value => ({ defa
 
 /** Plain workspace editor callbacks supplied by the owning plugin. */
 export interface DocumentPanelActions {
+  refreshDocument?(session: SessionId, path: string): Promise<void>
   documentEvidence?(this: void, session: SessionId, path: string): Promise<DocumentEvidence>
   commentSelection?(session: SessionId, path: string, text: string, start: number, end: number, comment: string): Promise<unknown>
   requestSelectionEdit?(session: SessionId, path: string, selected: string, instruction: string): Promise<void>

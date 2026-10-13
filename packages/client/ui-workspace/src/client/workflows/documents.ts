@@ -108,6 +108,17 @@ export class WorkspaceDocuments {
       } } })
     }
   }
+  /** Reconcile an external disk edit while preserving a dirty recovery draft. */
+  refresh(session: SessionId, path: string): Promise<void> {
+    return this.enqueue(session, path, async () => {
+      const current = await this.access.read(session, path)
+      this.update(session, path, (value) => {
+        if (current.version === value.base.version && current.text === value.base.text) return value
+        if (value.text !== value.base.text) return { ...value, conflict: current }
+        return { ...value, base: current, text: current.text, conflict: undefined }
+      })
+    })
+  }
   /**
    * Activate an already opened document without changing its text.
    * @param session Session that owns the open document.

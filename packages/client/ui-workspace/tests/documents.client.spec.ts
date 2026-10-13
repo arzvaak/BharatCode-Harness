@@ -123,3 +123,13 @@ it('keeps a dirty tab open when recovery persistence fails', async () => {
   expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.text).toBe('Do not lose')
   expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.error).toBe('Recovery unavailable')
 })
+it('refreshes clean disk text and preserves a dirty draft on external invalidation', async () => {
+  const b = bench(); await b.controller.open(session, '章.md')
+  b.external('Externally updated clean note'); await b.controller.refresh(session, '章.md')
+  expect(b.controller.state.getSnapshot().sessions[session]?.documents['章.md']?.text).toBe('Externally updated clean note')
+  await b.controller.edit(session, '章.md', 'Unsaved idea')
+  b.external('Another writer'); await b.controller.refresh(session, '章.md')
+  const document = b.controller.state.getSnapshot().sessions[session]?.documents['章.md']
+  expect(document?.text).toBe('Unsaved idea'); expect(document?.conflict?.text).toBe('Another writer')
+  expect(b.draft()?.text).toBe('Unsaved idea')
+})

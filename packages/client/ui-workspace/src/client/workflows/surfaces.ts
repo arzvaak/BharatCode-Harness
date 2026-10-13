@@ -3,6 +3,9 @@ import type { WorkspaceApp, WorkspaceAppResource, LanguageReview } from '@deepse
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { WorkspaceDirectoryListing } from '@deepseek-ai/dsh-api-workspace-files/types'
 import type {
+  ResearchList,
+  ResearchInspection,
+  ResearchExport,
   WorkflowRecord,
   SaveWorkflowRecord,
   WorkspaceId,
@@ -20,6 +23,17 @@ import type {
 
 /** Files and captured evidence are read through their owning remote services. */
 export interface WorkspaceSurfaceActions {
+  watchResearchFiles?(session: SessionId, path: string, changed: () => void, failed: (reason: unknown) => void): () => void
+  researchResolve?(project: WorkspaceId, from: string, target: string, wiki: boolean): Promise<import('@deepseek-ai/dsh-workspace/types').ResearchResolution>
+  researchList?(project: WorkspaceId, query?: string, cursor?: string): Promise<ResearchList>
+  researchInspect?(project: WorkspaceId, path: string): Promise<ResearchInspection>
+  researchCreate?(project: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }>
+  researchCaptureCitations?(
+    project: WorkspaceId, path: string, expectedText: string,
+  ): Promise<{ artifact: ArtifactRevision; linked: number; issues: string[] }>
+  researchExport?(project: WorkspaceId): Promise<ResearchExport>
+  researchResource?(project: WorkspaceId, path: string): Promise<{ base64: string; mime: string }>
+
   watchKnowledge?(this: void, project: WorkspaceId, changed: () => void, failed: (reason: unknown) => void): () => void
   applications?(session: SessionId): Promise<readonly WorkspaceApp[]>
   applicationResource?(session: SessionId, server: string, tool: string): Promise<WorkspaceAppResource>

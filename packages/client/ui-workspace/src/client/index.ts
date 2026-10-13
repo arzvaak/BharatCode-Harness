@@ -451,6 +451,34 @@ export function apply(ctx: Context): void {
           },
           searchArtifacts: async (request: import('@deepseek-ai/dsh-workspace/types').SearchArtifactsRequest) =>
             unwrap(await ctx.remote.knowledge.search(request)),
+          watchResearchFiles: (session: SessionId, path: string, changed: () => void, failed: (reason: unknown) => void) => {
+            let disposed = false
+            const stream = ctx.remote.$stream<import('@deepseek-ai/dsh-api-workspace-files/types').WorkspaceFileWatchFrame>({
+              name: `research files ${session}/${path}`,
+              open: signal => ctx.remote.workspaceFiles.changes(session, path, signal),
+              ended: () => new Error(`Research file watch ended: ${path}`),
+            })
+            void (async () => {
+              try { for await (const item of stream) { if (disposed) break; if (item.value.kind === 'change') changed(); item.accept() } }
+              catch (reason) { if (!disposed) failed(reason) }
+              finally { await stream.dispose() }
+            })()
+            return () => { disposed = true; void stream.dispose() }
+          },
+          researchList: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, query?: string, cursor?: string) =>
+            unwrap(await ctx.remote.knowledge.researchList(project, query, cursor)),
+          researchInspect: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, path: string) =>
+            unwrap(await ctx.remote.knowledge.researchInspect(project, path)),
+          researchCreate: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, path: string, title: string) =>
+            unwrap(await ctx.remote.knowledge.researchCreate(project, path, title)),
+          researchCaptureCitations: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, path: string, text: string) =>
+            unwrap(await ctx.remote.knowledge.researchCaptureCitations(project, path, text)),
+          researchResolve: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, from: string, target: string, wiki: boolean) =>
+            unwrap(await ctx.remote.knowledge.researchResolve(project, from, target, wiki)),
+          researchExport: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId) =>
+            unwrap(await ctx.remote.knowledge.researchExport(project)),
+          researchResource: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, path: string) =>
+            unwrap(await ctx.remote.knowledge.researchResource(project, path)),
           cancelNotebook: async (session: SessionId, jobId: string) => {
             unwrap(await ctx.jobs.kill(session, jobId as import('@deepseek-ai/dsh-api-job-controller/client').JobView['id']))
           },
@@ -616,6 +644,7 @@ export function apply(ctx: Context): void {
           },
           editDocument: (session: SessionId, path: string, text: string) => documents.edit(session, path, text),
           saveDocument: (session: SessionId, path: string) => documents.save(session, path),
+          refreshDocument: (session: SessionId, path: string) => documents.refresh(session, path),
           rebaseDocument: (session: SessionId, path: string) => documents.rebase(session, path),
         }),
       },

@@ -13,6 +13,7 @@ import type {
 } from '@deepseek-ai/dsh-workspace/types'
 import type { DocumentPanelProps } from './DocumentPanel.tsx'
 import { AppsPanel } from './AppsPanel.tsx'
+import { ResearchKnowledgePanel } from './ResearchKnowledgePanel.tsx'
 import { AnalysisPanel } from './AnalysisPanel.tsx'
 import { DocumentPanel } from './DocumentPanel.tsx'
 import type { ResearchPreference, ResearchSection, WorkspaceSurfaceActions } from './surfaces.ts'
@@ -319,6 +320,7 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
             )}
             {section === 'overview' && (
               <>
+                {props.researchList !== undefined && <ResearchKnowledgePanel {...props} home />}
                 <header className={css.pageHeading}>
                   <h3>{t('research.section.overview')}</h3>
                   <span>{t('research.projectRevision')}</span>
@@ -674,7 +676,8 @@ export function ResearchWorkspace(props: ResearchWorkspaceProps) {
                 {hasMore && <p className={css.notice}>{t('handoff.searchMore')}</p>}
               </>
             )}
-            {(section === 'notes' || section === 'manuscript' || section === 'workspace') && (
+            {section === 'notes' && props.researchList !== undefined && <ResearchKnowledgePanel {...props} />}
+            {((section === 'notes' && props.researchList === undefined) || section === 'manuscript' || section === 'workspace') && (
               <div className={css.researchEditor}>
                 <div className={css.toolbar}>
                   <strong>{t(`research.section.${section}`)}</strong>
