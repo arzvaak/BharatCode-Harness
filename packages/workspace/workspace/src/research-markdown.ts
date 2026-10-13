@@ -38,7 +38,7 @@ export function parseResearchMarkdown(text: string): ResearchMarkdown {
   ): void => {
     for (const node of nodes) {
       fn(node, insideLink)
-      if ('children' in node) visit(node.children as RootContent[], fn,
+      if ('children' in node) visit(node.children, fn,
         insideLink || node.type === 'link' || node.type === 'linkReference')
     }
   }
@@ -174,7 +174,7 @@ export function researchReadingText(text: string): string {
           comments.push({ start, end: start + marker[0].length })
         }
       }
-      if ('children' in node) visit(node.children as RootContent[])
+      if ('children' in node) visit(node.children)
     }
   }
   visit(root.children)
@@ -229,7 +229,7 @@ export function researchCitationMarkers(
             .join('\n')
           result.push({ id: marker[1] ?? '', start: Number(marker[2]), end: Number(marker[3]), quotedText })
         }
-      if ('children' in node) visit(node.children as RootContent[], body)
+      if ('children' in node) visit(node.children, body)
     }
   }
   visit(root.children)

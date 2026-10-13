@@ -23,16 +23,16 @@ import type {
 
 /** Files and captured evidence are read through their owning remote services. */
 export interface WorkspaceSurfaceActions {
-  watchResearchFiles?(session: SessionId, path: string, changed: () => void, failed: (reason: unknown) => void): () => void
-  researchResolve?(project: WorkspaceId, from: string, target: string, wiki: boolean): Promise<import('@deepseek-ai/dsh-workspace/types').ResearchResolution>
-  researchList?(project: WorkspaceId, query?: string, cursor?: string): Promise<ResearchList>
-  researchInspect?(project: WorkspaceId, path: string): Promise<ResearchInspection>
-  researchCreate?(project: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }>
+  watchResearchFiles?(this: void, session: SessionId, path: string, changed: () => void, failed: (reason: unknown) => void): () => void
+  researchResolve?(this: void, project: WorkspaceId, from: string, target: string, wiki: boolean): Promise<import('@deepseek-ai/dsh-workspace/types').ResearchResolution>
+  researchList?(this: void, project: WorkspaceId, query?: string, cursor?: string): Promise<ResearchList>
+  researchInspect?(this: void, project: WorkspaceId, path: string): Promise<ResearchInspection>
+  researchCreate?(this: void, project: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }>
   researchCaptureCitations?(
-    project: WorkspaceId, path: string, expectedText: string,
+    this: void, project: WorkspaceId, path: string, expectedText: string,
   ): Promise<{ artifact: ArtifactRevision; linked: number; issues: string[] }>
-  researchExport?(project: WorkspaceId): Promise<ResearchExport>
-  researchResource?(project: WorkspaceId, path: string): Promise<{ base64: string; mime: string }>
+  researchExport?(this: void, project: WorkspaceId): Promise<ResearchExport>
+  researchResource?(this: void, project: WorkspaceId, path: string): Promise<{ base64: string; mime: string }>
 
   watchKnowledge?(this: void, project: WorkspaceId, changed: () => void, failed: (reason: unknown) => void): () => void
   applications?(session: SessionId): Promise<readonly WorkspaceApp[]>

@@ -74,25 +74,25 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
   useEffect(() => {
     if (sessionId === null || props.watchResearchFiles === undefined) return
     let timer: ReturnType<typeof setTimeout> | undefined
-    let stopped = false
+    const lifecycle = { stopped: false }
     const invalidate = (): void => {
       clearTimeout(timer)
       timer = setTimeout(() => {
-        if (stopped) return
+        if (lifecycle.stopped) return
         if (current !== undefined) void props.refreshDocument?.(sessionId, current.path)
         setRevision(value => value + 1)
       }, 180)
     }
     const unavailable = (): void => {
-      if (!stopped) setNotice(t('knowledge.watchUnavailable'))
+      if (!lifecycle.stopped) setNotice(t('knowledge.watchUnavailable'))
     }
     const root = props.watchResearchFiles(sessionId, '.', invalidate, unavailable)
     const document =
       current === undefined ? undefined : props.watchResearchFiles(sessionId, current.path, invalidate, unavailable)
-    const focused = (): void => invalidate()
+    const focused = (): void => { invalidate() }
     window.addEventListener('focus', focused)
     return () => {
-      stopped = true
+      lifecycle.stopped = true
       clearTimeout(timer)
       root()
       document?.()
@@ -115,7 +115,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
   }
   useEffect(() => {
     const request = ++listing.current
-    let stopped = false
+    const lifecycle = { stopped: false }
     const list = props.researchList
     if (projectId === undefined || list === undefined) {
       setLoading(false)
@@ -127,25 +127,25 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
         void list(projectId, query)
           .then(
             (value) => {
-              if (!stopped && request === listing.current) setLibrary(value)
+              if (!lifecycle.stopped && request === listing.current) setLibrary(value)
             },
-            (reason) => {
-              if (!stopped && request === listing.current) setError(reasonText(reason))
+            (reason: unknown) => {
+              if (!lifecycle.stopped && request === listing.current) setError(reasonText(reason))
             },
           )
           .finally(() => {
-            if (!stopped && request === listing.current) setLoading(false)
+            if (!lifecycle.stopped && request === listing.current) setLoading(false)
           })
       },
       query ? 150 : 0,
     )
     return () => {
-      stopped = true
+      lifecycle.stopped = true
       clearTimeout(timer)
     }
   }, [projectId, query, revision, props.researchList])
   useEffect(() => {
-    let stopped = false
+    const lifecycle = { stopped: false }
     setInspection(undefined)
     if (
       projectId !== undefined &&
@@ -155,58 +155,59 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
     ) {
       void props.researchInspect(projectId, current.path).then(
         (value) => {
-          if (!stopped) setInspection(value)
+          if (!lifecycle.stopped) setInspection(value)
         },
-        (reason) => {
-          if (!stopped) setError(reasonText(reason))
+        (reason: unknown) => {
+          if (!lifecycle.stopped) setError(reasonText(reason))
         },
       )
     }
     return () => {
-      stopped = true
+      lifecycle.stopped = true
     }
   }, [projectId, current?.path, current?.base.version, revision, props.researchInspect])
   useEffect(() => {
-    let stopped = false
+    const lifecycle = { stopped: false }
     if (!home && projectId !== undefined)
       void props.searchArtifacts({ projectId, query: '', kinds: ['source'] }).then(
         (value) => {
-          if (!stopped) {
+          if (!lifecycle.stopped) {
             setSources(value.hits)
             if (value.hasMore) setNotice(t('knowledge.moreSources'))
             if (value.captureIssues?.length) setNotice(value.captureIssues.join('\n'))
           }
         },
-        (reason) => {
-          if (!stopped) setError(reasonText(reason))
+        (reason: unknown) => {
+          if (!lifecycle.stopped) setError(reasonText(reason))
         },
       )
     return () => {
-      stopped = true
+      lifecycle.stopped = true
     }
   }, [projectId, home, revision, props.searchArtifacts, t])
   useEffect(() => {
-    let stopped = false
+    const lifecycle = { stopped: false }
     setSource(undefined)
     setSourceStatus(undefined)
     setQuote('')
     if (sourceId)
       void Promise.all([props.readArtifact(sourceId as ArtifactRevision['id']), props.inspectArtifact(sourceId as ArtifactRevision['id'])]).then(
         ([value, inspected]) => {
-          if (!stopped && value.projectId === projectId) { setSource(value); setSourceStatus(inspected.status) }
+          if (!lifecycle.stopped && value.projectId === projectId) { setSource(value); setSourceStatus(inspected.status) }
         },
-        (reason) => {
-          if (!stopped) setError(reasonText(reason))
+        (reason: unknown) => {
+          if (!lifecycle.stopped) setError(reasonText(reason))
         },
       )
     return () => {
-      stopped = true
+      lifecycle.stopped = true
     }
   }, [sourceId, projectId, props.readArtifact, props.inspectArtifact])
   const parsed = useMemo(() => parseResearchMarkdown(current?.text ?? ''), [current?.text])
   useEffect(() => {
-    let stopped = false
+    const lifecycle = { stopped: false }
     setImages({})
+    const active = (): boolean => !lifecycle.stopped
     const resource = props.researchResource
     if (projectId === undefined || current === undefined || resource === undefined) return
     const wanted = parsed.links
@@ -216,7 +217,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
     let loadedBytes = 0
     void (async () => {
       for (const link of wanted) {
-        if (stopped) break
+        if (!active()) break
         try {
           const resolution =
             props.researchResolve === undefined
@@ -226,19 +227,19 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
           const result = await resource(projectId, resolution.path)
           loadedBytes += Math.floor(result.base64.length * 0.75)
           if (loadedBytes > 16 * 1024 * 1024) {
-            if (!stopped) setNotice(t('knowledge.figureFailed'))
+            if (active()) setNotice(t('knowledge.figureFailed'))
             break
           }
           const key = link.wiki ? `research-wiki/${encodeURIComponent(link.target)}` : link.target
           loaded[key] = `data:${result.mime};base64,${result.base64}`
         } catch {
-          if (!stopped) setNotice(t('knowledge.figureFailed'))
+          if (active()) setNotice(t('knowledge.figureFailed'))
         }
       }
-      if (!stopped) setImages(loaded)
+      if (active()) setImages(loaded)
     })()
     return () => {
-      stopped = true
+      lifecycle.stopped = true
     }
   }, [
     projectId,
@@ -300,7 +301,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
         setNotice(t('knowledge.missing'))
       }
     } else if (result.status === 'external') window.open(result.url, '_blank', 'noopener,noreferrer')
-    else if (result.status === 'invalid') setNotice(t('knowledge.invalid'))
+    else setNotice(t('knowledge.invalid'))
   }
   const create = async (): Promise<void> => {
     if (projectId === undefined || props.researchCreate === undefined) return
@@ -354,7 +355,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
     link.href = url
     link.download = result.filename
     link.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    setTimeout(() => { URL.revokeObjectURL(url) }, 1000)
     setNotice([t('knowledge.exportHint'), ...result.issues].join('\n'))
   }
   if (project === undefined) return <p className={css.empty}>{t('research.noProject')}</p>
@@ -387,7 +388,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
         >
           {t(topic === undefined ? 'knowledge.createTopic' : 'knowledge.openTopic')}
         </button>
-        <button type="button" onClick={() => props.changePreference({ section: 'notes' })}>
+        <button type="button" onClick={() => { props.changePreference({ section: 'notes' }) }}>
           {t('knowledge.openLibrary')}
         </button>
         {error !== undefined && <p role="alert">{error}</p>}
@@ -402,7 +403,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
     <section className={css.panel} aria-label={t('knowledge.title')}>
       <header className={css.toolbar}>
         <strong>{t('knowledge.title')}</strong>
-        <button type="button" onClick={() => setCreating(!creating)}>
+        <button type="button" onClick={() => { setCreating(!creating) }}>
           {t('knowledge.new')}
         </button>
         <button
@@ -426,7 +427,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
         >
           {t('knowledge.export')}
         </button>
-        <button type="button" onClick={() => props.changePreference({ section: 'runs' })}>
+        <button type="button" onClick={() => { props.changePreference({ section: 'runs' }) }}>
           {t('knowledge.computational')}
         </button>
       </header>
@@ -451,7 +452,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
           </label>
           <label>
             {t('knowledge.path')}
-            <input value={path} onChange={event => setPath(event.target.value)} />
+            <input value={path} onChange={(event) => { setPath(event.target.value) }} />
           </label>
           <button type="submit" disabled={busy || !title.trim() || !path.trim() || props.researchCreate === undefined}>
             {t('knowledge.create')}
@@ -497,7 +498,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
             aria-label={t('knowledge.search')}
             placeholder={t('knowledge.search')}
             value={query}
-            onChange={event => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value) }}
           />
           {loading && <p role="status">{t('knowledge.loading')}</p>}
           <ul>
@@ -543,10 +544,10 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
             <>
               <div className={css.toolbar}>
                 <strong>{current.path.split('/').at(-1)}</strong>
-                <button type="button" aria-pressed={mode === 'read'} onClick={() => setMode('read')}>
+                <button type="button" aria-pressed={mode === 'read'} onClick={() => { setMode('read') }}>
                   {t('knowledge.read')}
                 </button>
-                <button type="button" aria-pressed={mode === 'edit'} onClick={() => setMode('edit')}>
+                <button type="button" aria-pressed={mode === 'edit'} onClick={() => { setMode('edit') }}>
                   {t('knowledge.edit')}
                 </button>
                 <button
@@ -587,7 +588,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
               {current.conflict !== undefined && (
                 <p className={css.notice} role="alert">
                   {t('editor.conflict')}{' '}
-                  <button type="button" onClick={() => setMode('edit')}>
+                  <button type="button" onClick={() => { setMode('edit') }}>
                     {t('knowledge.edit')}
                   </button>
                 </p>
@@ -646,7 +647,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
                   <input
                     list={`research-targets-${projectId}`}
                     value={linkTarget}
-                    onChange={event => setLinkTarget(event.target.value)}
+                    onChange={(event) => { setLinkTarget(event.target.value) }}
                   />
                 </label>
                 <datalist id={`research-targets-${projectId}`}>
@@ -677,7 +678,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
                 <summary>{t('knowledge.citations')}</summary>
                 <label>
                   {t('knowledge.source')}
-                  <select value={sourceId} onChange={event => setSourceId(event.target.value)}>
+                  <select value={sourceId} onChange={(event) => { setSourceId(event.target.value) }}>
                     <option value="">{t('knowledge.source')}</option>
                     {sources.map(item => (
                       <option key={item.id} value={item.id}>
@@ -693,7 +694,7 @@ export function ResearchKnowledgePanel(props: ResearchWorkspaceProps & { home?: 
                     <ResearchReader text={source.text} t={t} onLink={() => {}} />
                     <label>
                       {t('knowledge.quote')}
-                      <textarea value={quote} onChange={event => setQuote(event.target.value)} />
+                      <textarea value={quote} onChange={(event) => { setQuote(event.target.value) }} />
                     </label>
                     <button
                       type="button"

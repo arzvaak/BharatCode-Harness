@@ -452,18 +452,18 @@ export function apply(ctx: Context): void {
           searchArtifacts: async (request: import('@deepseek-ai/dsh-workspace/types').SearchArtifactsRequest) =>
             unwrap(await ctx.remote.knowledge.search(request)),
           watchResearchFiles: (session: SessionId, path: string, changed: () => void, failed: (reason: unknown) => void) => {
-            let disposed = false
+            const lifecycle = { disposed: false }
             const stream = ctx.remote.$stream<import('@deepseek-ai/dsh-api-workspace-files/types').WorkspaceFileWatchFrame>({
               name: `research files ${session}/${path}`,
               open: signal => ctx.remote.workspaceFiles.changes(session, path, signal),
               ended: () => new Error(`Research file watch ended: ${path}`),
             })
             void (async () => {
-              try { for await (const item of stream) { if (disposed) break; if (item.value.kind === 'change') changed(); item.accept() } }
-              catch (reason) { if (!disposed) failed(reason) }
+              try { for await (const item of stream) { if (lifecycle.disposed) break; if (item.value.kind === 'change') changed(); item.accept() } }
+              catch (reason) { if (!lifecycle.disposed) failed(reason) }
               finally { await stream.dispose() }
             })()
-            return () => { disposed = true; void stream.dispose() }
+            return () => { lifecycle.disposed = true; void stream.dispose() }
           },
           researchList: async (project: import('@deepseek-ai/dsh-workspace/types').WorkspaceId, query?: string, cursor?: string) =>
             unwrap(await ctx.remote.knowledge.researchList(project, query, cursor)),

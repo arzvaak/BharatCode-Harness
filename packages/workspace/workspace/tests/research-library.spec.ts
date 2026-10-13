@@ -37,7 +37,7 @@ it('parses links and metadata without treating code as knowledge', () => {
 it('resolves exact paths, relative Markdown and aliases but preserves ambiguity', () => {
   const notes = ['notes/A.md', 'notes/B.md', 'other/B.md'].map(path => ({
     path,
-    ...parseResearchMarkdown('# ' + path.split('/').at(-1) + '\n'),
+    ...parseResearchMarkdown(`# ${path.split('/').at(-1) ?? ''}\n`),
   }))
   notes[0]!.aliases = ['Alpha']
   expect(resolveResearchLink(notes, 'notes/A.md', { target: 'B', wiki: true })).toMatchObject({

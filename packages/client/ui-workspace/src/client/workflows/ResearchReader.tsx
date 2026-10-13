@@ -26,8 +26,8 @@ export function ResearchReader({ text, t, onLink, images = {}, heading }: Resear
     if (!heading) return
     const normalize = (value: string): string => value.trim().toLocaleLowerCase().replace(/\s+/g, '-')
     const target = [...(article.current?.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6') ?? [])]
-      .find(node => normalize(node.textContent ?? '') === normalize(heading))
-    target?.scrollIntoView?.({ block: 'nearest' })
+      .find(node => normalize(node.textContent) === normalize(heading))
+    target?.scrollIntoView({ block: 'nearest' })
     target?.setAttribute('tabindex', '-1')
     target?.focus({ preventScroll: true })
   }, [heading, rendered])

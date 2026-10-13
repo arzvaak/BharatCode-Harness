@@ -93,7 +93,7 @@ it('creates notes explicitly and opens them, preserving the same project/session
   fireEvent.change(screen.getByRole('textbox', { name: 'Note title' }), { target: { value: 'New' } })
   fireEvent.change(screen.getByRole('textbox', { name: 'Markdown path' }), { target: { value: 'notes/New.md' } })
   fireEvent.click(screen.getByRole('button', { name: 'Create note' }))
-  await waitFor(() => expect(p.researchCreate).toHaveBeenCalledWith('p', 'notes/New.md', 'New'))
+  await waitFor(() => { expect(p.researchCreate).toHaveBeenCalledWith('p', 'notes/New.md', 'New') })
   expect(p.openDocument).toHaveBeenCalledWith('s', 'notes/New.md')
 })
 it('reports citation capture errors and does not claim a successful save', async () => {
@@ -115,10 +115,10 @@ it('drops late library results after switching projects', async () => {
       }),
   )
   const v = render(<ResearchKnowledgePanel {...p} />)
-  await waitFor(() => expect(p.researchList).toHaveBeenCalled())
+  await waitFor(() => { expect(p.researchList).toHaveBeenCalled() })
   v.rerender(<ResearchKnowledgePanel {...p} project={undefined} view={undefined} />)
   done({ notes: [{ path: 'Secret.md', title: 'Secret', version: '1', aliases: [], tags: [], headings: [], links: [], excerpt: '' }], issues: [], total: 1 })
-  await waitFor(() => expect(screen.queryByText('Secret')).toBeNull())
+  await waitFor(() => { expect(screen.queryByText('Secret')).toBeNull() })
 })
 it('renders wikilinks and images without rewriting authored code or running HTML', () => {
   const open = vi.fn()
@@ -141,5 +141,5 @@ it('uses exact-source editing for vault metadata and wikilinks', async () => {
   p.view = { active: 'notes/A.md', documents: { 'notes/A.md': { path: 'notes/A.md', base: { absolutePath: '/project/notes/A.md', version: '1', text }, text, busy: false } } }
   render(<ResearchKnowledgePanel {...p} />)
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-  await waitFor(() => expect(screen.getByRole('textbox', { name: 'Document source' })).toHaveProperty('value', text))
+  await waitFor(() => { expect(screen.getByRole('textbox', { name: 'Document source' })).toHaveProperty('value', text) })
 })
