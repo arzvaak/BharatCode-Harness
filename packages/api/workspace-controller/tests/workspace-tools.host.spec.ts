@@ -121,6 +121,7 @@ it('publishes all workspace feature tools and research instructions to the model
   expect(assembly.tools.map(value => value.name)).toEqual(
     expect.arrayContaining([
       'project_sources',
+      'research_notes',
       'workspace_records',
       'workspace_review',
       'workspace_handoff',
@@ -130,6 +131,9 @@ it('publishes all workspace feature tools and research instructions to the model
     ]),
   )
   expect(assembly.sections.map(value => value.text).join('\n')).toContain('automatically')
+  expect(assembly.sections.map(value => value.text).join('\n')).toContain('research_notes.store')
+  expect(assembly.sections.map(value => value.text).join('\n')).toContain('read back')
+  expect(assembly.tools.find(value => value.name === 'research_notes')?.description).toContain('store:')
 })
 it('registers an existing file via the agent tool and rejects cross-project source reads', async () => {
   const h = await setup()
@@ -308,4 +312,64 @@ it('provides research note tools with explicit source-backed citation proposals'
   expect(prepared.isError).toBe(false)
   expect(JSON.stringify(prepared)).toContain('proposedText')
   expect(await import('node:fs/promises').then(fs => fs.readFile(join(h.root, 'Note.md'), 'utf8'))).toBe('# Note\n\nFinding')
+})
+
+it('stores nonempty linked knowledge with exact citations through the model tool and reads it back', async () => {
+  const h = await setup()
+  const source = await h.ctx.projectKnowledge.captureText({ projectId: h.project.id, identity: 'study', title: 'Study', text: 'Exact passage', kind: 'source' })
+  const input = { path: 'notes/Finding.md', title: 'Finding', text: '# Finding\n\nUseful synthesis. See [[Research]].', citations: [{ sourceId: source.id, start: 0, end: 13 }] }
+  const saved = await h.call('research_notes', { action: 'store', input })
+  expect(saved.isError, JSON.stringify(saved)).toBe(false)
+  expect(JSON.stringify(saved)).toContain('"linked":1')
+  const inspected = await h.call('research_notes', { action: 'inspect', input: { path: input.path } })
+  expect(JSON.stringify(inspected)).toContain('Useful synthesis')
+  expect(JSON.stringify(inspected)).toContain('Exact passage')
+  const reopened = await h.controller.researchInspect(h.project.id, input.path)
+  expect(reopened.text).toContain('[[Research]]')
+  expect(reopened.text).toContain('research-citation:')
+  expect((await h.controller.researchList(h.project.id)).notes.map(note => note.path)).toContain(input.path)
+  expect((await h.call('research_notes', { action: 'store', input: { ...input, text: 'Overwrite' } })).isError).toBe(true)
+  expect((await h.controller.researchInspect(h.project.id, input.path)).text).toBe(reopened.text)
+})
+
+it('rejects empty knowledge and invalid source citations before creating a note', async () => {
+  const h = await setup()
+  const source = await h.ctx.projectKnowledge.captureText({ projectId: h.project.id, identity: 'short', title: 'Short', text: 'Short', kind: 'source' })
+  const otherRoot = join(h.root, 'other')
+  await mkdir(otherRoot)
+  const other = await h.ctx.workspaceRegistry.create(otherRoot)
+  const privateSource = await h.ctx.projectKnowledge.captureText({ projectId: other.id, identity: 'private', title: 'Private', text: 'Secret', kind: 'source' })
+  for (const input of [
+    { path: 'Empty.md', title: 'Empty', text: '   ' },
+    { path: 'Invalid.md', title: 'Invalid', text: 'Finding', citations: [{ sourceId: 'missing', start: 0, end: 3 }] },
+    { path: '../Outside.md', title: 'Outside', text: 'Finding' },
+    { path: 'Range.md', title: 'Range', text: 'Finding', citations: [{ sourceId: source.id, start: 0, end: 100 }] },
+    { path: 'Private.md', title: 'Private', text: 'Finding', citations: [{ sourceId: privateSource.id, start: 0, end: 6 }] },
+    { path: 'Oversized.md', title: 'Oversized', text: '界'.repeat(800_000) },
+  ]) expect((await h.call('research_notes', { action: 'store', input })).isError).toBe(true)
+  expect((await h.controller.researchList(h.project.id)).notes).toHaveLength(0)
+})
+
+it('returns an incomplete receipt when note evidence capture fails while keeping the saved Markdown', async () => {
+  const h = await setup()
+  vi.spyOn(h.ctx.projectKnowledge, 'register').mockRejectedValueOnce(new Error('Storage unavailable'))
+  const saved = await h.call('research_notes', { action: 'store', input: { path: 'Finding.md', title: 'Finding', text: '# Finding\n\nRetained knowledge' } })
+  expect(saved.isError).toBe(false)
+  expect(JSON.stringify(saved)).toContain('Storage unavailable')
+  expect(JSON.stringify(saved)).not.toContain('artifactId')
+  expect((await h.controller.researchInspect(h.project.id, 'Finding.md')).text).toContain('Retained knowledge')
+})
+
+it('generates portable relative citation links for Windows note paths', async () => {
+  const h = await setup()
+  const source = await h.ctx.projectKnowledge.captureText({ projectId: h.project.id, identity: 'windows', title: 'Study', text: 'Exact passage', kind: 'source' })
+  const saved = await h.call('research_notes', { action: 'store', input: { path: 'notes\\Finding.md', title: 'Finding', text: '# Finding\n\nKnowledge', citations: [{ sourceId: source.id, start: 0, end: 13 }] } })
+  expect(saved.isError).toBe(false)
+  const note = await h.controller.researchInspect(h.project.id, 'notes/Finding.md')
+  expect(note.text).toContain(`../sources/captured/${source.id}.md`)
+  await writeFile(join(h.root, 'notes/Existing.md'), '# Existing\n\nKnowledge')
+  const proposal = await h.call('research_notes', { action: 'prepare_citation', input: { path: 'notes\\Existing.md', expectedText: '# Existing\n\nKnowledge', sourceId: source.id, start: 0, end: 13 } })
+  expect(proposal.isError).toBe(false)
+  expect(JSON.stringify(proposal)).toContain(`../sources/captured/${source.id}.md`)
+  expect(JSON.stringify(proposal)).toContain('notes/Existing.md')
 })

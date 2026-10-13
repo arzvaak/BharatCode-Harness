@@ -22,6 +22,24 @@ editing preserves metadata, wikilinks, unsupported syntax and recovery drafts.
 Model tools can inspect the library, create notes, propose source-backed citations
 without publishing edits, and capture citations against exact saved text.
 
+The model persistence follow-through adds `research_notes.store`: complete new
+Markdown notes with optional validated exact-source citations, exclusive file
+creation, evidence registration and readback receipts. A dedicated model prompt
+instructs research tasks to save substantive findings and linked topic overviews,
+retain evidence and inspect saved content rather than leaving knowledge in chat.
+The [tool guide](../../research-knowledge-tools.md) documents the workflow.
+Both store and existing-note citation proposals normalize Windows paths before
+generating portable relative citation links.
+
+Follow-through verification: the focused suite passed 712 tests with the same
+three optional notebook skips; host/client aggregate TypeScript checks and staged
+lint passed. After the final existing-note Windows proposal correction, its tool
+and research-host suites passed 26 tests. Model-runtime tests check tool/prompt
+assembly, nonempty saved content through the UI-facing service, exact citations,
+exclusive creation, invalid/cross-project sources, oversized UTF-8 content,
+capture-failure receipts and Windows paths. This follow-through did not submit a
+live model request or update the installed application.
+
 ## Automated evidence
 
 Commands executed from the implementation checkout:

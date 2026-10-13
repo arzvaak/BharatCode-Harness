@@ -1,7 +1,7 @@
 /** Research operations share immutable evidence storage and never replace editor publication. */
 import type { Context } from '@deepseek-ai/cordis'
 import { ResearchLibrary } from '@deepseek-ai/dsh-workspace'
-import { researchCitationMarkers, prepareResearchCitation, researchRelativeLink } from '@deepseek-ai/dsh-workspace/research-markdown'
+import { researchCitationMarkers, prepareResearchCitation, researchRelativeLink, researchPath } from '@deepseek-ai/dsh-workspace/research-markdown'
 import type {
   ArtifactRevision,
   ArtifactRevisionId,
@@ -64,10 +64,44 @@ export class ResearchOperations {
     }
     return { ...created, issues }
   }
+  /** Persist complete new knowledge and exact citation evidence without replacing existing notes. */
+  async store(projectId: WorkspaceId, path: string, title: string, text: string,
+    citations: readonly { sourceId: ArtifactRevisionId; start: number; end: number }[] = []) {
+    if (!text.trim()) throw new Error('Provide nonempty knowledge content')
+    const canonicalPath = researchPath(path)
+    if (canonicalPath === undefined) throw new Error('Choose a portable Markdown path inside the project')
+    let content = text
+    for (const citation of citations) {
+      const source = this.ctx.projectKnowledge.read(citation.sourceId)
+      if (source.projectId !== projectId) throw new Error('Citation source belongs to another project')
+      if (!Number.isSafeInteger(citation.start) || !Number.isSafeInteger(citation.end) ||
+        citation.start < 0 || citation.end <= citation.start || citation.end > source.text.length)
+        throw new Error('Choose a passage within the captured source')
+      content = prepareResearchCitation(content, {
+        id: source.id, title: source.title,
+        url: researchRelativeLink(canonicalPath, `sources/captured/${source.id}.md`),
+        start: citation.start, end: citation.end, quote: source.text.slice(citation.start, citation.end),
+      })
+    }
+    const created = await this.library(projectId).create(canonicalPath, title, content)
+    try {
+      const captured = await this.captureCitations(projectId, created.path, content)
+      const inspected = await this.inspect(projectId, created.path)
+      if (inspected.text !== content) throw new Error('Note changed during read back; inspect its current version')
+      return { ...created, version: inspected.note.version, artifactId: captured.artifact.id,
+        linked: captured.linked, issues: captured.issues }
+    } catch (error) {
+      return { ...created, linked: 0, issues: [
+        `Note saved; evidence capture or read back incomplete: ${error instanceof Error ? error.message : String(error)}`,
+      ] }
+    }
+  }
   /** Propose a portable citation against the exact saved note; never publish an AI edit. */
   async prepareCitation(projectId: WorkspaceId, path: string, expectedText: string,
     sourceId: ArtifactRevisionId, start: number, end: number): Promise<{ path: string; proposedText: string }> {
-    const current = await this.library(projectId).readText(path)
+    const canonicalPath = researchPath(path)
+    if (canonicalPath === undefined) throw new Error('Choose a portable Markdown path inside the project')
+    const current = await this.library(projectId).readText(canonicalPath)
     if (current !== expectedText) throw new Error('Note changed; read its current version before proposing a citation')
     const source = this.ctx.projectKnowledge.read(sourceId)
     if (source.projectId !== projectId) throw new Error('Citation source belongs to another project')
@@ -75,10 +109,10 @@ export class ResearchOperations {
       throw new Error('Choose a passage within the captured source')
     const proposedText = prepareResearchCitation(current, {
       id: source.id, title: source.title,
-      url: researchRelativeLink(path, `sources/captured/${source.id}.md`),
+      url: researchRelativeLink(canonicalPath, `sources/captured/${source.id}.md`),
       start, end, quote: source.text.slice(start, end),
     })
-    return { path, proposedText }
+    return { path: canonicalPath, proposedText }
   }
   /** Capture saved text and validate portable citation markers against exact immutable sources. */
   async captureCitations(

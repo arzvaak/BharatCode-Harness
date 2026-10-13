@@ -205,7 +205,7 @@ export class ResearchLibrary {
     return result
   }
   /** Explicit exclusive creation. Existing notes and vault metadata are never overwritten. */
-  async create(selected: string, title: string): Promise<{ path: string }> {
+  async create(selected: string, title: string, text?: string): Promise<{ path: string }> {
     const path = researchPath(selected)
     if (
       path === undefined ||
@@ -222,6 +222,9 @@ export class ResearchLibrary {
     )
       throw new Error('Choose a portable Markdown path inside the project')
     if (!title.trim() || title.length > 500 || /[\r\n]/.test(title)) throw new Error('Choose a single-line note title')
+    const content = text ?? `# ${title.trim()}\n\n`
+    if (!content.trim() || Buffer.byteLength(content, 'utf8') > this.limits.maxFileBytes)
+      throw new Error('Provide nonempty note content within the research file byte limit')
     const root = await realpath(this.root)
     let parent = root
     for (const part of path.split('/').slice(0, -1)) {
@@ -241,7 +244,7 @@ export class ResearchLibrary {
       0o600,
     )
     try {
-      await file.writeFile(`# ${title.trim()}\n\n`)
+      await file.writeFile(content)
       await file.sync()
     } finally {
       await file.close()
