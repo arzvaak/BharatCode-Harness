@@ -89,8 +89,11 @@ export class LayoutController implements ILayout {
     return this.navigation.signal
   }
 
-  /** @returns Current cancellation signal without changing navigation ownership. */
-  currentNavigation(): AbortSignal { return this.navigation.signal }
+  /** @returns Live cancellation signal without superseding a pending navigation. */
+  currentNavigation(): AbortSignal {
+    if (this.navigation.signal.aborted) this.navigation = new AbortController()
+    return this.navigation.signal
+  }
 
   /** Invalidate pending navigations when the layout owner is unloaded. */
   dispose(): void {

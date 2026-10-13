@@ -112,3 +112,12 @@ it('lets automatic startup restoration observe an explicit pending navigation wi
   service.selectPanel(null)
   expect(pending.aborted).toBe(true)
 })
+
+it('observes future manual navigation after the preceding selection has completed', () => {
+  const service = new LayoutController(fakePanels(), () => true, createSnapshotStore({ activePanelId: null }))
+  service.selectPanel(null)
+  const observed = service.currentNavigation()
+  expect(observed.aborted).toBe(false)
+  service.selectPanel(null)
+  expect(observed.aborted).toBe(true)
+})

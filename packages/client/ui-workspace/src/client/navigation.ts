@@ -316,19 +316,21 @@ class UiWorkspaceService extends Service implements UiWorkspace {
   }
 
   private async restoreSelection(workspaces: WorkspaceSnapshot, sessions: SessionListState): Promise<void> {
+    const navigation = AbortSignal.any([this.ctx.layout.currentNavigation(), this.lifetime.signal])
+    const canceled = (): boolean => navigation.aborted
+    if (canceled()) return
     const saved = this.selection.getSnapshot()
     if (saved.subagentAddress !== undefined) {
-      this.replaceMain(saved.subagentAddress, this.lifetime.signal, 'preserve')
+      this.replaceMain(saved.subagentAddress, navigation, 'preserve')
       return
     }
     const summary = saved.sessionId === undefined ? undefined : sessions.byId[saved.sessionId]
     const workspace = summary === undefined ? undefined
       : workspaces.items.find(item => item.sessionIds.includes(summary.id))
     if (summary !== undefined && (!summary.blank || workspace === undefined)) {
-      this.replaceMain(summary.id, this.lifetime.signal, 'preserve')
+      this.replaceMain(summary.id, navigation, 'preserve')
       return
     }
-    const navigation = AbortSignal.any([this.ctx.layout.currentNavigation(), this.lifetime.signal])
     let sessionId: SessionId | undefined
     if (summary !== undefined && workspace !== undefined && summary.cwd === workspace.path
       && !workspaces.archivedSessionIds.includes(summary.id)) {
@@ -339,7 +341,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
       sessionId = await this.sessions.create({})
     }
     if (sessionId === undefined && target !== undefined) sessionId = await this.connectWorkspace(target)
-    if (sessionId !== undefined && !navigation.aborted) {
+    if (sessionId !== undefined && !canceled()) {
       this.replaceMain(sessionId, navigation, 'preserve')
     }
   }
@@ -367,12 +369,13 @@ class UiWorkspaceService extends Service implements UiWorkspace {
     panel: 'reveal' | 'preserve',
     beforeOpen?: (sessionId: SessionId) => void,
   ): void {
+    const canceled = (): boolean => signal.aborted
     signal.throwIfAborted()
     const reference = this.sessions.retain(target, { source: 'mainView' })
     try {
-      signal.throwIfAborted()
+      if (canceled()) { reference.release(); return }
       beforeOpen?.(reference.sessionId)
-      if (signal.aborted) {
+      if (canceled()) {
         reference.release()
         return
       }
