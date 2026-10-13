@@ -13,7 +13,7 @@
    an eased track chases the live window edge and the centre column visibly
    rubber-bands while the user resizes the window. */
 .frame[data-animating] {
-  transition: grid-template-columns var(--bc-motion-sidebar, 240ms) var(--ds-ease-in-out);
+  transition: grid-template-columns var(--bc-motion-sidebar, 320ms) var(--bc-ease-panel, cubic-bezier(.22,1,.36,1));
 }
 
 /* Dragging writes widths at pointer cadence; easing them would detach the
@@ -240,7 +240,7 @@
    during collapse/expand; instant at steady state (viewport-driven moves)
    and while dragging. */
 .frame[data-animating] .handle {
-  transition: left var(--bc-motion-sidebar, 240ms) var(--ds-ease-in-out);
+  transition: left var(--bc-motion-sidebar, 320ms) var(--bc-ease-panel, cubic-bezier(.22,1,.36,1));
 }
 
 .frame[data-dragging] .handle {
@@ -287,7 +287,7 @@
 
 
 .centerCol > :first-child { flex: 1; min-height: 0; }
-.terminalSeat { min-height: 0; min-width: 0; position: relative; border-top: 0.5px solid var(--dsw-alias-border-general); }
+.terminalSeat { overflow: hidden; min-height: 0; min-width: 0; position: relative; border-top: 0.5px solid var(--dsw-alias-border-general); }
 .terminalSeat:empty, .terminalSeat:has(> [hidden]) { display: none; }
 
 .frame:has([data-terminal-dock]:not([hidden])) { grid-template-rows: minmax(0, 1fr) min(260px, 35vh); }
@@ -295,3 +295,7 @@
 .frame:has([data-terminal-dock]:not([hidden])) .centerCol { grid-column: 2; grid-row: 1; }
 .frame:has([data-terminal-dock]:not([hidden])) .rightbarCol { grid-column: 3; grid-row: 1; }
 .frame:has([data-terminal-dock]:not([hidden])) .terminalSeat { grid-column: 2 / -1; grid-row: 2; }
+
+/* In Workbench, output and terminal share the right column so chat stays full-height. */
+.frame:not([data-rightbar-collapsed]):not([data-rightbar-fullscreen]):has([data-terminal-dock]:not([hidden])) .centerCol { grid-row: 1 / -1; }
+.frame:not([data-rightbar-collapsed]):not([data-rightbar-fullscreen]):has([data-terminal-dock]:not([hidden])) .terminalSeat { grid-column: 3; border-left: 0.5px solid var(--dsw-alias-border-l3); }

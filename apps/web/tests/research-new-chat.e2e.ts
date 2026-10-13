@@ -5,7 +5,7 @@ import { chromium } from 'playwright'
 import { expect, it } from 'vitest'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import { launchWebScaffold, watchConsole } from './scaffold.ts'
-import { newEnglishPage } from './support.ts'
+import { newEnglishPage, revealToolsAndWorkflows } from './support.ts'
 
 it('retains Research for fresh workspace chats and shows sources added through tools', async () => {
   const scaffold = await launchWebScaffold({ firstUse: true })
@@ -20,8 +20,10 @@ it('retains Research for fresh workspace chats and shows sources added through t
     await page.getByRole('button', { name: 'Choose workspace', exact: true }).click()
     await page.getByRole('menuitem').filter({ hasText: 'Research regression' }).click()
     await expect.poll(() => project.sessionIds.length).toBe(1)
+    await revealToolsAndWorkflows(page)
     await page.getByRole('navigation', { name: 'Workflows', exact: true }).getByRole('button', { name: 'Coding', exact: true }).click()
     await expect.poll(() => project.sessionIds.length).toBe(2)
+    await revealToolsAndWorkflows(page)
     await page.getByRole('navigation', { name: 'Workflows', exact: true }).getByRole('button', { name: 'Research', exact: true }).click()
     await expect.poll(() => project.sessionIds.length).toBe(3)
     const existing = [...project.sessionIds]
@@ -45,9 +47,13 @@ it('retains Research for fresh workspace chats and shows sources added through t
     await page.getByRole('button', { name: 'Tool source regression', exact: true }).click()
     await page.getByText('Evidence added through the model tool', { exact: true }).waitFor()
     await page.reload({ waitUntil: 'load' })
+    await page.locator('summary[aria-label="Tools & workflows"]').waitFor()
+    await revealToolsAndWorkflows(page)
     await expect.poll(() => page.getByRole('navigation', { name: 'Workflows', exact: true }).getByRole('button', { name: 'Research', exact: true }).getAttribute('aria-current')).toBe('page')
     expect(await page.locator('[data-conversation-session]').getAttribute('data-conversation-session')).toBe(current)
+    await revealToolsAndWorkflows(page)
     await page.getByRole('navigation', { name: 'Workflows', exact: true }).getByRole('button', { name: 'Coding', exact: true }).click()
+    await revealToolsAndWorkflows(page)
     await page.getByRole('navigation', { name: 'Workflows', exact: true }).getByRole('button', { name: 'Research', exact: true }).click()
     await expect.poll(() => page.locator('[data-conversation-session]').getAttribute('data-conversation-session')).toBe(current)
     expect(tripwire.pageErrors).toEqual([])

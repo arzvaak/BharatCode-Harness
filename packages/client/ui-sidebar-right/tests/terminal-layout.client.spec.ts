@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getPane } from '@deepseek-ai/dsh-client-ui-dockkit'
+import { dockPaneIds, getPane } from '@deepseek-ai/dsh-client-ui-dockkit'
 import { createSidebarRightStore } from '../src/client/stores.ts'
 import { resourceLayout, terminalLayout } from '../src/client/shell/SidebarRight.tsx'
 
@@ -29,4 +29,18 @@ describe('independent terminal presentation', () => {
     expect(terminalLayout(store.getSnapshot().bySession.session!.layout)).toBeUndefined()
     expect(Object.values(resourceLayout(store.getSnapshot().bySession.session!.layout).tabs)).toContain(files)
   })
+})
+
+it('removes terminal-only panes from the file projection without changing saved layout', () => {
+  const store = createSidebarRightStore(() => ({ kind: 'guide', title: 'Start' })).create()
+  store.actions.open('session')
+  store.actions.openContent('session', { kind: 'files', title: 'Files', contentId: 'files' }, () => {})
+  store.actions.openContent('session', { kind: 'terminal', title: 'bash', contentId: 'terminal:one', preferNewPane: true }, () => {})
+  const layout = store.getSnapshot().bySession.session!.layout
+  expect(dockPaneIds(layout)).toHaveLength(2)
+  const projected = resourceLayout(layout)
+  expect(dockPaneIds(projected)).toHaveLength(1)
+  expect(getPane(projected, projected.activePaneId).tabs.length).toBeGreaterThan(0)
+  expect(dockPaneIds(layout)).toHaveLength(2)
+  expect(Object.values(terminalLayout(layout)!.tabs)).toHaveLength(1)
 })

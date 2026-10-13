@@ -287,6 +287,14 @@ describe('session reference URI and inline mentions', () => {
     })
   })
 
+  it('accepts a copied chat link as completed-history context', () => {
+    const parsed = parseSessionReferenceText('Review dsh://sessions/source-chat. Then compare @[Earlier study](dsh://sessions/source-chat).')
+    expect(parsed.text).toBe('Review @source-chat. Then compare @Earlier study.')
+    expect(parsed.references).toEqual([{ sessionId: 'source-chat', label: 'source-chat' }, { sessionId: 'source-chat', label: 'Earlier study' }])
+    expect(decodeSessionReferenceUri('dsh://sessions/source-chat')).toBe('source-chat')
+    expect(() => parseSessionReferenceText('@[bad](dsh://sessions/source-chat?token=x)')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
+  })
+
   it('rejects malformed explicit references and base64url-shaped bare candidates', () => {
     expect(() => decodeSessionReferenceUri('https://example.test')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))
     expect(() => parseSessionReferenceText('see dsh-session:IiJ')).toThrow(expectCode('SESSION_REFERENCE_INVALID_REFERENCE'))

@@ -63,10 +63,6 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
         </span>
       </button>
       <div
-        data-slot="sidebar.workflows"
-        style="display: contents;"
-      />
-      <div
         class="regionArea"
       >
         <div
@@ -78,6 +74,28 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
     <div
       class="footArea"
     >
+      <details
+        class="toolsDisclosure"
+      >
+        <summary
+          aria-label="Tools & workflows"
+        >
+          <svg
+            aria-hidden="true"
+            data-content="88020f34"
+            fill="none"
+            height="16"
+            stroke-width="1"
+            viewBox="0 0 16 16"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          />
+        </summary>
+        <div
+          data-slot="sidebar.workflows"
+          style="display: contents;"
+        />
+      </details>
       <div
         class="footerActions"
       >
@@ -214,10 +232,6 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
         </span>
       </button>
       <div
-        data-slot="sidebar.workflows"
-        style="display: contents;"
-      />
-      <div
         class="regionArea"
       >
         <div
@@ -229,6 +243,31 @@ exports[`sidebar shell snapshots > renders Windows caption controls in expanded 
     <div
       class="footArea"
     >
+      <details
+        class="toolsDisclosure"
+      >
+        <summary
+          aria-label="Tools & workflows"
+        >
+          <svg
+            aria-hidden="true"
+            data-content="88020f34"
+            fill="none"
+            height="16"
+            stroke-width="1"
+            viewBox="0 0 16 16"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          />
+          <span>
+            Tools & workflows
+          </span>
+        </summary>
+        <div
+          data-slot="sidebar.workflows"
+          style="display: contents;"
+        />
+      </details>
       <div
         class="footerActions"
       >
@@ -331,10 +370,6 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
         </span>
       </button>
       <div
-        data-slot="sidebar.workflows"
-        style="display: contents;"
-      />
-      <div
         class="regionArea"
       >
         <div
@@ -346,6 +381,28 @@ exports[`sidebar shell snapshots > renders the collapsed rail after the crossfad
     <div
       class="footArea"
     >
+      <details
+        class="toolsDisclosure"
+      >
+        <summary
+          aria-label="Tools & workflows"
+        >
+          <svg
+            aria-hidden="true"
+            data-content="88020f34"
+            fill="none"
+            height="16"
+            stroke-width="1"
+            viewBox="0 0 16 16"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          />
+        </summary>
+        <div
+          data-slot="sidebar.workflows"
+          style="display: contents;"
+        />
+      </details>
       <div
         class="footerActions"
       >
@@ -482,10 +539,6 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
         </span>
       </button>
       <div
-        data-slot="sidebar.workflows"
-        style="display: contents;"
-      />
-      <div
         class="regionArea"
       >
         <div
@@ -497,6 +550,31 @@ exports[`sidebar shell snapshots > renders the expanded column (wordmark, capsul
     <div
       class="footArea"
     >
+      <details
+        class="toolsDisclosure"
+      >
+        <summary
+          aria-label="Tools & workflows"
+        >
+          <svg
+            aria-hidden="true"
+            data-content="88020f34"
+            fill="none"
+            height="16"
+            stroke-width="1"
+            viewBox="0 0 16 16"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          />
+          <span>
+            Tools & workflows
+          </span>
+        </summary>
+        <div
+          data-slot="sidebar.workflows"
+          style="display: contents;"
+        />
+      </details>
       <div
         class="footerActions"
       >
@@ -633,10 +711,6 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
         </span>
       </button>
       <div
-        data-slot="sidebar.workflows"
-        style="display: contents;"
-      />
-      <div
         class="regionArea"
       >
         <div
@@ -648,6 +722,31 @@ exports[`sidebar shell snapshots > renders the expanded column in the default lo
     <div
       class="footArea"
     >
+      <details
+        class="toolsDisclosure"
+      >
+        <summary
+          aria-label="工具与工作流"
+        >
+          <svg
+            aria-hidden="true"
+            data-content="88020f34"
+            fill="none"
+            height="16"
+            stroke-width="1"
+            viewBox="0 0 16 16"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          />
+          <span>
+            工具与工作流
+          </span>
+        </summary>
+        <div
+          data-slot="sidebar.workflows"
+          style="display: contents;"
+        />
+      </details>
       <div
         class="footerActions"
       >

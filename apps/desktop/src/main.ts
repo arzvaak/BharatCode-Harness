@@ -32,6 +32,7 @@ import { DesktopBackendController } from './backend-controller.ts'
 import { DESKTOP_IPC, SCHEME, assertDesktopSender, type DesktopUpdateState } from './ipc.ts'
 import { readDeviceInfo } from './device-info.ts'
 import { desktopUpdateReadyConfirmation, formatDesktopMessage, resolveDesktopLocale, resolveDesktopStartupLocale } from './locale.ts'
+import { DesktopChatLinks } from './chat-links.ts'
 import { claimDesktopSingleInstance } from './single-instance.ts'
 import { DesktopUpdateCoordinator } from './update-coordinator.ts'
 import { DesktopCommandManager } from './command-management.ts'
@@ -63,7 +64,11 @@ import { installDesktopStdioErrorHandlers } from './stdio-errors.ts'
 
 installDesktopStdioErrorHandlers()
 
+const chatLinks = new DesktopChatLinks()
 let focusPrimaryWindow = (): void => {}
+function acceptDesktopLink(url: string): void {
+  if (chatLinks.accept(url) || url === 'dsh://open' || url === 'dsh://open/') focusPrimaryWindow()
+}
 let stopForRecovery = async (): Promise<void> => {}
 let shuttingDown = false
 /**
@@ -735,6 +740,9 @@ async function main(): Promise<void> {
     try { event.returnValue = platformView.bootstrap(event) }
     catch { event.returnValue = null }
   })
+  chatLinks.listen(() => { mainWindow?.webContents.send(DESKTOP_IPC.chatLinkRequested) })
+  ipcMain.handle(DESKTOP_IPC.chatLinkPending, (event) => { assertMainApplication(event); return chatLinks.take() })
+
   ipcMain.handle(PLATFORM_IPC.open, (event, page: unknown, bounds: unknown) => {
     const owner = assertMainApplication(event)
     if (page !== 'usage' && page !== 'top-up') throw new Error('Invalid Platform page')
@@ -1232,10 +1240,7 @@ async function main(): Promise<void> {
   }
 
   if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient('dsh')
-  app.on('open-url', (event, url) => {
-    event.preventDefault()
-    if (url === 'dsh://open' || url === 'dsh://open/') focusPrimaryWindow()
-  })
+
 
   app.on('activate', (_event, hasVisibleWindows) => {
     if (!hasVisibleWindows) focusPrimaryWindow()
@@ -1339,7 +1344,16 @@ async function main(): Promise<void> {
   publishUpdate(updateState)
 }
 
-const ownsDesktopInstance = claimDesktopSingleInstance(app, () => { focusPrimaryWindow() })
+const ownsDesktopInstance = claimDesktopSingleInstance(app, (argv) => {
+  const link = argv?.find(value => value.startsWith('dsh://'))
+  if (link === undefined) focusPrimaryWindow()
+  else acceptDesktopLink(link)
+})
+if (ownsDesktopInstance) {
+  const link = process.argv.find(value => value.startsWith('dsh://'))
+  if (link !== undefined) acceptDesktopLink(link)
+  app.on('open-url', (event, url) => { event.preventDefault(); acceptDesktopLink(url) })
+}
 
 if (ownsDesktopInstance) void app.whenReady().then(main).catch(async (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error)

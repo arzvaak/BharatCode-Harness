@@ -66,6 +66,8 @@ import {
   SessionArchiveConfirmDialog,
 } from './session-actions/ArchiveSession.tsx'
 import { derive } from './session-actions/derived.ts'
+import { CopyChatLinkMenuItem } from './session-actions/CopyChatLink.tsx'
+import { installChatLinkNavigation, type ChatLinkBridge } from './chat-links.ts'
 import { ForkSessionMenuItem } from './session-actions/ForkSession.tsx'
 import { PinSessionMenuItem, PinSessionRowButton } from './session-actions/PinSession.tsx'
 import { RenameSessionMenuItem, SessionRenameDialog } from './session-actions/RenameSession.tsx'
@@ -264,6 +266,27 @@ export function apply(ctx: Context): void {
     pending: (profile) =>{  workflowInstance.actions.navigating(profile) },
     failed: (reason) =>{  notify({ kind: 'createFailed', message: reason instanceof Error ? reason.message : String(reason) }) },
   })
+  ctx.effect(() => {
+    const bridge = typeof window === 'undefined' ? undefined
+      : (window as Window & { dshDesktop?: { chats?: ChatLinkBridge } }).dshDesktop?.chats
+    if (bridge === undefined) return () => {}
+    return installChatLinkNavigation(bridge, {
+      ready: () => sessions.list.getSnapshot().phase === 'ready' && workspaces.list.getSnapshot().phase === 'ready',
+      available: id => sessions.list.getSnapshot().byId[id as SessionId] !== undefined
+        && !workspaces.list.getSnapshot().archivedSessionIds.includes(id as SessionId),
+      open: (id) => {
+        const summary = sessions.list.getSnapshot().byId[id as SessionId]
+        if (summary !== undefined) uiWorkspace.openSession(summary.id)
+      },
+      unavailable: () => { notify({ kind: 'chatLinkUnavailable' }) },
+      navigation: () => ctx.layout.beginNavigation(),
+      subscribe: (listener) => {
+        const stopSessions = sessions.list.subscribe(listener)
+        const stopWorkspaces = workspaces.list.subscribe(listener)
+        return () => { stopSessions(); stopWorkspaces() }
+      },
+    })
+  }, 'workspace.chat-links')
   ctx.effect(() => {
     destinations.observe()
     const stop = uiWorkspace.selection.subscribe(() =>{  destinations.observe() })
@@ -763,6 +786,10 @@ export function apply(ctx: Context): void {
     yield ctx.slots.register(
       { name: 'sidebar.workspaces.session.menu.item', id: 'handoff', order: 250, locale: NS, inject: () => ({ requestHandoff }) },
       HandoffMenuItem,
+    )
+    yield ctx.slots.register(
+      { name: 'sidebar.workspaces.session.menu.item', id: 'copy-chat-link', order: 275, locale: NS },
+      CopyChatLinkMenuItem,
     )
     yield ctx.slots.register(
       { name: 'sidebar.workspaces.session.menu.item', id: 'fork', order: 300, locale: NS, inject: forkInjected },

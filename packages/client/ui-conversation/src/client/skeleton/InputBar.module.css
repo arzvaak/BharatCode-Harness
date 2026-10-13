@@ -420,3 +420,11 @@
 .activity { display: flex; align-items: center; flex: none; }
 .activity:empty { display: none; }
 .activityExpanded { flex: 1; min-width: 0; }
+
+/* Workbench composer: a quiet surface with a deliberate focus cue. */
+.card { border-radius: var(--dsw-radius-md); box-shadow: 0 0 0 1px var(--dsw-alias-border-l2); padding-top: 12px; }
+.card:focus-within { box-shadow: 0 0 0 1px var(--dsw-focus-ring-color), 0 4px 20px #0000000a; }
+@media (prefers-reduced-motion: no-preference) {
+  .card { transition: box-shadow var(--bc-motion-content, 220ms) ease; }
+}
+@media (prefers-reduced-motion: reduce) { .pending { animation: none; } }

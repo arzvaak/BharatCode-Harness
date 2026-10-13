@@ -24,6 +24,7 @@
   "exclude": [
     "tests/independent-chats.e2e.ts",
     "tests/research-new-chat.e2e.ts",
+    "tests/chat-links.e2e.ts",
     "tests/shortcuts-desktop.e2e.ts",
     "tests/shortcuts-workspace.e2e.ts",
     "tests/shortcuts-panels.e2e.ts",

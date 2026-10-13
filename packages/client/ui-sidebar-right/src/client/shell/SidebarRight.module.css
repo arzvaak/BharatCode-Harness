@@ -49,8 +49,8 @@
   transform: translateX(var(--dsh-sidebar-width));
   visibility: hidden;
   transition:
-    transform var(--ds-transition-duration-slow) var(--ds-ease-in-out),
-    visibility 0s linear var(--ds-transition-duration-slow);
+    transform var(--bc-motion-sidebar, 320ms) var(--bc-ease-panel, cubic-bezier(.22,1,.36,1)),
+    visibility 0s linear var(--bc-motion-sidebar, 320ms);
 }
 
 .panel[data-sidebar-right-open] :global([data-dockkit-host='dock']),
@@ -58,7 +58,7 @@
 .panel[data-sidebar-right-open] :global([data-dockkit-divider]) {
   transform: none;
   visibility: visible;
-  transition: transform var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+  transition: transform var(--bc-motion-sidebar, 320ms) var(--bc-ease-panel, cubic-bezier(.22,1,.36,1));
 }
 
 .panel[data-sidebar-right-panel='fullscreen'] {
@@ -168,4 +168,6 @@
   overflow: hidden;
 }
 
-.terminalPanel { height: 100%; min-height: 0; width: 100%; --dsh-dockkit-dock-layer: 10; }
+.terminalPanel { display: flex; flex-direction: column; overflow: hidden; height: 100%; min-height: 0; width: 100%; --dsh-dockkit-dock-layer: 10; }
+
+.terminalPanel[hidden] { display: none; }

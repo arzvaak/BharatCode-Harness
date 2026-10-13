@@ -62,6 +62,7 @@ it.each(['dsh-app://shell/plugin-manager.html', 'dsh-app://other/index.html', 'h
   await import('../src/preload-app.ts')
   expect(electron.contextBridge.exposeInMainWorld).toHaveBeenCalledWith('dshDesktop', { protocolVersion: 1 })
   expect(electron.ipcRenderer.on.mock.calls.some(([channel]) => channel === DESKTOP_IPC.browserOpenRequested)).toBe(false)
+  expect(electron.ipcRenderer.on.mock.calls.some(([channel]) => channel === DESKTOP_IPC.chatLinkRequested)).toBe(false)
 })
 
 it('reads the local machine description only from the application main frame', async () => {
@@ -253,4 +254,18 @@ it('forwards browser guest input only for the focused live webview lease', async
   handler({}, input)
   expect(listener).toHaveBeenCalledOnce()
   off()
+})
+
+it('delivers pending private chat links and removes the native listener on cleanup', async () => {
+  vi.stubGlobal('location', new URL('dsh-app://app/index.html'))
+  await import('../src/preload-app.ts')
+  const api = electron.contextBridge.exposeInMainWorld.mock.calls.find(([name]) => name === 'dshDesktop')?.[1] as DshDesktopProductApi
+  electron.ipcRenderer.invoke.mockResolvedValueOnce('dsh://sessions/source')
+  await expect(api.chats.takePending()).resolves.toBe('dsh://sessions/source')
+  expect(electron.ipcRenderer.invoke).toHaveBeenCalledWith(DESKTOP_IPC.chatLinkPending)
+  const listener = vi.fn()
+  const dispose = api.chats.subscribe(listener)
+  const handler = electron.ipcRenderer.on.mock.calls.find(([channel]) => channel === DESKTOP_IPC.chatLinkRequested)?.[1] as () => void
+  handler(); expect(listener).toHaveBeenCalledOnce(); dispose()
+  expect(electron.ipcRenderer.off).toHaveBeenCalledWith(DESKTOP_IPC.chatLinkRequested, handler)
 })

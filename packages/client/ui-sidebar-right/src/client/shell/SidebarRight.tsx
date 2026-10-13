@@ -37,7 +37,7 @@ import type {
 } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '../contract/slots.ts'
 import type { DockIntents, DockMode, FloatRect, TabId, TabRecord, TabRenderer } from '@deepseek-ai/dsh-client-ui-dockkit'
-import { canSplit, dockPaneIds, DockLayout, findPaneContentTab } from '@deepseek-ai/dsh-client-ui-dockkit'
+import { applyOp, canSplit, dockPaneIds, DockLayout, findPaneContentTab } from '@deepseek-ai/dsh-client-ui-dockkit'
 import type { HalvesFit, LayoutNode, LayoutState, PaneId } from '@deepseek-ai/dsh-client-ui-dockkit'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { GUIDE_KIND, pageAddress } from '../contract/seed.ts'
@@ -66,7 +66,7 @@ export function terminalLayout(layout: LayoutState): LayoutState | undefined {
 
 /** Keep source/resource panes and their original identities in the side dock. */
 export function resourceLayout(layout: LayoutState): LayoutState {
-  return { ...layout,
+  let projected: LayoutState = { ...layout,
     tabs: Object.fromEntries(Object.entries(layout.tabs).filter(([, tab]) => tab.kind !== 'terminal')),
     nodes: Object.fromEntries<LayoutNode>(Object.entries(layout.nodes).map(([id, node]) => {
       if (node.kind !== 'pane') return [id, node]
@@ -75,6 +75,15 @@ export function resourceLayout(layout: LayoutState): LayoutState {
       return [id, { ...node, tabs, activeTabId }]
     })),
   }
+  // A terminal has its own dock; its former file pane must not leave a blank split.
+  // Only the presentation changes. Saved tab identities and placements stay intact.
+  for (const paneId of dockPaneIds(projected)) {
+    const pane = projected.nodes[paneId]
+    if (paneId !== projected.rootId && pane?.kind === 'pane' && pane.tabs.length === 0) {
+      projected = applyOp(projected, { type: 'merge', paneId }).state
+    }
+  }
+  return projected
 }
 
 /** The store share the seat receives. */
@@ -326,7 +335,7 @@ function PanelChrome({ sessionId, fullscreen, actions, t, shortcuts, toggleFulls
  * The panel: the docked surface with the two controls in its top-right strip,
  * anchored to the frame's right edge and slid off it while collapsed.
  */
-function SidebarPanel(panel: PanelProps & { width: number; panelRef: RefObject<HTMLDivElement> }): ReactNode {
+function SidebarPanel(panel: PanelProps & { originalLayout: LayoutState; width: number; panelRef: RefObject<HTMLDivElement> }): ReactNode {
   const { sessionId, surface, actions, t, renderSlot, openTab, width, reportRoom, fullscreen, panelRef } = panel
   const { expanded } = surface.layout
   const types = panel.useTabTypes(value => value)
@@ -348,7 +357,8 @@ function SidebarPanel(panel: PanelProps & { width: number; panelRef: RefObject<H
       <div className={css.panelBody}>
         <DockLayout
           state={surface.layout}
-          canSplit={Object.keys(surface.layout.tabs).length > 0 && canSplit(surface.layout) && dockPaneIds(surface.layout).length < 2}
+          canSplit={Object.keys(surface.layout.tabs).length > 0
+            && canSplit(panel.originalLayout) && dockPaneIds(panel.originalLayout).length < 2}
           hideSplitWhenBlocked={Object.keys(surface.layout.tabs).length === 0}
           dropZones="horizontal"
           minPaneFraction={0.2}
@@ -456,7 +466,8 @@ export function RightbarSeat({
   const terminals = terminalLayout(surface.layout)
   const resources = resourceLayout(surface.layout)
   return <>
-    <SidebarPanel {...panel} surface={{ ...surface, layout: resources }} width={width} panelRef={panelRef} />
+    <SidebarPanel {...panel} originalLayout={surface.layout}
+      surface={{ ...surface, layout: resources }} width={width} panelRef={panelRef} />
     {active && surface.terminalVisible !== undefined && terminals !== undefined && terminalSeat !== null && createPortal(
       <div className={css.terminalPanel} data-terminal-dock="bottom" hidden={!surface.terminalVisible}>
         <DockLayout state={terminals} canSplit={false} hideSplitWhenBlocked canAddTab={() => false}

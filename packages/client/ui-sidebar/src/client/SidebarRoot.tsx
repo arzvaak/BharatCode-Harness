@@ -277,25 +277,8 @@ export function SidebarRoot({
           </button>
         </Tooltip>
 
-        {panels.length > 0 && (
-          <nav className={css.panelList} aria-label={t('panels.label')}>
-            {panels.map(({ id, label }) => (
-              <PanelRow
-                key={id}
-                id={id}
-                label={label}
-                wide={wide}
-                usePanelInfo={usePanelInfo}
-                selectPanel={selectPanel}
-                renderSlot={renderSlot}
-              />
-            ))}
-          </nav>
-        )}
-
         {/* The browsing region fills the column between the controls and the
             foot in both states; its rail icon column rides the same slot. */}
-        {renderSlot('sidebar.workflows', { wide })}
         <div className={css.regionArea}>
           {renderSlot('sidebar.workspaces', {
             wide,
@@ -305,6 +288,26 @@ export function SidebarRoot({
       </div>
       {/* Footer actions stack above Settings in both sidebar widths. */}
       <div className={css.footArea}>
+        <details className={css.toolsDisclosure}>
+          <summary aria-label={t('tools.label')}><IconPanelLeftOutlineRegular size={16} />{wide && <span>{t('tools.label')}</span>}</summary>
+          {panels.length > 0 && (
+            <nav className={clsx(css.panelList, css.toolsList)} aria-label={t('panels.label')}>
+              {panels.map(({ id, label }) => (
+                <PanelRow
+                  key={id}
+                  id={id}
+                  label={label}
+                  wide={wide}
+                  usePanelInfo={usePanelInfo}
+                  selectPanel={selectPanel}
+                  renderSlot={renderSlot}
+                />
+              ))}
+            </nav>
+          )}
+
+          {renderSlot('sidebar.workflows', { wide })}
+        </details>
         <div className={css.footerActions}>
           {renderSlot('sidebar.footer.action', { wide })}
         </div>

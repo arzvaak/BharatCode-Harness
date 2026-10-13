@@ -30,3 +30,16 @@ describe('desktop single-instance ownership', () => {
     expect(focus).toHaveBeenCalledOnce()
   })
 })
+
+it('forwards launch arguments including a private chat URI to the existing window', () => {
+  let secondInstance!: (event?: unknown, argv?: string[]) => void
+  const open = vi.fn()
+  const application: DesktopSingleInstanceApplication = {
+    requestSingleInstanceLock: () => true, quit: vi.fn(),
+    on: (_event, listener) => { secondInstance = listener },
+  }
+  claimDesktopSingleInstance(application, open)
+  const argv = ['BharatCode.exe', 'dsh://sessions/source']
+  secondInstance({}, argv)
+  expect(open).toHaveBeenCalledWith(argv)
+})

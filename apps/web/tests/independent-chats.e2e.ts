@@ -4,7 +4,7 @@ import { stat } from 'node:fs/promises'
 import { chromium } from 'playwright'
 import { expect, it } from 'vitest'
 import { launchWebScaffold, watchConsole } from './scaffold.ts'
-import { newEnglishPage } from './support.ts'
+import { newEnglishPage, revealToolsAndWorkflows } from './support.ts'
 
 it('keeps general chats independent and toggles Files with visible state', async () => {
   const scaffold = await launchWebScaffold({ firstUse: true })
@@ -38,6 +38,7 @@ it('keeps general chats independent and toggles Files with visible state', async
     expect(newest.session.header.cwd!.startsWith(join(scaffold.harnessHome, 'chats', 'chat-'))).toBe(true)
     expect(workspace.sessionIds).toHaveLength(1)
 
+    await revealToolsAndWorkflows(page)
     await page.getByRole('button', { name: /^Research/ }).click()
     await expect.poll(() => scaffold.ctx.agents.list().length).toBe(count + 2)
     const research = scaffold.ctx.agents.list().find(agent =>

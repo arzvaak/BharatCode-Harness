@@ -140,18 +140,18 @@ describe('main panel selection', () => {
 })
 
 describe('right panel', () => {
-  it('initializes at a compact width only on first opening', () => {
+  it('initializes at a balanced width only on first opening', () => {
     const { store, actions } = createLayoutStore().create()
     actions.setViewportWidth(1000)
     expect(store.getSnapshot().layoutInfo.rightbar).toBeNull()
     actions.openRightbar(true, false)
-    expect(store.getSnapshot().layoutInfo.rightbar).toBe(300)
+    expect(store.getSnapshot().layoutInfo.rightbar).toBe(400)
     actions.setViewportWidth(2000)
     actions.openRightbar(true, true)
-    expect(store.getSnapshot().layoutInfo.rightbar).toBe(300)
+    expect(store.getSnapshot().layoutInfo.rightbar).toBe(400)
     actions.closeRightbar()
     actions.openRightbar(true, false)
-    expect(store.getSnapshot().layoutInfo.rightbar).toBe(300)
+    expect(store.getSnapshot().layoutInfo.rightbar).toBe(400)
   })
 
   it('keeps track and fullscreen reports independent and clears both on close', () => {

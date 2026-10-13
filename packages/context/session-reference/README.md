@@ -37,6 +37,12 @@ A message that cites other sessions is followed immediately by a `## Referenced 
 
 For a truncated reference, an optional spill backend saves the full captured text projection under the target session. A separate omission notice outside the bounded preview JSON gives exact `omittedMessages` and `omittedBytes`, then the saved locator and `retrievalHint`, or an unavailable outcome distinguishing missing storage from a failed save. The notice is part of the same durable context message. Full transcripts carry the same untrusted-background warning and capture metadata, including `capturedFormatVersion`. Each message uses JSON string fragments of at most 64 Unicode code points per line; decode and concatenate its fragments to recover exact text, including original newlines. This fixed storage format keeps even long single-line text readable through paged file reads.
 
+### Copying a private chat link
+
+In BharatCode, open a chat's menu and choose **Copy chat link**. Paste the resulting `dsh://sessions/<encoded-id>` link into another chat and send your message with any available model selected. The resolver supplies the same bounded completed-history snapshot used by session mentions; you do not need to export or upload a session.
+
+Opening the link through the installed desktop selects the existing chat after its profile metadata is ready. The link works within the profile that owns that chat. It contains its identity, without uploading its messages or granting remote access. An unavailable or archived chat produces a notice instead of creating a new chat.
+
 ### Finding sessions to reference
 
 `listCandidates(agent, query?, limit?)` lists sessions other than the agent's own, filters case-insensitively by id, working directory, projected title, or display title, and ranks same-directory sessions first. Each candidate carries its latest title as `label`, falling back to the session id when the title is absent or unreadable. Its display title prefers a subagent's durable creation label over that title. The candidate also reports whether its working directory is the requesting agent's so a host can surface a location only when it distinguishes the row. Browser consumers call the same discovery as `ctx.remote.sessionReferenceResolver.candidates`, which labels the canonical mention with `displayTitle` when present.

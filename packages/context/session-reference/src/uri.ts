@@ -1,5 +1,6 @@
 /** Canonical session URI and inline mention encoding. */
 
+import { parseChatLink } from '@deepseek-ai/dsh-util-workspace-path'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { SessionId as SessionIdType } from '@deepseek-ai/dsh-session'
 import { SessionReferenceError } from './config.ts'
@@ -24,6 +25,8 @@ export function encodeSessionReferenceUri(sessionId: SessionIdType): string {
  * @returns decoded session id.
  */
 export function decodeSessionReferenceUri(uri: string): SessionIdType {
+  const linked = parseChatLink(uri)
+  if (linked !== undefined) return brandString<SessionIdType>(linked)
   if (!uri.startsWith(SESSION_REFERENCE_SCHEME)) {
     throw invalidUri(uri)
   }
@@ -61,27 +64,32 @@ export interface ParsedSessionReferenceText {
 /**
  * Extract Markdown mentions and bare canonical URIs from one text value.
  * Explicit Markdown mentions fail on any malformed URI. Bare text is treated
- * as a reference only when it has a non-empty base64url-shaped payload, then
- * still fails if that candidate is not canonical.
+ * as a reference when it has a canonical session payload or a private chat
+ * link. Candidates still fail if they are not canonical.
  * @param text - host text to normalize.
  * @returns readable text and structured references in appearance order.
  */
 export function parseSessionReferenceText(text: string): ParsedSessionReferenceText {
   const references: SessionReferenceInput[] = []
-  const pattern = /@\[((?:\\.|[^\\\]])*)\]\((dsh-session:[^\s)]*)\)|(dsh-session:[A-Za-z0-9_-]+)/gu
+  const pattern = new RegExp(
+    String.raw`@?\[((?:\\.|[^\\\]])*)\]\(((?:dsh-session:|dsh:\/\/sessions\/)[^\s)]*)\)` +
+    String.raw`|(dsh-session:[A-Za-z0-9_-]+)|(dsh:\/\/sessions\/[^\s<>()\[\]"'\x60]+)`, 'gu',
+  )
   const rendered = text.replace(pattern, (
     _match,
     rawLabel: string | undefined,
     markdownUri: string | undefined,
     bareUri: string | undefined,
+    chatUri: string | undefined,
   ) => {
-    const uri = markdownUri ?? bareUri
-    /* v8 ignore next -- the two-alternative regex always captures exactly one URI group. */
+    const punctuation = chatUri?.match(/[.,;:!?]+$/u)?.[0] ?? ''
+    const uri = markdownUri ?? bareUri ?? (chatUri === undefined ? undefined : chatUri.slice(0, chatUri.length - punctuation.length))
+    /* v8 ignore next -- the three-alternative regex always captures exactly one URI group. */
     if (uri === undefined) throw new SessionReferenceError('session reference URI is missing', 'SESSION_REFERENCE_INVALID_REFERENCE')
     const sessionId = decodeSessionReferenceUri(uri)
     const label = rawLabel === undefined ? sessionId : unescapeLabel(rawLabel)
     references.push({ sessionId, label })
-    return `@${label}`
+    return `@${label}${punctuation}`
   })
   return { text: rendered, references }
 }

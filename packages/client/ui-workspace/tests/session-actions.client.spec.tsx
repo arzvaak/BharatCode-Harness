@@ -26,6 +26,7 @@ import type {
 import {
   ArchiveSessionMenuItem, ArchiveSessionRowButton, SessionArchiveConfirmDialog,
 } from '../src/client/session-actions/ArchiveSession.tsx'
+import { CopyChatLinkMenuItem } from '../src/client/session-actions/CopyChatLink.tsx'
 import { ForkSessionMenuItem } from '../src/client/session-actions/ForkSession.tsx'
 import { PinSessionMenuItem, PinSessionRowButton } from '../src/client/session-actions/PinSession.tsx'
 import { RenameSessionMenuItem, SessionRenameDialog } from '../src/client/session-actions/RenameSession.tsx'
@@ -654,4 +655,26 @@ it('shows effective Session shortcuts while menu clicks keep the row target', ()
   expect(requestSessionRename).toHaveBeenCalledWith(ROW.sessionId, ROW.displayTitle)
   expect(forkSession).toHaveBeenCalledWith(ROW.sessionId)
   expect(archiveSession).toHaveBeenCalledWith(ROW.sessionId)
+})
+
+it('copies a private chat link and reports clipboard success', async () => {
+  const prior = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+  const writeText = vi.fn(async () => undefined)
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+  try {
+    render(<CopyChatLinkMenuItem {...menuRow(openMenu().state)} t={tEn} />)
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Copy chat link' }))
+    await screen.findByRole('menuitem', { name: 'Chat link copied' })
+    expect(writeText).toHaveBeenCalledWith('dsh://sessions/one')
+  } finally { if (prior) Object.defineProperty(navigator, 'clipboard', prior); else Reflect.deleteProperty(navigator, 'clipboard') }
+})
+it('does not claim that a denied clipboard write copied a link', async () => {
+  const prior = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: vi.fn(async () => { throw new Error('denied') }) } })
+  try {
+    render(<CopyChatLinkMenuItem {...menuRow(openMenu().state)} t={tEn} />)
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Copy chat link' }))
+    await screen.findByRole('menuitem', { name: 'Could not copy chat link' })
+    expect(screen.queryByRole('menuitem', { name: 'Chat link copied' })).toBeNull()
+  } finally { if (prior) Object.defineProperty(navigator, 'clipboard', prior); else Reflect.deleteProperty(navigator, 'clipboard') }
 })

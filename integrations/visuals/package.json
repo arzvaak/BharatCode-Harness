@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-visuals",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Inline charts and diagrams for DeepSeek Harness, with local rendering and an original visual design.",
   "type": "module",
   "license": "MIT",

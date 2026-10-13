@@ -18,6 +18,7 @@
 
 .sessionRow.selected {
   background: var(--dsw-alias-interactive-bg-hover);
+  box-shadow: inset 2px 0 var(--dsw-alias-brand-primary);
 }
 
 .searchResultRow {

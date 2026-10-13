@@ -52,6 +52,9 @@
     },
     {
       "path": "../../subagent/subagent"
+    },
+    {
+      "path": "../../util/workspace-path"
     }
   ]
 }

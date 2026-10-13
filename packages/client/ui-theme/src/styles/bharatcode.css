@@ -13,10 +13,12 @@
   --dsw-static-deepseek-800: #632718;
   --dsw-static-deepseek-900: #42231a;
   --bc-reading-font: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --bc-motion-control: 120ms;
-  --bc-motion-content: 200ms;
-  --bc-motion-sidebar: 240ms;
-  --bc-motion-figure: 300ms;
+  --bc-motion-control: 140ms;
+  --bc-motion-content: 220ms;
+  --bc-motion-sidebar: 320ms;
+  --bc-motion-figure: 460ms;
+  --bc-ease-panel: cubic-bezier(.22,1,.36,1);
+  --bc-ease-enter: cubic-bezier(.16,1,.3,1);
 }
 body {
   --dsw-specific-sidebar-fill: #f1efea;
@@ -59,4 +61,24 @@ body[data-ds-dark-theme] {
     --bc-motion-sidebar: 0ms;
     --bc-motion-figure: 0ms;
   }
+}
+
+/* Workbench controls share the shell's paper and charcoal surfaces. */
+body {
+  --dsw-specific-input-major: #fffefa;
+  --dsw-alias-button-elevated-fill: #f6f4ee;
+  --dsw-alias-label-primary: #292722;
+  --dsw-alias-label-secondary: #68635b;
+}
+body[data-ds-dark-theme] {
+  --dsw-specific-input-major: #24221e;
+  --dsw-alias-button-elevated-fill: #24221e;
+  --dsw-alias-button-floating-hover: #302d28;
+  --dsw-alias-label-primary: #eeeae3;
+  --dsw-alias-label-secondary: #b3ada3;
+  --dsw-alias-label-tertiary: #a39d93;
+  --dsw-alias-label-caption: #989187;
+  --dsw-alias-border-l2: #3c3831;
+  --dsw-alias-border-l3: #35312b;
+  --dsw-alias-interactive-bg-hover: #ffffff09;
 }

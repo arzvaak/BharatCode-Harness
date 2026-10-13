@@ -105,6 +105,7 @@
     "apps/web/tests/sidebar-scrollbar.e2e.ts",
     "apps/web/tests/independent-chats.e2e.ts",
     "apps/web/tests/research-new-chat.e2e.ts",
+    "apps/web/tests/chat-links.e2e.ts",
     "apps/web/tests/sidebar-title-hover-scroll.e2e.ts",
     "apps/web/tests/rail-search-expand.e2e.ts",
     "apps/web/tests/conversation-column-overflow.e2e.ts",

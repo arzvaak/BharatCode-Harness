@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { parseVisual, splitVisuals } from './model.js';
+import { useFigureMotion } from './motion.js';
+import { useDiagramViewport } from './viewport.js';
 import { prepareReadingText } from './reading.js';
 import { MermaidDiagram, validateMermaid } from './mermaid.js';
 const h = React.createElement;
 export const en = { source: 'Source', copy: 'Copy source', copied: 'Copied', export: 'Export SVG', data: 'View data', apply: 'Apply preview', cancel: 'Cancel', reset: 'Reset', edit: 'Edit visual source', preview: 'Edits affect this preview only. The conversation stays unchanged.', error: 'Could not apply this source', exportError: 'Export failed', copyError: 'Copy failed', label: 'Label', value: 'Value', note: 'Note', total: 'Total', point: 'Point', gallery: 'Visuals', galleryIntro: 'Charts and diagrams, right where the explanation needs them.', empty: 'Choose a visual to explore its design.' };
-Object.assign(en, { save: 'Applying…', diagram: 'Diagram', rendering: 'Drawing diagram…', diagramError: 'Check the diagram syntax below.', from: 'From', to: 'To', condition: 'Condition' });
+Object.assign(en, { zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit diagram', fitShort: 'Fit', zoom: 'Diagram zoom', save: 'Applying…', diagram: 'Diagram', rendering: 'Drawing diagram…', diagramError: 'Check the diagram syntax below.', from: 'From', to: 'To', condition: 'Condition' });
 export const zh = { ...en };
 const defaultT = key => en[key] || key;
-const palette = ['#3976e8', '#13998d', '#c68a22', '#8873ca', '#c86883', '#5b8b40'];
+const palette = ['#db875e', '#65aaa0', '#9e96ce', '#c6a65d', '#ca869b', '#83a46f'];
 const fmt = n => new Intl.NumberFormat(undefined, { maximumFractionDigits: 2, notation: Math.abs(n) >= 1e7 ? 'compact' : 'standard' }).format(n);
 const color = i => palette[i % palette.length];
 function words(text, size = 20) {
@@ -58,7 +60,7 @@ function Metrics({ model, width = 720 }) {
   }), 'Key figures. Exact values are available in the data table.');
 }
 function Bars({ model, width = 720 }) {
-  const W = Math.max(280, width), compact = W < 520, L = compact ? 0 : Math.min(192, W * .3), R = W - (compact ? 0 : 84);
+  const W = Math.max(280, width), compact = W < 420, L = compact ? 0 : Math.min(192, W * .3), R = W - (compact ? 0 : 84);
   const layouts = model.rows.map(r => ({ label: words(r.label, compact ? Math.floor((W - 82) / 7) : Math.floor((L - 14) / 7)), note: words(r.note, Math.floor((R - L) / 6)) }));
   const heights = layouts.map(l => Math.max(58, (compact ? l.label.length * 17 + 36 : l.label.length * 17 + 16) + l.note.length * 16));
   const offsets = heights.map((_, i) => heights.slice(0, i).reduce((a, b) => a + b, 0)), H = heights.reduce((a, b) => a + b, 0) + 34;
@@ -79,6 +81,8 @@ function Bars({ model, width = 720 }) {
 }
 function Lines({ model, width = 720 }) {
   const [active, setActive] = React.useState(null);
+  const [hidden, setHidden] = React.useState(() => new Set());
+  const pointRefs = React.useRef(new Map());
   const W = Math.max(280, width), H = W < 480 ? 290 : 310, L = 55, R = W - 20, T = 18, B = H - 65;
   const all = model.series.flatMap(s => s.values), low = Math.min(0, ...all), high = Math.max(0, ...all);
   const range = high - low || 1, min = low === high ? low - 0.5 : (low === 0 ? 0 : low - range * .08), max = low === high ? high + .5 : high + range * .08;
@@ -91,16 +95,17 @@ function Lines({ model, width = 720 }) {
       h('line', { x1: L, x2: R, y1: y(v), y2: y(v), className: 'dv-grid' }),
       h('text', { x: L - 10, y: y(v) + 4, textAnchor: 'end', fontSize: 11, className: 'dv-muted' }, fmt(v)))),
     ...model.labels.map((label, i) => i % step && i !== model.labels.length - 1 ? null : h('text', { key: `x-${i}`, x: x(i), y: B + 24, textAnchor: 'middle', fontSize: 11, className: 'dv-muted' }, label.length > 13 ? label.slice(0, 12) + '…' : label)),
-    ...model.series.map((s, j) => h('g', { key: j },
+    ...model.series.map((s, j) => hidden.has(j) ? null : h('g', { key: j },
       s.type === 'bar' ? s.values.map((v, i) => h('rect', { key: i, x: x(i) - 7 + j * 10, y: Math.min(y(0), y(v)), width: 8, height: Math.max(1, Math.abs(y(v) - y(0))), fill: color(j), opacity: .7 }))
-        : h('path', { d: s.values.map((v, i) => `${i ? 'L' : 'M'}${x(i)},${y(v)}`).join(' '), stroke: color(j), strokeWidth: 2.5, fill: 'none', strokeLinejoin: 'round', strokeLinecap: 'round', strokeDasharray: j === 1 ? '6 4' : j === 2 ? '2 4' : undefined }),
+        : h('path', { className: 'dv-line-path', d: s.values.map((v, i) => `${i ? 'L' : 'M'}${x(i)},${y(v)}`).join(' '), stroke: color(j), strokeWidth: 2.5, fill: 'none', strokeLinejoin: 'round', strokeLinecap: 'round', strokeDasharray: j === 1 ? '6 4' : j === 2 ? '2 4' : undefined }),
       ...s.values.map((v, i) => h('circle', { key: `point-${i}`, cx: x(i), cy: y(v), r: active?.j === j && active?.i === i ? 6 : 3.5,
-        fill: color(j), stroke: 'var(--dv-paper)', strokeWidth: 2, tabIndex: 0, role: 'button', 'aria-label': `${s.name}, ${model.labels[i]}: ${fmt(v)} ${model.unit}`,
+        ref: el => { const key = `${j}:${i}`; if (el) pointRefs.current.set(key, el); else pointRefs.current.delete(key); },
+        fill: color(j), stroke: 'var(--dv-paper)', strokeWidth: 2, tabIndex: i === (active?.j === j ? active.i : 0) ? 0 : -1, role: 'button', 'aria-label': `${s.name}, ${model.labels[i]}: ${fmt(v)} ${model.unit}`,
         onMouseEnter: () => setActive({ i, j }), onMouseLeave: () => setActive(null), onFocus: () => setActive({ i, j }), onBlur: () => setActive(null),
-        onClick: () => setActive({ i, j }), onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActive({ i, j }); } },
+        onClick: () => setActive({ i, j }), onKeyDown: e => { if (['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) { e.preventDefault(); const next = e.key === 'Home' ? 0 : e.key === 'End' ? s.values.length - 1 : Math.max(0, Math.min(s.values.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1))); setActive({i:next,j}); pointRefs.current.get(`${j}:${next}`)?.focus(); } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActive({ i, j }); } },
       }, h('title', null, `${s.name}, ${model.labels[i]}: ${fmt(v)} ${model.unit}`))))),
   ], 'Series compared across the horizontal axis. Focus or hover a point for its exact value.'),
-    h('div', { className: 'dv-legend' }, model.series.map((s, i) => h('span', { key: i }, h('i', { style: { background: color(i) } }), s.name))),
+    h('div', { className: 'dv-legend' }, model.series.map((s, i) => h('button', { key: i, type:'button', 'aria-pressed':!hidden.has(i), disabled:!hidden.has(i) && hidden.size === model.series.length - 1, onClick:() => { setHidden(previous => { const next = new Set(previous); if (next.has(i)) next.delete(i); else if (next.size < model.series.length - 1) next.add(i); return next; }); setActive(null); } }, h('i', { style: { background: color(i) } }), s.name))),
     h('div', { className: 'dv-point-readout', 'aria-live': 'polite' }, active ? `${model.series[active.j].name} · ${model.labels[active.i]}: ${fmt(model.series[active.j].values[active.i])} ${model.unit}` : '\u00a0'));
 }
 function Flow({ model, id }) {
@@ -140,11 +145,11 @@ function Flow({ model, id }) {
       else if (back) { const right = W - 10 - i % 3 * 8; x1 = a.x + nodeW; x2 = b.x + nodeW; y1 = a.y + nodeH / 2; y2 = b.y + nodeH / 2; d = `M${x1},${y1} H${right} V${y2} H${x2}`; lx = right - 8; ly = (y1 + y2) / 2; }
       else if (LR) { const mid = (x1 + x2) / 2; d = `M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2}`; lx = mid; ly = (y1 + y2) / 2 - 9; }
       else { const mid = (y1 + y2) / 2; d = `M${x1},${y1} C${x1},${mid} ${x2},${mid} ${x2},${y2}`; lx = (x1 + x2) / 2 + 12; ly = mid; }
-      return h('g', { key: `edge-${i}` }, h('path', { d, fill: 'none', stroke: '#8090a5', strokeWidth: 1.5, markerEnd: `url(#${id})` }), e.label && h('text', { x: lx, y: ly, textAnchor: 'middle', fontSize: 11, className: 'dv-edge-label' }, e.label));
+      return h('g', { key: `edge-${i}` }, h('path', { className:'dv-flow-edge', d, fill: 'none', stroke: '#8090a5', strokeWidth: 1.5, markerEnd: `url(#${id})` }), e.label && h('text', { x: lx, y: ly, textAnchor: 'middle', fontSize: 11, className: 'dv-edge-label' }, e.label));
     }),
     ...model.nodes.map((n, i) => {
       const p = positions.get(n.id), lines = words(n.label, 20);
-      return h('g', { key: n.id }, h('rect', { x: p.x, y: p.y, width: nodeW, height: nodeH, rx: n.decision ? 22 : 9, className: 'dv-node', stroke: n.decision ? color(2) : color(i % 2), strokeWidth: n.decision ? 2 : 1 }),
+      return h('g', { key: n.id, className:'dv-flow-node' }, h('rect', { x: p.x, y: p.y, width: nodeW, height: nodeH, rx: n.decision ? 22 : 9, className: 'dv-node', stroke: n.decision ? color(2) : color(i % 2), strokeWidth: n.decision ? 2 : 1 }),
         textLines(n.label, p.x + nodeW / 2, p.y + nodeH / 2 - (lines.length - 1) * 8.5 + 4, 20, { fontSize: 13, fontWeight: 500, textAnchor: 'middle' }));
     }),
   ], 'Directed process. Arrows indicate the direction; labelled connections describe decisions.'));
@@ -209,7 +214,7 @@ export function exportSVG(svg) {
   const clone = svg.cloneNode(true), originals = [svg, ...svg.querySelectorAll('*')], copies = [clone, ...clone.querySelectorAll('*')];
   originals.forEach((el, i) => {
     const computed = getComputedStyle(el);
-    for (const prop of ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'font-family', 'font-size', 'font-weight', 'letter-spacing', 'opacity', 'paint-order']) copies[i].style.setProperty(prop, computed.getPropertyValue(prop));
+    for (const prop of ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'font-family', 'font-size', 'font-weight', 'letter-spacing', 'opacity', 'paint-order']) copies[i].style.setProperty(prop, prop === 'opacity' && el.getAnimations?.().length ? (el.getAttribute('opacity') || '1') : computed.getPropertyValue(prop));
     copies[i].removeAttribute('tabindex'); copies[i].removeAttribute('role');
   });
   const box = (svg.getAttribute('viewBox') || '').trim().split(/[ ,]+/).map(Number);
@@ -225,33 +230,28 @@ export function exportSVG(svg) {
 export function VisualFigure({ source, language = 'visual', t = defaultT }) {
   const [edited, setEdited] = React.useState(null), [draft, setDraft] = React.useState(source), [editing, setEditing] = React.useState(false), [error, setError] = React.useState(''), [notice, setNotice] = React.useState('');
   const root = React.useRef(null), sourceButton = React.useRef(null), id = 'dv-' + React.useId().replace(/:/g, '');
-  const [width, setWidth] = React.useState(720), [applying, setApplying] = React.useState(false), [diagramReady, setDiagramReady] = React.useState(false);
+  const [measuredWidth, setWidth] = React.useState(720), [applying, setApplying] = React.useState(false), [diagramReady, setDiagramReady] = React.useState(false);
   React.useEffect(() => {
     if (typeof ResizeObserver === 'undefined' || !root.current) return;
-    const observer = new ResizeObserver(entries => setWidth(Math.max(280, Math.min(720, entries[0].contentRect.width))));
+    const observer = new ResizeObserver(entries => setWidth(entries[0].contentRect.width));
     observer.observe(root.current); return () => observer.disconnect();
   }, []);
   const generation = React.useRef(0);
   React.useLayoutEffect(() => { ++generation.current; setEdited(null); setDraft(source); setError(''); setNotice(''); setEditing(false); setApplying(false); return () => { ++generation.current; }; }, [source, language]);
   const value = edited ?? source;
+  const width = Math.max(280, Math.min(720, measuredWidth));
   const closeEditor = () => { setEditing(false); setError(''); sourceButton.current?.focus(); };
   React.useEffect(() => {
     if (editing) root.current?.querySelector('textarea')?.focus();
   }, [editing]);
-  React.useEffect(() => {
-    const canvas = root.current?.querySelector('.dv-canvas');
-    if (!canvas || !globalThis.matchMedia?.('(prefers-reduced-motion: no-preference)').matches || !canvas.animate) return;
-    let animation, observer, revealed = false; const barAnimations = [];
-    const reveal = () => { if (revealed) return; revealed = true; animation = canvas.animate([{opacity:.35, clipPath:'inset(0 0 12px 0)'}, {opacity:1, clipPath:'inset(0)'}], {duration:280, easing:'cubic-bezier(.2,.7,.2,1)'}); observer?.disconnect(); canvas.querySelectorAll('.dv-bar-fill').forEach((bar, i) => {if(bar.animate) barAnimations.push(bar.animate([{transform:'scaleX(.02)'},{transform:'scaleX(1)'}], {duration:420, delay:Math.min(i * 35, 245), easing:'cubic-bezier(.16,1,.3,1)'}));}); };
-    if (typeof IntersectionObserver !== 'undefined') {
-      observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting)) reveal(); }, {threshold:.12});
-      observer.observe(canvas);
-    } else reveal();
-    return () => {observer?.disconnect(); animation?.cancel(); barAnimations.forEach(item => item.cancel());};
-  }, [value]);
-  const onDiagramReady = React.useCallback(ready => setDiagramReady(ready), []);
   let model;
-  try { model = parseVisual(value, language); } catch (cause) { return h('pre', { className: 'dv-fallback' }, value); }
+  try { model = parseVisual(value, language); } catch { /* Keep malformed input readable below. */ }
+  const ready = model?.kind !== 'mermaid' || diagramReady;
+  useFigureMotion(root, value, ready);
+  const { zoom, bounds, zoomIn, zoomOut, fit } = useDiagramViewport(root, value, measuredWidth, ready);
+  const onDiagramReady = React.useCallback(ready => setDiagramReady(ready), []);
+  if (!model) return h('pre', { className: 'dv-fallback' }, value);
+  const isDiagram = model.kind === 'flowchart' || model.kind === 'mermaid';
   const tables = model.kind === 'mermaid' ? null : tableData(model);
   const charts = { metrics: Metrics, bars: Bars, line: Lines, flowchart: Flow, timeline: Timeline, steps: Steps, donut: Donut, mermaid: MermaidDiagram };
   const copy = async () => { try { await navigator.clipboard.writeText(value); setNotice(t('copied')); } catch { setNotice(t('copyError')); } };
@@ -268,7 +268,12 @@ export function VisualFigure({ source, language = 'visual', t = defaultT }) {
     h('div', { className: 'dv-heading' }, h('figcaption', {id: id + '-title'}, null, model.title || ({metrics:'Key figures', bars:'Comparison', line:'Trend', flowchart:'Process', timeline:'Timeline', steps:'Steps', donut:'Distribution', mermaid:t('diagram')})[model.kind]), h('div', { className: 'dv-actions' },
       h('button', { ref:sourceButton, type: 'button', 'aria-expanded':editing, 'aria-controls':id + '-editor', onClick: () => { setDraft(value); setEditing(!editing); setError(''); } }, t('source')),
       h('button', { type: 'button', onClick: copy }, t('copy')), h('button', { type: 'button', disabled:model.kind === 'mermaid' && !diagramReady, onClick: download }, t('export')))),
-    h('div', { className: 'dv-canvas' }, h(charts[model.kind], { model, id, t, width, onReady:onDiagramReady })),
+    isDiagram && h('div', { className:'dv-zoom-controls', role:'group', 'aria-label':t('zoom') },
+      h('button', {type:'button', 'aria-label':t('zoomOut'), disabled:zoom <= bounds.fit, onClick:zoomOut}, '−'),
+      h('output', {'aria-live':'polite'}, `${Math.round(zoom * 100)}%`),
+      h('button', {type:'button', 'aria-label':t('zoomIn'), disabled:zoom >= bounds.max, onClick:zoomIn}, '+'),
+      h('button', {type:'button', 'aria-label':t('fit'), onClick:fit}, t('fitShort'))),
+    h('div', { className: 'dv-canvas', ...(isDiagram ? { tabIndex:0, role:'region', 'aria-label':model.title || t('diagram'), 'data-visual-zoom':zoom } : {}) }, h('div', {className:isDiagram ? 'dv-zoom-surface' : undefined, style:isDiagram ? {width:`${zoom * 100}%`} : undefined}, h(charts[model.kind], { key:value, model, id, t, width, onReady:onDiagramReady }))),
     model.caption && h('p', { className: 'dv-caption' }, model.caption),
     tables && h('details', { className: 'dv-data' }, h('summary', null, t('data')), h('div', { className: 'dv-table-scroll' }, h('table', null,
       h('thead', null, h('tr', null, tables.headers.map((s, i) => h('th', { key: i, scope: 'col' }, ({ Label: t('label'), Value: t('value'), Note: t('note'), Point: t('point'), From: t('from'), To: t('to'), Condition: t('condition') })[s] || s)))),

@@ -28,9 +28,9 @@ const modelServer = createServer(async (request, response) => {
   response.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: reply }, finish_reason: null }] })}\n\ndata: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], usage: { prompt_tokens: 2, completion_tokens: 3 } })}\n\ndata: [DONE]\n\n`);
 });
 await new Promise(resolve => modelServer.listen(0, '127.0.0.1', resolve));
-async function launch(configured = false) {
+async function launch(configured = false, chatLink) {
   console.log('AppImage smoke: launch');
-  const child = spawn(executable, ['--ozone-platform=x11', '--remote-debugging-port=0', `--user-data-dir=${join(home, 'electron')}`],
+  const child = spawn(executable, ['--ozone-platform=x11', '--remote-debugging-port=0', `--user-data-dir=${join(home, 'electron')}`, ...(chatLink ? [chatLink] : [])],
     { cwd: home, detached: true, stdio: 'ignore', env: { ...process.env, WAYLAND_DISPLAY: '',
       ...(configured ? { BHARATCODE_API_KEY: 'owned-chat-fixture-key' } : {}), DSH_HOME: join(home, 'home'), DSH_LOCALE: 'en', DSH_DESKTOP_WEB_PORT: '0' } });
   let launchError;
@@ -68,6 +68,8 @@ async function launch(configured = false) {
     return { browser, stop: async () => { await stop(); await browser.close(); } };
   } catch (error) { await stop(); throw error; }
 }
+let copiedLink;
+let sourceChat;
 try {
   const first = await launch();
   try {
@@ -96,6 +98,10 @@ try {
     await page.getByRole('button', { name: 'All chats', exact: true }).waitFor();
     if (await page.getByRole('treeitem').filter({ hasText: 'Default workspace' }).count()) throw Error('Fresh profile registered a default Workspace');
     await page.locator('[data-conversation-session]').waitFor();
+    await page.locator('summary[aria-label="Tools & workflows"]').waitFor({ timeout: 90000 });
+    if (await page.locator('details:has(summary[aria-label="Tools & workflows"]):not([open])').count()) {
+      await page.locator('summary[aria-label="Tools & workflows"]').click();
+    }
     await page.getByRole('button', { name: /^Research/ }).click();
     const files = page.getByRole('button', { name: 'Files', exact: true });
     await files.click();
@@ -152,6 +158,10 @@ try {
     if (!page) throw Error('Restarted workspace missing');
     await page.getByRole('button', { name: 'Account menu', exact: true }).waitFor({ timeout: 60000 });
     if (await page.locator('[data-desktop-onboarding]').count()) throw Error('Completed onboarding reappeared');
+    await page.locator('summary[aria-label="Tools & workflows"]').waitFor({ timeout: 90000 });
+    if (await page.locator('details:has(summary[aria-label="Tools & workflows"]):not([open])').count()) {
+      await page.locator('summary[aria-label="Tools & workflows"]').click();
+    }
     await page.getByRole('button', { name: /^Chat/ }).click();
     await page.locator('[data-conversation-session]').waitFor();
     const composer = page.locator('[data-composer-input][contenteditable="true"]').last();
@@ -169,8 +179,47 @@ try {
     assert.deepEqual(chats[0].chat_template_kwargs, { enable_thinking: true });
     assert.ok(chats[0].tools.length > 0, 'Full chat tool configuration must reach the adapter');
     console.log('AppImage smoke: full chat and follow-up completed through bundled plugins');
+    sourceChat = await page.locator('[data-conversation-session]').getAttribute('data-conversation-session');
+    await page.getByRole('button', { name: 'All chats', exact: true }).click();
+    const row = page.locator(`[data-row-key="session:${sourceChat}"]`);
+    await row.hover();
+    await row.getByRole('button', { name: /^Session actions for/ }).click();
+    await page.getByRole('menuitem', { name: 'Copy chat link', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Chat link copied', exact: true }).waitFor();
+    copiedLink = await page.evaluate(async () => navigator.clipboard.readText());
+    assert.equal(copiedLink, `dsh://sessions/${sourceChat}`);
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /^New session$/i }).first().click();
+    const targetDeadline = Date.now() + 30000;
+    while (await page.locator('[data-conversation-session]').getAttribute('data-conversation-session') === sourceChat) {
+      if (Date.now() > targetDeadline) throw Error('Copied-link target chat did not open');
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    await composer.fill(`Use this earlier chat as reference: ${copiedLink}`);
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await page.getByText('GUARD_FOLLOWUP_OK', { exact: true }).last().waitFor({ timeout: 30000 });
+    assert.ok(requests.some(request => JSON.stringify(request.messages).includes('referenced-sessions')
+      && JSON.stringify(request.messages).includes('initial marker')), 'Copied chat history reaches the installed model adapter');
+    console.log('AppImage smoke: copied chat link supplied real history to a new chat');
 
 
   } finally { await second.stop(); }
+  await rm(join(home, 'electron/DevToolsActivePort'), { force: true });
+  const linked = await launch(true, copiedLink);
+  try {
+    let page;
+    const deadline = Date.now() + 60000;
+    while (!page && Date.now() < deadline) {
+      page = linked.browser.contexts()[0].pages().find(page => page.url().startsWith('dsh-app://app/'));
+      if (!page) await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    if (!page) throw Error('Cold linked workspace missing');
+    while (await page.locator('[data-conversation-session]').getAttribute('data-conversation-session') !== sourceChat) {
+      if (Date.now() > deadline) throw Error('Cold private link failed to select its source chat');
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    await page.getByText('GUARD_CHAT_OK', { exact: true }).last().waitFor();
+    console.log('AppImage smoke: cold private link opened the existing source chat');
+  } finally { await linked.stop(); }
   console.log('Sandboxed AppImage: welcome, provider deferral, fixed footer, scrolling, Skills and restart passed.');
 } finally { await new Promise(resolve => modelServer.close(resolve)); await rm(home, { recursive: true, force: true }); }

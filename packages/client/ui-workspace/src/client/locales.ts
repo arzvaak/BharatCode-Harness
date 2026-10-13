@@ -6,6 +6,10 @@
 
 /** Simplified Chinese dictionary (the key-set source of truth). */
 export const zh = {
+  'menu.copyChatLink': '复制对话链接',
+  'menu.chatLinkCopied': '对话链接已复制',
+  'menu.chatLinkCopyFailed': '无法复制对话链接',
+  'toast.chatLinkUnavailable': '此配置中没有可打开的对话。',
   'apps.title': '交互式 MCP 工具',
   'apps.boundary': '独立工具界面只能调用此会话允许的工具。网络、外部链接和自动模型消息已禁用。',
   'apps.discover': '发现已连接的工具界面',
@@ -408,6 +412,10 @@ export type WorkspaceKey = keyof typeof zh
 
 /** English dictionary, checked complete against the zh key set. */
 export const en = {
+  'menu.copyChatLink': 'Copy chat link',
+  'menu.chatLinkCopied': 'Chat link copied',
+  'menu.chatLinkCopyFailed': 'Could not copy chat link',
+  'toast.chatLinkUnavailable': 'This chat is not available to open in this profile.',
   'apps.title': 'Interactive MCP tools',
   'apps.boundary':
     'Self-contained tool UIs use this conversation’s allowed tools. Network, external links, and automatic model messages are disabled.',

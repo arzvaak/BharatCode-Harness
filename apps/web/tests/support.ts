@@ -329,3 +329,11 @@ export async function openSettings(page: Page, locale: 'en' | 'zh'): Promise<voi
     await page.getByRole('button', { name: label, exact: true }).click()
   }
 }
+
+/** Reveal the sidebar tools and workflows before interacting with its controls.
+ * @param page - Product page with the Workbench sidebar.
+ */
+export async function revealToolsAndWorkflows(page: Page): Promise<void> {
+  const summary = page.locator('summary[aria-label="Tools & workflows"]')
+  if (await page.locator('details:has(summary[aria-label="Tools & workflows"]):not([open])').count()) await summary.click()
+}

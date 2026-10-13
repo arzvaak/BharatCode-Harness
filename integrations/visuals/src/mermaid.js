@@ -47,8 +47,8 @@ export function MermaidDiagram({ model, t, onReady }) {
   const root = React.useRef(null), [error, setError] = React.useState(''), [ready, setReady] = React.useState(false), [theme, setTheme] = React.useState(0);
   React.useEffect(() => {
     const observer = new MutationObserver(() => setTheme(v => v + 1));
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-theme'] });
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'data-theme'] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-ds-dark-theme'] });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'data-theme', 'data-ds-dark-theme'] });
     return () => observer.disconnect();
   }, []);
   React.useEffect(() => {
@@ -67,11 +67,11 @@ export function MermaidDiagram({ model, t, onReady }) {
           htmlLabels: false, fontFamily: style.fontFamily, theme: 'base',
           secure: ['securityLevel', 'startOnLoad', 'maxTextSize', 'maxEdges', 'htmlLabels', 'themeCSS', 'dompurifyConfig'],
           flowchart: { htmlLabels: false, curve: 'basis', padding: 16, nodeSpacing: 30, rankSpacing: 50 },
-          themeVariables: { darkMode: dark, background: paper, primaryColor: dark ? '#283a55' : '#edf3ff', primaryTextColor: ink, primaryBorderColor: '#6e94cd',
-            secondaryColor: dark ? '#23423e' : '#e8f5f1', tertiaryColor: dark ? '#493d27' : '#fff5e0', lineColor: dark ? '#a2b0c5' : '#7b899d', textColor: ink,
-            fontSize: '14px', edgeLabelBackground: paper, clusterBkg: dark ? '#242e3d' : '#f5f8fd', clusterBorder: dark ? '#435069' : '#d6e0f0',
-            actorBkg: dark ? '#283a55' : '#edf3ff', actorTextColor: ink, actorBorder: '#6e94cd', signalColor: ink, signalTextColor: ink,
-            noteBkgColor: dark ? '#493d27' : '#fff5e0', noteTextColor: ink, noteBorderColor: '#c68a22',
+          themeVariables: { darkMode: dark, background: paper, primaryColor: dark ? '#39312a' : '#f7eee6', primaryTextColor: ink, primaryBorderColor: '#b78b6e',
+            secondaryColor: dark ? '#253b37' : '#e9f2ef', tertiaryColor: dark ? '#3e3829' : '#f6f0df', lineColor: dark ? '#aca59a' : '#8a8073', textColor: ink,
+            fontSize: '14px', edgeLabelBackground: paper, clusterBkg: dark ? '#27241f' : '#f6f3ee', clusterBorder: dark ? '#4b443a' : '#ded7cb',
+            actorBkg: dark ? '#39312a' : '#f7eee6', actorTextColor: ink, actorBorder: '#b78b6e', signalColor: ink, signalTextColor: ink,
+            noteBkgColor: dark ? '#3e3829' : '#f6f0df', noteTextColor: ink, noteBorderColor: '#c68a22',
           },
         });
         const { svg } = await mermaid.render('dvmermaid' + (++sequence), prepareMermaid(model.source));
