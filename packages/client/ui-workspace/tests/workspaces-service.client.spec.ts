@@ -266,6 +266,7 @@ class FakeDirectoryPicker {
 }
 
 interface BenchOptions {
+  readonly prepareNew?: () => (session: SessionId) => void
   readonly configureWorkspaces?: (workspaces: FakeWorkspaces) => void
   readonly workspaces?: WorkspaceSnapshot
   readonly sessions?: SessionListState
@@ -297,6 +298,7 @@ function bench(options: BenchOptions = {}) {
     sessions,
     view.actions,
     notify,
+    options.prepareNew,
   )
   return { ctx, directoryPicker, sessions, uiWorkspace, workspaces, layout, selectPanel, view, notify }
 }
@@ -619,6 +621,29 @@ describe('UiWorkspaceService', () => {
     await expect(b.uiWorkspace.openWorkspace(wid('a'))).rejects.toBe('rejected without an Error')
     expect(b.notify).toHaveBeenLastCalledWith({ kind: 'createFailed', message: 'rejected without an Error' })
     expect(b.notify).toHaveBeenCalledTimes(3)
+  })
+
+  it('prepares new workflow ownership before selecting the created conversation', async () => {
+    const prepared = vi.fn<(session: SessionId) => void>()
+    const prepareNew = vi.fn(() => prepared)
+    const pending = Promise.withResolvers<SessionId>()
+    const b = bench({ sessions: sessionState([summary('existing')]), workspaces: workspaceState([workspace('research')]), prepareNew,
+      configureSessions: (sessions) => { sessions.create.mockReturnValueOnce(pending.promise) } })
+    b.uiWorkspace.selection.subscribe(() => { expect(prepared).toHaveBeenCalledWith(sid('fresh')) })
+    b.uiWorkspace.startSession(wid('research'))
+    expect(prepareNew).toHaveBeenCalledOnce()
+    pending.resolve(sid('fresh'))
+    await vi.waitFor(() => { expect(b.uiWorkspace.selection.getSnapshot().sessionId).toBe(sid('fresh')) })
+  })
+
+  it('starts a fresh workspace conversation instead of reopening a blank Coding session', async () => {
+    const blank = summary('old-coding', { cwd: '/w/research', blank: true })
+    const b = bench({ sessions: sessionState([blank]), workspaces: workspaceState([workspace('research', [blank.id])]) })
+    b.uiWorkspace.openSession(blank.id)
+    b.uiWorkspace.startSession(wid('research'))
+    await vi.waitFor(() => { expect(b.sessions.create).toHaveBeenCalledWith({ workspaceId: wid('research') }) })
+    expect(b.sessions.create).not.toHaveBeenCalledWith({ workspaceId: wid('research'), sessionId: blank.id })
+    await vi.waitFor(() => { expect(b.uiWorkspace.selection.getSnapshot().sessionId).toBe(sid('created-research')) })
   })
 
   it('creates independent chats unless a Workspace is explicitly selected', async () => {

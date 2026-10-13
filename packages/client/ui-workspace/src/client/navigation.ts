@@ -141,6 +141,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
    * @param sessions - pure Session Controller.
    * @param view - the browser's viewing-store write set (one instance shared with its registration).
    * @param notify - show one notice through the Workspace notice channel.
+   * @param prepareNew - capture workflow ownership before creation and apply it before selection.
    */
   constructor(
     ctx: Context,
@@ -149,6 +150,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
     private readonly sessions: ISessions,
     private readonly view: Pick<WorkspaceViewStoreActions, 'pinSessionOrder'>,
     private readonly notify: (toast: RowToast) => void,
+    private readonly prepareNew: () => ((session: SessionId) => void) | undefined = () => undefined,
   ) {
     super(ctx, 'uiWorkspace')
     ctx.effect(() => {
@@ -223,19 +225,19 @@ class UiWorkspaceService extends Service implements UiWorkspace {
   }
 
   startSession(workspaceId?: WorkspaceId): void {
-    const operation = workspaceId === undefined ? this.openStandalone() : this.openWorkspace(workspaceId)
+    const operation = this.openStandalone(workspaceId, this.prepareNew())
     void operation.catch((reason: unknown) => { console.warn('new session failed:', reason) })
   }
 
-  private async openStandalone(): Promise<void> {
+  private async openStandalone(workspaceId?: WorkspaceId, beforeOpen?: (sessionId: SessionId) => void): Promise<void> {
     const navigation = AbortSignal.any([this.ctx.layout.beginNavigation(), this.lifetime.signal])
     let sessionId: SessionId
-    try { sessionId = await this.sessions.create({}) }
+    try { sessionId = await this.sessions.create(workspaceId === undefined ? {} : { workspaceId }) }
     catch (error: unknown) {
       if (!navigation.aborted) this.notify({ kind: 'createFailed', message: creationFailureMessage(error) })
       throw error
     }
-    if (!navigation.aborted) this.replaceMain(sessionId, navigation, 'reveal')
+    if (!navigation.aborted) this.replaceMain(sessionId, navigation, 'reveal', beforeOpen)
   }
 
   async archiveSession(sessionId: SessionId, options: { readonly stopActivity?: boolean } = {}): Promise<void> {

@@ -231,7 +231,14 @@ export function apply(ctx: Context): void {
   const notify = (toast: RowToast): void => {
     rowToast.set({ ...toast, seq: ++toastSeq })
   }
-  const uiWorkspace = new UiWorkspaceService(ctx, ctx.remote.directoryPicker, workspaces, sessions, viewInstance.actions, notify)
+  const uiWorkspace = new UiWorkspaceService(ctx, ctx.remote.directoryPicker, workspaces, sessions, viewInstance.actions, notify, () => {
+    const selected = uiWorkspace.selection.getSnapshot().sessionId
+    const state = workflowInstance.getSnapshot()
+    const profile = state.navigating ?? (selected === undefined ? 'chat' : state.owners?.[selected] ?? 'chat')
+    return (session) => {
+      workflowInstance.actions.rememberDestination(session, profile, destinationContext(session))
+    }
+  })
   const destinationContext = (session: SessionId | undefined): string => workspaces.list.getSnapshot().items.find(
     item => session !== undefined && item.sessionIds.includes(session),
   )?.workspaceId ?? 'ungrouped'
