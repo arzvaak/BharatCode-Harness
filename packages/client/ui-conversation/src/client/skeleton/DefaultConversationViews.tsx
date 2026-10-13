@@ -13,7 +13,7 @@ import { QuoteSelection } from './QuoteSelection.tsx'
  */
 export function DefaultConversationViews({
   view, useSession, useConversation, useConversationViews, useInput, inputActions, useStore, actions,
-  renderSlot, bindDraftMirror, openView, useInspectCall, t,
+  renderSlot, bindDraftMirror, focusInput, openView, useInspectCall, t,
 }: ConversationSessionSlotProps) {
   const root = useRef<HTMLDivElement>(null)
   const tabs = useConversationViews(value => value)
@@ -41,7 +41,9 @@ export function DefaultConversationViews({
       <QuoteSelection root={root} enabled={inputState.phase === 'plain'} label={t('selection.ask')}
         onQuote={(text) => {
           const span = inputActions.captureInsertion()
-          return inputActions.insertText(text, { ...span, start: span.end })
+          if (!inputActions.insertText(text, { ...span, start: span.end })) return false
+          focusInput()
+          return true
         }} />
       {viewId !== undefined && renderSlot('conversation.view', {
         inspectCall,

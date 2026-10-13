@@ -386,6 +386,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
           },
         },
         bindDraftMirror: write => inputHub.shell(sessionId).bindMirror(write),
+        focusInput: () => { inputHub.shell(sessionId).focus() },
         openView,
       }
     },

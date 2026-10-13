@@ -344,6 +344,8 @@ export interface ConversationSessionInjected {
   }
   /** Bind input draft persistence to the Session-owned store instance. */
   bindDraftMirror: (write: (text: string) => void) => () => void
+  /** Return keyboard focus to this Session composer after quoting output. */
+  focusInput: () => void
   /** Select and activate one View while addressing an opaque focus request to it. */
   openView: (view: string, focus: string) => void
 }

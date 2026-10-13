@@ -419,6 +419,7 @@ function mount(fixture: Awaited<ReturnType<typeof bench>>) {
         renderSlot={renderSlot}
         t={tConversation}
         bindDraftMirror={() => () => {}}
+        focusInput={vi.fn()}
         openView={conversation.actions.openView}
         useInspectCall={selector => selector(undefined)}
       />

@@ -262,6 +262,7 @@ function mount(
           renderSlot={renderSlot as never}
           t={t}
           bindDraftMirror={write => wiring.bindMirror(write)}
+          focusInput={() => { wiring.focus() }}
           openView={(view, focus) => { store.actions.openView(view, focus) }}
         />
       )
@@ -496,10 +497,12 @@ describe('ConversationRoot resident composer', () => {
     selection.removeAllRanges()
     selection.addRange(range)
     fireEvent(document, new Event('selectionchange'))
+    b.view.getByRole('textbox').blur()
+    expect(document.activeElement).not.toBe(b.view.getByRole('textbox'))
     const button = b.view.getByRole('button', { name: zh['selection.ask'] })
     fireEvent.mouseDown(button)
     fireEvent.click(button)
-    expect(b.wiring.snapshot.draft).toBe('ordinary draft\n\n> specific passage\n\n')
+    expect(b.wiring.snapshot.draft).toBe('\n\n> specific passage\n\nordinary draft')
     expect(b.store.store.getSnapshot().draft).toBe(b.wiring.snapshot.draft)
     expect(b.sink).not.toHaveBeenCalled()
     expect(document.activeElement).toBe(b.view.getByRole('textbox'))
