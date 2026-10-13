@@ -108,7 +108,11 @@ export class WorkspaceDocuments {
       } } })
     }
   }
-  /** Reconcile an external disk edit while preserving a dirty recovery draft. */
+  /**
+   * Reconcile an external disk edit while preserving a dirty recovery draft.
+   * @param session - Owning conversation.
+   * @param path - Project-relative path.
+   */
   refresh(session: SessionId, path: string): Promise<void> {
     return this.enqueue(session, path, async () => {
       const current = await this.access.read(session, path)

@@ -15,7 +15,11 @@ function strings(value: unknown): string[] {
     (v): v is string => typeof v === 'string',
   )
 }
-/** Parse metadata and links while retaining exact source offsets. */
+/**
+ * Parse metadata and links while retaining exact source offsets.
+ * @param text - Complete Markdown content.
+ * @returns Parsed front matter, headings and authored links.
+ */
 export function parseResearchMarkdown(text: string): ResearchMarkdown {
   const front = /^(?:\uFEFF)?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(text)
   let metadata: Record<string, unknown> = {}
@@ -95,7 +99,11 @@ export function parseResearchMarkdown(text: string): ResearchMarkdown {
     links: links.sort((a, b) => a.start - b.start),
   }
 }
-/** Normalize a vault-relative path without permitting escape or OS-specific absolute paths. */
+/**
+ * Normalize a vault-relative path without permitting escape or OS-specific absolute paths.
+ * @param value - Candidate project-relative path.
+ * @returns Normalized relative path, or undefined for invalid input.
+ */
 export function researchPath(value: string): string | undefined {
   if (!value || /^[\\/]|^[a-zA-Z]:|\0/.test(value)) return undefined
   const parts: string[] = []
@@ -108,7 +116,13 @@ export function researchPath(value: string): string | undefined {
   }
   return parts.length ? parts.join('/') : undefined
 }
-/** Resolve only unique note targets; ambiguous names require a user choice. */
+/**
+ * Resolve only unique note targets; ambiguous names require a user choice.
+ * @param notes - Available note metadata for resolution.
+ * @param from - Project-relative originating note path.
+ * @param link - Authored link target and syntax kind.
+ * @returns Resolved target or explicit ambiguity, missing, external or invalid result.
+ */
 export function resolveResearchLink(
   notes: readonly (ResearchMarkdown & { path: string })[],
   from: string,
@@ -151,7 +165,11 @@ export function resolveResearchLink(
   if (exact.length > 1) return { status: 'ambiguous', candidates: exact.map(note => note.path) }
   return { status: 'missing', path }
 }
-/** Convert wikilinks for the native reader without modifying stored Markdown. */
+/**
+ * Convert wikilinks for the native reader without modifying stored Markdown.
+ * @param text - Complete Markdown content.
+ * @returns Safe rendering input with portable links and hidden citation locators.
+ */
 export function researchReadingText(text: string): string {
   let result = text
   for (const link of parseResearchMarkdown(text)
@@ -181,7 +199,12 @@ export function researchReadingText(text: string): string {
   for (const comment of comments.reverse()) result = result.slice(0, comment.start) + result.slice(comment.end)
   return result
 }
-/** Insert a normal Markdown footnote and a recoverable immutable evidence locator. */
+/**
+ * Insert a normal Markdown footnote and a recoverable immutable evidence locator.
+ * @param text - Complete Markdown content.
+ * @param citation - Exact captured source passage and portable locator.
+ * @returns Markdown containing the exact passage footnote.
+ */
 export function prepareResearchCitation(text: string, citation: ResearchCitation): string {
   if (
     !/^[\w-]+$/.test(citation.id) ||
@@ -207,7 +230,11 @@ export function prepareResearchCitation(text: string, citation: ResearchCitation
   return `${prefix}[^${label}]: [${title}](${url})${newline}    ${quote}${newline}    <!-- research-citation:${citation.id}:${citation.start}:${citation.end} -->${newline}`
 }
 
-/** Recover citation locators only from real HTML comments inside Markdown footnotes. */
+/**
+ * Recover citation locators only from real HTML comments inside Markdown footnotes.
+ * @param text - Complete Markdown content.
+ * @returns Actual footnote locators and quoted source passages.
+ */
 export function researchCitationMarkers(
   text: string,
 ): { id: string; start: number; end: number; quotedText: string }[] {
@@ -235,7 +262,12 @@ export function researchCitationMarkers(
   visit(root.children)
   return result
 }
-/** Portable relative link from a note to a vault-root resource. */
+/**
+ * Portable relative link from a note to a vault-root resource.
+ * @param from - Project-relative originating note path.
+ * @param to - Project-relative destination path.
+ * @returns Portable relative Markdown link.
+ */
 export function researchRelativeLink(from: string, to: string): string {
   const base = from.split('/').slice(0, -1)
   const target = to.split('/')

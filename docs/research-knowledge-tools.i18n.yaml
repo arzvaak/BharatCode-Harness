@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for research-knowledge-tools.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/research-knowledge-tools.md
+/research-knowledge-tools:
+  en: b844bbe2e4aae4ee
+  zh: 6369be6a4ae178eb
+/research-knowledge-tools/research-workflow:
+  en: 6e289d8a2a270873
+  zh: 95bb03b578acc2e6
+/research-knowledge-tools/verification-boundary:
+  en: f01a91ac9a1e8afa
+  zh: d41e918e51425687

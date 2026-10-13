@@ -7,6 +7,7 @@ import { strToU8, zipSync } from 'fflate'
 import { parseResearchMarkdown, researchPath, resolveResearchLink } from './research-markdown.ts'
 import type { ResearchInspection, ResearchList, ResearchNote } from './research-types.ts'
 
+/** Resource bounds for Markdown indexing and portable exports. */
 export interface ResearchLimits {
   maxFiles: number
   maxFileBytes: number
@@ -35,7 +36,11 @@ export class ResearchLibrary {
   ) {
     this.limits = { ...defaults, ...limits }
   }
-  /** Canonical root containment; symlinks are never resources in a portable vault. */
+  /**
+   * Canonical root containment; symlinks are never resources in a portable vault.
+   * @param selected - Portable project-relative path.
+   * @returns Contained canonical filesystem path.
+   */
   async safePath(selected: string): Promise<string> {
     const path = researchPath(selected)
     if (path === undefined || !visible(path)) throw new Error('Research path is outside the project or private')
@@ -52,7 +57,12 @@ export class ResearchLibrary {
       throw new Error('Research path is outside the project')
     return canonical
   }
-  /** Read a complete bounded file through a stable, non-symlink handle. */
+  /**
+   * Read a complete bounded file through a stable, non-symlink handle.
+   * @param selected - Portable project-relative path.
+   * @param maxBytes - Maximum allowed resource byte count.
+   * @returns Complete resource bytes after containment and stability checks.
+   */
   async readBytes(selected: string, maxBytes = this.limits.maxFileBytes): Promise<Uint8Array> {
     const path = await this.safePath(selected)
     const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW)
@@ -76,7 +86,11 @@ export class ResearchLibrary {
       await file.close()
     }
   }
-  /** Read complete valid UTF-8; no silently replaced or truncated characters. */
+  /**
+   * Read complete valid UTF-8; no silently replaced or truncated characters.
+   * @param path - Project-relative path.
+   * @returns Complete UTF-8 file content.
+   */
   async readText(path: string): Promise<string> {
     return new TextDecoder('utf-8', { fatal: true }).decode(await this.readBytes(path))
   }
@@ -146,7 +160,12 @@ export class ResearchLibrary {
     }
     return { notes: notes.sort((a, b) => a.path.localeCompare(b.path)), texts, issues }
   }
-  /** Deterministic bounded page. Cursor is the last returned path, not an unstable array offset. */
+  /**
+   * Deterministic bounded page. Cursor is the last returned path, not an unstable array offset.
+   * @param query - Literal search text; empty selects all notes.
+   * @param cursor - Optional continuation from the preceding page.
+   * @returns Bounded matching notes, continuation and explicit issues.
+   */
   async list(query = '', cursor?: string): Promise<ResearchList> {
     if (query.length > 2000 || (cursor?.length ?? 0) > 4096) throw new Error('Research search exceeds input limit')
     const scan = await this.scan()
@@ -167,7 +186,11 @@ export class ResearchLibrary {
       issues: scan.issues,
     }
   }
-  /** Inspect links and backlinks against the entire bounded scan, not a UI search page. */
+  /**
+   * Inspect links and backlinks against the entire bounded scan, not a UI search page.
+   * @param path - Project-relative path.
+   * @returns Saved content, note metadata, resolved links and backlinks.
+   */
   async inspect(path: string): Promise<ResearchInspection> {
     const normalized = researchPath(path)
     const scan = await this.scan()
@@ -190,7 +213,13 @@ export class ResearchLibrary {
       issues: scan.issues,
     }
   }
-  /** Resolve against all indexed notes, independently of the current search page. */
+  /**
+   * Resolve against all indexed notes, independently of the current search page.
+   * @param from - Project-relative originating note path.
+   * @param target - Authored link target including any heading fragment.
+   * @param wiki - Whether to apply wikilink resolution.
+   * @returns Resolved target or explicit ambiguity, missing, external or invalid result.
+   */
   async resolveLink(
     from: string,
     target: string,
@@ -204,7 +233,13 @@ export class ResearchLibrary {
       return { status: 'invalid' }
     return result
   }
-  /** Explicit exclusive creation. Existing notes and vault metadata are never overwritten. */
+  /**
+   * Explicit exclusive creation. Existing notes and vault metadata are never overwritten.
+   * @param selected - Portable project-relative path.
+   * @param title - Single-line note title.
+   * @param text - Complete Markdown content.
+   * @returns Canonical newly created note path and any capture issues.
+   */
   async create(selected: string, title: string, text?: string): Promise<{ path: string }> {
     const path = researchPath(selected)
     if (
@@ -251,7 +286,11 @@ export class ResearchLibrary {
     }
     return { path }
   }
-  /** Bundle canonical Markdown plus referenced attachments, notebooks and captured source copies. */
+  /**
+   * Bundle canonical Markdown plus referenced attachments, notebooks and captured source copies.
+   * @param extraFiles - Additional captured source copies to include in the vault.
+   * @returns ZIP bytes, included paths and explicit export omissions.
+   */
   async exportVault(
     extraFiles: readonly { path: string; text: string }[],
   ): Promise<{ bytes: Uint8Array; files: string[]; issues: string[] }> {

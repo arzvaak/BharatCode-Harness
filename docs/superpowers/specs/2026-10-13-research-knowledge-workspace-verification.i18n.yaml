@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for 2026-10-13-research-knowledge-workspace-verification.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/superpowers/specs/2026-10-13-research-knowledge-workspace-verification.md
+/research-knowledge-workspace-verification:
+  en: 12276873ef34adb1
+  zh: 293b5b7e355fb2b0
+/research-knowledge-workspace-verification/delivered-behavior:
+  en: 9b4d26287f0bd9c6
+  zh: 6f8804777329a8cd
+/research-knowledge-workspace-verification/automated-evidence:
+  en: d3714edd01f0f4a6
+  zh: f342cf40004ee71f
+/research-knowledge-workspace-verification/independent-review:
+  en: bdb1d72de91f044d
+  zh: 864aa7caeb258d10
+/research-knowledge-workspace-verification/actual-app-verification:
+  en: 3e017cd3ca12c4ab
+  zh: 3a751d2a49c4f61e
+/research-knowledge-workspace-verification/local-artifacts-and-limits:
+  en: 3b66fbaed487c529
+  zh: b4182a6de8c7ca29

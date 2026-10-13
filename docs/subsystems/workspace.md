@@ -168,11 +168,7 @@ interface SessionActivity {
 
 ## Research knowledge contracts
 
-The Research reader and model tools share ordinary project Markdown files and
-immutable source revisions. Discovery does not admit the entire library to model
-context. `research_notes.store` creates a complete new note exclusively, validates
-selected source passages, captures citation evidence and reads the saved file back.
-See the [research tool guide](../research-knowledge-tools.md) for the model workflow.
+The Research reader and model tools share ordinary project Markdown files and immutable source revisions. Discovery does not admit the entire library to model context. `research_notes.store` creates a complete new note exclusively, validates selected source passages, captures citation evidence and reads the saved file back. See the [research tool guide](../research-knowledge-tools.md) for the model workflow.
 
 | Contract | Meaning |
 | --- | --- |
@@ -181,10 +177,7 @@ See the [research tool guide](../research-knowledge-tools.md) for the model work
 | `ResearchResolution` | Resolved path and optional heading, ambiguous candidates, external URL, missing path or invalid target. |
 | `ResearchExport` | Vault ZIP filename and base64 bytes, included paths and explicit omissions. |
 
-Captured source IDs and exact character ranges become portable Markdown footnotes
-and evidence relationships. Exports include referenced captured source copies;
-existing vault metadata is preserved. Existing-note edits continue through reviewed,
-version-checked file publication. Computational work remains in linked notebooks.
+Captured source IDs and exact character ranges become portable Markdown footnotes and evidence relationships. Exports include referenced captured source copies; existing vault metadata is preserved. Existing-note edits continue through reviewed, version-checked file publication. Computational work remains in linked notebooks.
 
 ## Project workflow records
 

@@ -1,0 +1,40 @@
+# Bilingual-pair consistency record for 2026-10-13-research-knowledge-workspace-design.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/superpowers/specs/2026-10-13-research-knowledge-workspace-design.md
+/native-research-knowledge-workspace:
+  en: 078364b5121518ff
+  zh: 9300d38dab67c5ea
+/native-research-knowledge-workspace/purpose-and-approved-direction:
+  en: dc690787af3985b5
+  zh: 7aa1a0270ac6d773
+/native-research-knowledge-workspace/existing-seams:
+  en: 4ae489d754eb4fae
+  zh: 19b6cd867a25912a
+/native-research-knowledge-workspace/scope:
+  en: 6ffff25df8081939
+  zh: 89dd725e02a7e2e6
+/native-research-knowledge-workspace/files-and-identity:
+  en: 5c581de1d51e5dec
+  zh: 09d218ca58d900aa
+/native-research-knowledge-workspace/host-service-and-index:
+  en: 18d9d017cea5b06a
+  zh: 0e12916033dd16fd
+/native-research-knowledge-workspace/markdown-and-obsidian-link-semantics:
+  en: 18c8cb1565ae6461
+  zh: 7a26bddb35cbd484
+/native-research-knowledge-workspace/sources-and-citations:
+  en: 3059b43951886f05
+  zh: f7fd032a760a007a
+/native-research-knowledge-workspace/user-experience:
+  en: 17df19cc990c0693
+  zh: 5918e50fd0c18db6
+/native-research-knowledge-workspace/ai-integration:
+  en: 6720cfc0ee0f1994
+  zh: 715cc67a0e32dc7d
+/native-research-knowledge-workspace/verification-and-acceptance:
+  en: 3c7b91fdd4bb9703
+  zh: 7fc75ff691e10003
+/native-research-knowledge-workspace/implementation-and-release-boundary:
+  en: 44a1072d613ee00e
+  zh: 0799fe40554fdeb3

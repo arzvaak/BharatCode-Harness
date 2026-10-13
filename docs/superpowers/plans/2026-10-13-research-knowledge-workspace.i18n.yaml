@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for 2026-10-13-research-knowledge-workspace.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/superpowers/plans/2026-10-13-research-knowledge-workspace.md
+/native-research-knowledge-workspace-implementation-plan:
+  en: 86b12738bad14081
+  zh: ab088d39ee85af23
+/native-research-knowledge-workspace-implementation-plan/global-constraints:
+  en: 55967ddf0ffde347
+  zh: a419655aa40ec807
+/native-research-knowledge-workspace-implementation-plan/review-focus:
+  en: 05912444fbda7dcf
+  zh: ee2059498be561ec
+/native-research-knowledge-workspace-implementation-plan/task-1-markdown-library-and-portable-files:
+  en: 1b77f996090795c3
+  zh: a88e532887a8895b
+/native-research-knowledge-workspace-implementation-plan/task-2-host-apis-citations-and-agent-tools:
+  en: e262128888294665
+  zh: cfc06b19680b15c0
+/native-research-knowledge-workspace-implementation-plan/task-3-native-reader-editor-and-export-flow:
+  en: 628b493c8efeb54a
+  zh: 720c44d7e87b6706
+/native-research-knowledge-workspace-implementation-plan/task-4-whole-flow-verification:
+  en: 8c5c81d9e0ae3676
+  zh: 173e13e276ca5bf2

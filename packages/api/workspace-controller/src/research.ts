@@ -19,15 +19,33 @@ export class ResearchOperations {
     if (project === undefined) throw new Error('Unknown research project')
     return new ResearchLibrary(project.path)
   }
-  /** Browse a bounded Markdown page without capturing it into model context. */
+  /**
+   * Browse a bounded Markdown page without capturing it into model context.
+   * @param projectId - Registered research project.
+   * @param query - Literal search text; empty selects all notes.
+   * @param cursor - Optional continuation from the preceding page.
+   * @returns Bounded matching notes, continuation and explicit issues.
+   */
   async list(projectId: WorkspaceId, query = '', cursor?: string): Promise<ResearchList> {
     return this.library(projectId).list(query, cursor)
   }
-  /** Read one complete indexed note and resolved backlinks. */
+  /**
+   * Read one complete indexed note and resolved backlinks.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative path.
+   * @returns Saved content, note metadata, resolved links and backlinks.
+   */
   async inspect(projectId: WorkspaceId, path: string): Promise<ResearchInspection> {
     return this.library(projectId).inspect(path)
   }
-  /** Resolve a link against the complete bounded index. */
+  /**
+   * Resolve a link against the complete bounded index.
+   * @param projectId - Registered research project.
+   * @param from - Project-relative originating note path.
+   * @param target - Authored link target including any heading fragment.
+   * @param wiki - Whether to apply wikilink resolution.
+   * @returns Resolved target or explicit ambiguity, missing, external or invalid result.
+   */
   resolveLink(
     projectId: WorkspaceId,
     from: string,
@@ -36,7 +54,12 @@ export class ResearchOperations {
   ): Promise<import('@deepseek-ai/dsh-workspace/types').ResearchResolution> {
     return this.library(projectId).resolveLink(from, target, wiki)
   }
-  /** Read only bounded, contained image resources; never return arbitrary project files. */
+  /**
+   * Read only bounded, contained image resources; never return arbitrary project files.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative path.
+   * @returns Bounded base64 image bytes and MIME type.
+   */
   async resource(projectId: WorkspaceId, path: string): Promise<{ base64: string; mime: string }> {
     const extension = path.split('.').at(-1)?.toLowerCase()
     const types: Record<string, string> = {
@@ -51,7 +74,13 @@ export class ResearchOperations {
     const bytes = await this.library(projectId).readBytes(path, 8 * 1024 * 1024)
     return { base64: Buffer.from(bytes).toString('base64'), mime }
   }
-  /** Create an exclusive file and report capture failure separately from creation. */
+  /**
+   * Create an exclusive file and report capture failure separately from creation.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative path.
+   * @param title - Single-line note title.
+   * @returns Canonical newly created note path and any capture issues.
+   */
   async create(projectId: WorkspaceId, path: string, title: string): Promise<{ path: string; issues: string[] }> {
     const created = await this.library(projectId).create(path, title)
     const issues: string[] = []
@@ -64,9 +93,18 @@ export class ResearchOperations {
     }
     return { ...created, issues }
   }
-  /** Persist complete new knowledge and exact citation evidence without replacing existing notes. */
+  /**
+   * Persist complete new knowledge and exact citation evidence without replacing existing notes.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative path.
+   * @param title - Single-line note title.
+   * @param text - Complete Markdown content.
+   * @param citations - Captured source revisions and exact passage offsets.
+   * @returns Saved path, verified version and evidence receipt, or explicit incomplete capture issues.
+   */
   async store(projectId: WorkspaceId, path: string, title: string, text: string,
-    citations: readonly { sourceId: ArtifactRevisionId; start: number; end: number }[] = []) {
+    citations: readonly { sourceId: ArtifactRevisionId; start: number; end: number }[] = [],
+  ): Promise<{ path: string; version?: string; artifactId?: ArtifactRevisionId; linked: number; issues: string[] }> {
     if (!text.trim()) throw new Error('Provide nonempty knowledge content')
     const canonicalPath = researchPath(path)
     if (canonicalPath === undefined) throw new Error('Choose a portable Markdown path inside the project')
@@ -96,7 +134,16 @@ export class ResearchOperations {
       ] }
     }
   }
-  /** Propose a portable citation against the exact saved note; never publish an AI edit. */
+  /**
+   * Propose a portable citation against the exact saved note; never publish an AI edit.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative path.
+   * @param expectedText - Exact saved content to compare before processing.
+   * @param sourceId - Immutable source revision in the selected project.
+   * @param start - Inclusive source character offset.
+   * @param end - Exclusive source character offset.
+   * @returns Canonical note path and proposed cited Markdown without publication.
+   */
   async prepareCitation(projectId: WorkspaceId, path: string, expectedText: string,
     sourceId: ArtifactRevisionId, start: number, end: number): Promise<{ path: string; proposedText: string }> {
     const canonicalPath = researchPath(path)
@@ -114,7 +161,13 @@ export class ResearchOperations {
     })
     return { path: canonicalPath, proposedText }
   }
-  /** Capture saved text and validate portable citation markers against exact immutable sources. */
+  /**
+   * Capture saved text and validate portable citation markers against exact immutable sources.
+   * @param projectId - Registered research project.
+   * @param path - Project-relative path.
+   * @param expectedText - Exact saved content to compare before processing.
+   * @returns Captured note revision, linked citation count and incomplete evidence issues.
+   */
   async captureCitations(
     projectId: WorkspaceId,
     path: string,
@@ -158,7 +211,11 @@ export class ResearchOperations {
     }
     return { artifact, linked, issues }
   }
-  /** Export ordinary files plus exact source revisions referenced by portable citations. */
+  /**
+   * Export ordinary files plus exact source revisions referenced by portable citations.
+   * @param projectId - Registered research project.
+   * @returns Portable vault ZIP, included files and explicit omissions.
+   */
   async export(projectId: WorkspaceId): Promise<ResearchExport> {
     const library = this.library(projectId)
     const captured = new Map<string, string>()

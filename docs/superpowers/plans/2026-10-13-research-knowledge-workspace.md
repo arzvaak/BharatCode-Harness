@@ -1,5 +1,7 @@
 # Native Research Knowledge Workspace Implementation Plan
 
+English | [中文](2026-10-13-research-knowledge-workspace.zh.md)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox syntax for tracking.
 
 **Goal:** Read and develop linked, cited Markdown research in BharatCode and export it as an Obsidian-compatible vault while retaining notebooks.
