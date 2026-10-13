@@ -71,3 +71,35 @@ it('copies a chat link and gives its real history to two model selections withou
     expect(errors.pageErrors).toEqual([])
   } finally { stop(); await browser.close(); await scaffold.close() }
 }, 120_000)
+
+it('opens a queued native chat link after real client startup and metadata loading', async () => {
+  const scaffold = await launchWebScaffold({ firstUse: true })
+  const browser = await chromium.launch()
+  const id = SessionId('native-queued-source')
+  const source = Session.create(id)
+  source.append('turn/start', { turn: 1 })
+  source.append('user/message', createUserMessage({
+    content: [{ type: 'text', text: 'Native source history' }], source: { kind: 'user' },
+  }), { surfaceOp: 'append' })
+  source.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
+  const fixture = [JSON.stringify({ type: 'session', version: SESSION_FORMAT_VERSION, id: '{{sessionId}}', createdAt: 0,
+    cwd: '{{cwd}}', isSeeded: false, delegationDepth: 0 }), ...source.snapshotEvents().map(event => JSON.stringify(event)), ''].join('\n')
+  try {
+    await seedSession(scaffold, fixture, id)
+    const page = await newEnglishPage(browser)
+    const errors = watchConsole(page)
+    await page.addInitScript((link) => {
+      let pending: string | undefined = link
+      Object.assign(window, { dshDesktop: { chats: {
+        takePending: async () => { const value = pending; pending = undefined; return value },
+        subscribe: () => () => {},
+      } } })
+    }, formatChatLink(id))
+    await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+    await expect.poll(() => page.locator('[data-conversation-session]').evaluateAll(nodes => nodes[0]?.getAttribute('data-conversation-session')), {
+      timeout: 10_000,
+    }).toBe(id)
+    await page.getByText('Native source history', { exact: true }).waitFor()
+    expect(errors.pageErrors).toEqual([])
+  } finally { await browser.close(); await scaffold.close() }
+}, 60_000)

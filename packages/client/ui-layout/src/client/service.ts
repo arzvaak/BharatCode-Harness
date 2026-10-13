@@ -39,6 +39,11 @@ export interface ILayout {
    * @returns a signal aborted by the next navigation or layout disposal; check it before committing UI state.
    */
   beginNavigation(): AbortSignal
+  /**
+   * Observe the current navigation without superseding a pending explicit request.
+   * @returns Signal for automatic startup restoration, canceled by later navigation.
+   */
+  currentNavigation(): AbortSignal
   /** Toggle the sidebar panel (closed ⟷ contract default width). */
   toggleSidebar(): void
   /**
@@ -83,6 +88,9 @@ export class LayoutController implements ILayout {
     this.navigation = new AbortController()
     return this.navigation.signal
   }
+
+  /** @returns Current cancellation signal without changing navigation ownership. */
+  currentNavigation(): AbortSignal { return this.navigation.signal }
 
   /** Invalidate pending navigations when the layout owner is unloaded. */
   dispose(): void {

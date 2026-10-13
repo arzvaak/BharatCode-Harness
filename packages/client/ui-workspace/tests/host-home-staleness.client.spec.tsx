@@ -33,7 +33,8 @@ async function bench() {
   runtime.ctx.provide('jobs', { state: createSnapshotStore({ rows: {}, observed: {} }), watchRows: () => () => {}, observe: () => () => {} })
   runtime.ctx.provide('shortcuts', { register: () => () => {}, catalog: createSnapshotStore([]) })
   runtime.ctx.provide('uiConversation', {})
-  runtime.ctx.provide('layout', { selectPanel: vi.fn(), beginNavigation: () => new AbortController().signal })
+  runtime.ctx.provide('layout', { selectPanel: vi.fn(), beginNavigation: () => new AbortController().signal,
+    currentNavigation: () => new AbortController().signal })
   runtime.releaseWorkspaceSource()
   const directoryPicker = {}
   const { remote } = runtime

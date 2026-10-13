@@ -40,7 +40,8 @@ async function createRuntime(): Promise<SlotTestRuntime> {
   runtime.ctx.provide('sidebarRight', { openResource: vi.fn(), openTab: vi.fn() })
   runtime.ctx.provide('jobs', { state: createSnapshotStore({ rows: {}, observed: {} }), watchRows: () => () => {}, observe: () => () => {} })
   runtime.ctx.provide('shortcuts', { register: () => () => {}, catalog: createSnapshotStore([]) })
-  runtime.ctx.provide('layout', { selectPanel: vi.fn(), beginNavigation: () => new AbortController().signal })
+  runtime.ctx.provide('layout', { selectPanel: vi.fn(), beginNavigation: () => new AbortController().signal,
+    currentNavigation: () => new AbortController().signal })
   runtime.releaseWorkspaceSource()
   // The rename flow never picks a directory; the namespace only has to be there
   // for ui-workspace's inject to settle.
@@ -128,7 +129,7 @@ describe('session rename through the assembled browser', () => {
     const trigger = within(row as HTMLElement).getByLabelText('会话“Persisted title”的操作')
     fireEvent.click(trigger)
     expect(view.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      '置顶会话', '重命名', 'Send to session…', '分叉会话', '归档会话', 'Export action', 'Last action',
+      '置顶会话', '重命名', 'Send to session…', '复制对话链接', '分叉会话', '归档会话', 'Export action', 'Last action',
     ])
     expect(view.getAllByRole('separator')).toHaveLength(1)
     const last = view.getByRole('menuitem', { name: 'Last action' })

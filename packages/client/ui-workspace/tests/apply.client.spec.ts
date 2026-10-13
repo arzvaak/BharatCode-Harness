@@ -19,6 +19,7 @@ import {
 } from '../src/client/contract/slots.ts'
 import { WorkspaceBrowser } from '../src/client/rows/WorkspaceBrowser.tsx'
 import { ArchiveSessionMenuItem, ArchiveSessionRowButton, SessionArchiveConfirmDialog } from '../src/client/session-actions/ArchiveSession.tsx'
+import { CopyChatLinkMenuItem } from '../src/client/session-actions/CopyChatLink.tsx'
 import { ForkSessionMenuItem } from '../src/client/session-actions/ForkSession.tsx'
 import { PinSessionMenuItem, PinSessionRowButton } from '../src/client/session-actions/PinSession.tsx'
 import { RenameSessionMenuItem, SessionRenameDialog } from '../src/client/session-actions/RenameSession.tsx'
@@ -65,7 +66,8 @@ async function bench() {
   }))
   const rename = vi.fn(async () => ({}))
   const selectPanel = vi.fn()
-  ctx.provide('layout', { selectPanel, beginNavigation: () => new AbortController().signal })
+  ctx.provide('layout', { selectPanel, beginNavigation: () => new AbortController().signal,
+    currentNavigation: () => new AbortController().signal })
   const search = vi.fn(async () => ({
     ok: true as const,
     value: { items: [{ sessionId: 'session' as never, snippet: 'match' }], hasMore: false },
@@ -210,7 +212,7 @@ describe('ui-workspace apply', () => {
     await Promise.resolve()
     expect(after.slots.entries('conversation.hero.workspace')[0]!.component).toBe(WorkspacePicker)
     // The row actions follow the browser's own declaration, whenever it lands.
-    expect(after.slots.entries(MENU_ITEM)).toHaveLength(5)
+    expect(after.slots.entries(MENU_ITEM)).toHaveLength(6)
     expect(after.slots.entries(ROW_ACTION)).toHaveLength(2)
     expect(after.slots.entries('shell.overlay')).toHaveLength(4)
   })
@@ -232,6 +234,7 @@ describe('ui-workspace apply', () => {
       ['pin', 100, PinSessionMenuItem, 'workspace'],
       ['rename', 200, RenameSessionMenuItem, 'workspace'],
       ['handoff', 250, HandoffMenuItem, 'workspace'],
+      ['copy-chat-link', 275, CopyChatLinkMenuItem, 'workspace'],
       ['fork', 300, ForkSessionMenuItem, 'workspace'],
       ['archive', 400, ArchiveSessionMenuItem, 'workspace'],
     ])
@@ -590,7 +593,7 @@ describe('ui-workspace apply', () => {
     declare(b.slots, 'sidebar.workspaces', 'conversation.hero.workspace', 'conversation.empty.workspace', 'shell.overlay')
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
-    expect(b.slots.entries(MENU_ITEM)).toHaveLength(5)
+    expect(b.slots.entries(MENU_ITEM)).toHaveLength(6)
     expect(b.slots.entries(ROW_ACTION)).toHaveLength(2)
     expect(b.slots.entries('shell.overlay')).toHaveLength(4)
     await fiber.dispose()

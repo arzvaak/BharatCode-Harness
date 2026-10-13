@@ -328,7 +328,7 @@ class UiWorkspaceService extends Service implements UiWorkspace {
       this.replaceMain(summary.id, this.lifetime.signal, 'preserve')
       return
     }
-    const navigation = AbortSignal.any([this.ctx.layout.beginNavigation(), this.lifetime.signal])
+    const navigation = AbortSignal.any([this.ctx.layout.currentNavigation(), this.lifetime.signal])
     let sessionId: SessionId | undefined
     if (summary !== undefined && workspace !== undefined && summary.cwd === workspace.path
       && !workspaces.archivedSessionIds.includes(summary.id)) {

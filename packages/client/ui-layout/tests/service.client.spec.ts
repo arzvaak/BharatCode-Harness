@@ -103,3 +103,12 @@ describe('LayoutController', () => {
     service.dispose()
   })
 })
+
+it('lets automatic startup restoration observe an explicit pending navigation without superseding it', () => {
+  const service = new LayoutController(fakePanels(), () => true, createSnapshotStore({ activePanelId: null }))
+  const pending = service.beginNavigation()
+  expect(service.currentNavigation()).toBe(pending)
+  expect(pending.aborted).toBe(false)
+  service.selectPanel(null)
+  expect(pending.aborted).toBe(true)
+})
