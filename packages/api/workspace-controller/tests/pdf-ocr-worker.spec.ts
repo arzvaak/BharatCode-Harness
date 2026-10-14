@@ -26,7 +26,7 @@ vi.mock('@napi-rs/canvas', () => ({ createCanvas: (width: number, height: number
 afterEach(() => { vi.restoreAllMocks(); worker.recognize.mockReset().mockResolvedValue({ data: { text: ' recognized ', confidence: 88 } }) })
 function page(width = 612, height = 792) {
   return { getViewport: ({ scale }: { scale: number }) => ({ width: width * scale, height: height * scale }),
-    render: () => ({ promise: Promise.resolve(), cancel: () => {} }) } as PDFPageProxy
+    render: () => ({ promise: Promise.resolve(), cancel: () => {} }) } as unknown as PDFPageProxy
 }
 it('rejects path-like or excessive language selections before model access', async () => {
   for (const language of ['../../eng', 'eng/kor', 'eng+kor+fra+deu'])
@@ -62,7 +62,7 @@ it('cancels PDF rendering when extraction is aborted', async () => {
   const renderingPage = { getViewport: ({ scale }: { scale: number }) => ({ width: 612 * scale, height: 792 * scale }), render: () => {
     void Promise.resolve().then(() => { controller.abort(new Error('cancel raster')) })
     return { promise: new Promise<never>(() => {}), cancel: () => { cancelled = true } }
-  } } as PDFPageProxy
+  } } as unknown as PDFPageProxy
   await expect(recognizePdfPage(renderingPage, controller.signal)).rejects.toThrow('cancel raster')
   expect(cancelled).toBe(true)
 })

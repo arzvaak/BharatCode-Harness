@@ -86,14 +86,14 @@ it('curates the live Sources view and emits a refresh without resurrecting disco
   const initial = await h.controller.search({ projectId: h.project.id, query: '' })
   const id = initial.hits[0]!.id
   const changes = [{ id, status: 'removed', reason: 'Discovery duplicate' }]
-  const watch = h.controller.watch(h.project.id, new AbortController().signal)
+  const watch = h.controller.watch(h.project.id, new AbortController().signal)[Symbol.asyncIterator]()
   expect((await watch.next()).value).toBe(0)
   const preview = await h.call('project_sources', { action: 'curate', input: { changes } })
   expect(preview.isError, JSON.stringify(preview)).toBe(false)
   const version = (preview.value as { version: string }).version
   expect((await h.call('project_sources', { action: 'curate', input: { changes, apply: true, expectedVersion: version } })).isError).toBe(false)
   expect((await watch.next()).value).toBeGreaterThan(0)
-  await watch.return(undefined)
+  await watch.return?.(undefined)
   expect((await h.controller.search({ projectId: h.project.id, query: '' })).hits).toHaveLength(0)
   expect((await h.call('project_sources', { action: 'read', input: { id } })).isError).toBe(false)
   const restored = await h.call('project_sources', { action: 'restore', input: { ids: [id], reason: 'Needed again' } })
