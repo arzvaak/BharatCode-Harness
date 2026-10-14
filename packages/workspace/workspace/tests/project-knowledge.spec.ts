@@ -39,6 +39,71 @@ async function harness(pool = new MemoryMediaPool(), existingRoot?: string, maxS
   return { ctx, dispose, root, workspace, pool, knowledge: ctx.projectKnowledge }
 }
 
+it('previews and commits reversible bulk curation without erasing citation evidence', async () => {
+  const h = await harness()
+  const a = await h.knowledge.captureText({ projectId: h.workspace.id, identity: 'a', title: 'A', text: 'Quoted evidence', kind: 'source' })
+  const b = await h.knowledge.captureText({ projectId: h.workspace.id, identity: 'b', title: 'B', text: 'Better evidence', kind: 'source' })
+  await h.knowledge.link({ projectId: h.workspace.id, from: b.id, to: a.id, relation: 'cites', passage: { start: 0, end: 6, quote: 'Quoted' } })
+  const changes = [{ id: a.id, status: 'removed' as const, reason: 'Duplicate', replacementId: b.id }]
+  const preview = await h.knowledge.curateSources({ projectId: h.workspace.id, changes })
+  expect(preview.applied).toBe(false)
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '' }).hits).toHaveLength(2)
+  const saved = await h.knowledge.curateSources({ projectId: h.workspace.id, changes, apply: true, expectedVersion: preview.version })
+  expect(saved.applied).toBe(true)
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '' }).hits.map(value => value.id)).toEqual([b.id])
+  expect(h.knowledge.read(a.id).text).toBe('Quoted evidence')
+  expect(h.knowledge.related(b.id)).toHaveLength(1)
+  const restore = [{ id: a.id, status: 'active' as const, reason: 'Restore' }]
+  const next = await h.knowledge.curateSources({ projectId: h.workspace.id, changes: restore })
+  await h.knowledge.curateSources({ projectId: h.workspace.id, changes: restore, apply: true, expectedVersion: next.version })
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '' }).hits).toHaveLength(2)
+})
+
+it('keeps archived identities excluded across refetch, file discovery and storage reopen', async () => {
+  const h = await harness()
+  await writeFile(join(h.root, 'evidence.md'), 'Original')
+  const a = await h.knowledge.register({ projectId: h.workspace.id, path: 'evidence.md', kind: 'source' })
+  const changes = [{ id: a.id, status: 'archived' as const, reason: 'Superseded' }]
+  const preview = await h.knowledge.curateSources({ projectId: h.workspace.id, changes })
+  await h.knowledge.curateSources({ projectId: h.workspace.id, changes, apply: true, expectedVersion: preview.version })
+  await writeFile(join(h.root, 'evidence.md'), 'New revision')
+  await h.knowledge.register({ projectId: h.workspace.id, path: 'evidence.md', kind: 'source' })
+  expect(h.knowledge.search({ projectId: h.workspace.id, query: '' }).hits).toHaveLength(0)
+  await h.dispose()
+  const reopened = await harness(h.pool, h.root)
+  expect(reopened.knowledge.search({ projectId: h.workspace.id, query: '' }).hits).toHaveLength(0)
+  expect(reopened.knowledge.sourceBank({ projectId: h.workspace.id, statuses: ['archived'] }).items[0]).toMatchObject({ status: 'archived', reason: 'Superseded' })
+})
+
+it('rejects stale curation and cross-project replacements before making any changes', async () => {
+  const h = await harness()
+  const a = await h.knowledge.captureText({ projectId: h.workspace.id, identity: 'a', title: 'A', text: 'One', kind: 'source' })
+  const changes = [{ id: a.id, status: 'removed' as const, reason: 'Unused' }]
+  const preview = await h.knowledge.curateSources({ projectId: h.workspace.id, changes })
+  await h.knowledge.captureText({ projectId: h.workspace.id, identity: 'a', title: 'A', text: 'Two', kind: 'source' })
+  await expect(h.knowledge.curateSources({ projectId: h.workspace.id, changes, apply: true, expectedVersion: preview.version })).rejects.toThrow('changed')
+  const other = await h.ctx.workspaceRegistry.create(await mkdtemp(join(tmpdir(), 'other-bank-')))
+  resources.push({ dispose: async () => {}, root: other.path })
+  const foreign = await h.knowledge.captureText({ projectId: other.id, identity: 'b', title: 'B', text: 'Private', kind: 'source' })
+  await expect(h.knowledge.curateSources({ projectId: h.workspace.id, changes: [{ ...changes[0]!, replacementId: foreign.id }] })).rejects.toThrow('another project')
+  expect(h.knowledge.sourceBank({ projectId: h.workspace.id }).counts.active).toBe(1)
+})
+
+it('reports full-bank counts and coverage even beyond search limits, with versioned pagination', async () => {
+  const h = await harness(undefined, undefined, 1)
+  for (const identity of ['a', 'b', 'c']) await h.knowledge.captureText({ projectId: h.workspace.id, identity, title: identity, text: 'Paper 2610.00001', kind: 'source' })
+  const first = h.knowledge.sourceBank({ projectId: h.workspace.id, limit: 2 })
+  expect(first.counts.active).toBe(3)
+  expect(first.items).toHaveLength(2)
+  const second = h.knowledge.sourceBank({ projectId: h.workspace.id, limit: 2, cursor: first.nextCursor })
+  expect(second.items).toHaveLength(1)
+  expect(new Set([...first.items, ...second.items].map(value => value.id)).size).toBe(3)
+  const check = h.knowledge.checkSources({ projectId: h.workspace.id, requiredTexts: ['2610.00001', 'Missing paper'] })
+  expect(check.ok).toBe(false)
+  expect(check.missingTexts).toEqual(['Missing paper'])
+  expect(check.duplicateGroups).toHaveLength(1)
+})
+
 it('keeps captured research immutable after refresh and survives reopening private storage', async () => {
   const h = await harness()
   await writeFile(join(h.root, 'evidence.md'), '# Finding\nNative document editing needs version-checked saves.\n')

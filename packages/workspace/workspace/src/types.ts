@@ -175,7 +175,11 @@ export interface SearchArtifactsRequest {
   readonly query: string
   /** Restrict classifications before applying result and byte limits. */
   readonly kinds?: readonly ArtifactKind[]
+  /** Default active library; discovery/archive membership can be selected explicitly. */
+  readonly statuses?: readonly import('./source-bank-types.ts').SourceStatus[]
 }
+export type { SourceStatus, SourceSelection, SourceBankItem, SourceBankRequest, SourceBankResult,
+  CurateSourcesRequest, CurateSourcesResult, CheckSourcesRequest, CheckSourcesResult } from './source-bank-types.ts'
 /** Explicit revision selection for a bounded context capture. */
 export interface CaptureArtifactsRequest {
   readonly projectId: WorkspaceId

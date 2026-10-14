@@ -44,6 +44,9 @@ export type {
 } from './types.ts'
 import type {} from './index.ts'
 import { WorkflowJournal, type SaveWorkflowRecord, type WorkflowRecord } from './workflow-journal.ts'
+import { SourceBank } from './source-bank.ts'
+import type { SourceBankRequest, SourceBankResult, CurateSourcesRequest, CurateSourcesResult,
+  CheckSourcesRequest, CheckSourcesResult } from './source-bank-types.ts'
 
 const revisionSchema = z.object({
   id: z.string().transform(value => value as ArtifactRevisionId),
@@ -137,6 +140,8 @@ export class ProjectKnowledge extends Service {
     maxSearchResults: schema.natural().min(1).default(50),
   })
   private readonly journal = new WorkflowJournal()
+  private readonly bank = new SourceBank(() => [...this.table().entries()].map(([, value]) => value),
+    id => this.read(id), id => this.related(id))
   private relations?: KvTable<ArtifactRelationId, ArtifactRelation>
   private revisions?: KvTable<ArtifactRevisionId, ArtifactRevision>
   private handoffs?: KvTable<HandoffId, PreparedHandoff>
@@ -159,6 +164,29 @@ export class ProjectKnowledge extends Service {
     this.relations = domain.table('relations')
     this.revisions = domain.table('revisions')
     this.handoffs = domain.table('handoffs')
+    const closeBank = await this.bank.open(this.ctx.storageDomain)
+    this.ctx.effect(() => closeBank, 'project-knowledge.source-bank')
+  }
+  /** Browse complete source membership with stable pagination and counts.
+   * @param request - Selected project, membership filters and page cursor.
+   * @returns Complete-bank totals and a bounded metadata page. */
+  sourceBank(request: SourceBankRequest): SourceBankResult {
+    if (this.ctx.workspaceRegistry.get(request.projectId) === undefined) throw new Error('Unknown project')
+    return this.bank.list(request)
+  }
+  /** Preview/apply reversible library selection while retaining immutable evidence.
+   * @param request - Project-owned changes and preview version for applying.
+   * @returns Validated curation receipt after the durable commit. */
+  curateSources(request: CurateSourcesRequest): Promise<CurateSourcesResult> {
+    if (this.ctx.workspaceRegistry.get(request.projectId) === undefined) throw new Error('Unknown project')
+    return this.bank.curate(request)
+  }
+  /** Verify complete active-bank evidence rather than a truncated search page.
+   * @param request - Required identities and literal passages in the selected project.
+   * @returns Counts, missing evidence, duplicate content and citation issues. */
+  checkSources(request: CheckSourcesRequest): CheckSourcesResult {
+    if (this.ctx.workspaceRegistry.get(request.projectId) === undefined) throw new Error('Unknown project')
+    return this.bank.check(request)
   }
   /**
    * Find a registered file's latest revision independently of search result limits.
@@ -336,6 +364,7 @@ export class ProjectKnowledge extends Service {
     }
     const matches = [...latest.values()].filter(artifact =>
       (request.kinds === undefined || request.kinds.includes(artifact.kind))
+      && (request.statuses ?? ['active']).includes(this.bank.selection(artifact).status)
       && `${artifact.title}\n${artifact.text}`.toLocaleLowerCase().includes(query),
     ).sort((a, b) => b.capturedAt.localeCompare(a.capturedAt) || b.path.localeCompare(a.path))
     const hits: ArtifactSearchHit[] = []

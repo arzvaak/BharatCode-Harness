@@ -22,9 +22,13 @@
     "src/request-review.ts",
     "src/workspace-tools.ts",
     "src/source-capture.ts",
-    "src/research.ts"
+    "src/research.ts",
+    "src/research-sources.ts",
+    "src/document-extract.ts"
   ],
   "references": [
+    { "path": "../../web/web" },
+    { "path": "../../web/tool-web" },
     {
       "path": "../../../vendor/cordis"
     },

@@ -176,6 +176,9 @@ The Research reader and model tools share ordinary project Markdown files and im
 | `ResearchInspection` | Exact saved text and version, outgoing link resolutions, backlinks and issues. |
 | `ResearchResolution` | Resolved path and optional heading, ambiguous candidates, external URL, missing path or invalid target. |
 | `ResearchExport` | Vault ZIP filename and base64 bytes, included paths and explicit omissions. |
+| `SourceBankRequest` / `SourceBankResult` | Selected memberships, versioned pagination and full-bank totals independent of lexical-search limits. |
+| `CurateSourcesRequest` / `CurateSourcesResult` | Version-checked reversible library selection, preview receipts and atomic bulk application. |
+| `CheckSourcesRequest` / `CheckSourcesResult` | Required evidence coverage, exact duplicates, citation integrity and bounded diagnostics. |
 
 Captured source IDs and exact character ranges become portable Markdown footnotes and evidence relationships. Exports include referenced captured source copies; existing vault metadata is preserved. Existing-note edits continue through reviewed, version-checked file publication. Computational work remains in linked notebooks.
 
@@ -323,6 +326,21 @@ Source: [`packages/workspace/workspace/src/document-drafts.ts`](../../packages/w
 Durable project evidence service independent of optional memory/search integrations.
 
 ```ts cordis-catalog
+/** Browse complete source membership with stable pagination and counts.
+ * @param request - Selected project, membership filters and page cursor.
+ * @returns Complete-bank totals and a bounded metadata page. */
+sourceBank(request: SourceBankRequest): SourceBankResult
+
+/** Preview/apply reversible library selection while retaining immutable evidence.
+ * @param request - Project-owned changes and preview version for applying.
+ * @returns Validated curation receipt after the durable commit. */
+curateSources(request: CurateSourcesRequest): Promise<CurateSourcesResult>
+
+/** Verify complete active-bank evidence rather than a truncated search page.
+ * @param request - Required identities and literal passages in the selected project.
+ * @returns Counts, missing evidence, duplicate content and citation issues. */
+checkSources(request: CheckSourcesRequest): CheckSourcesResult
+
 /**
  * Find a registered file's latest revision independently of search result limits.
  * @param path - Project-owned file path.

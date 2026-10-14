@@ -78,7 +78,7 @@ export class ProjectKnowledgeController extends TypertRemoteService {
     let observed = -1
     let wake: (() => void) | undefined
     const stop = this.ctx.on('domain/changed', (change) => {
-      if (!['project_knowledge', 'project_workflow_journal'].includes(change.domain) || change.operation !== 'put') return
+      if (!['project_knowledge', 'project_source_bank', 'project_workflow_journal'].includes(change.domain) || change.operation !== 'put') return
       const value = change.value as { projectId?: unknown; sourceProjectId?: unknown; destinationProjectId?: unknown }
       if (![value.projectId, value.sourceProjectId, value.destinationProjectId].includes(projectId)) return
       ++revision

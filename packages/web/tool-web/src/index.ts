@@ -16,6 +16,8 @@ export { WEB_SEARCH_MAX_QUERIES, WEB_SEARCH_MAX_RESULTS, applyWebSearchTool, for
 export type { WebSearchMeta } from './search.ts'
 export { applyWebFetchTool, formatFetchOutput, parseFetchArgs, presentFetchCall, presentFetchResult, fetchMetaFromValue, fetchMetaFromResult } from './fetch.ts'
 export type { WebFetchMeta } from './fetch.ts'
+export { extractFetchBody } from './fetch.ts'
+export type { ExtractedFetchBody } from './fetch.ts'
 
 /** Cordis plugin name used by loader diagnostics. */
 export const name = 'tool-web'

@@ -176,6 +176,9 @@ Research 阅读器和模型工具共用项目中的普通 Markdown 文件与不�
 | `ResearchInspection` | 精确保存的文本及版本、外链解析结果、反向链接与问题。 |
 | `ResearchResolution` | 已解析路径及可选标题、歧义候选、外部 URL、缺失路径或无效目标。 |
 | `ResearchExport` | 知识库 ZIP 文件名及 base64 数据、包含的路径与明确的省略项。 |
+| `SourceBankRequest` / `SourceBankResult` | 来源状态筛选、版本化分页和完整来源库统计，不受词法搜索结果上限影响。 |
+| `CurateSourcesRequest` / `CurateSourcesResult` | 版本检查、可恢复的来源库整理、预览回执和原子批量提交。 |
+| `CheckSourcesRequest` / `CheckSourcesResult` | 必需证据覆盖、内容重复、引用完整性和有界诊断。 |
 
 来源 ID 与精确字符范围形成可移植的 Markdown 脚注和证据关系。 导出包含引用的来源副本，保留已有知识库元数据。已有笔记仍通过经审核且检查版本 的文件发布流程修改。计算工作保留在关联的 notebook 中。
 
@@ -323,6 +326,21 @@ Source: [`packages/workspace/workspace/src/document-drafts.ts`](../../packages/w
 Durable project evidence service independent of optional memory/search integrations.
 
 ```ts cordis-catalog
+/** Browse complete source membership with stable pagination and counts.
+ * @param request - Selected project, membership filters and page cursor.
+ * @returns Complete-bank totals and a bounded metadata page. */
+sourceBank(request: SourceBankRequest): SourceBankResult
+
+/** Preview/apply reversible library selection while retaining immutable evidence.
+ * @param request - Project-owned changes and preview version for applying.
+ * @returns Validated curation receipt after the durable commit. */
+curateSources(request: CurateSourcesRequest): Promise<CurateSourcesResult>
+
+/** Verify complete active-bank evidence rather than a truncated search page.
+ * @param request - Required identities and literal passages in the selected project.
+ * @returns Counts, missing evidence, duplicate content and citation issues. */
+checkSources(request: CheckSourcesRequest): CheckSourcesResult
+
 /**
  * Find a registered file's latest revision independently of search result limits.
  * @param path - Project-owned file path.

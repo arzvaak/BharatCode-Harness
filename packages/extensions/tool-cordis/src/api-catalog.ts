@@ -1852,6 +1852,24 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Durable project evidence service independent of optional memory/search integrations.',
     methods: [
       {
+        signature: 'sourceBank(request: SourceBankRequest): SourceBankResult',
+        description: 'Browse complete source membership with stable pagination and counts.',
+        parameters: [{ name: 'request', description: 'Selected project, membership filters and page cursor.' }],
+        returns: 'Complete-bank totals and a bounded metadata page.',
+      },
+      {
+        signature: 'curateSources(request: CurateSourcesRequest): Promise<CurateSourcesResult>',
+        description: 'Preview/apply reversible library selection while retaining immutable evidence.',
+        parameters: [{ name: 'request', description: 'Project-owned changes and preview version for applying.' }],
+        returns: 'Validated curation receipt after the durable commit.',
+      },
+      {
+        signature: 'checkSources(request: CheckSourcesRequest): CheckSourcesResult',
+        description: 'Verify complete active-bank evidence rather than a truncated search page.',
+        parameters: [{ name: 'request', description: 'Required identities and literal passages in the selected project.' }],
+        returns: 'Counts, missing evidence, duplicate content and citation issues.',
+      },
+      {
         signature: 'latestForPath(projectId: WorkspaceId, path: string): ArtifactRevision | undefined',
         description: 'Find a registered file\'s latest revision independently of search result limits.',
         parameters: [{ name: 'path', description: 'Project-owned file path.' }, { name: 'projectId', description: 'Registered project identity.' }],
@@ -5184,6 +5202,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ChangeResult {\n    changed: boolean;\n    application: \'applied\' | \'restart-required\' | \'overridden\' | \'failed\' | \'cancelled\';\n    stage: \'install\' | \'enable\' | \'remove\';\n    target: string;\n    enabled?: boolean;\n    error?: ManagementError;\n    warnings?: string[];\n    packageResult?: PackageResult;\n    bundle?: string;\n    pendingBuilds?: string[];\n    approvedBuilds?: string[];\n    registries?: Registry[];\n    failedAt?: \'registry\' | \'spec-host\';\n}',
   },
   {
+    name: 'CheckSourcesRequest',
+    declaration: 'export interface CheckSourcesRequest {\n    readonly projectId: WorkspaceId;\n    readonly requiredIds?: readonly ArtifactRevisionId[] | undefined;\n    readonly requiredTexts?: readonly string[] | undefined;\n}',
+  },
+  {
+    name: 'CheckSourcesResult',
+    declaration: 'export interface CheckSourcesResult {\n    readonly ok: boolean;\n    readonly version: string;\n    readonly counts: Readonly<Record<SourceStatus, number>>;\n    readonly storedRevisions: number;\n    readonly missingIds: readonly ArtifactRevisionId[];\n    readonly missingTexts: readonly string[];\n    readonly duplicateGroups: readonly (readonly ArtifactRevisionId[])[];\n    readonly citationIssues: readonly string[];\n    readonly omittedDuplicateGroups: number;\n    readonly omittedCitationIssues: number;\n}',
+  },
+  {
     name: 'ClientArtifactBaseline',
     declaration: 'export interface ClientArtifactBaseline {\n    readonly path: string;\n    readonly mtimeMs: number;\n    readonly ctimeMs: number;\n    readonly size: number;\n}',
   },
@@ -5466,6 +5492,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CronScheduleRecord',
     declaration: 'export interface CronScheduleRecord {\n    readonly id: ScheduleId;\n    readonly kind: \'cron\';\n    readonly title: string;\n    readonly prompt: string;\n    readonly expression: string;\n    readonly timeZone: string;\n    readonly scheduledAt: string;\n}',
+  },
+  {
+    name: 'CurateSourcesRequest',
+    declaration: 'export interface CurateSourcesRequest {\n    readonly projectId: WorkspaceId;\n    readonly changes: readonly (SourceSelection & {\n        readonly id: ArtifactRevisionId;\n    })[];\n    readonly apply?: boolean | undefined;\n    readonly expectedVersion?: string | undefined;\n}',
+  },
+  {
+    name: 'CurateSourcesResult',
+    declaration: 'export interface CurateSourcesResult {\n    readonly applied: boolean;\n    readonly version: string;\n    readonly changes: readonly SourceBankItem[];\n}',
   },
   {
     name: 'DailyInput',
@@ -6949,7 +6983,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SearchArtifactsRequest',
-    declaration: 'export interface SearchArtifactsRequest {\n    readonly projectId: WorkspaceId;\n    readonly query: string;\n    readonly kinds?: readonly ArtifactKind[];\n}',
+    declaration: 'export interface SearchArtifactsRequest {\n    readonly projectId: WorkspaceId;\n    readonly query: string;\n    readonly kinds?: readonly ArtifactKind[];\n    readonly statuses?: readonly import(\'./source-bank-types.ts\').SourceStatus[];\n}',
   },
   {
     name: 'SearchArtifactsResult',
@@ -7674,6 +7708,26 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SkillViewOptions',
     declaration: 'export interface SkillViewOptions extends SkillLookupOptions {\n    readonly scope?: ScopeKey | undefined;\n}',
+  },
+  {
+    name: 'SourceBankItem',
+    declaration: 'export interface SourceBankItem extends SourceSelection {\n    readonly id: ArtifactRevisionId;\n    readonly path: string;\n    readonly title: string;\n    readonly revision: string;\n    readonly bytes: number;\n    readonly revisions: number;\n}',
+  },
+  {
+    name: 'SourceBankRequest',
+    declaration: 'export interface SourceBankRequest {\n    readonly projectId: WorkspaceId;\n    readonly statuses?: readonly SourceStatus[] | undefined;\n    readonly limit?: number | undefined;\n    readonly cursor?: string | undefined;\n}',
+  },
+  {
+    name: 'SourceBankResult',
+    declaration: 'export interface SourceBankResult {\n    readonly version: string;\n    readonly counts: Readonly<Record<SourceStatus, number>>;\n    readonly storedRevisions: number;\n    readonly activeBytes: number;\n    readonly items: readonly SourceBankItem[];\n    readonly nextCursor?: string;\n}',
+  },
+  {
+    name: 'SourceSelection',
+    declaration: 'export interface SourceSelection {\n    readonly status: SourceStatus;\n    readonly reason: string;\n    readonly replacementId?: ArtifactRevisionId | undefined;\n}',
+  },
+  {
+    name: 'SourceStatus',
+    declaration: 'export type SourceStatus = \'active\' | \'discovery\' | \'archived\' | \'removed\';',
   },
   {
     name: 'SpawnTeammateRequest',

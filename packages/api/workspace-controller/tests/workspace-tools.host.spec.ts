@@ -17,6 +17,7 @@ import { WorkspaceController } from '../src/index.ts'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import { applyWebFetchTool } from '../../../web/tool-web/src/fetch.ts'
 import { discoverProjectSources } from '../src/source-capture.ts'
+import { zipSync, strToU8 } from 'fflate'
 
 const cleanups: (() => Promise<void>)[] = []
 afterEach(async () => {
@@ -75,6 +76,179 @@ async function setup() {
     )
   return { ctx, root, project, session, agent, controller, call, register }
 }
+
+it('curates the live Sources view and emits a refresh without resurrecting discovered files', async () => {
+  const h = await setup()
+  await mkdir(join(h.root, 'sources'))
+  await writeFile(join(h.root, 'sources', 'paper.md'), 'Paper evidence')
+  const initial = await h.controller.search({ projectId: h.project.id, query: '' })
+  const id = initial.hits[0]!.id
+  const changes = [{ id, status: 'removed', reason: 'Discovery duplicate' }]
+  const watch = h.controller.watch(h.project.id, new AbortController().signal)
+  expect((await watch.next()).value).toBe(0)
+  const preview = await h.call('project_sources', { action: 'curate', input: { changes } })
+  expect(preview.isError, JSON.stringify(preview)).toBe(false)
+  const version = (preview.value as { version: string }).version
+  expect((await h.call('project_sources', { action: 'curate', input: { changes, apply: true, expectedVersion: version } })).isError).toBe(false)
+  expect((await watch.next()).value).toBeGreaterThan(0)
+  await watch.return(undefined)
+  expect((await h.controller.search({ projectId: h.project.id, query: '' })).hits).toHaveLength(0)
+  expect((await h.call('project_sources', { action: 'read', input: { id } })).isError).toBe(false)
+  const restored = await h.call('project_sources', { action: 'restore', input: { ids: [id], reason: 'Needed again' } })
+  expect(restored.isError, JSON.stringify(restored)).toBe(false)
+  const restoreVersion = (restored.value as { version: string }).version
+  await h.call('project_sources', { action: 'restore', input: { ids: [id], reason: 'Needed again', apply: true, expectedVersion: restoreVersion } })
+  expect((await h.controller.search({ projectId: h.project.id, query: '' })).hits).toHaveLength(1)
+})
+
+it('imports URLs with per-source receipts, retaining good evidence and rejecting interstitials', async () => {
+  const h = await setup()
+  await h.ctx.plugin(WebRuntime)
+  applyWebFetchTool(h.ctx, 1000, 2000)
+  h.ctx.web.registerFetchProvider({ id: 'fixture', available: () => true,
+    fetch: async ({ url }) => ({ url, statusCode: url.endsWith('/missing') ? 404 : 200,
+      body: { kind: 'html', content: url.endsWith('/challenge') ? '<title>Just a moment...</title>Verify you are human'
+        : '<h1>Paper</h1><p>Full paper evidence</p>' }, truncated: false }) })
+  const result = await h.call('research_sources', { action: 'fetch_many', input: {
+    urls: ['https://example.org/paper', 'https://example.org/paper', 'https://example.org/missing', 'https://example.org/challenge'] } })
+  expect(result.isError, JSON.stringify(result)).toBe(false)
+  const receipts = (result.value as { receipts: { id?: string; error?: string }[] }).receipts
+  expect(receipts).toHaveLength(3)
+  expect(receipts[0]?.id).toBeDefined()
+  expect(receipts[1]?.error).toContain('404')
+  expect(receipts[2]?.error).toContain('challenge')
+  const bank = h.ctx.projectKnowledge.search({ projectId: h.project.id, query: 'Full paper evidence' })
+  expect(bank.hits).toHaveLength(1)
+})
+
+it('imports parsed arXiv abstracts as one resumable corpus, with no XML or stub records', async () => {
+  const h = await setup()
+  await h.ctx.plugin(WebRuntime)
+  applyWebFetchTool(h.ctx, 1000, 2000)
+  h.ctx.web.registerFetchProvider({ id: 'arxiv-fixture', available: () => true,
+    fetch: async ({ url }) => {
+      const params = new URL(url).searchParams
+      const start = Number(params.get('start'))
+      return { url, statusCode: 200, truncated: false, body: { kind: 'text', content:
+        `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">
+        <opensearch:totalResults>2</opensearch:totalResults><opensearch:startIndex>${start}</opensearch:startIndex>
+        <entry><id>http://arxiv.org/abs/2610.0000${start + 1}v1</id><title>Agent &amp; Harness ${start}</title>
+        <summary>Complete abstract ${start}</summary><published>2026-10-13T00:00:00Z</published><updated>2026-10-13T00:00:00Z</updated>
+        <author><name>Researcher</name></author><category term="cs.AI" /></entry></feed>` } }
+    } })
+  const first = await h.call('research_sources', { action: 'arxiv', input: { query: 'all:harness', pageSize: 1 } })
+  expect(first.isError, JSON.stringify(first)).toBe(false)
+  expect(first.value).toMatchObject({ nextStart: 1, complete: false, imported: 1 })
+  const second = await h.call('research_sources', { action: 'arxiv', input: { query: 'all:harness', pageSize: 1, start: 1 } })
+  expect(second.isError, JSON.stringify(second)).toBe(false)
+  expect(second.value).toMatchObject({ complete: true, imported: 2 })
+  const sources = h.ctx.projectKnowledge.search({ projectId: h.project.id, query: '' }).hits
+  expect(sources).toHaveLength(1)
+  const corpus = h.ctx.projectKnowledge.read(sources[0]!.id).text
+  expect(corpus).toContain('Complete abstract 0')
+  expect(corpus).toContain('Complete abstract 1')
+  expect(corpus).not.toContain('<feed')
+  expect((await h.call('research_check', { action: 'sources', input: { requiredTexts: ['2610.00001', '2610.00002'] } })).value).toMatchObject({ ok: true })
+})
+
+it('extracts and captures DOCX and PPTX text in document order without helper scripts', async () => {
+  const h = await setup()
+  await writeFile(join(h.root, 'paper.docx'), zipSync({ 'word/document.xml': strToU8(
+    '<w:document xmlns:w="word"><w:body><w:p><w:r><w:t>First &amp; </w:t></w:r><w:r><w:t>second</w:t></w:r></w:p><w:p><w:r><w:t>Next paragraph</w:t></w:r></w:p></w:body></w:document>') }))
+  const docx = await h.call('document_extract', { action: 'extract', input: { path: 'paper.docx' } })
+  expect(docx.isError, JSON.stringify(docx)).toBe(false)
+  expect(docx.value).toMatchObject({ method: 'docx_xml', segments: 2 })
+  const id = (docx.value as { id: Parameters<typeof h.ctx.projectKnowledge.read>[0] }).id
+  expect(h.ctx.projectKnowledge.read(id).text).toContain('First & second')
+  expect(h.ctx.projectKnowledge.read(id).text).toContain('Next paragraph')
+  await writeFile(join(h.root, 'deck.pptx'), zipSync({
+    'ppt/slides/slide10.xml': strToU8('<p:sld xmlns:p="ppt" xmlns:a="text"><a:p><a:r><a:t>Last slide</a:t></a:r></a:p></p:sld>'),
+    'ppt/slides/slide2.xml': strToU8('<p:sld xmlns:p="ppt" xmlns:a="text"><a:p><a:r><a:t>First slide</a:t></a:r></a:p></p:sld>') }))
+  const pptx = await h.call('document_extract', { action: 'extract', input: { path: 'deck.pptx' } })
+  expect(pptx.isError, JSON.stringify(pptx)).toBe(false)
+  const slides = h.ctx.projectKnowledge.read((pptx.value as { id: typeof id }).id).text
+  expect(slides.indexOf('First slide')).toBeLessThan(slides.indexOf('Last slide'))
+  expect(pptx.value).toMatchObject({ method: 'pptx_xml', segments: 2 })
+  expect((await h.call('document_extract', { action: 'extract', input: { path: '../outside.docx' } })).isError).toBe(true)
+})
+
+it('extracts native PDF text with page labels and retains an immutable source receipt', async () => {
+  const h = await setup()
+  const content = 'BT /F1 12 Tf 72 720 Td (Evidence from PDF) Tj ET'
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+  ]
+  let pdf = '%PDF-1.4\n'
+  const offsets = [0]
+  for (const [index, object] of objects.entries()) { offsets.push(pdf.length); pdf += `${index + 1} 0 obj\n${object}\nendobj\n` }
+  const xref = pdf.length
+  pdf += `xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map(value => `${String(value).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`
+  await writeFile(join(h.root, 'paper.pdf'), pdf)
+  const result = await h.call('document_extract', { action: 'extract', input: { path: 'paper.pdf' } })
+  expect(result.isError, JSON.stringify(result)).toBe(false)
+  expect(result.value).toMatchObject({ method: 'pdf_text', segments: 1, omissions: [] })
+  const id = (result.value as { id: Parameters<typeof h.ctx.projectKnowledge.read>[0] }).id
+  expect(h.ctx.projectKnowledge.read(id).text).toContain('Page 1')
+  expect(h.ctx.projectKnowledge.read(id).text).toContain('Evidence from PDF')
+})
+
+it('follows PPTX presentation relationships after slides have been reordered', async () => {
+  const h = await setup()
+  await writeFile(join(h.root, 'reordered.pptx'), zipSync({
+    'ppt/presentation.xml': strToU8('<p:presentation xmlns:p="ppt" xmlns:r="rels"><p:sldIdLst><p:sldId id="300" r:id="rId9"/><p:sldId id="301" r:id="rId2"/></p:sldIdLst></p:presentation>'),
+    'ppt/_rels/presentation.xml.rels': strToU8('<Relationships><Relationship Id="rId9" Target="slides/slide10.xml"/><Relationship Id="rId2" Target="slides/slide2.xml"/></Relationships>'),
+    'ppt/slides/slide10.xml': strToU8('<sld><p><r><t>Presented first</t></r></p></sld>'),
+    'ppt/slides/slide2.xml': strToU8('<sld><p><r><t>Presented second</t></r></p></sld>'),
+  }))
+  const result = await h.call('document_extract', { action: 'extract', input: { path: 'reordered.pptx' } })
+  expect(result.isError, JSON.stringify(result)).toBe(false)
+  const text = h.ctx.projectKnowledge.read((result.value as { id: Parameters<typeof h.ctx.projectKnowledge.read>[0] }).id).text
+  expect(text.indexOf('Presented first')).toBeLessThan(text.indexOf('Presented second'))
+  expect(text).toContain('## Slide 1\n\nPresented first')
+})
+
+it('refreshes an arXiv corpus when the API result set shrinks without retaining removed papers', { timeout: 15000 }, async () => {
+  const h = await setup()
+  await h.ctx.plugin(WebRuntime)
+  applyWebFetchTool(h.ctx, 1000, 2000)
+  let empty = false
+  h.ctx.web.registerFetchProvider({ id: 'changing-arxiv', available: () => true,
+    fetch: async ({ url }) => ({ url, statusCode: 200, truncated: false, body: { kind: 'text', content:
+      empty ? '<feed><totalResults>0</totalResults><startIndex>0</startIndex></feed>'
+        : '<feed><totalResults>1</totalResults><startIndex>0</startIndex><entry><id>https://arxiv.org/abs/2610.00001v1</id><title>Removed later</title><summary>Abstract</summary><published>2026-10-01</published><updated>2026-10-01</updated></entry></feed>' } }) })
+  expect((await h.call('research_sources', { action: 'arxiv', input: { query: 'all:changing' } })).value).toMatchObject({ complete: true, imported: 1 })
+  empty = true
+  const refreshed = await h.call('research_sources', { action: 'arxiv', input: { query: 'all:changing' } })
+  expect(refreshed.value).toMatchObject({ complete: true, imported: 0, nextStart: null })
+})
+
+it('refuses native retrieval when web_fetch is unavailable in the calling scope', async () => {
+  const h = await setup()
+  await h.ctx.plugin(WebRuntime)
+  h.ctx.web.registerFetchProvider({ id: 'disabled-fixture', available: () => true,
+    fetch: async ({ url }) => ({ url, statusCode: 200, body: { kind: 'text', content: 'Evidence' }, truncated: false }) })
+  const result = await h.call('research_sources', { action: 'fetch', input: { url: 'https://example.org/paper' } })
+  expect(result.isError).toBe(true)
+  expect(h.ctx.projectKnowledge.search({ projectId: h.project.id, query: '' }).hits).toHaveLength(0)
+})
+
+it('does not capture omitted or invisible HTML as successful publication evidence', async () => {
+  const h = await setup()
+  await h.ctx.plugin(WebRuntime)
+  applyWebFetchTool(h.ctx, 1000, 2000)
+  h.ctx.web.registerFetchProvider({ id: 'omitted-html', available: () => true,
+    fetch: async ({ url }) => ({ url, statusCode: 200, truncated: false, body: { kind: 'html', content:
+      url.endsWith('/nested') ? '<div>'.repeat(520) + 'Real evidence' + '</div>'.repeat(520) : '<script>Invisible</script>' } }) })
+  for (const path of ['nested', 'invisible']) {
+    const result = await h.call('research_sources', { action: 'fetch', input: { url: `https://example.org/${path}` } })
+    expect(result.isError).toBe(true)
+  }
+  expect(h.ctx.projectKnowledge.search({ projectId: h.project.id, query: '' }).hits).toHaveLength(0)
+})
 it('automatically captures successful web reads in Sources without asking the model to save', async () => {
   const h = await setup()
   h.register('web_fetch', {

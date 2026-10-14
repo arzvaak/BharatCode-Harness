@@ -222,11 +222,13 @@ function exceedsConversionDepth(html: string): boolean {
   return false
 }
 
-interface RenderedBody {
+export interface ExtractedFetchBody {
   /** Converted text, or a fixed omission marker when conversion is unsafe. */
   text: string
   /** Whether the source was cut before conversion to bound synchronous work. */
   sourceTruncated: boolean
+  /** True when safe HTML conversion omitted the content entirely. */
+  omitted: boolean
 }
 
 /**
@@ -239,22 +241,22 @@ interface RenderedBody {
  *   beyond {@link MAX_CONVERSION_DEPTH} or rejected by turndown is omitted so
  *   raw active markup never reaches the model-facing result.
  */
-function renderBody(body: WebFetchBody, maxInputChars: number): RenderedBody {
+export function extractFetchBody(body: WebFetchBody, maxInputChars: number): ExtractedFetchBody {
   const content = body.content.slice(0, maxInputChars)
   const sourceTruncated = content.length !== body.content.length
   switch (body.kind) {
     case 'html':
-      if (exceedsConversionDepth(content)) return { text: '[HTML content omitted: unable to convert safely.]', sourceTruncated }
+      if (exceedsConversionDepth(content)) return { text: '[HTML content omitted: unable to convert safely.]', sourceTruncated, omitted: true }
       try {
-        return { text: turndown.turndown(content), sourceTruncated }
+        return { text: turndown.turndown(content), sourceTruncated, omitted: false }
       } catch {
         // turndown's DOM walk recurses per element; malformed markup the lexical
         // guard cannot model can still throw RangeError. Provider errors remain
         // structured upstream; conversion failure returns no source markup.
-        return { text: '[HTML content omitted: unable to convert safely.]', sourceTruncated }
+        return { text: '[HTML content omitted: unable to convert safely.]', sourceTruncated, omitted: true }
       }
     case 'text':
-      return { text: content, sourceTruncated }
+      return { text: content, sourceTruncated, omitted: false }
     /* v8 ignore next 2 -- WebFetchBody is a closed union; this arm is unreachable and only makes adding a kind a compile error. */
     default:
       return assertNever(body, 'unhandled web fetch body kind')
@@ -327,7 +329,7 @@ const renderCache = new WeakMap<WebFetchResult, Map<number, RenderedFetch>>()
  */
 function computeFetchOutput(result: WebFetchResult, maxOutputChars: number): RenderedFetch {
   const header = `Fetched ${result.url} (HTTP ${result.statusCode})\n\n${EXTERNAL_WEB_CONTENT_NOTICE}\n\n`
-  const rendered = renderBody(result.body, maxOutputChars)
+  const rendered = extractFetchBody(result.body, maxOutputChars)
   const prefix = `${header}${rendered.text}`
   const truncated = result.truncated || rendered.sourceTruncated || prefix.length > maxOutputChars
   const full = `${prefix}${truncated ? TRUNCATION_FOOTER : ''}`
