@@ -222,6 +222,7 @@ function exceedsConversionDepth(html: string): boolean {
   return false
 }
 
+/** Safe text conversion outcome, including explicit whole-body omission. */
 export interface ExtractedFetchBody {
   /** Converted text, or a fixed omission marker when conversion is unsafe. */
   text: string

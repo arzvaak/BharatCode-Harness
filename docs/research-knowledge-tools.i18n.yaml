@@ -3,11 +3,17 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/research-knowledge-tools.md
 /research-knowledge-tools:
-  en: b844bbe2e4aae4ee
-  zh: 6369be6a4ae178eb
+  en: 274c4f72a3f0a96e
+  zh: 403485f97a0ff353
 /research-knowledge-tools/research-workflow:
-  en: 6e289d8a2a270873
-  zh: 95bb03b578acc2e6
+  en: c6cd2142fef56eaa
+  zh: 8d2aa638bc74b8d5
+/research-knowledge-tools/source-retrieval-and-extraction:
+  en: b3b7d6eb59f73c93
+  zh: 40b66ff5966ebd96
+/research-knowledge-tools/source-bank-curation:
+  en: f46f0057e0f4e51e
+  zh: 1061dfed52be43da
 /research-knowledge-tools/verification-boundary:
   en: f01a91ac9a1e8afa
   zh: d41e918e51425687

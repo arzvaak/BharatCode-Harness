@@ -26,14 +26,18 @@ export class SourceBank {
     private readonly read: (id: ArtifactRevisionId) => ArtifactRevision,
     private readonly related: (id: ArtifactRevisionId) => readonly ArtifactRelation[]) {}
 
-  /** Open an additive domain; existing evidence storage requires no migration. */
+  /** Open an additive domain; existing evidence storage requires no migration.
+   * @param storage - Host-owned domain facility.
+   * @returns Disposer that drains pending writes and closes the domain. */
   async open(storage: DomainFacility): Promise<() => Promise<void>> {
     const opened = await storage.open(domain)
     this.table = opened.table('projects')
     return async () => { await this.tail; await opened.close() }
   }
 
-  /** Classify discovery records separately, while explicit user selection wins. */
+  /** Classify discovery records separately, while explicit user selection wins.
+   * @param artifact - Retained source revision.
+   * @returns Current identity-level library membership. */
   selection(artifact: ArtifactRevision): SourceSelection {
     const selections = this.requireTable().get(artifact.projectId)?.selections
     const selected = selections !== undefined && Object.hasOwn(selections, artifact.path) ? selections[artifact.path] : undefined
@@ -41,7 +45,9 @@ export class SourceBank {
       ? 'discovery' : 'active', reason: '' }
   }
 
-  /** Enumerate the complete bank without inheriting the lexical-search result cap. */
+  /** Enumerate the complete bank without inheriting the lexical-search result cap.
+   * @param request - Project, selected memberships and pagination cursor.
+   * @returns Full-bank totals and one bounded metadata page. */
   list(request: SourceBankRequest): SourceBankResult {
     const snapshot = this.snapshot(request.projectId)
     const limit = request.limit ?? 100
@@ -62,7 +68,9 @@ export class SourceBank {
         version: snapshot.version, filter, offset: offset + items.length })).toString('base64url') }) }
   }
 
-  /** Preview by default; commit the complete selection batch in one durable write. */
+  /** Preview by default; commit the complete selection batch in one durable write.
+   * @param request - Selected source changes and expected bank version.
+   * @returns Validated preview or durable commit receipt. */
   curate(request: CurateSourcesRequest): Promise<CurateSourcesResult> {
     const operation = this.tail.then(async () => {
       const snapshot = this.snapshot(request.projectId)
@@ -102,7 +110,9 @@ export class SourceBank {
     return operation
   }
 
-  /** Check required evidence, exact duplicate content and preserved citation passages. */
+  /** Check required evidence, exact duplicate content and preserved citation passages.
+   * @param request - Owning project and required evidence selectors.
+   * @returns Coverage, duplicate content and citation-integrity diagnostics. */
   check(request: CheckSourcesRequest): CheckSourcesResult {
     const snapshot = this.snapshot(request.projectId)
     const active = snapshot.items.filter(item => item.status === 'active').map(item => this.read(item.id))

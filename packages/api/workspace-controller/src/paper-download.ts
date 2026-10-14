@@ -1,13 +1,14 @@
 /** Retain original complete paper PDFs and captured text without generated helper scripts. */
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-web'
-import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
+import type { ArtifactRevisionId, WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import { constants } from 'node:fs'
 import { mkdir, open, realpath, lstat, link, rm } from 'node:fs/promises'
 import { createHash, randomUUID } from 'node:crypto'
 import { isAbsolute, join, relative, sep } from 'node:path'
-import { extractDocument } from './document-extract.ts'
+import { extractDocument, type DocumentExtractionReceipt } from './document-extract.ts'
 
+/** Publication identity and optional page/OCR policy for retaining its original PDF. */
 export interface PaperDownloadInput {
   url?: string | undefined
   arxivId?: string | undefined
@@ -17,6 +18,34 @@ export interface PaperDownloadInput {
   maxPages: number
   ocr: boolean
   ocrLanguage: string
+}
+
+/** Original PDF retention receipt, with either extracted evidence or explicit incomplete coverage. */
+export type PaperDownloadReceipt = {
+  url: string
+  path: string
+  sha256: string
+  bytes: number
+  downloaded: boolean
+} & ({
+  extracted: false
+  coverage: string
+  issues?: string[]
+} | {
+  extracted: true
+  sourceId: ArtifactRevisionId
+  revision: string
+  method: string
+  segments: number
+  omissions: string[]
+  ocrPages: DocumentExtractionReceipt['ocrPages']
+  coverage: string
+})
+
+/** Per-publication successes and failures from a deduplicated bulk PDF request. */
+export interface PaperDownloadBatchReceipt {
+  receipts: (PaperDownloadReceipt | { identity: string; downloaded: false; error: string })[]
+  complete: boolean
 }
 
 /** Save an immutable content-addressed original; existing files must match its digest. */
@@ -56,8 +85,16 @@ async function savePdf(root: string, bytes: Uint8Array, sha256: string): Promise
   return relative(canonicalRoot, target)
 }
 
-/** Download PDF originals from an arXiv identity or public PDF URL, optionally extracting/OCRing full text. */
-export async function downloadPaper(ctx: Context, projectId: WorkspaceId, input: PaperDownloadInput, signal: AbortSignal) {
+/**
+ * Download PDF originals from an arXiv identity or public PDF URL, optionally extracting full text.
+ * @param ctx - Host context providing the web provider, workspace and source storage.
+ * @param projectId - Project that will own the retained content-addressed original.
+ * @param input - Publication identity and extraction/OCR settings.
+ * @param signal - Cancellation signal shared by retrieval and extraction.
+ * @returns The original PDF receipt and successful or incomplete extraction coverage.
+ */
+export async function downloadPaper(ctx: Context, projectId: WorkspaceId,
+  input: PaperDownloadInput, signal: AbortSignal): Promise<PaperDownloadReceipt> {
   const project = ctx.workspaceRegistry.get(projectId)
   if (project === undefined) throw new Error('Unknown project')
   if ((input.url === undefined) === (input.arxivId === undefined)) throw new Error('Supply exactly one of url or arxivId')
@@ -89,9 +126,17 @@ export async function downloadPaper(ctx: Context, projectId: WorkspaceId, input:
   }
 }
 
-/** Bulk paper retrieval retains successes and reports original/text coverage per paper. */
-export async function downloadPapers(ctx: Context, projectId: WorkspaceId, papers: readonly PaperDownloadInput[], signal: AbortSignal) {
-  const receipts = []
+/**
+ * Bulk paper retrieval retains successes and reports original/text coverage per paper.
+ * @param ctx - Host context providing retrieval and project storage services.
+ * @param projectId - Owning project for every retained paper.
+ * @param papers - Publication requests, deduplicated by their supplied identity.
+ * @param signal - Cancellation signal for the complete sequential retrieval batch.
+ * @returns Per-paper receipts and whether every paper has retained extracted text.
+ */
+export async function downloadPapers(ctx: Context, projectId: WorkspaceId,
+  papers: readonly PaperDownloadInput[], signal: AbortSignal): Promise<PaperDownloadBatchReceipt> {
+  const receipts: PaperDownloadBatchReceipt['receipts'] = []
   const seen = new Set<string>()
   for (const paper of papers) {
     signal.throwIfAborted()

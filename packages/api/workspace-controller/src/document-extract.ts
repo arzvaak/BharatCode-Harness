@@ -1,6 +1,6 @@
 /** Text extraction from project documents, with bounded input and explicit omissions. */
 import type { Context } from '@deepseek-ai/cordis'
-import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
+import type { ArtifactRevisionId, WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import { constants } from 'node:fs'
 import { open, lstat, realpath } from 'node:fs/promises'
 import { extname, isAbsolute, relative, resolve, sep } from 'node:path'
@@ -9,6 +9,19 @@ import { unzipSync, strFromU8 } from 'fflate'
 import { XMLParser, XMLValidator } from 'fast-xml-parser'
 import { z } from 'zod'
 import { recognizePdfPage } from './pdf-ocr.ts'
+
+/** Immutable source revision and page-level coverage produced by document extraction. */
+export interface DocumentExtractionReceipt {
+  id: ArtifactRevisionId
+  revision: string
+  path: string
+  inputDigest: string
+  method: string
+  ocrPages: { page: number; language: string; confidence: number }[]
+  segments: number
+  bytes: number
+  omissions: string[]
+}
 
 const xml = new XMLParser({ preserveOrder: true, ignoreAttributes: true, removeNSPrefix: true,
   parseTagValue: false, trimValues: false, processEntities: true })
@@ -68,10 +81,20 @@ function paragraphs(text: string): string[] {
   return result
 }
 
-/** Capture extracted text with the input digest, method, page labels and limitations. */
+/**
+ * Capture extracted text with the input digest, method, page labels and limitations.
+ * @param ctx - Host context providing the workspace registry and source revision storage.
+ * @param projectId - Owning project whose directory bounds document access.
+ * @param selected - Project-relative path of the immutable original document.
+ * @param signal - Cancellation signal for reading, rendering and recognition.
+ * @param firstPage - First one-based PDF page to include.
+ * @param maxPages - Maximum number of PDF pages or presentation slides to capture.
+ * @param options - OCR settings and optional source URL and title.
+ * @returns The captured source revision, original digest and explicit extraction coverage.
+ */
 export async function extractDocument(ctx: Context, projectId: WorkspaceId, selected: string,
   signal: AbortSignal, firstPage = 1, maxPages = 200,
-  options: { ocr?: boolean; ocrLanguage?: string; sourceUrl?: string; title?: string } = {}) {
+  options: { ocr?: boolean; ocrLanguage?: string; sourceUrl?: string; title?: string } = {}): Promise<DocumentExtractionReceipt> {
   const project = ctx.workspaceRegistry.get(projectId)
   if (project === undefined) throw new Error('Unknown project')
   const root = await realpath(project.path)

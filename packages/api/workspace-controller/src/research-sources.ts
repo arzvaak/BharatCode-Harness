@@ -1,7 +1,7 @@
 /** Native retrieval/import operations with explicit capture and coverage receipts. */
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-web'
-import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
+import type { ArtifactRevisionId, WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import { createHash } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { XMLParser, XMLValidator } from 'fast-xml-parser'
@@ -20,11 +20,54 @@ const corpusSchema = z.object({
   papers: z.array(paperSchema),
 })
 type Corpus = z.infer<typeof corpusSchema>
+/** Validated arXiv metadata page, including pagination and complete returned abstracts. */
+export interface ArxivFeedReceipt {
+  totalResults: number
+  start: number
+  papers: z.infer<typeof paperSchema>[]
+}
+
+/** Retained web-source revision with its conversion method and text coverage. */
+export interface ResearchSourceReceipt {
+  id: ArtifactRevisionId
+  revision: string
+  url: string
+  method: 'html_to_markdown' | 'decoded_text'
+  coverage: 'excerpt' | 'returned_text'
+  truncated: boolean
+  bytes: number
+}
+
+/** Successful web-source revisions and individual failures from a bulk request. */
+export interface ResearchSourceBatchReceipt {
+  receipts: (ResearchSourceReceipt | { url: string; error: string })[]
+  complete: boolean
+}
+
+/** Captured arXiv corpus revision with resumable pagination and explicit metadata coverage. */
+export interface ArxivCorpusReceipt {
+  id: ArtifactRevisionId
+  revision: string
+  method: string
+  coverage: string
+  totalResults: number
+  imported: number
+  pageCount: number
+  complete: boolean
+  nextStart: number | null
+  issues: string[]
+  gaps: number[]
+}
+
 let arxivNextRequest = 0
 let arxivTail: Promise<void> = Promise.resolve()
 
-/** Parse only validated Atom XML; refuse partial/error feeds before retaining anything. */
-export function parseArxivFeed(text: string) {
+/**
+ * Parse only validated Atom XML; refuse partial/error feeds before retaining anything.
+ * @param text - Complete arXiv Atom feed returned by the metadata endpoint.
+ * @returns Validated publication metadata and server pagination information.
+ */
+export function parseArxivFeed(text: string): ArxivFeedReceipt {
   if (Buffer.byteLength(text) > 4 * 1024 * 1024 || /<!DOCTYPE|<!ENTITY/iu.test(text)
     // oxlint-disable-next-line typescript/no-deprecated -- Use the validator bundled with the pinned parser version.
     || XMLValidator.validate(text) !== true) throw new Error('Invalid or unsupported arXiv XML feed')
@@ -52,10 +95,21 @@ export function parseArxivFeed(text: string) {
 /** HTTP and conversion policy are shared with the normal web capability. */
 export class ResearchSources {
   private tail: Promise<void> = Promise.resolve()
+  /**
+   * Bind native research operations to the host services.
+   * @param ctx - Context providing web retrieval and immutable project knowledge storage.
+   */
   constructor(private readonly ctx: Context) {}
 
-  /** Fetch and retain one text/HTML resource; never turn an interstitial into a paper. */
-  async fetch(projectId: WorkspaceId, url: string, signal: AbortSignal, title?: string) {
+  /**
+   * Fetch and retain one text/HTML resource; never turn an interstitial into a paper.
+   * @param projectId - Owning project for the captured source revision.
+   * @param url - Public source URL handled by the configured web provider.
+   * @param signal - Cancellation signal for retrieval and capture preparation.
+   * @param title - Optional human-readable title for the captured source.
+   * @returns The immutable source revision and explicit returned-text coverage.
+   */
+  async fetch(projectId: WorkspaceId, url: string, signal: AbortSignal, title?: string): Promise<ResearchSourceReceipt> {
     const web = this.ctx.get('web')
     if (web === undefined) throw new Error('Source retrieval needs a configured web fetch provider')
     const result = await web.fetch({ url }, signal)
@@ -79,9 +133,15 @@ export class ResearchSources {
       bytes: Buffer.byteLength(artifact.text) }
   }
 
-  /** Bulk URL retrieval preserves successes and reports failures individually. */
-  async fetchMany(projectId: WorkspaceId, urls: readonly string[], signal: AbortSignal) {
-    const receipts = []
+  /**
+   * Bulk URL retrieval preserves successes and reports failures individually.
+   * @param projectId - Owning project for all captured sources.
+   * @param urls - Source URLs, deduplicated before sequential retrieval.
+   * @param signal - Cancellation signal for the complete batch.
+   * @returns Per-source receipts and whether every retrieval succeeded.
+   */
+  async fetchMany(projectId: WorkspaceId, urls: readonly string[], signal: AbortSignal): Promise<ResearchSourceBatchReceipt> {
+    const receipts: ResearchSourceBatchReceipt['receipts'] = []
     for (const url of new Set(urls)) {
       signal.throwIfAborted()
       try { receipts.push(await this.fetch(projectId, url, signal)) }
@@ -90,8 +150,15 @@ export class ResearchSources {
     return { receipts, complete: receipts.every(receipt => !('error' in receipt)) }
   }
 
-  /** Import a resumable page into one query corpus rather than raw XML or individual stubs. */
-  arxiv(projectId: WorkspaceId, input: { query: string; start: number; pageSize: number }, signal: AbortSignal) {
+  /**
+   * Import a resumable page into one query corpus rather than raw XML or individual stubs.
+   * @param projectId - Project that owns the accumulated metadata corpus.
+   * @param input - Search query and bounded page range to retrieve from arXiv.
+   * @param signal - Cancellation signal for pacing, retrieval and corpus preparation.
+   * @returns The updated corpus revision, coverage, gaps and next resumable offset.
+   */
+  arxiv(projectId: WorkspaceId, input: { query: string; start: number; pageSize: number },
+    signal: AbortSignal): Promise<ArxivCorpusReceipt> {
     const operation = this.tail.then(async () => {
       const web = this.ctx.get('web')
       if (web === undefined) throw new Error('arXiv import needs a configured web fetch provider')

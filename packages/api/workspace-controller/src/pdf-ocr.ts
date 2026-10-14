@@ -6,6 +6,13 @@ import { mkdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
+/** Recognized page text with the selected model language and aggregate confidence. */
+export interface PdfOcrResult {
+  text: string
+  confidence: number
+  language: string
+}
+
 let queue: Promise<void> = Promise.resolve()
 let cached: { language: string; worker: Worker } | undefined
 let idle: ReturnType<typeof setTimeout> | undefined
@@ -77,8 +84,14 @@ async function receive(worker: Worker, expected: 'ready' | 'result', signal: Abo
   })
 }
 
-/** Render and recognize one textless page, serializing work to bound native/WASM memory. */
-export async function recognizePdfPage(page: PDFPageProxy, inputSignal: AbortSignal, language = 'eng') {
+/**
+ * Render and recognize one scanned page, serializing work to bound native/WASM memory.
+ * @param page - PDFjs page containing the scanned content to rasterize.
+ * @param inputSignal - Caller cancellation signal, combined with a bounded page deadline.
+ * @param language - One to three Tesseract language codes, joined with plus signs.
+ * @returns Recognized text, model language and confidence after the bounded worker request.
+ */
+export async function recognizePdfPage(page: PDFPageProxy, inputSignal: AbortSignal, language = 'eng'): Promise<PdfOcrResult> {
   if (!/^[a-z]{3}(?:_[a-z]+)?(?:\+[a-z]{3}(?:_[a-z]+)?){0,2}$/u.test(language))
     throw new Error('OCR language must contain one to three Tesseract language codes, such as eng or eng+kor')
   inputSignal.throwIfAborted()

@@ -23087,7 +23087,7 @@
       "digest": "443000524ce3bb379745cb41b4872b06764d6795abf986e68c09d1d416b4ef4c",
       "names": [],
       "sources": [
-        "packages/workspace/workspace/src/types.ts:270"
+        "packages/workspace/workspace/src/types.ts:274"
       ]
     },
     {
@@ -23220,7 +23220,7 @@
         "packages/workspace/workspace/src/types.ts#HandoffAdmission"
       ],
       "sources": [
-        "packages/workspace/workspace/src/types.ts:258"
+        "packages/workspace/workspace/src/types.ts:262"
       ]
     },
     {
@@ -23279,7 +23279,7 @@
         "packages/workflow/workflow/src/types.ts:13",
         "packages/workspace/workspace/src/types.ts:147",
         "packages/workspace/workspace/src/types.ts:16",
-        "packages/workspace/workspace/src/types.ts:215"
+        "packages/workspace/workspace/src/types.ts:219"
       ]
     },
     {
@@ -24036,7 +24036,7 @@
         "packages/workspace/workspace/src/types.ts#WorkflowProfile"
       ],
       "sources": [
-        "packages/workspace/workspace/src/types.ts:196"
+        "packages/workspace/workspace/src/types.ts:200"
       ]
     },
     {
