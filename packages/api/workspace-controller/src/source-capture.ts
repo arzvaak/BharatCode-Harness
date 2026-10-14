@@ -1,5 +1,5 @@
 /** Durable research receipts at the successful tool-result boundary. */
-import type { Context } from '@deepseek-ai/cordis'
+import { symbols, type Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { PostToolDecision } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-workspace'
@@ -19,22 +19,47 @@ export function projectForAgent(ctx: Context, agent: Agent | undefined): Workspa
   return ctx.workspaceRegistry.list().find(value => value.sessionIds.includes(agent.session.id))
 }
 const sourceVersions = new WeakMap<object, Map<string, { version: string; id: string }>>()
+type DiscoveryResult = { receipts: { path: string; id?: string; revision?: string; error?: string }[]; truncated: boolean }
+const sourceDiscoveries = new WeakMap<object, Map<WorkspaceId, Promise<DiscoveryResult>>>()
 /** Recover sources written through shell/download tools as well as native file tools.
  * Directory and capture limits keep discovery bounded; source registration owns
  * symlink, containment, UTF-8 and byte-limit validation.
  * @param ctx - Host context containing the evidence storage services.
  * @param projectId - Registered project whose sources directory is inspected.
- * @param signal - Optional cancellation for bounded discovery.
+ * @param signal - Optional cancellation of this caller's wait for bounded discovery.
  * @returns Successful capture receipts and explicit discovery limits or errors.
  */
 export async function discoverProjectSources(
   ctx: Context, projectId: WorkspaceId, signal?: AbortSignal,
-): Promise<{ receipts: { path: string; id?: string; revision?: string; error?: string }[]; truncated: boolean }> {
+): Promise<DiscoveryResult> {
+  signal?.throwIfAborted()
+  const knowledge = ctx.projectKnowledge as typeof ctx.projectKnowledge & { [symbols.original]?: object }
+  // Cordis returns a fresh caller-bound proxy on every service read. Cache on
+  // the underlying service so search and tool callers share one discovery.
+  const owner = knowledge[symbols.original] ?? knowledge
+  let active = sourceDiscoveries.get(owner)
+  if (active === undefined) { active = new Map(); sourceDiscoveries.set(owner, active) }
+  let pending = active.get(projectId)
+  if (pending === undefined) {
+    pending = scanProjectSources(ctx, projectId, owner).finally(() => { active.delete(projectId) })
+    active.set(projectId, pending)
+  }
+  if (signal === undefined) return pending
+  // One cancelled viewer must not cancel discovery for the other callers.
+  return new Promise<DiscoveryResult>((resolve, reject) => {
+    const abort = (): void => { reject(signal.reason instanceof Error ? signal.reason : new Error('Source discovery cancelled', { cause: signal.reason })) }
+    signal.addEventListener('abort', abort, { once: true })
+    void pending.then(resolve, reject).finally(() => { signal.removeEventListener('abort', abort) })
+    if (signal.aborted) abort()
+  })
+}
+
+async function scanProjectSources(ctx: Context, projectId: WorkspaceId, owner: object): Promise<DiscoveryResult> {
   const project = ctx.workspaceRegistry.get(projectId)
   if (project === undefined) throw new Error('Unknown source project')
   const receipts: { path: string; id?: string; revision?: string; error?: string }[] = []
-  const versions = sourceVersions.get(ctx.projectKnowledge) ?? new Map<string, { version: string; id: string }>()
-  sourceVersions.set(ctx.projectKnowledge, versions)
+  const versions = sourceVersions.get(owner) ?? new Map<string, { version: string; id: string }>()
+  sourceVersions.set(owner, versions)
   const directories = ['sources']
   let inspected = 0
   let files = 0
@@ -46,7 +71,6 @@ export async function discoverProjectSources(
       truncated = true
       break
     }
-    signal?.throwIfAborted()
     let directoryHandle
     try {
       const info = await lstat(join(project.path, directory))
@@ -59,7 +83,6 @@ export async function discoverProjectSources(
     }
     let entryCount = 0
     for await (const entry of directoryHandle) {
-      signal?.throwIfAborted()
       if (++entryCount > 1000) {
         truncated = true
         break

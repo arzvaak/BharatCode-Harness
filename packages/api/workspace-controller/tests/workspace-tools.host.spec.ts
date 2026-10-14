@@ -16,6 +16,7 @@ import { MemoryStorageBackend } from '../../../storage/storage-domain/tests/help
 import { WorkspaceController } from '../src/index.ts'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import { applyWebFetchTool } from '../../../web/tool-web/src/fetch.ts'
+import { discoverProjectSources } from '../src/source-capture.ts'
 
 const cleanups: (() => Promise<void>)[] = []
 afterEach(async () => {
@@ -282,6 +283,37 @@ it('recovers existing sources on Sources search and captures later shell-generat
   expect(result.isError).toBe(false)
   expect(h.ctx.projectKnowledge.search({ projectId: h.project.id, query: '' }).hits).toHaveLength(2)
   expect(JSON.stringify(result.content)).toContain('Project Sources discovery')
+})
+it('coalesces overlapping Sources searches while discovery commits invalidate the Research view', async () => {
+  const h = await setup()
+  await mkdir(join(h.root, 'sources'))
+  await writeFile(join(h.root, 'sources/one.md'), 'First source')
+  await writeFile(join(h.root, 'sources/two.md'), 'Second source')
+  const register = vi.spyOn(h.ctx.projectKnowledge, 'register')
+  const results = await Promise.all(Array.from({ length: 8 }, () =>
+    h.controller.search({ projectId: h.project.id, query: '' })))
+  expect(results.every(result => result.hits.length === 2)).toBe(true)
+  expect(register).toHaveBeenCalledTimes(2)
+  await h.controller.search({ projectId: h.project.id, query: '' })
+  expect(register).toHaveBeenCalledTimes(2)
+})
+it('shares discovery across caller contexts without cancelling another viewer', async () => {
+  const h = await setup()
+  await mkdir(join(h.root, 'sources'))
+  await writeFile(join(h.root, 'sources/one.md'), 'First revision')
+  const register = vi.spyOn(h.ctx.projectKnowledge, 'register')
+  const abort = new AbortController()
+  const cancelled = discoverProjectSources(h.ctx.extend({}), h.project.id, abort.signal)
+  const active = discoverProjectSources(h.ctx.extend({}), h.project.id)
+  abort.abort(new Error('viewer closed'))
+  await expect(cancelled).rejects.toThrow('viewer closed')
+  expect((await active).receipts).toHaveLength(1)
+  expect(register).toHaveBeenCalledTimes(1)
+  await discoverProjectSources(h.ctx.extend({}), h.project.id)
+  expect(register).toHaveBeenCalledTimes(1)
+  await writeFile(join(h.root, 'sources/one.md'), 'Changed revision')
+  expect((await discoverProjectSources(h.ctx, h.project.id)).receipts).toHaveLength(1)
+  expect(register).toHaveBeenCalledTimes(2)
 })
 it('reports invalid source discovery while keeping existing evidence readable', async () => {
   const h = await setup()
