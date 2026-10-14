@@ -59,13 +59,14 @@ afterEach(() => {
 })
 
 describe('desktop core package set', () => {
-  it('acknowledges ONNX install scripts while using the bundled CPU runtime for Engram', () => {
+  it('allows required runtime builds and denies optional install hooks', () => {
     const { root } = packageSetProject()
     createRuntimeProjectMetadata(root, {
       schemaVersion: 1, version: '1.2.3', hostProtocolVersion: DESKTOP_HOST_PROTOCOL_VERSION,
       nodeVersion: '24.18.1', pnpmVersion: '11.28.5',
     })
     expect(readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf8')).toContain('  onnxruntime-node: false\n')
+    expect(readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf8')).toContain("  'tesseract.js@7.0.0': false\n")
   })
   it('pins the direct dsh dependency and every internal package to local tarballs', () => {
     const { root } = packageSetProject()

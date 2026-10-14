@@ -64,6 +64,9 @@ allowBuilds:
   # optional prebuilts are omitted. Upgrade all consumers together after the
   # replacement passes that build and the release packed-install check.
   koffi: true
+  # Tesseract's postinstall is an optional opencollective funding prompt; the
+  # pinned OCR runtime and traineddata are packaged without running it.
+  'tesseract.js@7.0.0': false
   # The Python runtime deploy includes the reviewed workspace postinstall that
   # restores the executable bit on node-pty's macOS spawn helper.
   '@deepseek-ai/dsh-subprocess-local@file:packages/subprocess/subprocess-local': true
