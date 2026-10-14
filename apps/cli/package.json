@@ -116,7 +116,8 @@
     "dsh-lsp-actions": "workspace:*",
     "@bharatcode/dsh-novel-continuity": "workspace:*",
     "dsh-deepread": "workspace:*",
-    "@bharatcode/extension-store": "workspace:*"
+    "@bharatcode/extension-store": "workspace:*",
+    "@kenz1117/dsh-engram": "workspace:*"
   },
   "devDependencies": {
     "@agentclientprotocol/sdk": "1.4.0",

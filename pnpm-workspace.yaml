@@ -14,6 +14,7 @@ packages:
   - integrations/workflows/packages/novel-continuity
   - integrations/workflows/packages/deepread
   - integrations/extension-store
+  - integrations/engram
   - vendor/*
   - packages/*/*
   # The Landlock launcher is developed with its harness consumers but keeps

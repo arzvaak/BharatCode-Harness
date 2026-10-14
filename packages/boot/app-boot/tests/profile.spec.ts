@@ -35,6 +35,25 @@ import {
 import { installRuntimeInterception } from '../src/profile-resolution/resolver.ts'
 
 const tempRoots: string[] = []
+it('ships Engram in the default web profile and production dependency closure', () => {
+  const name = '@kenz1117/dsh-engram'
+  const core = JSON.parse(readFileSync(new URL('../../../../integrations/core.json', import.meta.url), 'utf8')) as {
+    defaultOn: string[]
+    packages: { id: string; enabled: boolean; packageName: string }[]
+    optional: string[]
+    defaults: { semanticMemory: boolean }
+  }
+  const cli = JSON.parse(readFileSync(new URL('../../../../apps/cli/package.json', import.meta.url), 'utf8')) as {
+    dependencies: Record<string, string>
+  }
+  expect(PROFILE_TEMPLATES.web?.bundles).toContain(name)
+  expect(core.defaultOn).toContain(name)
+  expect(core.packages).toContainEqual(expect.objectContaining({ id: 'engram', enabled: true, packageName: name }))
+  expect(core.optional).not.toContain('engram')
+  expect(core.defaults.semanticMemory).toBe(true)
+  expect(cli.dependencies[name]).toBe('workspace:*')
+  expect(readFileSync(new URL('../../../../pnpm-workspace.yaml', import.meta.url), 'utf8')).toContain('  - integrations/engram\n')
+})
 afterAll(() => {
   for (const root of tempRoots.splice(0)) rmSync(root, { recursive: true, force: true })
 })

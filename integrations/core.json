@@ -14,7 +14,8 @@
     "dsh-lsp-actions",
     "@bharatcode/dsh-novel-continuity",
     "dsh-deepread",
-    "@bharatcode/extension-store"
+    "@bharatcode/extension-store",
+    "@kenz1117/dsh-engram"
   ],
   "packages": [
     {
@@ -125,17 +126,22 @@
       "directory": "integrations/extension-store",
       "enabled": true,
       "packageName": "@bharatcode/extension-store"
+    },
+    {
+      "id": "engram",
+      "directory": "integrations/engram",
+      "enabled": true,
+      "packageName": "@kenz1117/dsh-engram"
     }
   ],
   "optional": [
-    "engram",
     "zotero",
     "github",
     "browser-playwright"
   ],
   "defaults": {
     "zero": "safe",
-    "semanticMemory": false,
+    "semanticMemory": true,
     "searxng": false
   }
 }
