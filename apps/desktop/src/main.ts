@@ -332,6 +332,9 @@ async function main(): Promise<void> {
   const primaryRuntime = development
     ? developmentPrimaryRuntime()
     : join(process.resourcesPath, 'runtime', 'primary-runtime')
+  const bundledOcrLanguagePath = development
+    ? join(app.getAppPath(), 'resources', 'ocr', 'tessdata')
+    : join(process.resourcesPath, 'runtime', 'ocr', 'tessdata')
   const activeProject = paths.profile
   const manager = new DesktopProjectManager(paths, resources)
   // Dock and Finder launches inherit only launchd's environment; every Host shares one login-shell read.
@@ -345,7 +348,13 @@ async function main(): Promise<void> {
     return result.environment
   })
   let hostEnvironment: NodeJS.ProcessEnv = process.env
-  const prepareHostEnvironment = async (): Promise<void> => { hostEnvironment = await loginShell }
+  const prepareHostEnvironment = async (): Promise<void> => {
+    const environment = await loginShell
+    hostEnvironment = {
+      ...environment,
+      BC_OCR_LANG_PATH: process.env.BC_OCR_LANG_PATH ?? environment.BC_OCR_LANG_PATH ?? bundledOcrLanguagePath,
+    }
+  }
   let quitting = false
   let startup: Promise<void> | undefined
   let workspaceRecovery: Promise<void> | undefined

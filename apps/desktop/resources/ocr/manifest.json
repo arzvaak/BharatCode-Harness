@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "assetPath": "tessdata/eng.traineddata.gz",
+  "language": "eng",
+  "modelVersion": "4.0.0_best_int",
+  "sizeBytes": 2952873,
+  "sha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91",
+  "license": "Apache-2.0",
+  "licenseFile": "LICENSE",
+  "sourcePackage": "@tesseract.js-data/eng@1.0.0",
+  "sourcePackageIntegrity": "sha512-mbTumm6KQPUHyzTPQaF3ObXYnx0SqqfV2nabqFVQBwD6Kl7PhGSLSzOlfFTWy0P3BjghaSKA2W9GB19Jk+ZcTg==",
+  "sourceUrl": "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int/eng.traineddata.gz",
+  "upstreamModelRepository": "https://github.com/tesseract-ocr/tessdata_best"
+}

@@ -2,6 +2,7 @@
 
 import { packagingStep } from './packaging-step.mjs'
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -16,6 +17,26 @@ import { prepareCommandLink } from './prepare-command-link.ts'
 
 const BUILD_PATHS = resolveDesktopTargetBuildPaths()
 const RUNTIME_ROOT = BUILD_PATHS.runtime
+const OCR_ASSET_ROOT = join(import.meta.dirname, '..', 'resources', 'ocr')
+const OCR_MODEL_PATH = 'tessdata/eng.traineddata.gz'
+
+function prepareOcrAssets(): void {
+  const manifest = JSON.parse(readFileSync(join(OCR_ASSET_ROOT, 'manifest.json'), 'utf8')) as {
+    assetPath?: unknown
+    sha256?: unknown
+    sizeBytes?: unknown
+  }
+  if (manifest.assetPath !== OCR_MODEL_PATH || typeof manifest.sha256 !== 'string'
+    || !/^[a-f\d]{64}$/.test(manifest.sha256) || !Number.isSafeInteger(manifest.sizeBytes)) {
+    throw new Error('desktop runtime: invalid bundled OCR asset manifest')
+  }
+  const model = readFileSync(join(OCR_ASSET_ROOT, OCR_MODEL_PATH))
+  const digest = createHash('sha256').update(model).digest('hex')
+  if (digest !== manifest.sha256 || model.byteLength !== manifest.sizeBytes) {
+    throw new Error(`desktop runtime: bundled OCR model failed integrity check (sha256 ${digest})`)
+  }
+  cpSync(OCR_ASSET_ROOT, join(RUNTIME_ROOT, 'ocr'), { recursive: true })
+}
 
 function preparePnpm(): string {
   const require = createRequire(import.meta.url)
@@ -61,6 +82,7 @@ async function main(): Promise<void> {
     ['-c', 'Print LSMinimumSystemVersion', join(BUILD_PATHS.electron, 'Electron.app', 'Contents', 'Info.plist')], { encoding: 'utf8' }).trim() : undefined
   rmSync(RUNTIME_ROOT, { recursive: true, force: true })
   mkdirSync(RUNTIME_ROOT, { recursive: true })
+  prepareOcrAssets()
   const pnpmVersion = preparePnpm()
   cpSync(join(import.meta.dirname, 'node-bin'), join(RUNTIME_ROOT, 'bin'), { recursive: true })
   chmodSync(join(RUNTIME_ROOT, 'bin', 'node'), 0o755)
