@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -13,6 +13,8 @@ import {
   verifyDesktopCorePackageSet,
   type DesktopCorePackageRecord,
 } from '../src/core-package-set.ts'
+import { createRuntimeProjectMetadata } from '../src/project-manager.ts'
+import { DESKTOP_HOST_PROTOCOL_VERSION } from '../src/host-protocol.ts'
 
 const roots: string[] = []
 
@@ -57,6 +59,14 @@ afterEach(() => {
 })
 
 describe('desktop core package set', () => {
+  it('acknowledges ONNX install scripts while using the bundled CPU runtime for Engram', () => {
+    const { root } = packageSetProject()
+    createRuntimeProjectMetadata(root, {
+      schemaVersion: 1, version: '1.2.3', hostProtocolVersion: DESKTOP_HOST_PROTOCOL_VERSION,
+      nodeVersion: '24.18.1', pnpmVersion: '11.28.5',
+    })
+    expect(readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf8')).toContain('  onnxruntime-node: false\n')
+  })
   it('pins the direct dsh dependency and every internal package to local tarballs', () => {
     const { root } = packageSetProject()
     const packageSet = verifyDesktopCorePackageSet(root, '1.2.3')
