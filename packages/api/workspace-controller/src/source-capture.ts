@@ -99,6 +99,11 @@ async function scanProjectSources(ctx: Context, projectId: WorkspaceId, owner: o
         break
       }
       if (/\.(pdf|docx?|epub|png|jpe?g|gif|webp)$/i.test(entry.name)) {
+        const extracted = ctx.projectKnowledge.latestForPath(projectId, `source:document:${path}`)
+        if (extracted !== undefined) {
+          receipts.push({ path, id: extracted.id, revision: extracted.revision })
+          continue
+        }
         receipts.push({ path, error: 'Text extraction is required before this source can be captured.' })
         continue
       }

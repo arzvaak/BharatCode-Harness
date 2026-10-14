@@ -12,6 +12,7 @@ import type {
   WebFetchProvider,
   WebFetchRequest,
   WebFetchResult,
+  WebDocumentResult,
   WebSearchProvider,
   WebSearchRequest,
   WebSearchResult,
@@ -22,6 +23,7 @@ export {
   WebError,
 } from './types.ts'
 export type {
+  WebDocumentResult,
   WebFetchBody,
   WebFetchProvider,
   WebFetchRequest,
@@ -160,6 +162,20 @@ export class WebRuntime extends Service {
       ...this.fetchProviderId !== undefined ? { configuredId: this.fetchProviderId } : {},
     })
     return provider.fetch(request, signal)
+  }
+  /** Retrieve a complete PDF through the selected fetch provider's binary capability.
+   * @param request - Public document URL.
+   * @param signal - Cancellation forwarded to the provider.
+   * @returns Complete PDF bytes; unsupported capabilities and truncated documents reject. */
+  async fetchDocument(request: WebFetchRequest, signal?: AbortSignal): Promise<WebDocumentResult> {
+    const provider = resolveProvider({ providers: this.fetchProviders,
+      ...this.fetchProviderId !== undefined ? { configuredId: this.fetchProviderId } : {} })
+    if (provider.fetchDocument === undefined)
+      throw new WebError('Selected fetch provider does not support PDF downloads', 'WEB_DOCUMENT_UNAVAILABLE')
+    const result = await provider.fetchDocument(request, signal)
+    if (result.statusCode === 206 || result.contentRange !== undefined)
+      throw new WebError('PDF response is partial; a complete original is required', 'WEB_DOCUMENT_PARTIAL')
+    return result
   }
 }
 

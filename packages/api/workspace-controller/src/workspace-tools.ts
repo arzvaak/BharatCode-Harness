@@ -16,6 +16,7 @@ import { discoverProjectSources, installSourceCapture, projectForAgent } from '.
 import { ResearchOperations } from './research.ts'
 import { ResearchSources } from './research-sources.ts'
 import { extractDocument } from './document-extract.ts'
+import { downloadPaper, downloadPapers } from './paper-download.ts'
 
 export const name = 'workspace-tools'
 export const inject = [
@@ -186,16 +187,31 @@ export function apply(ctx: Context): void {
     z.object({ query: string.max(4000), start: z.number().int().min(0).max(100000).default(0),
       pageSize: z.number().int().min(1).max(100).default(100) }).strict(),
     (input, exec) => { fetchAllowed(exec); return retrieval.arxiv(project(exec).id, input, exec.signal) })
+  const paperInput = z.object({ url: z.url().max(2048).optional(), arxivId: string.max(128).optional(),
+    title: string.max(2000).optional(), extract: z.boolean().default(true),
+    firstPage: z.number().int().min(1).max(100000).default(1), maxPages: z.number().int().min(1).max(200).default(200),
+    ocr: z.boolean().default(true), ocrLanguage: string.max(64).default('eng') }).strict()
+  add('research_sources', 'paper',
+    'Download and retain a full paper PDF, then extract page-labelled text with automatic OCR for scanned pages. ' +
+      'input: {arxivId OR url,title?,extract?,firstPage?,maxPages?,ocr?,ocrLanguage?}. Returns original path/hash, source ID and omissions. ' +
+      'The original PDF remains saved if extraction fails. Supply a direct PDF URL; bot challenges are errors, never papers.',
+    paperInput, (input, exec) => { fetchAllowed(exec); return downloadPaper(ctx, project(exec).id, input, exec.signal) })
+  add('research_sources', 'papers',
+    'Download/extract up to 10 full paper PDFs with per-paper receipts. input: {papers:[paper inputs]}. Successes survive other failures.',
+    z.object({ papers: z.array(paperInput).min(1).max(10) }).strict(),
+    (input, exec) => { fetchAllowed(exec); return downloadPapers(ctx, project(exec).id, input.papers, exec.signal) })
   add('research_check', 'sources',
     'Check full-bank counts, required source identities/text, exact duplicates and citation integrity. input: {requiredIds?,requiredTexts?}. Checks all retained identities, not a truncated search page.',
     z.object({ requiredIds: z.array(id).max(200).optional(), requiredTexts: z.array(string.max(2000)).max(1000).optional() }).strict(),
     (input, exec) => ctx.projectKnowledge.checkSources({ ...input, projectId: project(exec).id }))
   add('document_extract', 'extract',
     'Extract/capture a project PDF, DOCX, PPTX or UTF-8 document. input: {path,firstPage?:number,maxPages?:number}. ' +
-      'Returns source ID, revision, input digest, method and omissions. PDF text has page labels; scanned PDFs report OCR required. No scripts are generated.',
+      'Returns source ID, revision, input digest, method and omissions. Scanned PDF pages use native OCR by default. No scripts are generated.',
     z.object({ path: string, firstPage: z.number().int().min(1).max(100000).default(1),
-      maxPages: z.number().int().min(1).max(200).default(200) }).strict(),
-    (input, exec) => extractDocument(ctx, project(exec).id, path(input.path, exec), exec.signal, input.firstPage, input.maxPages))
+      maxPages: z.number().int().min(1).max(200).default(200), ocr: z.boolean().default(true),
+      ocrLanguage: string.max(64).default('eng') }).strict(),
+    (input, exec) => extractDocument(ctx, project(exec).id, path(input.path, exec), exec.signal, input.firstPage, input.maxPages,
+      { ocr: input.ocr, ocrLanguage: input.ocrLanguage }))
   add(
     'project_sources',
     'discover',
@@ -761,7 +777,8 @@ export function apply(ctx: Context): void {
       'For a new topic, save a topic overview linking its findings; avoid leaving only empty headings or chat-only conclusions. ' +
       'Supply citations as captured sourceId/start/end offsets from project_sources.read; store generates exact quote footnotes and durable evidence links. ' +
       'Retain other sources with project_sources.capture_text/register before citing them. Never invent quotations or source IDs. ' +
-      'Use research_sources.fetch/fetch_many for source retrieval, research_sources.arxiv for paginated abstract corpus imports, and document_extract.extract for local PDF/DOCX/PPTX text; do not create one-off scripts for these supported operations. ' +
+      'Use research_sources.fetch/fetch_many for webpages, arxiv for metadata discovery, and paper/papers to download full PDFs by arxivId or direct URL and retain page-labelled text. ' +
+      'Get full papers before making full-text claims; abstracts are discovery coverage only. document_extract.extract handles local PDF/DOCX/PPTX text and automatic scanned-page OCR. Do not create one-off scripts for these supported operations. ' +
       'Use project_sources.list to inspect the full bank, curate to preview and apply reversible bulk selection using expectedVersion, and restore to undo exclusions. Search/API discovery is separate from active evidence; promote useful discovery to active. ' +
       'Use research_check.sources for full-bank counts, required evidence coverage, duplicates and citation integrity. Removal affects library membership, never immutable citation evidence or project files. ' +
       'Inspect saved notes to read back the content, verify links and address receipt issues before claiming knowledge was stored. ' +

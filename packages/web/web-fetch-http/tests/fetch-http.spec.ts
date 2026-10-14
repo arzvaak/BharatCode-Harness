@@ -52,6 +52,32 @@ function provider(overrides: Partial<HttpFetchLimits> = {}): HttpFetchProvider {
   return new HttpFetchProvider({ ...limits, ...overrides })
 }
 
+it('retrieves complete PDF bytes through the same pinned transport and redirect policy', async () => {
+  const bytes = Buffer.from('%PDF-1.7\nFull binary paper\x00\xff\n%%EOF')
+  handler = (req, res) => {
+    if (req.url === '/redirect') { res.writeHead(302, { location: '/paper' }); res.end(); return }
+    res.writeHead(200, { 'content-type': 'application/pdf' }); res.end(bytes)
+  }
+  const result = await provider().fetchDocument({ url: `${base}/redirect` })
+  expect(result.url).toBe(`${base}/paper`)
+  expect(Buffer.from(result.bytes)).toEqual(bytes)
+  handler = (_req, res) => { res.writeHead(302, { location: 'https://other-origin.example/paper.pdf' }); res.end() }
+  await expect(provider().fetchDocument({ url: `${base}/redirect` })).rejects.toMatchObject({ code: 'WEB_REDIRECT_BLOCKED' })
+})
+
+it('rejects partial PDFs and challenge HTML instead of retaining corrupt downloads', async () => {
+  handler = (_req, res) => { res.writeHead(200, { 'content-type': 'application/pdf' }); res.end('%PDF-1.7\n' + 'x'.repeat(100)) }
+  await expect(provider({ maxDocumentBytes: 20 }).fetchDocument({ url: `${base}/paper` })).rejects.toMatchObject({ code: 'WEB_FETCH_TOO_LARGE' })
+  handler = (_req, res) => { res.writeHead(200, { 'content-type': 'text/html' }); res.end('<title>Verify you are human</title>') }
+  await expect(provider().fetchDocument({ url: `${base}/paper` })).rejects.toMatchObject({ code: 'WEB_UNSUPPORTED_CONTENT_TYPE' })
+  handler = (_req, res) => { res.writeHead(200, { 'content-type': 'application/pdf' }); res.end('Not a PDF') }
+  await expect(provider().fetchDocument({ url: `${base}/paper` })).rejects.toMatchObject({ code: 'WEB_UNSUPPORTED_CONTENT_TYPE' })
+  handler = (_req, res) => { res.writeHead(206, { 'content-type': 'application/pdf', 'content-range': 'bytes 0-8/1000' }); res.end('%PDF-1.7') }
+  await expect(provider().fetchDocument({ url: `${base}/paper` })).rejects.toMatchObject({ code: 'WEB_DOCUMENT_PARTIAL' })
+  handler = (_req, res) => { res.writeHead(200, { 'content-type': 'application/pdf', 'content-range': 'bytes 0-8/1000' }); res.end('%PDF-1.7') }
+  await expect(provider().fetchDocument({ url: `${base}/paper` })).rejects.toMatchObject({ code: 'WEB_DOCUMENT_PARTIAL' })
+})
+
 describe('policy helpers', () => {
   it('validates scheme, credentials, and length', () => {
     expect(parseFetchUrl('https://example.com/preflight').pathname).toBe('/preflight')

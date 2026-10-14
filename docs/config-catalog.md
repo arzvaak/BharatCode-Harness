@@ -3938,7 +3938,7 @@ export interface Config {
 ## `@deepseek-ai/dsh-tool-web`
 
 - `inject`: `tools` · `web` · `systemPrompt`
-- `source`: [`packages/web/tool-web/src/index.ts:37`](../packages/web/tool-web/src/index.ts)
+- `source`: [`packages/web/tool-web/src/index.ts:39`](../packages/web/tool-web/src/index.ts)
 
 ```ts config-catalog
 /** Plugin config: which web tools to register, search bounds, per-tool budgets, and the fetch output cap. */
@@ -4103,7 +4103,7 @@ export type ApprovalPolicy = 'ask' | 'never'
 
 ## `@deepseek-ai/dsh-web`
 
-- `source`: [`packages/web/web/src/index.ts:55`](../packages/web/web/src/index.ts)
+- `source`: [`packages/web/web/src/index.ts:57`](../packages/web/web/src/index.ts)
 
 ```ts config-catalog
 /**
@@ -4162,6 +4162,8 @@ export interface Config {
 export interface Config {
   /** Maximum response body size in bytes. */
   maxResponseBytes?: number
+  /** Maximum complete PDF size in bytes. */
+  maxDocumentBytes?: number
   /** Maximum decoded body length in characters. */
   maxBodyChars?: number
   /** Default fetch timeout in milliseconds, within Node's timer range. */

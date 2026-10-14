@@ -7,7 +7,7 @@
  */
 
 import { WebError } from '@deepseek-ai/dsh-web'
-import type { WebFetchBody, WebFetchProvider, WebFetchRequest, WebFetchResult } from '@deepseek-ai/dsh-web'
+import type { WebFetchBody, WebFetchProvider, WebFetchRequest, WebFetchResult, WebDocumentResult } from '@deepseek-ai/dsh-web'
 import { deadline, timeoutOf } from '@deepseek-ai/dsh-timeout'
 import type { Response } from 'undici'
 import { proxyRouteFor } from '@deepseek-ai/dsh-http-proxy'
@@ -19,6 +19,8 @@ import { classifyContentType, decoderForCharset, isSameOrigin, parseCharset, val
 export interface HttpFetchLimits {
   /** Maximum response body size in bytes (read is aborted past this). */
   maxResponseBytes: number
+  /** Maximum complete PDF size; defaults to 32 MiB when omitted. */
+  maxDocumentBytes?: number
   /** Maximum decoded body length in characters (truncated past this). */
   maxBodyChars: number
   /** Default fetch timeout in milliseconds. */
@@ -59,11 +61,18 @@ export class HttpFetchProvider implements WebFetchProvider {
     // One signal stops both the request and body read. The deadline's TimeoutReason later
     // distinguishes this provider's timeout from caller or outer-deadline cancellation.
     using d = deadline(signal, this.limits.timeoutMs, 'WEB_FETCH_TIMEOUT')
-    return await this.followAndRead(request.url, d.signal)
+    return await this.followAndRead(request.url, d.signal, (response, url, signal) => this.readBody(response, url, signal))
+  }
+  /** Retrieve a complete PDF, retaining the text fetcher's network and redirect protections. */
+  async fetchDocument(request: WebFetchRequest, signal?: AbortSignal): Promise<WebDocumentResult> {
+    if (signal?.aborted) throw new WebError('web fetch aborted', 'WEB_ABORTED')
+    using d = deadline(signal, this.limits.timeoutMs, 'WEB_FETCH_TIMEOUT')
+    return await this.followAndRead(request.url, d.signal, (response, url, signal) => this.readDocument(response, url, signal))
   }
 
   /** Follow same-origin redirects up to the hop cap, then read the final response. */
-  private async followAndRead(initialUrl: string, signal: AbortSignal): Promise<WebFetchResult> {
+  private async followAndRead<T>(initialUrl: string, signal: AbortSignal,
+    read: (response: Response, url: URL, signal: AbortSignal) => Promise<T>): Promise<T> {
     let currentUrl = validateFetchUrl(initialUrl)
     let redirectsFollowed = 0
 
@@ -107,7 +116,7 @@ export class HttpFetchProvider implements WebFetchProvider {
           continue
         }
 
-        return await this.readBody(response, currentUrl, signal)
+        return await read(response, currentUrl, signal)
       } finally {
         await request.close()
       }
@@ -117,7 +126,7 @@ export class HttpFetchProvider implements WebFetchProvider {
   private async requestOnce(url: URL, signal: AbortSignal) {
     const headers = {
       'user-agent': this.limits.userAgent,
-      'accept': 'text/html,application/xhtml+xml,text/*;q=0.9,application/json;q=0.8',
+      'accept': 'text/html,application/xhtml+xml,text/*;q=0.9,application/json;q=0.8,application/pdf;q=0.8',
     }
     try {
       // A proxied hop skips public-address resolution and pinning: the proxy performs the origin's
@@ -175,6 +184,27 @@ export class HttpFetchProvider implements WebFetchProvider {
       truncated: truncatedByBytes || truncatedByChars,
     }
   }
+  /** Binary retrieval never returns a truncated PDF or an HTML challenge as a document. */
+  private async readDocument(response: Response, finalUrl: URL, signal: AbortSignal): Promise<WebDocumentResult> {
+    const mime = (response.headers.get('content-type') ?? '').split(';')[0]?.trim().toLowerCase()
+    if (response.status === 206 || response.headers.has('content-range')) {
+      await response.body?.cancel()
+      throw new WebError('PDF response is partial; a complete original is required', 'WEB_DOCUMENT_PARTIAL')
+    }
+    if (response.status < 200 || response.status >= 300) {
+      await response.body?.cancel()
+      throw new WebError(`PDF retrieval returned HTTP ${response.status}`, 'WEB_PROVIDER_ERROR')
+    }
+    if (mime !== 'application/pdf' && mime !== 'application/octet-stream') {
+      await response.body?.cancel()
+      throw new WebError(`PDF retrieval returned unsupported content type ${mime}`, 'WEB_UNSUPPORTED_CONTENT_TYPE')
+    }
+    const { bytes, truncatedByBytes } = await this.readCapped(response, signal, this.limits.maxDocumentBytes ?? 32 * 1024 * 1024)
+    if (truncatedByBytes) throw new WebError('PDF exceeds the document byte limit', 'WEB_FETCH_TOO_LARGE')
+    if (!new TextDecoder('ascii').decode(bytes.subarray(0, 1024)).includes('%PDF-'))
+      throw new WebError('Retrieved document has no PDF signature', 'WEB_UNSUPPORTED_CONTENT_TYPE')
+    return { url: finalUrl.href, statusCode: response.status, contentType: 'application/pdf', bytes }
+  }
 
   /**
    * Read the response stream up to `maxResponseBytes`. A `Content-Length` over
@@ -182,13 +212,14 @@ export class HttpFetchProvider implements WebFetchProvider {
    * past the cap is cut short (`truncatedByBytes`) rather than rejected, so a
    * server that under-reports still yields a bounded usable body.
    */
-  private async readCapped(response: Response, signal: AbortSignal): Promise<{ bytes: Uint8Array; truncatedByBytes: boolean }> {
+  private async readCapped(response: Response, signal: AbortSignal,
+    limit = this.limits.maxResponseBytes): Promise<{ bytes: Uint8Array; truncatedByBytes: boolean }> {
     const declared = response.headers.get('content-length')
     if (declared !== null) {
       const length = Number(declared)
-      if (Number.isFinite(length) && length > this.limits.maxResponseBytes) {
+      if (Number.isFinite(length) && length > limit) {
         await response.body?.cancel()
-        throw new WebError(`response exceeds the maximum of ${this.limits.maxResponseBytes} bytes`, 'WEB_FETCH_TOO_LARGE')
+        throw new WebError(`response exceeds the maximum of ${limit} bytes`, 'WEB_FETCH_TOO_LARGE')
       }
     }
 
@@ -204,7 +235,7 @@ export class HttpFetchProvider implements WebFetchProvider {
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
-        const remaining = this.limits.maxResponseBytes - total
+        const remaining = limit - total
         // Only DROPPED bytes count as truncation: a chunk that exactly fills the
         // remaining capacity keeps all its bytes and we read on to observe EOF,
         // so an exactly-at-cap body is not falsely flagged truncated.

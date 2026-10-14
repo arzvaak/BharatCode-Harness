@@ -64,6 +64,15 @@ export interface WebSearchSource {
 export interface WebFetchRequest {
   readonly url: string
 }
+/** Complete binary PDF response; partial bodies are errors, never usable documents. */
+export interface WebDocumentResult {
+  readonly url: string
+  readonly statusCode: number
+  readonly contentType: 'application/pdf'
+  readonly bytes: Uint8Array
+  /** Range metadata denotes a partial resource and must be rejected by the seam. */
+  readonly contentRange?: string
+}
 
 /**
  * Normalized fetch outcome. A successful network fetch of a non-2xx response is
@@ -117,6 +126,8 @@ export interface WebFetchProvider {
   available(): boolean
   /** Retrieve one URL; honor `signal` for cancellation. */
   fetch(request: WebFetchRequest, signal?: AbortSignal): Promise<WebFetchResult>
+  /** Optional complete PDF retrieval using the same provider URL and network policy. */
+  fetchDocument?(request: WebFetchRequest, signal?: AbortSignal): Promise<WebDocumentResult>
 }
 
 /**

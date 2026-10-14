@@ -200,6 +200,12 @@ async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearch
  * @returns the retrieval outcome; non-2xx responses resolve descriptively.
  */
 async fetch(request: WebFetchRequest, signal?: AbortSignal): Promise<WebFetchResult>
+
+/** Retrieve a complete PDF through the selected fetch provider's binary capability.
+ * @param request - Public document URL.
+ * @param signal - Cancellation forwarded to the provider.
+ * @returns Complete PDF bytes; unsupported capabilities and truncated documents reject. */
+async fetchDocument(request: WebFetchRequest, signal?: AbortSignal): Promise<WebDocumentResult>
 ```
 
 Source: [`packages/web/web/src/index.ts`](../../packages/web/web/src/index.ts)

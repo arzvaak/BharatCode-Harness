@@ -3894,6 +3894,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'request', description: 'the URL plus retrieval options.' }, { name: 'signal', description: 'optional cancellation signal forwarded to the provider.' }],
         returns: 'the retrieval outcome; non-2xx responses resolve descriptively.',
       },
+      {
+        signature: 'async fetchDocument(request: WebFetchRequest, signal?: AbortSignal): Promise<WebDocumentResult>',
+        description: 'Retrieve a complete PDF through the selected fetch provider\'s binary capability.',
+        parameters: [{ name: 'request', description: 'Public document URL.' }, { name: 'signal', description: 'Cancellation forwarded to the provider.' }],
+        returns: 'Complete PDF bytes; unsupported capabilities and truncated documents reject.',
+      },
     ],
   },
   {
@@ -8486,12 +8492,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface WebBootGraph {\n    rev: string;\n    entries: WebBootEntry[];\n    batches: WebBootBatch[];\n}',
   },
   {
+    name: 'WebDocumentResult',
+    declaration: 'export interface WebDocumentResult {\n    readonly url: string;\n    readonly statusCode: number;\n    readonly contentType: \'application/pdf\';\n    readonly bytes: Uint8Array;\n    readonly contentRange?: string;\n}',
+  },
+  {
     name: 'WebFetchBody',
     declaration: 'export type WebFetchBody = {\n    readonly kind: \'html\';\n    readonly content: string;\n} | {\n    readonly kind: \'text\';\n    readonly content: string;\n};',
   },
   {
     name: 'WebFetchProvider',
-    declaration: 'export interface WebFetchProvider {\n    readonly id: string;\n    available(): boolean;\n    fetch(request: WebFetchRequest, signal?: AbortSignal): Promise<WebFetchResult>;\n}',
+    declaration: 'export interface WebFetchProvider {\n    readonly id: string;\n    available(): boolean;\n    fetch(request: WebFetchRequest, signal?: AbortSignal): Promise<WebFetchResult>;\n    fetchDocument?(request: WebFetchRequest, signal?: AbortSignal): Promise<WebDocumentResult>;\n}',
   },
   {
     name: 'WebFetchRequest',

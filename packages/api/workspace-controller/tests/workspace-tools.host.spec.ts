@@ -1,6 +1,6 @@
 /** Agent operations use the same durable evidence registry as the workspace UI. */
 import { afterEach, expect, it, vi } from 'vitest'
-import { mkdtemp, mkdir, writeFile, rm, symlink } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
@@ -18,6 +18,8 @@ import WebRuntime from '@deepseek-ai/dsh-web'
 import { applyWebFetchTool } from '../../../web/tool-web/src/fetch.ts'
 import { discoverProjectSources } from '../src/source-capture.ts'
 import { zipSync, strToU8 } from 'fflate'
+import { paperPdf } from './helpers/paper-pdf.ts'
+import { HttpFetchProvider } from '../../../web/web-fetch-http/src/provider.ts'
 
 const cleanups: (() => Promise<void>)[] = []
 afterEach(async () => {
@@ -235,6 +237,43 @@ it('refuses native retrieval when web_fetch is unavailable in the calling scope'
   expect(result.isError).toBe(true)
   expect(h.ctx.projectKnowledge.search({ projectId: h.project.id, query: '' }).hits).toHaveLength(0)
 })
+
+it('downloads and retains full arXiv paper PDF bytes and captured full text', async () => {
+  const h = await setup()
+  await h.ctx.plugin(WebRuntime)
+  applyWebFetchTool(h.ctx, 1000, 2000)
+  const bytes = paperPdf()
+  h.ctx.web.registerFetchProvider({ id: 'full-paper', available: () => true,
+    fetch: async ({ url }) => ({ url, statusCode: 200, body: { kind: 'text', content: 'Abstract only' }, truncated: false }),
+    fetchDocument: async ({ url }) => ({ url, statusCode: 200, contentType: 'application/pdf', bytes }) })
+  const result = await h.call('research_sources', { action: 'paper', input: { arxivId: '2610.00001v2' } })
+  expect(result.isError, JSON.stringify(result)).toBe(false)
+  expect(result.value).toMatchObject({ url: 'https://arxiv.org/pdf/2610.00001v2', downloaded: true, extracted: true })
+  const receipt = result.value as { path: string; sourceId: Parameters<typeof h.ctx.projectKnowledge.read>[0] }
+  expect(await readFile(join(h.root, receipt.path))).toEqual(bytes)
+  expect(h.ctx.projectKnowledge.read(receipt.sourceId).text).toContain('Full paper evidence beyond its abstract')
+  expect(h.ctx.projectKnowledge.read(receipt.sourceId).text).toContain('https://arxiv.org/pdf/2610.00001v2')
+  expect(h.ctx.projectKnowledge.sourceBank({ projectId: h.project.id }).counts.active).toBe(1)
+  expect((await h.controller.search({ projectId: h.project.id, query: '' })).captureIssues ?? []).toEqual([])
+  expect((await h.call('research_sources', { action: 'paper', input: { arxivId: '2610.00001v2' } })).isError).toBe(false)
+  expect(h.ctx.projectKnowledge.sourceBank({ projectId: h.project.id }).counts.active).toBe(1)
+})
+
+it.runIf(process.env.BC_LIVE_RESEARCH_PDF === '1')('retrieves a real full arXiv paper and retains its original and page text',
+  { timeout: 120000 }, async () => {
+    const h = await setup()
+    await h.ctx.plugin(WebRuntime)
+    applyWebFetchTool(h.ctx, 60000, 200000)
+    h.ctx.web.registerFetchProvider(new HttpFetchProvider({ maxResponseBytes: 5000000, maxDocumentBytes: 32 * 1024 * 1024,
+      maxBodyChars: 100000, timeoutMs: 60000, maxRedirects: 5, userAgent: 'BharatCode-research-verification/1.0' }))
+    const result = await h.call('research_sources', { action: 'paper', input: { arxivId: '1706.03762', ocr: false } })
+    expect(result.isError, JSON.stringify(result)).toBe(false)
+    expect(result.value).toMatchObject({ downloaded: true, extracted: true })
+    const receipt = result.value as { path: string; sourceId: Parameters<typeof h.ctx.projectKnowledge.read>[0]; sha256: string }
+    expect((await readFile(join(h.root, receipt.path))).subarray(0, 5).toString()).toBe('%PDF-')
+    expect(h.ctx.projectKnowledge.read(receipt.sourceId).text).toContain('Attention Is All You Need')
+    expect(h.ctx.projectKnowledge.read(receipt.sourceId).text).toContain('## Page 2')
+  })
 
 it('does not capture omitted or invisible HTML as successful publication evidence', async () => {
   const h = await setup()
