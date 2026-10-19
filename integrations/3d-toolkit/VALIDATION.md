@@ -4,7 +4,7 @@ Source implementation: `9f674221fb3f2b89d820006249a438d8462dd960` (2026-10-19).
 
 Environment: Linux x64, Node 24.19.0, existing Playwright Chromium 1243. Headless rendering uses SwiftShader; it is not a hardware performance benchmark or native Windows qualification.
 
-`npm test` passed **12/12** tests:
+The implementation suite passed **12/12** tests, and the additional real-browser gameplay test passed **1/1**:
 
 - Workspace-owned persistent editable projects, immutable revisions, stale-edit rejection and engine identity.
 - Traversal, symlink and source-size rejection; compiled import boundaries and token-protected preview paths.
@@ -19,6 +19,7 @@ Environment: Linux x64, Node 24.19.0, existing Playwright Chromium 1243. Headles
 - Malformed raw HTTP requests return a client error without crashing the host (review regression initially failed).
 - Both model tool families execute with compiled JSON Schema and return PNG image attachments.
 - Real UI clicks create/edit/preview/render/export and download GLB, source ZIP, offline viewer ZIP and Babylon JSON.
+- A custom Babylon game responds to keyboard input, moves its player and collects an orb in both the live preview and exported offline viewer.
 
 `npm run build` passed. Twelve dependency licence texts are retained, including exact-upstream fallback files for the two React Three packages whose npm distributions omit them. Runtime dependencies and transitive closure are recorded by `package-lock.json`; the release package bundles its dependency closure while consuming the existing host `dsh-tools` peer.
 
