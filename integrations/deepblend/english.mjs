@@ -4,6 +4,12 @@ import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 const COPY=JSON.parse(await readFile(new URL('./english-copy.json',import.meta.url),'utf8'));
 const entries=Object.entries(COPY).sort((a,b)=>b[0].length-a[0].length);
+const CONTRACT_COPY=JSON.parse(await readFile(new URL('./english-contract-copy.json',import.meta.url),'utf8'));
+export function patchContracts(source) {
+  if(!source.includes('export function buildQaView') || !source.includes('export function describeJobForHuman')) throw Error('Expected pinned DeepBlend display contracts');
+  for(const [original,english] of Object.entries(CONTRACT_COPY).sort((a,b)=>b[0].length-a[0].length)) source=source.split(original).join(english);
+  return source;
+}
 export function englishText(value) {
   if(typeof value!=='string') return value;
   for(const [original,english] of entries) value=value.split(original).join(english);
@@ -56,7 +62,9 @@ export function deliveryVideo(projectId,job) {
 export async function adaptEnglish(root) {
   const base=join(root,'node_modules/@deepblend');
   const changes=new Map();
+  const bundleClient=patchClient(await readFile(join(root,'lib/client.js'),'utf8'));
   const load=async relative=>readFile(join(base,relative),'utf8');
+  changes.set('dsh-blender-contracts/lib/ui-api.js',patchContracts(await load('dsh-blender-contracts/lib/ui-api.js')));
   changes.set('dsh-blender-ui/lib/client.js',patchClient(await load('dsh-blender-ui/lib/client.js')));
   let host=await load('dsh-blender-ui/lib/index.js');
   host=host.replaceAll('DeepBlend 工作台未能启动：','DeepBlend workbench could not start: ').replaceAll("'DeepBlend 工作台'","'DeepBlend workbench'");
@@ -102,7 +110,8 @@ Image materials require matching UVs on the affected meshes. Never guess selecto
   // Validate and prepare every edit before writing any files. Recipe input hashes
   // are rebound to translated SceneSpec bytes; geometry and timing are preserved.
   for(const [relative,source] of changes) await writeFile(join(base,relative),source);
-  return {edition:'bharatcode-english',changed:[...changes.keys()]};
+  await writeFile(join(root,'lib/client.js'),bundleClient);
+  return {edition:'bharatcode-english',changed:['lib/client.js (bundle entry)',...changes.keys()]};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
   if(!process.argv[2]) throw Error('Usage: node english.mjs /path/to/verified/adapted/package');
