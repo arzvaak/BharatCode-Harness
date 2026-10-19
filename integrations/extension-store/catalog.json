@@ -438,7 +438,7 @@
       "version": "0.1.0",
       "packageName": "@bharatcode/3d-toolkit",
       "source": "https://github.com/arzvaak/BharatCode-Harness",
-      "sourceCommit": "35089609afdc367699f24faf97e31490d6d0098f",
+      "sourceCommit": "9f674221fb3f2b89d820006249a438d8462dd960",
       "license": "MIT",
       "scope": "profile",
       "platforms": [
