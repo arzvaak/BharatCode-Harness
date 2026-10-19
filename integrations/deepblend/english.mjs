@@ -78,7 +78,7 @@ export async function adaptEnglish(root) {
     const relative=`dsh-blender-preset/presets/${name}/preset.yml`;
     let source=await load(relative);
     if(!/^description: /m.test(source)) throw Error(`Expected preset description: ${name}`);
-    source=source.replace(/^description: .*$/m,`description: ${description}`);
+    source=source.replace(/^description: .*$/m,`description: ${description}`).replace(/^name: .*$/m,`name: ${name==='deepblend'?'DeepBlend Studio':'DeepBlend Developer'}`);
     changes.set(relative,source);
   }
   const persona='dsh-blender-preset/presets/deepblend/agent.cordis.yml';

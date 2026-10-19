@@ -47,7 +47,8 @@ async function request(action) {
   return value;
 }
 function initialWorkspace(workspaces, context) {
-  const current = context?.get?.("sessions")?.list?.getSnapshot?.().current;
+  const sessions = context?.get?.("sessions")?.list?.getSnapshot?.();
+  const current = Object.values(sessions?.byId ?? {}).find((item) => (item.retainedBy?.mainView ?? 0) > 0)?.id;
   const hosts = context?.get?.("workspaces")?.list?.getSnapshot?.().items ?? [];
   const active = hosts.find((item) => item.sessionIds?.includes(current));
   const id = active?.workspaceId ?? active?.id;
@@ -56,7 +57,7 @@ function initialWorkspace(workspaces, context) {
 function StudioPage({ context } = {}) {
   const [state, setState] = (0, import_react.useState)({ projects: [], workspaces: [] }), [workspace, setWorkspace] = (0, import_react.useState)(""), [engine, setEngine] = (0, import_react.useState)("three"), [title, setTitle] = (0, import_react.useState)("Untitled scene");
   const [selected, setSelected] = (0, import_react.useState)(null), [source, setSource] = (0, import_react.useState)(""), [preview, setPreview] = (0, import_react.useState)(""), [busy, setBusy] = (0, import_react.useState)(false), [error, setError] = (0, import_react.useState)(""), [notice, setNotice] = (0, import_react.useState)(""), [format, setFormat] = (0, import_react.useState)("glb"), [download, setDownload] = (0, import_react.useState)(null), [render, setRender] = (0, import_react.useState)("");
-  const viewport = (0, import_react.useRef)(null);
+  const viewport = (0, import_react.useRef)(null), workspaceChosen = (0, import_react.useRef)(false);
   const [ready, setReady] = (0, import_react.useState)(false);
   const [width, setWidth] = (0, import_react.useState)(1280), [height, setHeight] = (0, import_react.useState)(720), [time, setTime] = (0, import_react.useState)(0), [playing, setPlaying] = (0, import_react.useState)(true);
   const dirty = Boolean(selected && source !== selected.source);
@@ -113,6 +114,15 @@ function StudioPage({ context } = {}) {
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
   }, [dirty]);
+  (0, import_react.useEffect)(() => {
+    const sync = () => {
+      if (!workspaceChosen.current && state.workspaces.length) setWorkspace(initialWorkspace(state.workspaces, context));
+    };
+    const sources = ["sessions", "workspaces"].map((name) => context?.get?.(name)?.list);
+    const off = sources.map((source2) => source2?.subscribe?.(sync));
+    sync();
+    return () => off.forEach((dispose) => dispose?.());
+  }, [context, state.workspaces]);
   const run = async (action) => {
     setBusy(true);
     setError("");
@@ -127,6 +137,7 @@ function StudioPage({ context } = {}) {
   };
   const args = () => ({ workspace: selected.workspace, engine: selected.engine, projectId: selected.id });
   const open = async (project) => {
+    workspaceChosen.current = true;
     const loaded = await request({ action: "get", workspace: project.workspace, engine: project.engine, projectId: project.id });
     setSelected({ ...loaded, workspace: project.workspace });
     setSource(loaded.source);
@@ -149,6 +160,7 @@ function StudioPage({ context } = {}) {
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
         "Workspace",
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { "aria-label": "Workspace", value: workspace, disabled: busy || dirty, onChange: (event) => {
+          workspaceChosen.current = true;
           setWorkspace(event.target.value);
           setSelected(null);
           setPreview("");

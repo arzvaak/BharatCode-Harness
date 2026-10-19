@@ -5,7 +5,8 @@ async function request(action) {
   const value=await response.json(); if(!response.ok) throw Error(value.error ?? '3D Studio is unavailable'); return value;
 }
 export function initialWorkspace(workspaces,context) {
-  const current=context?.get?.('sessions')?.list?.getSnapshot?.().current;
+  const sessions=context?.get?.('sessions')?.list?.getSnapshot?.();
+  const current=Object.values(sessions?.byId??{}).find(item=>(item.retainedBy?.mainView??0)>0)?.id;
   const hosts=context?.get?.('workspaces')?.list?.getSnapshot?.().items??[];
   const active=hosts.find(item=>item.sessionIds?.includes(current));
   const id=active?.workspaceId??active?.id;
@@ -14,7 +15,7 @@ export function initialWorkspace(workspaces,context) {
 export function StudioPage({context}={}) {
   const [state,setState]=useState({projects:[],workspaces:[]}),[workspace,setWorkspace]=useState(''),[engine,setEngine]=useState('three'),[title,setTitle]=useState('Untitled scene');
   const [selected,setSelected]=useState(null),[source,setSource]=useState(''),[preview,setPreview]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[format,setFormat]=useState('glb'),[download,setDownload]=useState(null),[render,setRender]=useState('');
-  const viewport=useRef(null);
+  const viewport=useRef(null),workspaceChosen=useRef(false);
   const [ready,setReady]=useState(false);
   const [width,setWidth]=useState(1280),[height,setHeight]=useState(720),[time,setTime]=useState(0),[playing,setPlaying]=useState(true);
   const dirty=Boolean(selected&&source!==selected.source);
@@ -25,16 +26,18 @@ export function StudioPage({context}={}) {
   useEffect(()=>{let active=true; const load=()=>request().then(value=>{if(active){setState(value);setWorkspace(current=>current||initialWorkspace(value.workspaces,context));}}).catch(error=>{if(active)setError(error.message);});load();const timer=setInterval(load,4000);return()=>{active=false;clearInterval(timer);};},[]);
   useEffect(()=>{setReady(false);const receive=event=>{if(event.source===viewport.current?.contentWindow&&event.data?.type==='bc3d-ready'){setReady(true);}else if(event.source===viewport.current?.contentWindow&&event.data?.type==='bc3d-state'&&Number.isFinite(event.data.time)&&event.data.time>=0&&event.data.time<=86400){setPlaying(event.data.playing===true);setTime(event.data.time);}};window.addEventListener('message',receive);return()=>window.removeEventListener('message',receive);},[preview]);
   useEffect(()=>{if(!dirty)return;const guard=event=>{event.preventDefault();event.returnValue='';};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);},[dirty]);
+  useEffect(()=>{const sync=()=>{if(!workspaceChosen.current&&state.workspaces.length)setWorkspace(initialWorkspace(state.workspaces,context));};const sources=['sessions','workspaces'].map(name=>context?.get?.(name)?.list);const off=sources.map(source=>source?.subscribe?.(sync));sync();return()=>off.forEach(dispose=>dispose?.());},[context,state.workspaces]);
   const run=async action=>{setBusy(true);setError('');setNotice('');try{return await action();}catch(error){setError(error.message);}finally{setBusy(false);}};
   const args=()=>({workspace:selected.workspace,engine:selected.engine,projectId:selected.id});
   const open=async project=>{
+    workspaceChosen.current=true;
     const loaded=await request({action:'get',workspace:project.workspace,engine:project.engine,projectId:project.id});
     setSelected({...loaded,workspace:project.workspace});setSource(loaded.source);setPreview('');setPlaying(true);setTime(0);setRender('');setDownload(null);setFormat('glb');
     const result=await request({action:'preview',workspace:project.workspace,engine:project.engine,projectId:project.id});startPreview(result.url);return loaded;
   };
   return <section className="bc3d">
     <header><h2>3D Studio</h2><p>Create a scene, explore it, and take the source with you.</p></header>
-    <div className="bc3d-create"><label>Workspace<select aria-label="Workspace" value={workspace} disabled={busy||dirty} onChange={event=>{setWorkspace(event.target.value);setSelected(null);setPreview('');setRender('');setDownload(null);}}>{state.workspaces.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Engine<select aria-label="Engine" value={engine} onChange={event=>setEngine(event.target.value)}><option value="three">Three.js</option><option value="babylon">Babylon.js</option></select></label><label>Scene name<input value={title} maxLength={160} onChange={event=>setTitle(event.target.value)}/></label><button disabled={busy||dirty||!workspace||!title.trim()} onClick={()=>run(async()=>{const project=await request({action:'create',workspace,engine,title});await refresh();await open({...project,workspace});setNotice('Scene created. Drag in the viewport to orbit.');})}>Create scene</button></div>
+    <div className="bc3d-create"><label>Workspace<select aria-label="Workspace" value={workspace} disabled={busy||dirty} onChange={event=>{workspaceChosen.current=true;setWorkspace(event.target.value);setSelected(null);setPreview('');setRender('');setDownload(null);}}>{state.workspaces.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Engine<select aria-label="Engine" value={engine} onChange={event=>setEngine(event.target.value)}><option value="three">Three.js</option><option value="babylon">Babylon.js</option></select></label><label>Scene name<input value={title} maxLength={160} onChange={event=>setTitle(event.target.value)}/></label><button disabled={busy||dirty||!workspace||!title.trim()} onClick={()=>run(async()=>{const project=await request({action:'create',workspace,engine,title});await refresh();await open({...project,workspace});setNotice('Scene created. Drag in the viewport to orbit.');})}>Create scene</button></div>
     {state.workspaces.length===0&&<p>Open a workspace in BharatCode to save your 3D projects.</p>}
     <div role="alert">{error}</div><p className="bc3d-notice" role="status">{notice}</p>
     <div className="bc3d-body"><aside aria-label="Saved scenes"><h3>Saved scenes</h3>{state.projects.filter(project=>project.workspace===workspace).length===0&&<p>Your scenes will appear here.</p>}{state.projects.filter(project=>project.workspace===workspace).map(project=><button key={project.id} disabled={busy||dirty} aria-pressed={project.id===selected?.id} onClick={()=>run(()=>open(project))}><strong>{project.title}</strong><span>{project.engine==='three'?'Three.js':'Babylon.js'} · Revision {project.revision}</span></button>)}</aside>

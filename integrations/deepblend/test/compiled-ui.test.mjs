@@ -45,6 +45,7 @@ test('English adaptation preserves recipe geometry and timing and rebinds exact 
  for(const file of files){const destination=join(root,base,file);await mkdir((await import('node:path')).dirname(destination),{recursive:true});await copyFile(join(process.env.BC_DEEPBLEND_PACKAGE,base,file),destination);}
  const originals=await Promise.all(names.map(name=>readFile(join(root,base,`dsh-blender-host/recipes/${name}/scene-spec.json`),'utf8').then(JSON.parse)));
  await adaptEnglish(root);
+ for(const preset of ['deepblend','deepblend-dev']) {const text=await readFile(join(root,base,`dsh-blender-preset/presets/${preset}/preset.yml`),'utf8');assert.ok(!/[\u3400-\u9fff]/u.test(text.split('\n').filter(line=>!line.trim().startsWith('#')).join('\n')),'preset name and description are English');}
  for(const [index,name] of names.entries()) {
   const prefix=join(root,base,`dsh-blender-host/recipes/${name}`);
   const bytes=await readFile(join(prefix,'scene-spec.json'));

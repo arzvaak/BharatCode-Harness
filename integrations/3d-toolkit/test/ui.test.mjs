@@ -13,7 +13,7 @@ test('native studio controls create, edit, preview, render and download both eng
   const studio=new Studio({directory});
   await studio.projects.create('other-workspace','three','Other workspace scene');
   const api=apiHandler({workspaceRegistry:{list:()=>[{id:'other-workspace',name:'Other workspace'},{id:'ui-workspace',name:'Test workspace'}]}},studio);
-  const result=await build({stdin:{contents:"import React from 'react';import{createRoot}from'react-dom/client';import{StudioPage,apply}from'./src/client.jsx';apply({effect(fn){fn()},slots:{inject(){}}});createRoot(document.getElementById('root')).render(React.createElement(StudioPage,{context:{get(name){return name==='sessions'?{list:{getSnapshot:()=>({current:'active-session'})}}:{list:{getSnapshot:()=>({items:[{workspaceId:'ui-workspace',sessionIds:['active-session']}]})}}}}}));",resolveDir:resolve(import.meta.dirname,'..'),loader:'jsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic',logLevel:'silent'});
+  const result=await build({stdin:{contents:"import React from 'react';import{createRoot}from'react-dom/client';import{StudioPage,apply}from'./src/client.jsx';apply({effect(fn){fn()},slots:{inject(){}}});createRoot(document.getElementById('root')).render(React.createElement(StudioPage,{context:{get(name){return name==='sessions'?{list:{getSnapshot:()=>({ids:['active-session'],byId:{'active-session':{id:'active-session',retainedBy:{mainView:1}}},phase:'ready'})}}:{list:{getSnapshot:()=>({items:[{workspaceId:'ui-workspace',sessionIds:['active-session']}]})}}}}}));",resolveDir:resolve(import.meta.dirname,'..'),loader:'jsx'},bundle:true,write:false,format:'iife',platform:'browser',jsx:'automatic',logLevel:'silent'});
   const server=createServer((req,res)=>{if(req.url.startsWith('/api/bc-3d'))return void api(req,res);if(req.url==='/ui.js'){res.writeHead(200,{'Content-Type':'text/javascript'});res.end(result.outputFiles[0].contents);return;}res.writeHead(200,{'Content-Type':'text/html'});res.end('<html><body><div id="root"></div><script src="/ui.js"></script></body></html>');});
   await new Promise(done=>server.listen(0,'127.0.0.1',done));
   const browser=await chromium.launch({executablePath:await browserExecutable(process.env.BC_3D_CHROMIUM),headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -21,7 +21,8 @@ test('native studio controls create, edit, preview, render and download both eng
     const page=await browser.newPage({viewport:{width:1280,height:960}});
     page.setDefaultTimeout(45000);
     await page.goto(`http://127.0.0.1:${server.address().port}`);
-    await page.waitForFunction(()=>document.querySelector('select[aria-label=Workspace]')?.value==='ui-workspace');
+    await page.waitForFunction(()=>document.querySelector('select[aria-label=Workspace]')?.options.length===2,{},{timeout:3000});
+    assert.equal(await page.getByLabel('Workspace',{exact:true}).inputValue(),'ui-workspace');
     assert.equal(await page.getByRole('button',{name:/Other workspace scene/}).count(),0);
     for(const engine of ['three','babylon']) {
       await page.getByLabel('Engine',{exact:true}).selectOption(engine);
