@@ -4,7 +4,7 @@ Source implementation: `9f674221fb3f2b89d820006249a438d8462dd960` (2026-10-19).
 
 Environment: Linux x64, Node 24.19.0, existing Playwright Chromium 1243. Headless rendering uses SwiftShader; it is not a hardware performance benchmark or native Windows qualification.
 
-The implementation suite passed **12/12** tests, and the additional real-browser gameplay test passed **1/1**:
+The combined implementation and real-browser gameplay suite passed **13/13** tests:
 
 - Workspace-owned persistent editable projects, immutable revisions, stale-edit rejection and engine identity.
 - Traversal, symlink and source-size rejection; compiled import boundaries and token-protected preview paths.
