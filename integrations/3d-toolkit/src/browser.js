@@ -27,7 +27,7 @@ async function initialize() {
   ${engine === 'babylon' ? 'await value.scene.whenReadyAsync();' : ''}
   const resize = () => {
     if (innerWidth < 1 || innerHeight < 1) return;
-    ${engine === 'three' ? `value.renderer.setSize(innerWidth, innerHeight, false);
+    ${engine === 'three' ? `value.renderer.setSize(innerWidth, innerHeight);
     if (value.camera.isPerspectiveCamera) { value.camera.aspect = innerWidth / innerHeight; value.camera.updateProjectionMatrix(); }` : 'value.engine.setSize(innerWidth, innerHeight);'}
   };
   resize();

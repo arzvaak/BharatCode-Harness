@@ -22,9 +22,11 @@ for(const engine of ['three','babylon']) test(`${engine} preview survives a zero
     assert.deepEqual(await frame.evaluate(()=>[innerWidth,innerHeight]),[0,0]);
     await page.locator('iframe').evaluate(element=>{element.style.width='600px';element.style.height='360px';});
     await frame.waitForFunction(()=>window.BC3D.ready&&document.querySelector('canvas').width===600&&document.querySelector('canvas').height===360,{},{timeout:7000});
+    assert.deepEqual(await frame.evaluate(()=>{const {width,height}=document.querySelector('canvas').getBoundingClientRect();return [width,height];}),[600,360]);
     assert.equal(await frame.evaluate(()=>window.BC3D.error),null);
     assert.ok((await frame.evaluate(()=>window.BC3D.metrics.meshes))>0);
-    await page.locator('iframe').evaluate(element=>{element.style.width='800px';element.style.height='480px';});
-    await frame.waitForFunction(()=>document.querySelector('canvas').width===800&&document.querySelector('canvas').height===480,{},{timeout:3000});
+    await page.locator('iframe').evaluate(element=>{element.style.width='800px';element.style.height='400px';});
+    await frame.waitForFunction(()=>document.querySelector('canvas').width===800&&document.querySelector('canvas').height===400,{},{timeout:3000});
+    assert.deepEqual(await frame.evaluate(()=>{const {width,height}=document.querySelector('canvas').getBoundingClientRect();return [width,height];}),[800,400]);
   } finally {await browser.close();server.closeAllConnections();await new Promise(done=>server.close(done));await studio.close();}
 });
