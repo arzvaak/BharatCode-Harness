@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "qualification": {
+    "status": "passed_with_scope_limits",
+    "platform": "linux-x64",
+    "qualifiedOn": "2026-10-19",
+    "sourceCommit": "9f674221fb3f2b89d820006249a438d8462dd960",
+    "nodeVersion": "v24.19.0",
+    "dshVersion": "0.2.0-rc.2",
+    "liveModelCall": "partial Three/Babylon create-edit-preview-render verified; model-driven exports unverified",
+    "electronProfileReloadVerified": false,
+    "publicCatalogPublished": false
+  },
+  "artifact": {
+    "package": "@bharatcode/3d-toolkit@0.1.0",
+    "path": "$DEEPBLEND_RUNTIME/bharatcode-3d-toolkit-0.1.0-linux-x64.tgz",
+    "sha256": "4c2caf17e43d7664e7406e9fcb0a9c87cccd85f63ce2714141555a0f025f96a4",
+    "bytes": 41592845,
+    "expandedTarBytes": 171980800,
+    "maxExpandedTarBytes": 268435456,
+    "bundledPackageManifestCount": 87,
+    "wasmFileCount": 20,
+    "esbuildBinary": "package/node_modules/@esbuild/linux-x64/bin/esbuild",
+    "sourceCommit": "9f674221fb3f2b89d820006249a438d8462dd960",
+    "peerDependencies": {
+      "@deepseek-ai/dsh-tools": "0.2.0-rc.2"
+    }
+  },
+  "artifactNativeSmoke": {
+    "hostPackageLoadedFromFinalArchive": true,
+    "cordisToolRuntime": "real @deepseek-ai/dsh-tools runtime",
+    "injectedHostAdapters": [
+      "profileContext",
+      "workspaceRegistry",
+      "attachments",
+      "webServer"
+    ],
+    "registeredToolCount": 14,
+    "three": {
+      "created": true,
+      "editedRevision": 2,
+      "previewSucceeded": true,
+      "renderPngBytes": 23826,
+      "imageAttachmentBytes": 23826,
+      "glbBytes": 142932,
+      "offlineViewerZipBytes": 314320,
+      "sourceZipBytes": 1396
+    },
+    "babylon": {
+      "renderPngBytes": 15180,
+      "nativeSceneJsonBytes": 426857,
+      "nativeSceneMeshCount": 2
+    },
+    "lifecycleRouteDisposed": true,
+    "resultPath": "$DEEPBLEND_RUNTIME/native-workflow/final-artifact-receipt.json",
+    "modelWorkflowReceipt": "integrations/3d-toolkit/model-workflow-receipt.json"
+  },
+  "profileInstall": {
+    "profile": "desktop",
+    "method": "shipped dsh plugin add command",
+    "toolkitArchiveSha256": "4c2caf17e43d7664e7406e9fcb0a9c87cccd85f63ce2714141555a0f025f96a4",
+    "deepblendArchiveSha256": "cf0d50e66dd4a77e5ee8ed18eb5edfcd910ea94a30781b9485b5dc738a76d839",
+    "profileFiles": {
+      "packageJsonSha256": "291da7fbe628e4c68aa981dde6c8bb113456dc0a086241ea8d2d0258d37372cb",
+      "pnpmLockSha256": "24209e235a8ac8aad6d4083a85601ba67a09d243be48845d6228a327d7ba1039",
+      "cordisPatchSha256": "556de1305d57b3d7c03020f162ac153a1b134230a50ee1e458d62f9d179dc005"
+    },
+    "runtimePaths": {
+      "blender": "$DEEPBLEND_RUNTIME/blender-5.2.1-linux-x64/blender",
+      "ffmpeg": "$DEEPBLEND_RUNTIME/ffmpeg-qualification/ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-9.0/bin/ffmpeg",
+      "ffprobe": "$DEEPBLEND_RUNTIME/ffmpeg-qualification/ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-9.0/bin/ffprobe"
+    },
+    "backup": "$DEEPBLEND_RUNTIME/profile-backup-before-deepblend",
+    "bundleListIncludesBoth": true,
+    "patchYamlParsed": true,
+    "electronProfileReloadVerified": false
+  },
+  "implementationTests": {
+    "toolkit": "13/13 passed",
+    "extensionStore": "70/70 passed",
+    "deepblendAdapterAndBlenderProbe": "2/2 passed"
+  },
+  "publication": {
+    "status": "not_published",
+    "reason": "The signed public-catalog publisher requires a full app-release receipt and packed-core inventory; this optional extension install does not create them."
+  }
+}

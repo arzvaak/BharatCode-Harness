@@ -5,8 +5,10 @@
     "platform": "linux-x86_64",
     "qualifiedOn": "2026-10-19",
     "workflow": "native Cordis runtime with agent-scoped DeepBlend tools",
-    "profileInstallPerformed": false,
-    "published": false
+    "profileInstallPerformed": true,
+    "published": false,
+    "liveProfileReloadVerified": false,
+    "liveModelCall": "not attempted for DeepBlend; separate Three/Babylon dispatch evidence is in the toolkit receipt"
   },
   "source": {
     "repositoryRevision": "d6e3e05bc80301e792804eb4db6126d9d81618f5",
@@ -96,7 +98,9 @@
       "blender_visual_autofix",
       "blender_visual_review"
     ],
-    "genericDshToolsExercised": ["job_list"],
+    "genericDshToolsExercised": [
+      "job_list"
+    ],
     "scopeIsolation": "An out-of-scope agent invocation was rejected as an unknown tool"
   },
   "runtime": {
@@ -171,9 +175,23 @@
       "semantics": "Editable scene checkpoint at revision r0002; DeepBlend blender_export in this workflow encodes render frames to MP4 and has no GLB/FBX format selector"
     },
     "capabilitiesReported": {
-      "importFormats": ["fbx", "gltf"],
-      "exportFormats": ["fbx", "gltf"],
-      "unavailableFormats": ["abc", "dae", "obj", "ply", "stl", "usd", "x3d"],
+      "importFormats": [
+        "fbx",
+        "gltf"
+      ],
+      "exportFormats": [
+        "fbx",
+        "gltf"
+      ],
+      "unavailableFormats": [
+        "abc",
+        "dae",
+        "obj",
+        "ply",
+        "stl",
+        "usd",
+        "x3d"
+      ],
       "qualifiedStandaloneSceneExports": []
     },
     "cancellation": {
@@ -194,23 +212,122 @@
     "passed": 17,
     "failed": 0,
     "checks": [
-      {"id": 1, "status": "pass", "check": "Upstream source archive SHA-256 verified"},
-      {"id": 2, "status": "pass", "check": "Exact 18-tool native catalog matched"},
-      {"id": 3, "status": "pass", "check": "Blender Cycles smoke render succeeded"},
-      {"id": 4, "status": "pass", "check": "Recipe parameter edit committed as a new scene revision"},
-      {"id": 5, "status": "pass", "check": "Scene validation returned zero errors"},
-      {"id": 6, "status": "pass", "check": "Preview PNG signature and dimensions verified"},
-      {"id": 7, "status": "pass", "check": "Final-render PNG signature and dimensions verified"},
-      {"id": 8, "status": "pass", "check": "MP4 signature and ffprobe codec/frame metadata verified"},
-      {"id": 9, "status": "pass", "check": "Delivery manifest complete and verified"},
-      {"id": 10, "status": "pass", "check": "Editable BLEND checkpoint signature verified"},
-      {"id": 11, "status": "pass", "check": "Pinned FFmpeg runtime, ffprobe, and libx264 availability verified"},
-      {"id": 12, "status": "pass", "check": "Canceled Blender subprocess confirmed gone"},
-      {"id": 13, "status": "pass", "check": "Generic DSH job confirmed killed after cancellation"},
-      {"id": 14, "status": "pass", "check": "Agent scope, agent lifecycle, and Cordis root cleanup verified"},
-      {"id": 15, "status": "pass", "check": "Preview artifact SHA-256 verified"},
-      {"id": 16, "status": "pass", "check": "Final PNG artifact SHA-256 verified"},
-      {"id": 17, "status": "pass", "check": "MP4 artifact SHA-256 verified"}
+      {
+        "id": 1,
+        "status": "pass",
+        "check": "Upstream source archive SHA-256 verified"
+      },
+      {
+        "id": 2,
+        "status": "pass",
+        "check": "Exact 18-tool native catalog matched"
+      },
+      {
+        "id": 3,
+        "status": "pass",
+        "check": "Blender Cycles smoke render succeeded"
+      },
+      {
+        "id": 4,
+        "status": "pass",
+        "check": "Recipe parameter edit committed as a new scene revision"
+      },
+      {
+        "id": 5,
+        "status": "pass",
+        "check": "Scene validation returned zero errors"
+      },
+      {
+        "id": 6,
+        "status": "pass",
+        "check": "Preview PNG signature and dimensions verified"
+      },
+      {
+        "id": 7,
+        "status": "pass",
+        "check": "Final-render PNG signature and dimensions verified"
+      },
+      {
+        "id": 8,
+        "status": "pass",
+        "check": "MP4 signature and ffprobe codec/frame metadata verified"
+      },
+      {
+        "id": 9,
+        "status": "pass",
+        "check": "Delivery manifest complete and verified"
+      },
+      {
+        "id": 10,
+        "status": "pass",
+        "check": "Editable BLEND checkpoint signature verified"
+      },
+      {
+        "id": 11,
+        "status": "pass",
+        "check": "Pinned FFmpeg runtime, ffprobe, and libx264 availability verified"
+      },
+      {
+        "id": 12,
+        "status": "pass",
+        "check": "Canceled Blender subprocess confirmed gone"
+      },
+      {
+        "id": 13,
+        "status": "pass",
+        "check": "Generic DSH job confirmed killed after cancellation"
+      },
+      {
+        "id": 14,
+        "status": "pass",
+        "check": "Agent scope, agent lifecycle, and Cordis root cleanup verified"
+      },
+      {
+        "id": 15,
+        "status": "pass",
+        "check": "Preview artifact SHA-256 verified"
+      },
+      {
+        "id": 16,
+        "status": "pass",
+        "check": "Final PNG artifact SHA-256 verified"
+      },
+      {
+        "id": 17,
+        "status": "pass",
+        "check": "MP4 artifact SHA-256 verified"
+      }
     ]
+  },
+  "profileInstall": {
+    "profile": "desktop",
+    "method": "shipped dsh plugin add command",
+    "toolkit": {
+      "name": "@bharatcode/3d-toolkit",
+      "version": "0.1.0",
+      "archiveSha256": "4c2caf17e43d7664e7406e9fcb0a9c87cccd85f63ce2714141555a0f025f96a4"
+    },
+    "deepblend": {
+      "name": "@deepblend/dsh-blender-bundle",
+      "version": "0.15.0",
+      "archiveSha256": "cf0d50e66dd4a77e5ee8ed18eb5edfcd910ea94a30781b9485b5dc738a76d839"
+    },
+    "profileFiles": {
+      "packageJsonSha256": "291da7fbe628e4c68aa981dde6c8bb113456dc0a086241ea8d2d0258d37372cb",
+      "pnpmLockSha256": "24209e235a8ac8aad6d4083a85601ba67a09d243be48845d6228a327d7ba1039",
+      "cordisPatchSha256": "556de1305d57b3d7c03020f162ac153a1b134230a50ee1e458d62f9d179dc005"
+    },
+    "runtimePaths": {
+      "blender": "$DEEPBLEND_RUNTIME/blender-5.2.1-linux-x64/blender",
+      "ffmpeg": "$DEEPBLEND_RUNTIME/ffmpeg-qualification/ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-9.0/bin/ffmpeg",
+      "ffprobe": "$DEEPBLEND_RUNTIME/ffmpeg-qualification/ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-9.0/bin/ffprobe"
+    },
+    "backup": "$DEEPBLEND_RUNTIME/profile-backup-before-deepblend",
+    "activation": {
+      "bundleListIncludesBoth": true,
+      "patchYamlParsed": true,
+      "appReloaded": false,
+      "reason": "Desktop profile is Electron-managed; the running app was left untouched to preserve active chats."
+    }
   }
 }

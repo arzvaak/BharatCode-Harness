@@ -1,6 +1,6 @@
 # DeepBlend qualification: Linux x86-64
 
-Status: **passed for the exercised native workflow**, with the scope limits below. This qualification used DeepBlend 0.15.0 against the Cordis host and DeepSeek toolkit 0.2.0-rc.2. It did not install anything into a user profile or publish the bundle.
+Status: **passed for the exercised native workflow**, with the scope limits below. The native workflow qualification used DeepBlend 0.15.0 against the Cordis host and DeepSeek toolkit 0.2.0-rc.2. A separate release step later installed the exact adapted artifact into the current user's desktop profile; the already-running Electron window was not restarted, so its live bundle reload remains unverified.
 
 ## Source and adapted bundle
 
@@ -33,6 +33,14 @@ The editable scene checkpoint is a `.blend` file saved with project creation (`s
 The delivery used a pinned user-owned FFmpeg runtime under `$DEEPBLEND_RUNTIME/ffmpeg-qualification/`. It came from BtbN FFmpeg Builds tag `autobuild-2026-10-18-13-01`, asset `ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-9.0.tar.xz`, SHA-256 `d2cc2d5446f14ff32b411e4fee488005b472023fb6554bed0ea80b7110f0b3a6`. The binaries are at `ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-9.0/bin/ffmpeg` and `.../bin/ffprobe`; their SHA-256 values are `03e218b978410716319c1b712c7973384de6be63b80f5ad4a8a60c9e8d95f4a0` and `c2357e52b4d68261674078e1f7fbeef63c03cc2cd5ac085061c030ba74c9e4e4`, respectively. The build reports `n9.0.2-28-g669f5ab083-20261018`, includes libx264, and is GPLv3 (GPL version 3 enabled). The provenance and license record is kept beside the runtime; the FFmpeg runtime is separate from the adapted DeepBlend archive.
 
 A bounded 48-frame render was then canceled. The managed Blender process was gone, the corresponding DSH job was killed, and the scoped registry, agent lifecycle, and Cordis root were disposed. No multi-frame render was left running.
+
+## Desktop profile installation
+
+The exact adapted artifact above (SHA-256 `cf0d50e66dd4a77e5ee8ed18eb5edfcd910ea94a30781b9485b5dc738a76d839`) was installed with the shipped `dsh plugin --profile desktop add` flow. The profile now has both `@deepblend/dsh-blender-bundle` 0.15.0 and `@bharatcode/3d-toolkit` 0.1.0 in its direct dependencies and bundle list. The final toolkit archive SHA-256 is `4c2caf17e43d7664e7406e9fcb0a9c87cccd85f63ce2714141555a0f025f96a4`.
+
+The desktop profile patch explicitly selects Blender 5.2.1 at `$DEEPBLEND_RUNTIME/blender-5.2.1-linux-x64/blender` and FFmpeg/ffprobe at `$DEEPBLEND_RUNTIME/ffmpeg-qualification/ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-9.0/bin/{ffmpeg,ffprobe}`. The runtime files and profile configuration are user-owned; existing conversations and project data were not changed. The profile package and lock files were backed up before the DeepBlend installation. The user interface process was already running and was left untouched; therefore package installation and profile configuration are verified, while a fresh app load is not. No model-selected DeepBlend call was attempted; the separate Three/Babylon model dispatch is recorded in the toolkit qualification report.
+
+The installation evidence uses the app's `desktop` profile. Its final package manifest, lockfile, and patch hashes are retained in the local release evidence directory; no provider secrets or credentials are included in the report.
 
 ## Passed checks
 
