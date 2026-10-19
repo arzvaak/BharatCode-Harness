@@ -435,10 +435,10 @@
       "id": "3d-toolkit",
       "name": "Three.js & Babylon.js Studio",
       "kind": "native",
-      "version": "0.1.0",
+      "version": "0.1.3",
       "packageName": "@bharatcode/3d-toolkit",
       "source": "https://github.com/arzvaak/BharatCode-Harness",
-      "sourceCommit": "9f674221fb3f2b89d820006249a438d8462dd960",
+      "sourceCommit": "ece03b374a34141f9c8486916c0a3769cc4b61b3",
       "license": "MIT",
       "scope": "profile",
       "platforms": [
