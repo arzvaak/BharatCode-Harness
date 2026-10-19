@@ -1,5 +1,7 @@
 # BharatCode 3D Studio
 
+Version 0.1.1 local Linux artifact and actual in-app qualification are recorded in [`QUALIFICATION-0.1.1-linux-x64.md`](./QUALIFICATION-0.1.1-linux-x64.md). The earlier [`QUALIFICATION-linux-x64.md`](./QUALIFICATION-linux-x64.md) is the preserved 0.1.0 record.
+
 Optional native Three.js and Babylon.js toolkit. Open **3D Studio** in the sidebar or use the `three_*` and `babylon_*` tools from a workspace chat.
 
 ## Create, inspect, render, export
@@ -18,7 +20,7 @@ Available imports: `three` and addons, `react`, `react-dom`, `@react-three/fiber
 
 Node 24+ and an installed Chromium are required. The plugin discovers existing Playwright Chromium or common Linux Chrome executables, or accepts an explicit `browserPath` in plugin configuration. It never downloads a browser at startup. Rendering uses headless Chromium with SwiftShader for portable qualification; interactive previews use the user's browser GPU. Render size is 64–4096 pixels per side, time 0–86400 seconds, deadline 45 seconds. Source limit is 1 MiB. Compiled preview limit is 32 MiB and model export limit 64 MiB.
 
-Projects live beneath the profile's `bc-3d-toolkit/projects`, segregated by registered workspace. Each edit creates an immutable revision. Stale edits, traversal and symlink directories are rejected. Source runs on a separate token-protected loopback origin, never in Node. Only the bundled library imports are accepted. Preview CSP blocks outbound network requests; headless rendering independently intercepts all non-preview traffic. Remote assets, arbitrary local files and project-selected dependency installs are not supported; embed small assets as data URLs or generate geometry in code. Extend asset ingestion separately rather than bypassing these boundaries.
+Projects live beneath the profile's `bc-3d-toolkit/projects`, segregated by registered workspace. Each edit creates an immutable revision. Stale edits, traversal and symlink directories are rejected. Source runs on a separate token-protected loopback origin, never in Node. Only the bundled library imports are accepted. Preview CSP restricts fetches and subresources; headless rendering independently intercepts all non-preview traffic. Remote assets, arbitrary local files and project-selected dependency installs are not supported; embed small assets as data URLs or generate geometry in code. Extend asset ingestion separately rather than bypassing these boundaries.
 
 Interactive previews execute generated browser JavaScript on a separate origin. CSP restricts fetches and subresources, while the app iframe also uses an opaque sandbox. Browser self-navigation is not blocked by CSP: this is not a complete network sandbox for hostile code. Automated renders and model exports additionally intercept browser requests and allow only the exact snapshot files.
 

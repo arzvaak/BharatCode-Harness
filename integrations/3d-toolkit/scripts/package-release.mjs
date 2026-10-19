@@ -11,7 +11,7 @@ import { spawnSync } from 'node:child_process';
 
 const TOOLKIT = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(TOOLKIT, '../../..');
-const SOURCE_COMMIT = process.env.SOURCE_COMMIT ?? '9f674221fb3f2b89d820006249a438d8462dd960';
+const SOURCE_COMMIT = process.env.SOURCE_COMMIT ?? 'aea4dfe0a988652c75a8c73f5fc58fee5ae79699';
 const MAX_TAR_BYTES = 256 * 1024 * 1024;
 const manifestAtRepo = JSON.parse(await readFile(join(TOOLKIT, '../package.json'), 'utf8'));
 
@@ -26,7 +26,7 @@ function run(command, args, options = {}) {
 
 function outputPath() {
   const index = process.argv.indexOf('--out');
-  return resolve(index >= 0 ? process.argv[index + 1] : join(REPO, 'dist/3d-toolkit/bharatcode-3d-toolkit-0.1.0-linux-x64.tgz'));
+  return resolve(index >= 0 ? process.argv[index + 1] : join(REPO, 'dist/3d-toolkit/bharatcode-3d-toolkit-0.1.1-linux-x64.tgz'));
 }
 
 async function listFiles(root) {
