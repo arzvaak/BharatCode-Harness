@@ -123,3 +123,11 @@ test('editable source exports preserve unfinished code without requiring compila
     assert.equal(studio.server.server,undefined);
   }finally{await studio.close();}
 });
+test('module-scope scene exceptions report the actual error instead of waiting for readiness',async()=>{
+  const studio=new Studio({directory:await temporary()});
+  const abort=new AbortController();const timeout=setTimeout(()=>abort.abort(Error('Test readiness deadline')),2000);
+  try{
+    const project=await studio.projects.create('a','three','Module failure','throw Error("module scope failure"); export function createScene() {}');
+    await assert.rejects(studio.render('a',project.id,'three',{signal:abort.signal}),/module scope failure/);
+  }finally{clearTimeout(timeout);await studio.close();}
+});

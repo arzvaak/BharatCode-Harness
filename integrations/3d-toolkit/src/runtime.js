@@ -70,8 +70,11 @@ export class Studio {
       const permitted = new Set([snapshot.url, new URL('app.js', snapshot.url).href]);
       await context.route('**/*', route => permitted.has(route.request().url()) ? route.continue() : route.abort());
       const page = await context.newPage();
+      let moduleError;
+      page.on('pageerror', error=>{moduleError=error;});
       page.setDefaultTimeout(30000);
       await page.goto(snapshot.url, {waitUntil: 'load'});
+      if(moduleError) throw Error(`Scene module failed: ${moduleError.message}`);
       await page.waitForFunction(() => window.BC3D?.ready || window.BC3D?.error);
       const error = await page.evaluate(() => window.BC3D.error);
       if (error) throw Error(`Scene initialization failed: ${error}`);
