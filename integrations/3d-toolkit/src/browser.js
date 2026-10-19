@@ -19,10 +19,21 @@ window.addEventListener('unhandledrejection', event => report(event.reason));
 function encode(bytes) { let raw = ''; for(let start = 0; start < bytes.length; start += 8192) raw += String.fromCharCode(...bytes.subarray(start, start + 8192)); return btoa(raw); }
 function draw(time) { logicalTime = time; value.update?.(time); ${draw}; }
 async function initialize() {
+  // A cached app pane can mount its iframe before layout gives it any area.
+  while (innerWidth < 1 || innerHeight < 1) await new Promise(requestAnimationFrame);
   const width = innerWidth, height = innerHeight;
   value = await createScene({canvas, width, height});
   if (!value?.scene || !${engine === 'three' ? 'value.camera || !value.renderer' : 'value.engine'}) throw Error('createScene returned an incomplete ${engine} runtime');
   ${engine === 'babylon' ? 'await value.scene.whenReadyAsync();' : ''}
+  const resize = () => {
+    if (innerWidth < 1 || innerHeight < 1) return;
+    ${engine === 'three' ? `value.renderer.setSize(innerWidth, innerHeight, false);
+    if (value.camera.isPerspectiveCamera) { value.camera.aspect = innerWidth / innerHeight; value.camera.updateProjectionMatrix(); }` : 'value.engine.setSize(innerWidth, innerHeight);'}
+  };
+  resize();
+  window.addEventListener('resize', resize);
+  const observer = new ResizeObserver(resize);
+  observer.observe(document.documentElement);
   draw(0);
   const meshes = ${engine === 'three' ? '[]; value.scene.traverse(object => {if(object.isMesh) meshes.push(object);})' : 'value.scene.meshes.filter(mesh => mesh.getTotalVertices() > 0)'};
   window.BC3D.metrics = {meshes: meshes.length, engine: '${engine}'};
@@ -33,7 +44,7 @@ async function initialize() {
   window.BC3D.ready = true;
   function loop(now) { if (!playing) return; try { draw(now / 1000); frame = requestAnimationFrame(loop); } catch(error) {report(error);} }
   frame = requestAnimationFrame(loop);
-  window.addEventListener('beforeunload', () => { cancelAnimationFrame(frame); value.dispose?.(); });
+  window.addEventListener('beforeunload', () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('resize', resize); value.dispose?.(); });
 }
 initialize().catch(report);
 `;
