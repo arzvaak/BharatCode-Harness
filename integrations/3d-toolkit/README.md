@@ -8,8 +8,8 @@ Optional native Three.js and Babylon.js toolkit. Open **3D Studio** in the sideb
 
 1. Call `three_project_create` or `babylon_project_create` with a title. The default is a lit, animated sculpture with an orbit camera.
 2. Read `*_project_get`. Edit the full JS/TS/TSX module through `*_project_update`, supplying its exact `expectedRevision`.
-3. Call `*_preview` for an interactive local URL. In the app, select the saved scene in 3D Studio. Drag to orbit; use the source editor for manual changes.
-4. Call `*_render` for an actual PNG, image attachment and mesh metrics. Rendering reports initialization errors; a successful compile alone does not prove a visible scene.
+3. Call `*_preview` for an interactive local URL. In the app, select the saved scene in 3D Studio. The initial workspace follows the active chat; saved scenes are filtered to the selected workspace. Drag to orbit and scroll to zoom. Play, pause or seek to a precise animation time. Use the source editor for manual changes; save or discard a draft before switching scenes or exporting.
+4. Call `*_render` for an actual PNG, image attachment and mesh metrics. The UI exposes width, height and animation time for frame renders and model exports. Rendering reports initialization errors; a successful compile alone does not prove a visible scene.
 5. Call `*_export`: `glb` for a 3D model, `source` for an editable project ZIP, `viewer` for a bundled offline HTML ZIP. Babylon supports `babylon` native JSON. Outputs include absolute paths and source revision. The page also provides download buttons.
 
 The scene module exports `async createScene({canvas,width,height})`. Three returns `{scene,camera,renderer,update(timeSeconds),dispose()}`; Babylon returns `{scene,engine,update(timeSeconds),dispose()}`. `update` and `dispose` are optional. Keep animation deterministic relative to its supplied time. The preview starts animation automatically. Render/export freeze at the requested `time` (default zero).
@@ -25,3 +25,5 @@ Projects live beneath the profile's `bc-3d-toolkit/projects`, segregated by regi
 Interactive previews execute generated browser JavaScript on a separate origin. CSP restricts fetches and subresources, while the app iframe also uses an opaque sandbox. Browser self-navigation is not blocked by CSP: this is not a complete network sandbox for hostile code. Automated renders and model exports additionally intercept browser requests and allow only the exact snapshot files.
 
 `npm ci --ignore-scripts --legacy-peer-deps`, `npm test`, and `npm run build` verify the package. Link the host-provided `@deepseek-ai/dsh-tools` peer for development; the optional extension uses BharatCode's existing tool runtime. Tests use real Chromium for both engines. Native packed-install, lifecycle and live model qualification are recorded separately by release qualification.
+
+An offline viewer preserves procedural animation. PNG and model exports capture a chosen time; they do not bake procedural animation tracks into GLB. Use DeepBlend Studio for complete rendered MP4 delivery.

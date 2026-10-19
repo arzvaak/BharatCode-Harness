@@ -1,6 +1,6 @@
 {
   "name": "@bharatcode/3d-toolkit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Editable Three.js and Babylon.js projects with native preview, render and export tools.",
   "type": "module",
   "license": "MIT",

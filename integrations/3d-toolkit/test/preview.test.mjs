@@ -25,8 +25,11 @@ for(const engine of ['three','babylon']) test(`${engine} preview survives a zero
     assert.deepEqual(await frame.evaluate(()=>{const {width,height}=document.querySelector('canvas').getBoundingClientRect();return [width,height];}),[600,360]);
     assert.equal(await frame.evaluate(()=>window.BC3D.error),null);
     assert.ok((await frame.evaluate(()=>window.BC3D.metrics.meshes))>0);
+    await frame.evaluate(()=>window.BC3D.step(1.25));
     await page.locator('iframe').evaluate(element=>{element.style.width='800px';element.style.height='400px';});
     await frame.waitForFunction(()=>document.querySelector('canvas').width===800&&document.querySelector('canvas').height===400,{},{timeout:3000});
     assert.deepEqual(await frame.evaluate(()=>{const {width,height}=document.querySelector('canvas').getBoundingClientRect();return [width,height];}),[800,400]);
+    await frame.waitForFunction(()=>{const gl=document.querySelector('canvas').getContext('webgl2');const pixel=new Uint8Array(4);gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);return pixel[3]===255;},{},{timeout:3000});
+    assert.equal(await frame.evaluate(()=>window.BC3D.time),1.25);
   } finally {await browser.close();server.closeAllConnections();await new Promise(done=>server.close(done));await studio.close();}
 });
