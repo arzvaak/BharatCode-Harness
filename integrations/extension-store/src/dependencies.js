@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 
 // Known version-only probes. Catalog content cannot introduce arbitrary commands
 // or shell fragments. These do not qualify a package, kernel or document workflow.
-export const DEPENDENCY_IDS = ['node', 'python', 'jupyter', 'duckdb', 'typst', 'tinymist', 'ffmpeg', 'pdflatex', 'latexmk'];
+export const DEPENDENCY_IDS = ['node', 'python', 'jupyter', 'duckdb', 'typst', 'tinymist', 'ffmpeg', 'pdflatex', 'latexmk', 'blender'];
 const versionProbe = (id, platform, commands = {}) => {
   const python = commands.python ?? (platform === 'win32' ? 'python' : 'python3');
   const probes = {
@@ -14,6 +14,7 @@ const versionProbe = (id, platform, commands = {}) => {
     typst: { title: 'Local Typst compiler', command: commands.typst ?? 'typst', args: ['--version'], range: '>=0.0.0' },
     tinymist: { title: 'Local Tinymist server', command: commands.tinymist ?? 'tinymist', args: ['--version'], range: '>=0.0.0' },
     ffmpeg: { title: 'Local FFmpeg', command: commands.ffmpeg ?? 'ffmpeg', args: ['-version'], range: '>=0.0.0' },
+    blender: { title: 'Local Blender', command: commands.blender ?? 'blender', args: ['--version'], range: '>=5.2.1' },
     pdflatex: { title: 'Local LaTeX PDF engine', command: commands.pdflatex ?? 'pdflatex', args: ['--version'], range: '>=0.0.0', pattern: /(?:pdfTeX\s+\S+-\S+-|MiKTeX-pdfTeX\s+)(\d+\.\d+(?:\.\d+)?)/i },
     latexmk: { title: 'Local LaTeX build runner', command: commands.latexmk ?? 'latexmk', args: ['-v'], range: '>=0.0.0', pattern: /Version\s+(\d+\.\d+(?:\.\d+)?)/i },
   };

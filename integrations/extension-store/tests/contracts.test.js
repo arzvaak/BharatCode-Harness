@@ -166,7 +166,12 @@ test("checked-in discovery catalog obeys scope boundaries and never qualifies un
   const seed = validateCatalog(
     JSON.parse(await readFile(new URL("../catalog.json", import.meta.url))),
   );
-  assert.equal(seed.entries.length, 58);
+  assert.equal(seed.entries.length, 61);
+  const toolkit=seed.entries.find(entry=>entry.id==='3d-toolkit');
+  assert.equal(toolkit.packageName,'@bharatcode/3d-toolkit');
+  assert.equal(toolkit.tools.length,14);
+  for(const id of ['three-pack','babylon-pack']) assert.deepEqual(seed.entries.find(entry=>entry.id===id).components,['3d-toolkit']);
+  assert.equal(seed.entries.find(entry=>entry.id==='deepblend').version,'0.15.0');
   const latex = seed.entries.find(entry => entry.id === 'bc-latex-documents');
   assert.equal(latex.status, 'bundled');
   assert.deepEqual(latex.dependencyIds, ['pdflatex', 'latexmk']);
